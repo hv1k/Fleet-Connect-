@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Work Order | FleetConnect</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-card: #12121a;
+            --bg-input: #1a1a24;
+            --border: #2a2a3a;
+            --border-light: #3a3a4a;
+            --text-primary: #ffffff;
+            --text-secondary: #8a8a9a;
+            --text-muted: #5a5a6a;
+            --accent: #00d4aa;
+            --accent-glow: rgba(0, 212, 170, 0.3);
+            --accent-secondary: #00a8ff;
+            --warning: #ffaa00;
+            --error: #ff6b6b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 212, 170, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 212, 170, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        /* Navigation */
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            font-family: 'Space Mono', monospace;
+            font-size: 1.5rem;
+            color: var(--accent);
+            letter-spacing: -1px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 24px;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--accent);
+        }
+
+        /* Header */
+        .header {
+            margin-bottom: 32px;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .page-subtitle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        /* Form Card */
+        .form-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 32px;
+        }
+
+        .form-section {
+            margin-bottom: 32px;
+            padding-bottom: 32px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .form-section:last-of-type {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--accent);
+        }
+
+        .section-hint {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* Form Fields */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: var(--text-primary);
+        }
+
+        label .required {
+            color: var(--error);
+            margin-left: 2px;
+        }
+
+        label .optional {
+            color: var(--text-muted);
+            font-weight: 400;
+            font-size: 0.75rem;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px 14px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.95rem;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        input::placeholder,
+        textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        input.mono {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+        }
+
+        select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%238a8a9a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 18px;
+            padding-right: 44px;
+        }
+
+        select option {
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        /* Grid layouts */
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .form-row-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+        }
+
+        .form-row-4 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 16px;
+        }
+
+        @media (max-width: 700px) {
+            .form-row,
+            .form-row-3,
+            .form-row-4 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (min-width: 701px) and (max-width: 900px) {
+            .form-row-3,
+            .form-row-4 {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        /* Equipment Table */
+        .equipment-section {
+            background: var(--bg-input);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 16px;
+        }
+
+        .equipment-row {
+            display: grid;
+            grid-template-columns: 80px 1fr 2fr 40px;
+            gap: 12px;
+            align-items: end;
+            margin-bottom: 12px;
+        }
+
+        .equipment-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .equipment-row input {
+            padding: 10px 12px;
+        }
+
+        .equipment-row .form-group {
+            margin-bottom: 0;
+        }
+
+        .remove-btn {
+            padding: 10px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1.1rem;
+        }
+
+        .remove-btn:hover {
+            border-color: var(--error);
+            color: var(--error);
+        }
+
+        .add-equipment-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 16px;
+            padding: 10px 16px;
+            background: transparent;
+            border: 1px dashed var(--border);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .add-equipment-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        @media (max-width: 700px) {
+            .equipment-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Button Group */
+        .button-group {
+            display: flex;
+            gap: 16px;
+            margin-top: 32px;
+        }
+
+        .submit-btn {
+            flex: 1;
+            padding: 16px 24px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            background: var(--accent);
+            color: var(--bg-dark);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px var(--accent-glow);
+        }
+
+        .draft-btn {
+            padding: 16px 24px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 1rem;
+            font-weight: 500;
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .draft-btn:hover {
+            border-color: var(--text-secondary);
+            color: var(--text-primary);
+        }
+
+        /* Success Message */
+        .success-message {
+            display: none;
+            text-align: center;
+            padding: 60px 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        .success-icon {
+            width: 72px;
+            height: 72px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            font-size: 2.5rem;
+        }
+
+        .success-message h2 {
+            font-size: 1.75rem;
+            margin-bottom: 8px;
+        }
+
+        .success-message p {
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        .order-number {
+            font-family: 'Space Mono', monospace;
+            font-size: 1.1rem;
+            color: var(--accent);
+            background: var(--bg-input);
+            padding: 8px 16px;
+            border-radius: 6px;
+            display: inline-block;
+            margin-bottom: 32px;
+        }
+
+        .success-actions {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+        }
+
+        .btn-outline {
+            padding: 12px 24px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            background: transparent;
+            color: var(--accent);
+            border: 1px solid var(--accent);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .btn-outline:hover {
+            background: var(--accent);
+            color: var(--bg-dark);
+        }
+
+        .form-card.hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Navigation -->
+        <nav class="nav">
+            <a href="index.html" class="logo" style="text-decoration: none;">FLEETCONNECT</a>
+            <div style="display: flex; align-items: center; gap: 24px;">
+                <div class="nav-links">
+                    <a href="index.html">Home</a>
+                    <a href="create-job.html" class="active">New Order</a>
+                    <a href="job-history.html">Job History</a>
+                </div>
+                <span id="userBadge" style="background: var(--accent-secondary); color: white; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">RENTAL</span>
+                <span id="userName" style="color: var(--text-secondary); font-size: 0.9rem;"></span>
+                <button onclick="logout()" style="background: transparent; border: 1px solid var(--border); color: var(--text-secondary); padding: 8px 16px; border-radius: 6px; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; cursor: pointer;">Logout</button>
+            </div>
+        </nav>
+
+        <header class="header">
+            <h1 class="page-title">Create Work Order</h1>
+            <p class="page-subtitle">Submit a new service request for vendor assignment</p>
+        </header>
+
+        <div class="form-card" id="formCard">
+            <form id="workOrderForm">
+                
+                <!-- Contract & Order Info -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <span class="section-label">Order Information</span>
+                    </div>
+                    
+                    <div class="form-row-4">
+                        <div class="form-group">
+                            <label for="contractNumber">Contract #<span class="required">*</span></label>
+                            <input type="text" id="contractNumber" class="mono" placeholder="178435490" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="poNumber">P.O. #<span class="required">*</span></label>
+                            <input type="text" id="poNumber" class="mono" placeholder="802556817" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="jobNumber">Job No.<span class="optional"> (optional)</span></label>
+                            <input type="text" id="jobNumber" class="mono" placeholder="17-D-27">
+                        </div>
+                        <div class="form-group">
+                            <label for="orderId">Order ID<span class="optional"> (optional)</span></label>
+                            <input type="text" id="orderId" class="mono" placeholder="7455">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Job Site Info -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <span class="section-label">Job Site</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="jobSiteName">Job Site Name<span class="required">*</span></label>
+                        <input type="text" id="jobSiteName" placeholder="e.g., D-27 MONROVIA - EATON A-1203" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="jobAddress">Service Address<span class="required">*</span></label>
+                        <input type="text" id="jobAddress" placeholder="2528 LA VENEZIA CT" required>
+                    </div>
+
+                    <div class="form-row-3">
+                        <div class="form-group">
+                            <label for="jobCity">City<span class="required">*</span></label>
+                            <input type="text" id="jobCity" placeholder="ALTADENA" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="jobState">State<span class="required">*</span></label>
+                            <select id="jobState" required>
+                                <option value="">Select...</option>
+                                <option value="CA" selected>California</option>
+                                <option value="AZ">Arizona</option>
+                                <option value="NV">Nevada</option>
+                                <option value="TX">Texas</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="jobZip">ZIP<span class="required">*</span></label>
+                            <input type="text" id="jobZip" class="mono" placeholder="91001" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Customer Info -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <span class="section-label">Customer Information</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="customerName">Customer / Company Name<span class="required">*</span></label>
+                        <input type="text" id="customerName" placeholder="SOUTHERN CALIFORNIA EDISON TSD" required>
+                    </div>
+
+                    <div class="form-row-3">
+                        <div class="form-group">
+                            <label for="customerNumber">Customer #<span class="required">*</span></label>
+                            <input type="text" id="customerNumber" class="mono" placeholder="76530" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="vendorNumber">Vendor #<span class="optional"> (optional)</span></label>
+                            <input type="text" id="vendorNumber" class="mono" placeholder="10041159">
+                        </div>
+                        <div class="form-group">
+                            <label for="paymentTerms">Payment Terms</label>
+                            <select id="paymentTerms">
+                                <option value="net30">NET 30</option>
+                                <option value="net60">NET 60</option>
+                                <option value="2-15-net60">2% 15, NET 60</option>
+                                <option value="cod">COD</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="contactName">Ordered By (Contact)<span class="required">*</span></label>
+                            <input type="text" id="contactName" placeholder="MYERS, MORGAN" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="contactPhone">Contact Phone<span class="required">*</span></label>
+                            <input type="tel" id="contactPhone" placeholder="626-201-6548" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rental Company Info -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <span class="section-label">Rental Company</span>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="rentalCompany">Rental Company<span class="required">*</span></label>
+                            <select id="rentalCompany" required>
+                                <option value="">Select company...</option>
+                                <option value="sunbelt">Sunbelt Rentals</option>
+                                <option value="united">United Rentals</option>
+                                <option value="herc">Herc Rentals</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="salesman">Salesman<span class="optional"> (optional)</span></label>
+                            <input type="text" id="salesman" placeholder="REYES, PAUL (1388)">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vendor Assignment -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <span class="section-label">Vendor Assignment</span>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="assignedVendor">Assign to Vendor<span class="required">*</span></label>
+                            <select id="assignedVendor" required>
+                                <option value="">Select vendor...</option>
+                                <option value="your-company">Your Fleet Services</option>
+                                <option value="vendor-2">ABC Fuel Delivery</option>
+                                <option value="vendor-3">XYZ Equipment Transport</option>
+                                <option value="open">Leave Open (Any Vendor)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="allowOpen">If vendor declines?</label>
+                            <select id="allowOpen">
+                                <option value="yes">Open to other vendors</option>
+                                <option value="no">Contact us first</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Schedule -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <span class="section-label">Schedule</span>
+                    </div>
+
+                    <div class="form-row-4">
+                        <div class="form-group">
+                            <label for="dateOut">Date Out<span class="required">*</span></label>
+                            <input type="date" id="dateOut" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="timeOut">Time Out</label>
+                            <input type="time" id="timeOut" value="08:00">
+                        </div>
+                        <div class="form-group">
+                            <label for="estReturn">Est. Return<span class="optional"> (optional)</span></label>
+                            <input type="date" id="estReturn">
+                        </div>
+                        <div class="form-group">
+                            <label for="timeReturn">Return Time</label>
+                            <input type="time" id="timeReturn" value="08:00">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Equipment -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <span class="section-label">Equipment</span>
+                        <span class="section-hint">Add all equipment for this order</span>
+                    </div>
+
+                    <div class="equipment-section" id="equipmentList">
+                        <div class="equipment-row" data-row="1">
+                            <div class="form-group">
+                                <label>QTY</label>
+                                <input type="number" name="qty_1" value="1" min="1">
+                            </div>
+                            <div class="form-group">
+                                <label>Equipment #</label>
+                                <input type="text" name="equipNum_1" class="mono" placeholder="0090030">
+                            </div>
+                            <div class="form-group">
+                                <label>Description</label>
+                                <input type="text" name="equipDesc_1" placeholder="20KW DIESEL GENERATOR">
+                            </div>
+                            <button type="button" class="remove-btn" onclick="removeEquipment(this)">×</button>
+                        </div>
+                    </div>
+
+                    <button type="button" class="add-equipment-btn" onclick="addEquipment()">
+                        <span>+</span> Add Equipment
+                    </button>
+                </div>
+
+                <!-- Job Type & Instructions -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <span class="section-label">Service Request</span>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="jobType">Job Type<span class="required">*</span></label>
+                            <select id="jobType" required>
+                                <option value="">Select job type...</option>
+                                <option value="fuel-delivery">Fuel Delivery</option>
+                                <option value="equipment-tow">Equipment Tow</option>
+                                <option value="emergency-fuel">Emergency Fuel</option>
+                                <option value="pickup">Equipment Pickup</option>
+                                <option value="delivery">Equipment Delivery</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="priority">Priority</label>
+                            <select id="priority">
+                                <option value="normal">Normal</option>
+                                <option value="urgent">Urgent</option>
+                                <option value="emergency">Emergency</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="instructions">Special Instructions<span class="optional"> (optional)</span></label>
+                        <textarea id="instructions" placeholder="Gate code, fuel amount, specific site directions, etc."></textarea>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button type="button" class="draft-btn">Save Draft</button>
+                    <button type="submit" class="submit-btn">Submit Work Order</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Success Message -->
+        <div class="success-message" id="successMessage">
+            <div class="success-icon">✓</div>
+            <h2>Work Order Submitted</h2>
+            <p>Your order has been created and is ready for vendor assignment.</p>
+            <div class="order-number" id="orderNumberDisplay">Contract #178435490</div>
+            <div class="success-actions">
+                <button class="btn-outline" id="newOrderBtn">Create Another</button>
+                <a href="job-history.html" class="btn-outline">View All Orders</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Set default dates
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('dateOut').value = today;
+        document.getElementById('dateOut').setAttribute('min', today);
+
+        // Equipment row counter
+        let equipmentRowCount = 1;
+
+        function addEquipment() {
+            equipmentRowCount++;
+            const equipmentList = document.getElementById('equipmentList');
+            
+            const newRow = document.createElement('div');
+            newRow.className = 'equipment-row';
+            newRow.dataset.row = equipmentRowCount;
+            newRow.innerHTML = `
+                <div class="form-group">
+                    <label>QTY</label>
+                    <input type="number" name="qty_${equipmentRowCount}" value="1" min="1">
+                </div>
+                <div class="form-group">
+                    <label>Equipment #</label>
+                    <input type="text" name="equipNum_${equipmentRowCount}" class="mono" placeholder="0090030">
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <input type="text" name="equipDesc_${equipmentRowCount}" placeholder="Equipment description">
+                </div>
+                <button type="button" class="remove-btn" onclick="removeEquipment(this)">×</button>
+            `;
+            
+            equipmentList.appendChild(newRow);
+        }
+
+        function removeEquipment(btn) {
+            const rows = document.querySelectorAll('.equipment-row');
+            if (rows.length > 1) {
+                btn.closest('.equipment-row').remove();
+            }
+        }
+
+        // Collect equipment data
+        function getEquipmentData() {
+            const rows = document.querySelectorAll('.equipment-row');
+            const equipment = [];
+            
+            rows.forEach(row => {
+                const rowNum = row.dataset.row;
+                const qty = row.querySelector(`input[name="qty_${rowNum}"]`).value;
+                const equipNum = row.querySelector(`input[name="equipNum_${rowNum}"]`).value;
+                const desc = row.querySelector(`input[name="equipDesc_${rowNum}"]`).value;
+                
+                if (desc || equipNum) {
+                    equipment.push({ qty, equipNum, description: desc });
+                }
+            });
+            
+            return equipment;
+        }
+
+        // Form submission
+        const form = document.getElementById('workOrderForm');
+        const formCard = document.getElementById('formCard');
+        const successMessage = document.getElementById('successMessage');
+        const newOrderBtn = document.getElementById('newOrderBtn');
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const workOrder = {
+                // Order info
+                contractNumber: document.getElementById('contractNumber').value,
+                poNumber: document.getElementById('poNumber').value,
+                jobNumber: document.getElementById('jobNumber').value,
+                orderId: document.getElementById('orderId').value,
+                
+                // Job site
+                jobSiteName: document.getElementById('jobSiteName').value,
+                address: {
+                    street: document.getElementById('jobAddress').value,
+                    city: document.getElementById('jobCity').value,
+                    state: document.getElementById('jobState').value,
+                    zip: document.getElementById('jobZip').value
+                },
+                
+                // Customer
+                customerName: document.getElementById('customerName').value,
+                customerNumber: document.getElementById('customerNumber').value,
+                vendorNumber: document.getElementById('vendorNumber').value,
+                paymentTerms: document.getElementById('paymentTerms').value,
+                contactName: document.getElementById('contactName').value,
+                contactPhone: document.getElementById('contactPhone').value,
+                
+                // Rental company
+                rentalCompany: document.getElementById('rentalCompany').value,
+                salesman: document.getElementById('salesman').value,
+                
+                // Vendor assignment
+                assignedVendor: document.getElementById('assignedVendor').value === 'open' ? null : document.getElementById('assignedVendor').value,
+                allowOpenIfDeclined: document.getElementById('allowOpen').value === 'yes',
+                
+                // Schedule
+                dateOut: document.getElementById('dateOut').value,
+                timeOut: document.getElementById('timeOut').value,
+                estReturn: document.getElementById('estReturn').value,
+                timeReturn: document.getElementById('timeReturn').value,
+                
+                // Equipment
+                equipment: getEquipmentData(),
+                
+                // Service
+                jobType: document.getElementById('jobType').value,
+                priority: document.getElementById('priority').value,
+                instructions: document.getElementById('instructions').value,
+                
+                // Meta
+                status: document.getElementById('assignedVendor').value === 'open' ? 'open' : 'assigned',
+                submittedAt: new Date().toISOString(),
+                id: 'WO-' + Date.now()
+            };
+
+            // Save to localStorage (simulating database)
+            let orders = JSON.parse(localStorage.getItem('workOrders') || '[]');
+            orders.push(workOrder);
+            localStorage.setItem('workOrders', JSON.stringify(orders));
+
+            console.log('Work Order Submitted:', workOrder);
+
+            // Update success message
+            document.getElementById('orderNumberDisplay').textContent = 
+                `Contract #${workOrder.contractNumber}`;
+
+            // Show success
+            formCard.classList.add('hidden');
+            successMessage.classList.add('show');
+        });
+
+        // Reset form
+        newOrderBtn.addEventListener('click', function() {
+            form.reset();
+            document.getElementById('dateOut').value = today;
+            
+            // Reset equipment to single row
+            const equipmentList = document.getElementById('equipmentList');
+            equipmentList.innerHTML = `
+                <div class="equipment-row" data-row="1">
+                    <div class="form-group">
+                        <label>QTY</label>
+                        <input type="number" name="qty_1" value="1" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label>Equipment #</label>
+                        <input type="text" name="equipNum_1" class="mono" placeholder="0090030">
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <input type="text" name="equipDesc_1" placeholder="20KW DIESEL GENERATOR">
+                    </div>
+                    <button type="button" class="remove-btn" onclick="removeEquipment(this)">×</button>
+                </div>
+            `;
+            equipmentRowCount = 1;
+            
+            formCard.classList.remove('hidden');
+            successMessage.classList.remove('show');
+        });
+
+        // Auth check
+        const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+        if (!currentUser) {
+            window.location.href = 'login.html';
+        } else {
+            document.getElementById('userName').textContent = currentUser.name;
+            document.getElementById('userBadge').textContent = currentUser.role.toUpperCase();
+        }
+
+        function logout() {
+            localStorage.removeItem('currentUser');
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>

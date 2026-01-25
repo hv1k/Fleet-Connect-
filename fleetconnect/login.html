@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | FleetConnect</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-card: #12121a;
+            --bg-input: #1a1a24;
+            --border: #2a2a3a;
+            --text-primary: #ffffff;
+            --text-secondary: #8a8a9a;
+            --text-muted: #5a5a6a;
+            --accent: #00d4aa;
+            --accent-glow: rgba(0, 212, 170, 0.3);
+            --error: #ff6b6b;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'DM Sans', sans-serif; 
+            background: var(--bg-dark); 
+            color: var(--text-primary); 
+            min-height: 100vh; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        body::before { 
+            content: ''; 
+            position: fixed; 
+            top: 0; left: 0; 
+            width: 100%; height: 100%; 
+            background-image: 
+                linear-gradient(rgba(0, 212, 170, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 212, 170, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .login-container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 420px;
+        }
+        
+        .logo {
+            font-family: 'Space Mono', monospace;
+            font-size: 2rem;
+            color: var(--accent);
+            text-align: center;
+            margin-bottom: 8px;
+            letter-spacing: -1px;
+        }
+        
+        .tagline {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+            font-size: 0.95rem;
+        }
+        
+        .login-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 40px 32px;
+        }
+        
+        .login-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+        
+        .login-subtitle {
+            color: var(--text-secondary);
+            text-align: center;
+            margin-bottom: 32px;
+            font-size: 0.9rem;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+        
+        input {
+            width: 100%;
+            padding: 14px 16px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 1rem;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            transition: all 0.2s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+        
+        input::placeholder {
+            color: var(--text-muted);
+        }
+        
+        .error-message {
+            display: none;
+            background: rgba(255, 107, 107, 0.1);
+            border: 1px solid var(--error);
+            color: var(--error);
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+        
+        .error-message.show {
+            display: block;
+        }
+        
+        .login-btn {
+            width: 100%;
+            padding: 16px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            background: var(--accent);
+            color: var(--bg-dark);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 12px;
+        }
+        
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px var(--accent-glow);
+        }
+        
+        .login-btn:active {
+            transform: translateY(0);
+        }
+        
+        .demo-accounts {
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+        }
+        
+        .demo-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        
+        .demo-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .demo-btn {
+            padding: 12px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 500;
+            background: var(--bg-input);
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .demo-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        
+        .demo-btn span {
+            display: block;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">FLEETCONNECT</div>
+        <p class="tagline">Fleet Management Platform</p>
+        
+        <div class="login-card">
+            <h1 class="login-title">Welcome back</h1>
+            <p class="login-subtitle">Sign in to your account</p>
+            
+            <div class="error-message" id="errorMessage">
+                Invalid email or password. Please try again.
+            </div>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" placeholder="you@company.com" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="Enter your password" required>
+                </div>
+                
+                <button type="submit" class="login-btn">Sign In</button>
+            </form>
+            
+            <div class="demo-accounts">
+                <div class="demo-title">Quick Demo Access</div>
+                <div class="demo-buttons">
+                    <button class="demo-btn" onclick="demoLogin('admin')">
+                        Admin
+                        <span>Full access</span>
+                    </button>
+                    <button class="demo-btn" onclick="demoLogin('rental')">
+                        Rental Co.
+                        <span>Create jobs</span>
+                    </button>
+                    <button class="demo-btn" onclick="demoLogin('vendor')">
+                        Vendor
+                        <span>Manage jobs</span>
+                    </button>
+                    <button class="demo-btn" onclick="demoLogin('fieldworker')">
+                        Field Worker
+                        <span>Mobile view</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Demo users (in real app, this would be server-side)
+        const users = [
+            { id: 'admin-1', email: 'admin@fleetconnect.com', password: 'admin123', role: 'admin', name: 'System Admin', company: 'FleetConnect' },
+            { id: 'rental-1', email: 'paul@sunbelt.com', password: 'rental123', role: 'rental', name: 'Paul Reyes', company: 'Sunbelt Rentals' },
+            { id: 'vendor-1', email: 'owner@yourfleet.com', password: 'vendor123', role: 'vendor', name: 'Owner', company: 'Your Fleet Services', vendorId: 'your-company' },
+            { id: 'field-1', email: 'driver@yourfleet.com', password: 'field123', role: 'fieldworker', name: 'John Driver', company: 'Your Fleet Services', vendorId: 'your-company' }
+        ];
+        
+        // Save users to localStorage if not exists
+        if (!localStorage.getItem('users')) {
+            localStorage.setItem('users', JSON.stringify(users));
+        }
+        
+        // Login form handler
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            const allUsers = JSON.parse(localStorage.getItem('users') || '[]');
+            const user = allUsers.find(u => u.email === email && u.password === password);
+            
+            if (user) {
+                loginUser(user);
+            } else {
+                document.getElementById('errorMessage').classList.add('show');
+            }
+        });
+        
+        // Demo login buttons
+        function demoLogin(role) {
+            const allUsers = JSON.parse(localStorage.getItem('users') || '[]');
+            const user = allUsers.find(u => u.role === role);
+            if (user) {
+                loginUser(user);
+            }
+        }
+        
+        // Process login
+        function loginUser(user) {
+            // Store current user
+            localStorage.setItem('currentUser', JSON.stringify(user));
+            
+            // Redirect to home page (it will show role-specific content)
+            window.location.href = 'index.html';
+        }
+        
+        // Clear error on input
+        document.getElementById('email').addEventListener('input', () => {
+            document.getElementById('errorMessage').classList.remove('show');
+        });
+        document.getElementById('password').addEventListener('input', () => {
+            document.getElementById('errorMessage').classList.remove('show');
+        });
+    </script>
+</body>
+</html>

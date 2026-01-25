@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Jobs | FleetConnect</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-card: #12121a;
+            --bg-input: #1a1a24;
+            --border: #2a2a3a;
+            --text-primary: #ffffff;
+            --text-secondary: #8a8a9a;
+            --text-muted: #5a5a6a;
+            --accent: #00d4aa;
+            --accent-glow: rgba(0, 212, 170, 0.3);
+            --accent-blue: #00a8ff;
+            --warning: #ffaa00;
+            --error: #ff6b6b;
+            --success: #00d4aa;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'DM Sans', sans-serif; background: var(--bg-dark); color: var(--text-primary); min-height: 100vh; }
+        
+        /* Mobile-first header */
+        .header {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .logo {
+            font-family: 'Space Mono', monospace;
+            font-size: 1.25rem;
+            color: var(--accent);
+        }
+        .user-pill {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .user-name {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        .logout-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+        .welcome-text {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        .welcome-sub {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        
+        /* Quick stats */
+        .quick-stats {
+            display: flex;
+            gap: 12px;
+            padding: 16px 20px;
+            overflow-x: auto;
+        }
+        .quick-stat {
+            flex: 1;
+            min-width: 100px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            text-align: center;
+        }
+        .quick-stat.active {
+            border-color: var(--accent);
+            background: rgba(0, 212, 170, 0.05);
+        }
+        .quick-stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            font-family: 'Space Mono', monospace;
+        }
+        .quick-stat-value.warning { color: var(--warning); }
+        .quick-stat-value.accent { color: var(--accent); }
+        .quick-stat-label {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
+        }
+        
+        /* Tab bar */
+        .tab-bar {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+            padding: 0 20px;
+            background: var(--bg-card);
+            position: sticky;
+            top: 106px;
+            z-index: 40;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 14px 8px;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            color: var(--text-secondary);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .tab-btn.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+        .tab-btn .badge {
+            display: inline-block;
+            background: var(--bg-input);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            margin-left: 6px;
+        }
+        .tab-btn.active .badge {
+            background: var(--accent);
+            color: var(--bg-dark);
+        }
+        
+        /* Jobs list */
+        .jobs-container {
+            padding: 16px 20px;
+        }
+        
+        .job-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+        .job-card.urgent {
+            border-left: 4px solid var(--warning);
+        }
+        
+        .job-card-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        .job-card-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .priority-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--warning);
+        }
+        .job-card-meta {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+        .job-type-badge {
+            display: inline-block;
+            background: var(--bg-input);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            margin-top: 8px;
+        }
+        
+        .job-card-body {
+            padding: 16px;
+        }
+        .job-detail-row {
+            display: flex;
+            margin-bottom: 12px;
+        }
+        .job-detail-row:last-child {
+            margin-bottom: 0;
+        }
+        .job-detail-icon {
+            width: 32px;
+            font-size: 1rem;
+            opacity: 0.7;
+        }
+        .job-detail-content {
+            flex: 1;
+        }
+        .job-detail-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .job-detail-value {
+            font-size: 0.9rem;
+            margin-top: 2px;
+        }
+        .job-detail-value a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+        
+        .job-equipment {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+        }
+        .equip-tag {
+            background: var(--bg-input);
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+        }
+        .equip-tag .qty {
+            color: var(--accent);
+            font-family: 'Space Mono', monospace;
+        }
+        
+        .job-instructions {
+            margin-top: 12px;
+            padding: 12px;
+            background: rgba(255, 170, 0, 0.1);
+            border-radius: 8px;
+            font-size: 0.85rem;
+        }
+        .job-instructions-label {
+            font-size: 0.7rem;
+            color: var(--warning);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        
+        .job-card-actions {
+            padding: 16px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 12px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 14px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        .btn-primary {
+            background: var(--accent);
+            color: var(--bg-dark);
+            border: none;
+        }
+        .btn-secondary {
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+        }
+        .btn-outline {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+        .btn-success {
+            background: var(--success);
+            color: var(--bg-dark);
+            border: none;
+        }
+        
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+        .empty-state h3 {
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+        .empty-state p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        /* Status badge */
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .status-badge.in-progress { background: rgba(0, 168, 255, 0.15); color: var(--accent-blue); }
+        .status-badge.completed { background: rgba(0, 212, 170, 0.15); color: var(--success); }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-top">
+            <a href="index.html" class="logo" style="text-decoration: none;">FLEETCONNECT</a>
+            <div class="user-pill">
+                <span class="user-name" id="userName">Driver</span>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </div>
+        <div class="welcome-text" id="welcomeText">Good morning!</div>
+        <div class="welcome-sub">Here are your jobs for today</div>
+    </header>
+    
+    <div class="quick-stats">
+        <div class="quick-stat active">
+            <div class="quick-stat-value warning" id="statToday">0</div>
+            <div class="quick-stat-label">Today</div>
+        </div>
+        <div class="quick-stat">
+            <div class="quick-stat-value accent" id="statInProgress">0</div>
+            <div class="quick-stat-label">In Progress</div>
+        </div>
+        <div class="quick-stat">
+            <div class="quick-stat-value" id="statCompleted">0</div>
+            <div class="quick-stat-label">Completed</div>
+        </div>
+    </div>
+    
+    <div class="tab-bar">
+        <button class="tab-btn active" data-tab="assigned" id="tabAssigned">Assigned <span class="badge" id="badgeAssigned">0</span></button>
+        <button class="tab-btn" data-tab="in-progress" id="tabProgress">In Progress <span class="badge" id="badgeProgress">0</span></button>
+        <button class="tab-btn" data-tab="completed" id="tabCompleted">Done <span class="badge" id="badgeCompleted">0</span></button>
+    </div>
+    
+    <div class="jobs-container" id="jobsContainer">
+        <!-- Jobs loaded by JS -->
+    </div>
+    
+    <script>
+        // Check auth
+        const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+        if (!currentUser || currentUser.role !== 'fieldworker') {
+            window.location.href = 'login.html';
+        } else {
+            document.getElementById('userName').textContent = currentUser.name;
+            
+            // Set greeting based on time
+            const hour = new Date().getHours();
+            let greeting = 'Good morning';
+            if (hour >= 12 && hour < 17) greeting = 'Good afternoon';
+            else if (hour >= 17) greeting = 'Good evening';
+            document.getElementById('welcomeText').textContent = `${greeting}, ${currentUser.name.split(' ')[0]}!`;
+        }
+        
+        function logout() {
+            localStorage.removeItem('currentUser');
+            window.location.href = 'login.html';
+        }
+        
+        // Sample jobs for field worker
+        const sampleFieldJobs = [
+            {
+                id: 'FW-1001',
+                jobSiteName: 'D-27 MONROVIA -EATON A-1203',
+                address: { street: '2528 LA VENEZIA CT', city: 'ALTADENA', state: 'CA', zip: '91001' },
+                contactName: 'MYERS, MORGAN',
+                contactPhone: '626-201-6548',
+                dateOut: new Date().toISOString().split('T')[0],
+                timeOut: '08:00',
+                equipment: [
+                    { qty: '1', description: '20KW DIESEL GENERATOR' }
+                ],
+                jobType: 'fuel-delivery',
+                priority: 'normal',
+                instructions: 'Gate code: 4521. Fuel tank behind generator on east side. Call when arriving.',
+                status: 'assigned',
+                assignedWorker: currentUser?.id
+            },
+            {
+                id: 'FW-1002',
+                jobSiteName: 'SCE POMONA SUBSTATION',
+                address: { street: '1500 HOLT AVE', city: 'POMONA', state: 'CA', zip: '91768' },
+                contactName: 'JOHNSON, MIKE',
+                contactPhone: '909-555-1234',
+                dateOut: new Date().toISOString().split('T')[0],
+                timeOut: '10:30',
+                equipment: [
+                    { qty: '1', description: '45KW DIESEL GENERATOR' }
+                ],
+                jobType: 'equipment-tow',
+                priority: 'urgent',
+                instructions: 'Equipment needs to be moved to new location on site. Check in at security gate first.',
+                status: 'assigned',
+                assignedWorker: currentUser?.id
+            },
+            {
+                id: 'FW-1003',
+                jobSiteName: 'BURBANK MEDIA CENTER',
+                address: { street: '3000 W ALAMEDA AVE', city: 'BURBANK', state: 'CA', zip: '91523' },
+                contactName: 'WILSON, TOM',
+                contactPhone: '818-555-3333',
+                dateOut: new Date().toISOString().split('T')[0],
+                timeOut: '14:00',
+                equipment: [
+                    { qty: '1', description: '30KW GENERATOR' }
+                ],
+                jobType: 'fuel-delivery',
+                priority: 'normal',
+                status: 'in-progress',
+                assignedWorker: currentUser?.id
+            },
+            {
+                id: 'FW-1004',
+                jobSiteName: 'LONG BEACH PORT',
+                address: { street: '415 W OCEAN BLVD', city: 'LONG BEACH', state: 'CA', zip: '90802' },
+                contactName: 'GARCIA, MARIA',
+                contactPhone: '562-555-7777',
+                dateOut: new Date(Date.now() - 86400000).toISOString().split('T')[0],
+                equipment: [
+                    { qty: '3', description: '50KW GENERATOR' }
+                ],
+                jobType: 'fuel-delivery',
+                status: 'completed',
+                completedAt: new Date(Date.now() - 86400000).toISOString(),
+                assignedWorker: currentUser?.id
+            }
+        ];
+        
+        // Get jobs
+        function getFieldJobs() {
+            let jobs = JSON.parse(localStorage.getItem('fieldWorkerJobs') || '[]');
+            if (jobs.length === 0) {
+                jobs = sampleFieldJobs;
+                localStorage.setItem('fieldWorkerJobs', JSON.stringify(jobs));
+            }
+            return jobs.filter(j => j.assignedWorker === currentUser?.id);
+        }
+        
+        function saveFieldJobs(jobs) {
+            localStorage.setItem('fieldWorkerJobs', JSON.stringify(jobs));
+        }
+        
+        // Format helpers
+        function formatJobType(type) {
+            const types = { 'fuel-delivery': 'Fuel Delivery', 'equipment-tow': 'Equipment Tow', 'emergency-fuel': 'Emergency Fuel', 'pickup': 'Pickup', 'delivery': 'Delivery' };
+            return types[type] || type;
+        }
+        
+        function formatTime(time) {
+            if (!time) return '';
+            const [h, m] = time.split(':');
+            const hour = parseInt(h);
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+            const hour12 = hour % 12 || 12;
+            return `${hour12}:${m} ${ampm}`;
+        }
+        
+        // Current tab
+        let currentTab = 'assigned';
+        
+        // Update stats
+        function updateStats() {
+            const jobs = getFieldJobs();
+            const today = new Date().toISOString().split('T')[0];
+            
+            const todayJobs = jobs.filter(j => j.dateOut === today && j.status !== 'completed').length;
+            const inProgress = jobs.filter(j => j.status === 'in-progress').length;
+            const completed = jobs.filter(j => j.status === 'completed').length;
+            const assigned = jobs.filter(j => j.status === 'assigned').length;
+            
+            document.getElementById('statToday').textContent = todayJobs;
+            document.getElementById('statInProgress').textContent = inProgress;
+            document.getElementById('statCompleted').textContent = completed;
+            
+            document.getElementById('badgeAssigned').textContent = assigned;
+            document.getElementById('badgeProgress').textContent = inProgress;
+            document.getElementById('badgeCompleted').textContent = completed;
+        }
+        
+        // Render job card
+        function renderJobCard(job) {
+            const isUrgent = job.priority === 'urgent' || job.priority === 'emergency';
+            const equipment = job.equipment?.map(e => `<span class="equip-tag"><span class="qty">${e.qty}x</span> ${e.description}</span>`).join('') || '';
+            
+            let actions = '';
+            if (job.status === 'assigned') {
+                actions = `
+                    <button class="btn btn-primary" onclick="startJob('${job.id}')">Start Job</button>
+                    <button class="btn btn-outline" onclick="openMaps('${job.address.street}, ${job.address.city}, ${job.address.state}')">Navigate</button>
+                `;
+            } else if (job.status === 'in-progress') {
+                actions = `
+                    <button class="btn btn-success" onclick="openDeliveryModal('${job.id}')">Log Fuel Delivery</button>
+                    <button class="btn btn-outline" onclick="viewDeliveryHistory('${job.id}')">History</button>
+                    <button class="btn btn-outline" onclick="callContact('${job.contactPhone}')">Call</button>
+                `;
+            } else if (job.status === 'completed') {
+                actions = `
+                    <button class="btn btn-outline" onclick="viewDeliveryHistory('${job.id}')">View History</button>
+                `;
+            }
+            
+            return `
+                <div class="job-card ${isUrgent ? 'urgent' : ''}">
+                    <div class="job-card-header">
+                        <div class="job-card-title">
+                            ${isUrgent ? '<span class="priority-dot"></span>' : ''}
+                            ${job.jobSiteName}
+                        </div>
+                        <div class="job-card-meta">
+                            ${job.dateOut} ${job.timeOut ? '• ' + formatTime(job.timeOut) : ''}
+                            ${job.status === 'completed' ? '<span class="status-badge completed" style="margin-left:8px;">Completed</span>' : ''}
+                            ${job.status === 'in-progress' ? '<span class="status-badge in-progress" style="margin-left:8px;">In Progress</span>' : ''}
+                        </div>
+                        <span class="job-type-badge">${formatJobType(job.jobType)}</span>
+                    </div>
+                    
+                    <div class="job-card-body">
+                        <div class="job-detail-row">
+                            <div class="job-detail-icon">📍</div>
+                            <div class="job-detail-content">
+                                <div class="job-detail-label">Location</div>
+                                <div class="job-detail-value">
+                                    <a href="https://maps.google.com/?q=${encodeURIComponent(job.address.street + ', ' + job.address.city + ', ' + job.address.state)}" target="_blank">
+                                        ${job.address.street}<br>${job.address.city}, ${job.address.state} ${job.address.zip}
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="job-detail-row">
+                            <div class="job-detail-icon">👤</div>
+                            <div class="job-detail-content">
+                                <div class="job-detail-label">Site Contact</div>
+                                <div class="job-detail-value">
+                                    ${job.contactName || '-'}
+                                    ${job.contactPhone ? `<br><a href="tel:${job.contactPhone}">${job.contactPhone}</a>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        ${equipment ? `<div class="job-equipment">${equipment}</div>` : ''}
+                        
+                        ${job.status === 'in-progress' || job.status === 'completed' ? `
+                        <div style="display: flex; gap: 16px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);">
+                            <div style="flex: 1; text-align: center; padding: 10px; background: var(--bg-input); border-radius: 8px;">
+                                <div style="font-family: 'Space Mono', monospace; font-size: 1.1rem; color: var(--accent);">${job.totalGallons || 0}</div>
+                                <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Total Gallons</div>
+                            </div>
+                            <div style="flex: 1; text-align: center; padding: 10px; background: var(--bg-input); border-radius: 8px;">
+                                <div style="font-size: 0.9rem; color: var(--text-primary);">${job.lastDelivery ? new Date(job.lastDelivery).toLocaleDateString() : 'None'}</div>
+                                <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Last Delivery</div>
+                            </div>
+                        </div>
+                        ` : ''}
+                        
+                        ${job.instructions ? `
+                        <div class="job-instructions">
+                            <div class="job-instructions-label">Instructions</div>
+                            ${job.instructions}
+                        </div>
+                        ` : ''}
+                    </div>
+                    
+                    ${actions ? `<div class="job-card-actions">${actions}</div>` : ''}
+                </div>
+            `;
+        }
+        
+        // Render jobs list
+        function renderJobs() {
+            const jobs = getFieldJobs();
+            let filtered = [];
+            
+            switch(currentTab) {
+                case 'assigned':
+                    filtered = jobs.filter(j => j.status === 'assigned');
+                    break;
+                case 'in-progress':
+                    filtered = jobs.filter(j => j.status === 'in-progress');
+                    break;
+                case 'completed':
+                    filtered = jobs.filter(j => j.status === 'completed');
+                    break;
+            }
+            
+            const container = document.getElementById('jobsContainer');
+            
+            if (filtered.length === 0) {
+                const messages = {
+                    'assigned': { icon: '📋', title: 'No assigned jobs', text: 'New jobs will appear here when assigned' },
+                    'in-progress': { icon: '🚚', title: 'No jobs in progress', text: 'Start a job to see it here' },
+                    'completed': { icon: '✅', title: 'No completed jobs', text: 'Finished jobs will appear here' }
+                };
+                const msg = messages[currentTab];
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">${msg.icon}</div>
+                        <h3>${msg.title}</h3>
+                        <p>${msg.text}</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = filtered.map(renderJobCard).join('');
+        }
+        
+        // Job actions
+        function startJob(jobId) {
+            const jobs = JSON.parse(localStorage.getItem('fieldWorkerJobs') || '[]');
+            const job = jobs.find(j => j.id === jobId);
+            if (job) {
+                job.status = 'in-progress';
+                job.startedAt = new Date().toISOString();
+                saveFieldJobs(jobs);
+                updateStats();
+                renderJobs();
+            }
+        }
+        
+        function openDeliveryModal(jobId) {
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.id = 'deliveryModal';
+            modal.innerHTML = `
+                <div class="modal-content" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; width: 90%; max-width: 400px; padding: 24px;">
+                    <h3 style="margin-bottom: 20px; font-size: 1.1rem;">Log Fuel Delivery</h3>
+                    
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Gallons Delivered *</label>
+                        <input type="number" id="gallonsInput" step="0.1" min="0" placeholder="0.0" style="width: 100%; padding: 12px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); font-size: 1.1rem; font-family: 'Space Mono', monospace;">
+                    </div>
+                    
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Fuel Type</label>
+                        <select id="fuelTypeInput" style="width: 100%; padding: 12px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); font-size: 0.95rem;">
+                            <option value="diesel">Diesel</option>
+                            <option value="gasoline">Gasoline</option>
+                            <option value="propane">Propane</option>
+                        </select>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px;">Notes (optional)</label>
+                        <textarea id="deliveryNotes" placeholder="Equipment condition, issues, etc." style="width: 100%; padding: 12px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); font-size: 0.9rem; min-height: 80px; resize: vertical; font-family: 'DM Sans', sans-serif;"></textarea>
+                    </div>
+                    
+                    <div style="display: flex; gap: 12px;">
+                        <button onclick="closeDeliveryModal()" style="flex: 1; padding: 14px; background: transparent; border: 1px solid var(--border); border-radius: 8px; color: var(--text-secondary); font-family: 'DM Sans', sans-serif; font-size: 0.95rem; cursor: pointer;">Cancel</button>
+                        <button onclick="submitDelivery('${jobId}')" style="flex: 1; padding: 14px; background: var(--accent); border: none; border-radius: 8px; color: var(--bg-dark); font-family: 'DM Sans', sans-serif; font-size: 0.95rem; font-weight: 600; cursor: pointer;">Log Delivery</button>
+                    </div>
+                </div>
+            `;
+            modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px;';
+            document.body.appendChild(modal);
+            
+            document.getElementById('gallonsInput').focus();
+        }
+        
+        function closeDeliveryModal() {
+            const modal = document.getElementById('deliveryModal');
+            if (modal) modal.remove();
+        }
+        
+        function submitDelivery(jobId) {
+            const gallons = parseFloat(document.getElementById('gallonsInput').value);
+            const fuelType = document.getElementById('fuelTypeInput').value;
+            const notes = document.getElementById('deliveryNotes').value;
+            
+            if (!gallons || gallons <= 0) {
+                alert('Please enter gallons delivered');
+                return;
+            }
+            
+            // Create delivery entry
+            const delivery = {
+                id: 'DEL-' + Date.now(),
+                jobId: jobId,
+                gallons: gallons,
+                fuelType: fuelType,
+                notes: notes,
+                deliveredBy: currentUser.name,
+                deliveredById: currentUser.id,
+                timestamp: new Date().toISOString()
+            };
+            
+            // Save to delivery history
+            let deliveries = JSON.parse(localStorage.getItem('fuelDeliveries') || '[]');
+            deliveries.push(delivery);
+            localStorage.setItem('fuelDeliveries', JSON.stringify(deliveries));
+            
+            // Update job's last delivery date
+            const jobs = JSON.parse(localStorage.getItem('fieldWorkerJobs') || '[]');
+            const job = jobs.find(j => j.id === jobId);
+            if (job) {
+                job.lastDelivery = new Date().toISOString();
+                job.totalGallons = (job.totalGallons || 0) + gallons;
+                saveFieldJobs(jobs);
+            }
+            
+            closeDeliveryModal();
+            renderJobs();
+            
+            // Show confirmation
+            showToast('Delivery logged: ' + gallons + ' gallons');
+        }
+        
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.style.cssText = 'position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: var(--accent); color: var(--bg-dark); padding: 14px 24px; border-radius: 8px; font-weight: 600; z-index: 1001; animation: fadeIn 0.3s;';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+        
+        function viewDeliveryHistory(jobId) {
+            const deliveries = JSON.parse(localStorage.getItem('fuelDeliveries') || '[]');
+            const jobDeliveries = deliveries.filter(d => d.jobId === jobId);
+            
+            let historyHtml = '';
+            if (jobDeliveries.length === 0) {
+                historyHtml = '<p style="color: var(--text-muted); text-align: center; padding: 20px;">No deliveries logged yet</p>';
+            } else {
+                historyHtml = jobDeliveries.reverse().map(d => `
+                    <div style="padding: 12px; background: var(--bg-input); border-radius: 8px; margin-bottom: 10px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                            <span style="font-family: 'Space Mono', monospace; color: var(--accent); font-weight: 600;">${d.gallons} gal</span>
+                            <span style="font-size: 0.8rem; color: var(--text-muted);">${new Date(d.timestamp).toLocaleDateString()} ${new Date(d.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                        </div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary);">${d.fuelType} • ${d.deliveredBy}</div>
+                        ${d.notes ? `<div style="font-size: 0.85rem; margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border);">${d.notes}</div>` : ''}
+                    </div>
+                `).join('');
+            }
+            
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.id = 'historyModal';
+            modal.innerHTML = `
+                <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; width: 90%; max-width: 450px; max-height: 80vh; overflow: hidden; display: flex; flex-direction: column;">
+                    <div style="padding: 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="font-size: 1.1rem;">Delivery History</h3>
+                        <button onclick="document.getElementById('historyModal').remove()" style="background: none; border: none; color: var(--text-secondary); font-size: 1.5rem; cursor: pointer;">&times;</button>
+                    </div>
+                    <div style="padding: 20px; overflow-y: auto;">
+                        ${historyHtml}
+                    </div>
+                </div>
+            `;
+            modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px;';
+            document.body.appendChild(modal);
+        }
+        
+        function openMaps(address) {
+            window.open(`https://maps.google.com/?q=${encodeURIComponent(address)}`, '_blank');
+        }
+        
+        function callContact(phone) {
+            window.location.href = `tel:${phone}`;
+        }
+        
+        // Tab switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentTab = this.dataset.tab;
+                renderJobs();
+            });
+        });
+        
+        // Init
+        updateStats();
+        renderJobs();
+    </script>
+</body>
+</html>
