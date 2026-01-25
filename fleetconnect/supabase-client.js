@@ -3,12 +3,12 @@ const SUPABASE_URL = 'https://ojqoxdsibiutpfhtvyyo.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9qcW94ZHNpYml1dHBmaHR2eXlvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkzMDgzODEsImV4cCI6MjA4NDg4NDM4MX0.GgpdgFyJBVtkAKmp2ZJIoEd5xO5EwA2itnfST-ig1ck';
 
 // Initialize Supabase client
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ============ USER FUNCTIONS ============
 
 async function loginUser(email, password) {
-    const { data, error } = await supabaseClient
+    const { data, error } = await db
         .from('users')
         .select('*')
         .eq('email', email)
@@ -19,13 +19,12 @@ async function loginUser(email, password) {
         return { success: false, error: 'Invalid email or password' };
     }
     
-    // Store in localStorage for session
     localStorage.setItem('currentUser', JSON.stringify(data));
     return { success: true, user: data };
 }
 
 async function getAllUsers() {
-    const { data, error } = await supabase
+    const { data, error } = await db
         .from('users')
         .select('*')
         .order('created_at', { ascending: false });
@@ -34,11 +33,11 @@ async function getAllUsers() {
         console.error('Error fetching users:', error);
         return [];
     }
-    return data;
+    return data || [];
 }
 
 async function createUser(userData) {
-    const { data, error } = await supabase
+    const { data, error } = await db
         .from('users')
         .insert([{
             email: userData.email,
@@ -59,7 +58,7 @@ async function createUser(userData) {
 }
 
 async function updateUser(userId, userData) {
-    const { data, error } = await supabase
+    const { data, error } = await db
         .from('users')
         .update({
             email: userData.email,
@@ -81,7 +80,7 @@ async function updateUser(userId, userData) {
 }
 
 async function deleteUser(userId) {
-    const { error } = await supabase
+    const { error } = await db
         .from('users')
         .delete()
         .eq('id', userId);
@@ -96,7 +95,7 @@ async function deleteUser(userId) {
 // ============ VENDOR FUNCTIONS ============
 
 async function getAllVendors() {
-    const { data, error } = await supabase
+    const { data, error } = await db
         .from('vendors')
         .select('*')
         .order('name');
@@ -105,11 +104,11 @@ async function getAllVendors() {
         console.error('Error fetching vendors:', error);
         return [];
     }
-    return data;
+    return data || [];
 }
 
 async function createVendor(vendorData) {
-    const { data, error } = await supabase
+    const { data, error } = await db
         .from('vendors')
         .insert([vendorData])
         .select()
@@ -125,29 +124,22 @@ async function createVendor(vendorData) {
 // ============ JOB FUNCTIONS ============
 
 async function getAllJobs() {
-    const { data, error } = await supabase
+    const { data, error } = await db
         .from('jobs')
-        .select(`
-            *,
-            equipment (*),
-            assigned_vendor_details:vendors(id, name, company)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
     
     if (error) {
         console.error('Error fetching jobs:', error);
         return [];
     }
-    return data;
+    return data || [];
 }
 
 async function getJobsByStatus(statuses) {
-    const { data, error } = await supabase
+    const { data, error } = await db
         .from('jobs')
-        .select(`
-            *,
-            equipment (*)
-        `)
+        .select('*')
         .in('status', statuses)
         .order('created_at', { ascending: false });
     
@@ -155,16 +147,13 @@ async function getJobsByStatus(statuses) {
         console.error('Error fetching jobs:', error);
         return [];
     }
-    return data;
+    return data || [];
 }
 
 async function getJobsByVendor(vendorId) {
-    const { data, error } = await supabase
+    const { data, error } = await db
         .from('jobs')
-        .select(`
-            *,
-            equipment (*)
-        `)
+        .select('*')
         .eq('assigned_vendor', vendorId)
         .order('created_at', { ascending: false });
     
@@ -172,16 +161,13 @@ async function getJobsByVendor(vendorId) {
         console.error('Error fetching vendor jobs:', error);
         return [];
     }
-    return data;
+    return data || [];
 }
 
 async function getJobsByWorker(workerId) {
-    const { data, error } = await supabase
+    const { data, error } = await db
         .from('jobs')
-        .select(`
-            *,
-            equipment (*)
-        `)
+        .select('*')
         .eq('assigned_worker', workerId)
         .order('created_at', { ascending: false });
     
@@ -189,12 +175,11 @@ async function getJobsByWorker(workerId) {
         console.error('Error fetching worker jobs:', error);
         return [];
     }
-    return data;
+    return data || [];
 }
 
 async function createJob(jobData, equipmentList) {
-    // Insert job
-    const { data: job, error: jobError } = await supabase
+    const { data: job, error: jobError } = await db
         .from('jobs')
         .insert([{
             contract_number: jobData.contractNumber,
@@ -214,17 +199,17 @@ async function createJob(jobData, equipmentList) {
             contact_phone: jobData.contactPhone,
             rental_company: jobData.rentalCompany,
             salesman: jobData.salesman,
-            date_out: jobData.dateOut,
-            time_out: jobData.timeOut,
-            est_return: jobData.estReturn,
-            time_return: jobData.timeReturn,
+            date_out: jobData.dateOut || null,
+            time_out: jobData.timeOut || null,
+            est_return: jobData.estReturn || null,
+            time_return: jobData.timeReturn || null,
             job_type: jobData.jobType,
             priority: jobData.priority,
             instructions: jobData.instructions,
             status: jobData.status || 'pending',
-            assigned_vendor: jobData.assignedVendor,
+            assigned_vendor: jobData.assignedVendor || null,
             allow_open_if_declined: jobData.allowOpenIfDeclined,
-            created_by: jobData.createdBy
+            created_by: jobData.createdBy || null
         }])
         .select()
         .single();
@@ -234,7 +219,6 @@ async function createJob(jobData, equipmentList) {
         return { success: false, error: jobError.message };
     }
     
-    // Insert equipment
     if (equipmentList && equipmentList.length > 0) {
         const equipmentData = equipmentList.map(eq => ({
             job_id: job.id,
@@ -243,13 +227,7 @@ async function createJob(jobData, equipmentList) {
             description: eq.description
         }));
         
-        const { error: eqError } = await supabase
-            .from('equipment')
-            .insert(equipmentData);
-        
-        if (eqError) {
-            console.error('Error adding equipment:', eqError);
-        }
+        await db.from('equipment').insert(equipmentData);
     }
     
     return { success: true, job: job };
@@ -262,7 +240,7 @@ async function updateJobStatus(jobId, status, additionalData = {}) {
         updateData.completed_at = new Date().toISOString();
     }
     
-    const { data, error } = await supabase
+    const { data, error } = await db
         .from('jobs')
         .update(updateData)
         .eq('id', jobId)
@@ -277,7 +255,7 @@ async function updateJobStatus(jobId, status, additionalData = {}) {
 }
 
 async function assignWorkerToJob(jobId, workerId) {
-    const { data, error } = await supabase
+    const { data, error } = await db
         .from('jobs')
         .update({ 
             assigned_worker: workerId,
@@ -297,7 +275,7 @@ async function assignWorkerToJob(jobId, workerId) {
 // ============ DELIVERY FUNCTIONS ============
 
 async function getDeliveriesForJob(jobId) {
-    const { data, error } = await supabase
+    const { data, error } = await db
         .from('deliveries')
         .select('*')
         .eq('job_id', jobId)
@@ -307,34 +285,31 @@ async function getDeliveriesForJob(jobId) {
         console.error('Error fetching deliveries:', error);
         return [];
     }
-    return data;
+    return data || [];
 }
 
 async function getAllDeliveries() {
-    const { data, error } = await supabase
+    const { data, error } = await db
         .from('deliveries')
-        .select(`
-            *,
-            job:jobs(id, job_site_name, contract_number)
-        `)
+        .select('*')
         .order('timestamp', { ascending: false });
     
     if (error) {
         console.error('Error fetching all deliveries:', error);
         return [];
     }
-    return data;
+    return data || [];
 }
 
 async function createDelivery(deliveryData) {
-    const { data, error } = await supabase
+    const { data, error } = await db
         .from('deliveries')
         .insert([{
             job_id: deliveryData.jobId,
             gallons: deliveryData.gallons,
             fuel_type: deliveryData.fuelType,
             notes: deliveryData.notes,
-            delivered_by: deliveryData.deliveredById,
+            delivered_by: deliveryData.deliveredById || null,
             delivered_by_name: deliveryData.deliveredByName
         }])
         .select()
@@ -372,7 +347,6 @@ function checkAuth(allowedRoles = null) {
     return user;
 }
 
-// Format helpers
 function formatJobType(type) {
     const types = {
         'fuel-delivery': 'Fuel Delivery',
@@ -381,7 +355,7 @@ function formatJobType(type) {
         'pickup': 'Pickup',
         'delivery': 'Delivery'
     };
-    return types[type] || type;
+    return types[type] || type || '-';
 }
 
 function formatDate(dateStr) {
