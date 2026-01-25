@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --bg-dark: #0a0a0f;
@@ -30,9 +31,8 @@
         body::before { content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-image: linear-gradient(rgba(168, 85, 247, 0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(168, 85, 247, 0.02) 1px, transparent 1px); background-size: 50px 50px; pointer-events: none; z-index: 0; }
         .container { position: relative; z-index: 1; max-width: 1400px; margin: 0 auto; padding: 40px 20px; }
         
-        /* Nav */
         .nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
-        .logo { font-family: 'Space Mono', monospace; font-size: 1.5rem; color: var(--accent); letter-spacing: -1px; }
+        .logo { font-family: 'Space Mono', monospace; font-size: 1.5rem; color: var(--accent); letter-spacing: -1px; text-decoration: none; }
         .nav-right { display: flex; align-items: center; gap: 24px; }
         .nav-links { display: flex; gap: 24px; }
         .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: color 0.2s; }
@@ -43,15 +43,12 @@
         .logout-btn { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); padding: 8px 16px; border-radius: 6px; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
         .logout-btn:hover { border-color: var(--error); color: var(--error); }
         
-        /* Header */
         .header { margin-bottom: 32px; }
         .header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 8px; }
         .header p { color: var(--text-secondary); }
         
-        /* Stats Grid */
-        .stats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 32px; }
-        @media (max-width: 1000px) { .stats-grid { grid-template-columns: repeat(3, 1fr); } }
-        @media (max-width: 600px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
+        @media (max-width: 800px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
         .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 20px; }
         .stat-label { font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
         .stat-value { font-size: 1.75rem; font-weight: 700; font-family: 'Space Mono', monospace; }
@@ -60,34 +57,20 @@
         .stat-value.warning { color: var(--warning); }
         .stat-value.blue { color: var(--accent-blue); }
         
-        /* Tabs */
-        .tabs { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
-        .tab { padding: 10px 20px; background: transparent; border: 1px solid var(--border); border-radius: 8px; color: var(--text-secondary); font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 500; cursor: pointer; transition: all 0.2s; }
-        .tab:hover { border-color: var(--admin); color: var(--text-primary); }
-        .tab.active { background: var(--admin); border-color: var(--admin); color: white; }
-        
-        /* Content Panels */
-        .panel { display: none; }
-        .panel.active { display: block; }
-        
-        /* Table styles */
         .table-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
         .table-header-row { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid var(--border); }
         .table-title { font-size: 1.1rem; font-weight: 600; }
-        .table-grid { display: grid; grid-template-columns: 2fr 2fr 1fr 1fr 120px; gap: 16px; padding: 14px 24px; font-size: 0.85rem; }
+        .table-grid { display: grid; grid-template-columns: 2fr 2fr 1fr 1fr 150px; gap: 16px; padding: 14px 24px; font-size: 0.85rem; }
         .table-grid.header { background: var(--bg-input); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); font-weight: 600; }
         .table-grid.row { border-bottom: 1px solid var(--border); transition: background 0.2s; }
         .table-grid.row:hover { background: var(--bg-hover); }
-        .table-grid.row:last-child { border-bottom: none; }
         
-        /* Badges */
         .role-badge { display: inline-block; padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
         .role-badge.admin { background: rgba(168, 85, 247, 0.15); color: var(--admin); }
         .role-badge.rental { background: rgba(0, 168, 255, 0.15); color: var(--accent-blue); }
         .role-badge.vendor { background: rgba(0, 212, 170, 0.15); color: var(--accent); }
         .role-badge.fieldworker { background: rgba(255, 170, 0, 0.15); color: var(--warning); }
         
-        /* Buttons */
         .btn { padding: 8px 16px; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 500; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
         .btn-primary { background: var(--admin); color: white; border: none; }
         .btn-primary:hover { box-shadow: 0 4px 16px rgba(168, 85, 247, 0.3); }
@@ -97,7 +80,6 @@
         .btn-danger { background: transparent; border: 1px solid var(--error); color: var(--error); }
         .btn-danger:hover { background: var(--error); color: white; }
         
-        /* Modal */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 100; justify-content: center; align-items: center; padding: 20px; }
         .modal-overlay.show { display: flex; }
         .modal { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 500px; }
@@ -111,21 +93,20 @@
         .form-group label { display: block; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px; }
         .form-group input, .form-group select { width: 100%; padding: 12px 14px; font-family: 'DM Sans', sans-serif; font-size: 0.95rem; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); }
         .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--admin); }
-        .form-group select { cursor: pointer; }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+        .loading { text-align: center; padding: 40px; color: var(--text-secondary); }
         
-        /* Responsive */
         @media (max-width: 800px) {
             .table-grid { grid-template-columns: 1fr; gap: 8px; }
             .table-grid.header { display: none; }
-            .table-grid.row > div::before { content: attr(data-label); display: block; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 2px; }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <nav class="nav">
-            <a href="index.html" class="logo" style="text-decoration: none;">FLEETCONNECT</a>
+            <a href="index.html" class="logo">FLEETCONNECT</a>
             <div class="nav-right">
                 <div class="nav-links">
                     <a href="index.html">Home</a>
@@ -148,107 +129,40 @@
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-label">Total Users</div>
-                <div class="stat-value admin" id="statUsers">0</div>
+                <div class="stat-value admin" id="statUsers">-</div>
             </div>
             <div class="stat-card">
                 <div class="stat-label">Rental Companies</div>
-                <div class="stat-value blue" id="statRentals">0</div>
+                <div class="stat-value blue" id="statRentals">-</div>
             </div>
             <div class="stat-card">
                 <div class="stat-label">Vendors</div>
-                <div class="stat-value accent" id="statVendors">0</div>
+                <div class="stat-value accent" id="statVendors">-</div>
             </div>
             <div class="stat-card">
                 <div class="stat-label">Field Workers</div>
-                <div class="stat-value warning" id="statWorkers">0</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Active Jobs</div>
-                <div class="stat-value" id="statJobs">0</div>
+                <div class="stat-value warning" id="statWorkers">-</div>
             </div>
         </div>
         
-        <div class="tabs">
-            <button class="tab active" onclick="showPanel('users')">Users</button>
-            <button class="tab" onclick="showPanel('rentals')">Rental Companies</button>
-            <button class="tab" onclick="showPanel('vendors')">Vendors</button>
-            <button class="tab" onclick="showPanel('workers')">Field Workers</button>
-        </div>
-        
-        <!-- Users Panel -->
-        <div class="panel active" id="panel-users">
-            <div class="table-card">
-                <div class="table-header-row">
-                    <span class="table-title">All Users</span>
-                    <button class="btn btn-primary" onclick="openAddUserModal()">+ Add User</button>
-                </div>
-                <div class="table-grid header">
-                    <div>Name</div>
-                    <div>Email</div>
-                    <div>Role</div>
-                    <div>Company</div>
-                    <div>Actions</div>
-                </div>
-                <div id="usersTableBody"></div>
+        <div class="table-card">
+            <div class="table-header-row">
+                <span class="table-title">All Users</span>
+                <button class="btn btn-primary" onclick="openAddUserModal()">+ Add User</button>
             </div>
-        </div>
-        
-        <!-- Rental Companies Panel -->
-        <div class="panel" id="panel-rentals">
-            <div class="table-card">
-                <div class="table-header-row">
-                    <span class="table-title">Rental Company Users</span>
-                    <button class="btn btn-primary" onclick="openAddUserModal('rental')">+ Add Rental User</button>
-                </div>
-                <div class="table-grid header">
-                    <div>Name</div>
-                    <div>Email</div>
-                    <div>Role</div>
-                    <div>Company</div>
-                    <div>Actions</div>
-                </div>
-                <div id="rentalsTableBody"></div>
+            <div class="table-grid header">
+                <div>Name</div>
+                <div>Email</div>
+                <div>Role</div>
+                <div>Company</div>
+                <div>Actions</div>
             </div>
-        </div>
-        
-        <!-- Vendors Panel -->
-        <div class="panel" id="panel-vendors">
-            <div class="table-card">
-                <div class="table-header-row">
-                    <span class="table-title">Vendor Users</span>
-                    <button class="btn btn-primary" onclick="openAddUserModal('vendor')">+ Add Vendor</button>
-                </div>
-                <div class="table-grid header">
-                    <div>Name</div>
-                    <div>Email</div>
-                    <div>Role</div>
-                    <div>Company</div>
-                    <div>Actions</div>
-                </div>
-                <div id="vendorsTableBody"></div>
-            </div>
-        </div>
-        
-        <!-- Field Workers Panel -->
-        <div class="panel" id="panel-workers">
-            <div class="table-card">
-                <div class="table-header-row">
-                    <span class="table-title">Field Workers</span>
-                    <button class="btn btn-primary" onclick="openAddUserModal('fieldworker')">+ Add Field Worker</button>
-                </div>
-                <div class="table-grid header">
-                    <div>Name</div>
-                    <div>Email</div>
-                    <div>Role</div>
-                    <div>Company (Vendor)</div>
-                    <div>Actions</div>
-                </div>
-                <div id="workersTableBody"></div>
+            <div id="usersTableBody">
+                <div class="loading">Loading users...</div>
             </div>
         </div>
     </div>
     
-    <!-- Add/Edit User Modal -->
     <div class="modal-overlay" id="userModal">
         <div class="modal">
             <div class="modal-header">
@@ -274,7 +188,7 @@
                         </div>
                         <div class="form-group">
                             <label>Role</label>
-                            <select id="formRole" onchange="toggleVendorSelect()">
+                            <select id="formRole">
                                 <option value="admin">Admin</option>
                                 <option value="rental">Rental Company</option>
                                 <option value="vendor">Vendor</option>
@@ -286,12 +200,6 @@
                         <label>Company Name</label>
                         <input type="text" id="formCompany" required>
                     </div>
-                    <div class="form-group" id="vendorSelectGroup" style="display:none;">
-                        <label>Belongs to Vendor</label>
-                        <select id="formVendorId">
-                            <option value="">Select vendor...</option>
-                        </select>
-                    </div>
                 </form>
             </div>
             <div class="modal-footer">
@@ -301,94 +209,61 @@
         </div>
     </div>
     
+    <script src="supabase-client.js"></script>
     <script>
         // Check auth
-        const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
-        if (!currentUser || currentUser.role !== 'admin') {
-            window.location.href = 'login.html';
-        } else {
+        const currentUser = checkAuth(['admin']);
+        if (currentUser) {
             document.getElementById('userName').textContent = currentUser.name;
         }
         
-        function logout() {
-            localStorage.removeItem('currentUser');
-            window.location.href = 'login.html';
-        }
-        
-        // Get users
-        function getUsers() {
-            return JSON.parse(localStorage.getItem('users') || '[]');
-        }
-        
-        function saveUsers(users) {
-            localStorage.setItem('users', JSON.stringify(users));
-        }
-        
-        // Update stats
-        function updateStats() {
-            const users = getUsers();
-            document.getElementById('statUsers').textContent = users.length;
-            document.getElementById('statRentals').textContent = users.filter(u => u.role === 'rental').length;
-            document.getElementById('statVendors').textContent = users.filter(u => u.role === 'vendor').length;
-            document.getElementById('statWorkers').textContent = users.filter(u => u.role === 'fieldworker').length;
-            
-            const jobs = JSON.parse(localStorage.getItem('vendorJobs') || '[]');
-            const activeJobs = jobs.filter(j => j.status === 'assigned' || j.status === 'accepted' || j.status === 'in-progress').length;
-            document.getElementById('statJobs').textContent = activeJobs || '0';
-        }
-        
-        // Render user row
-        function renderUserRow(user) {
-            return `
-                <div class="table-grid row">
-                    <div data-label="Name">${user.name}</div>
-                    <div data-label="Email">${user.email}</div>
-                    <div data-label="Role"><span class="role-badge ${user.role}">${user.role}</span></div>
-                    <div data-label="Company">${user.company || '-'}</div>
-                    <div data-label="Actions">
-                        <button class="btn btn-small btn-outline" onclick="editUser('${user.id}')">Edit</button>
-                        <button class="btn btn-small btn-danger" onclick="deleteUser('${user.id}')">Delete</button>
-                    </div>
-                </div>
-            `;
-        }
-        
-        // Render tables
-        function renderTables() {
-            const users = getUsers();
-            
-            document.getElementById('usersTableBody').innerHTML = users.map(renderUserRow).join('') || '<div style="padding:24px;text-align:center;color:var(--text-muted);">No users found</div>';
-            document.getElementById('rentalsTableBody').innerHTML = users.filter(u => u.role === 'rental').map(renderUserRow).join('') || '<div style="padding:24px;text-align:center;color:var(--text-muted);">No rental company users</div>';
-            document.getElementById('vendorsTableBody').innerHTML = users.filter(u => u.role === 'vendor').map(renderUserRow).join('') || '<div style="padding:24px;text-align:center;color:var(--text-muted);">No vendors</div>';
-            document.getElementById('workersTableBody').innerHTML = users.filter(u => u.role === 'fieldworker').map(renderUserRow).join('') || '<div style="padding:24px;text-align:center;color:var(--text-muted);">No field workers</div>';
-        }
-        
-        // Panel switching
-        function showPanel(panel) {
-            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.getElementById('panel-' + panel).classList.add('active');
-            event.target.classList.add('active');
-        }
-        
-        // Modal functions
+        let allUsers = [];
         let editingUserId = null;
         
-        function openAddUserModal(presetRole) {
+        async function loadUsers() {
+            allUsers = await getAllUsers();
+            updateStats();
+            renderTable();
+        }
+        
+        function updateStats() {
+            document.getElementById('statUsers').textContent = allUsers.length;
+            document.getElementById('statRentals').textContent = allUsers.filter(u => u.role === 'rental').length;
+            document.getElementById('statVendors').textContent = allUsers.filter(u => u.role === 'vendor').length;
+            document.getElementById('statWorkers').textContent = allUsers.filter(u => u.role === 'fieldworker').length;
+        }
+        
+        function renderTable() {
+            const tbody = document.getElementById('usersTableBody');
+            
+            if (allUsers.length === 0) {
+                tbody.innerHTML = '<div class="loading">No users found</div>';
+                return;
+            }
+            
+            tbody.innerHTML = allUsers.map(user => `
+                <div class="table-grid row">
+                    <div>${user.name}</div>
+                    <div>${user.email}</div>
+                    <div><span class="role-badge ${user.role}">${user.role}</span></div>
+                    <div>${user.company || '-'}</div>
+                    <div>
+                        <button class="btn btn-small btn-outline" onclick="editUser('${user.id}')">Edit</button>
+                        <button class="btn btn-small btn-danger" onclick="removeUser('${user.id}')">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function openAddUserModal() {
             editingUserId = null;
             document.getElementById('modalTitle').textContent = 'Add User';
             document.getElementById('userForm').reset();
-            if (presetRole) {
-                document.getElementById('formRole').value = presetRole;
-            }
-            toggleVendorSelect();
-            populateVendorDropdown();
             document.getElementById('userModal').classList.add('show');
         }
         
         function editUser(userId) {
-            const users = getUsers();
-            const user = users.find(u => u.id === userId);
+            const user = allUsers.find(u => u.id === userId);
             if (!user) return;
             
             editingUserId = userId;
@@ -398,13 +273,6 @@
             document.getElementById('formPassword').value = user.password;
             document.getElementById('formRole').value = user.role;
             document.getElementById('formCompany').value = user.company || '';
-            
-            toggleVendorSelect();
-            populateVendorDropdown();
-            if (user.vendorId) {
-                document.getElementById('formVendorId').value = user.vendorId;
-            }
-            
             document.getElementById('userModal').classList.add('show');
         }
         
@@ -412,24 +280,8 @@
             document.getElementById('userModal').classList.remove('show');
         }
         
-        function toggleVendorSelect() {
-            const role = document.getElementById('formRole').value;
-            document.getElementById('vendorSelectGroup').style.display = role === 'fieldworker' ? 'block' : 'none';
-        }
-        
-        function populateVendorDropdown() {
-            const users = getUsers();
-            const vendors = users.filter(u => u.role === 'vendor');
-            const select = document.getElementById('formVendorId');
-            select.innerHTML = '<option value="">Select vendor...</option>' + 
-                vendors.map(v => `<option value="${v.vendorId || v.id}">${v.company}</option>`).join('');
-        }
-        
-        function saveUser() {
-            const users = getUsers();
-            
+        async function saveUser() {
             const userData = {
-                id: editingUserId || 'user-' + Date.now(),
                 name: document.getElementById('formName').value,
                 email: document.getElementById('formEmail').value,
                 password: document.getElementById('formPassword').value,
@@ -437,37 +289,34 @@
                 company: document.getElementById('formCompany').value
             };
             
-            if (userData.role === 'vendor') {
-                userData.vendorId = userData.id;
-            } else if (userData.role === 'fieldworker') {
-                userData.vendorId = document.getElementById('formVendorId').value;
-            }
-            
+            let result;
             if (editingUserId) {
-                const idx = users.findIndex(u => u.id === editingUserId);
-                if (idx !== -1) users[idx] = userData;
+                result = await updateUser(editingUserId, userData);
             } else {
-                users.push(userData);
+                result = await createUser(userData);
             }
             
-            saveUsers(users);
-            closeModal();
-            updateStats();
-            renderTables();
+            if (result.success) {
+                closeModal();
+                await loadUsers();
+            } else {
+                alert('Error: ' + result.error);
+            }
         }
         
-        function deleteUser(userId) {
+        async function removeUser(userId) {
             if (!confirm('Delete this user? This cannot be undone.')) return;
-            let users = getUsers();
-            users = users.filter(u => u.id !== userId);
-            saveUsers(users);
-            updateStats();
-            renderTables();
+            
+            const result = await deleteUser(userId);
+            if (result.success) {
+                await loadUsers();
+            } else {
+                alert('Error: ' + result.error);
+            }
         }
         
-        // Init
-        updateStats();
-        renderTables();
+        // Load on start
+        loadUsers();
     </script>
 </body>
 </html>

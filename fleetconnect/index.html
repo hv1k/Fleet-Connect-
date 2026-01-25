@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --bg-dark: #0a0a0f;
@@ -51,7 +52,6 @@
             padding: 40px 20px;
         }
 
-        /* Nav */
         .nav {
             display: flex;
             justify-content: space-between;
@@ -65,6 +65,7 @@
             font-size: 1.5rem;
             color: var(--accent);
             letter-spacing: -1px;
+            text-decoration: none;
         }
         .nav-right {
             display: flex;
@@ -101,13 +102,13 @@
             font-size: 0.85rem;
             cursor: pointer;
             transition: all 0.2s;
+            text-decoration: none;
         }
         .logout-btn:hover {
             border-color: var(--text-secondary);
             color: var(--text-primary);
         }
 
-        /* Hero */
         .hero {
             text-align: center;
             margin-bottom: 60px;
@@ -127,7 +128,6 @@
             margin: 0 auto;
         }
 
-        /* Quick Actions Grid */
         .section-title {
             font-size: 0.8rem;
             font-weight: 600;
@@ -185,7 +185,6 @@
             font-weight: 500;
         }
 
-        /* Stats Row */
         .stats-row {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -218,7 +217,6 @@
             margin-top: 4px;
         }
 
-        /* Not logged in state */
         .login-prompt {
             text-align: center;
             padding: 80px 20px;
@@ -246,199 +244,201 @@
             transform: translateY(-2px);
             box-shadow: 0 8px 24px var(--accent-glow);
         }
+
+        .loading-spinner {
+            text-align: center;
+            padding: 60px;
+            color: var(--text-secondary);
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <nav class="nav">
-            <div class="logo">FLEETCONNECT</div>
+            <a href="index.html" class="logo">FLEETCONNECT</a>
             <div class="nav-right" id="navRight">
-                <!-- Populated by JS -->
+                <div class="loading-spinner">Loading...</div>
             </div>
         </nav>
 
         <div id="mainContent">
-            <!-- Populated by JS based on login state -->
+            <div class="loading-spinner">Loading...</div>
         </div>
     </div>
 
+    <script src="supabase-client.js"></script>
     <script>
-        const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+        const currentUser = getCurrentUser();
 
-        function logout() {
-            localStorage.removeItem('currentUser');
-            window.location.href = 'login.html';
-        }
-
-        function getStats() {
-            const jobs = JSON.parse(localStorage.getItem('vendorJobs') || '[]');
-            const workOrders = JSON.parse(localStorage.getItem('workOrders') || '[]');
-            const users = JSON.parse(localStorage.getItem('users') || '[]');
-            
-            const allJobs = [...jobs, ...workOrders];
-            return {
-                total: allJobs.length || 4,
-                active: allJobs.filter(j => j.status === 'assigned' || j.status === 'accepted' || j.status === 'in-progress').length || 3,
-                completed: allJobs.filter(j => j.status === 'completed').length || 1,
-                users: users.length || 4
-            };
-        }
-
-        if (currentUser) {
-            // Logged in - show nav
-            document.getElementById('navRight').innerHTML = `
-                <div class="user-info">
-                    <span class="role-badge ${currentUser.role}">${currentUser.role}</span>
-                    <span class="user-name">${currentUser.name}</span>
-                </div>
-                <button class="logout-btn" onclick="logout()">Logout</button>
-            `;
-
-            // Show role-specific content
-            const stats = getStats();
-            let actionsHtml = '';
-            let welcomeText = '';
-
-            if (currentUser.role === 'admin') {
-                welcomeText = 'Admin Control Center';
-                actionsHtml = `
-                    <a href="admin-dashboard.html" class="action-card">
-                        <div class="action-icon">👥</div>
-                        <h3>Manage Users</h3>
-                        <p>Create and manage accounts for rental companies, vendors, and field workers.</p>
-                        <span class="arrow">Open Dashboard →</span>
-                    </a>
-                    <a href="job-history.html" class="action-card">
-                        <div class="action-icon">📋</div>
-                        <h3>All Jobs</h3>
-                        <p>View and search all work orders across the platform.</p>
-                        <span class="arrow">View Jobs →</span>
-                    </a>
-                    <a href="create-job.html" class="action-card">
-                        <div class="action-icon">➕</div>
-                        <h3>Create Work Order</h3>
-                        <p>Manually create a work order on behalf of a rental company.</p>
-                        <span class="arrow">Create Order →</span>
-                    </a>
+        async function loadDashboard() {
+            if (currentUser) {
+                // Logged in - show nav
+                document.getElementById('navRight').innerHTML = `
+                    <div class="user-info">
+                        <span class="role-badge ${currentUser.role}">${currentUser.role}</span>
+                        <span class="user-name">${currentUser.name}</span>
+                    </div>
+                    <button class="logout-btn" onclick="logout()">Logout</button>
                 `;
-            } else if (currentUser.role === 'rental') {
-                welcomeText = 'Rental Company Portal';
-                actionsHtml = `
-                    <a href="rental-dashboard.html" class="action-card">
-                        <div class="action-icon">📊</div>
-                        <h3>My Orders</h3>
-                        <p>Track your active work orders, view delivery history, and close completed jobs.</p>
-                        <span class="arrow">View Orders →</span>
-                    </a>
-                    <a href="create-job.html" class="action-card">
-                        <div class="action-icon">➕</div>
-                        <h3>Create Work Order</h3>
-                        <p>Submit a new fuel delivery, equipment tow, or service request.</p>
-                        <span class="arrow">Create Order →</span>
-                    </a>
-                    <a href="job-history.html" class="action-card">
-                        <div class="action-icon">📋</div>
-                        <h3>Full History</h3>
-                        <p>Search all past work orders for audits and records.</p>
-                        <span class="arrow">View History →</span>
-                    </a>
+
+                // Load stats from database
+                const jobs = await getAllJobs();
+                const users = await getAllUsers();
+                const deliveries = await getAllDeliveries();
+
+                const stats = {
+                    total: jobs.length,
+                    active: jobs.filter(j => ['assigned', 'accepted', 'in-progress'].includes(j.status)).length,
+                    completed: jobs.filter(j => j.status === 'completed').length,
+                    users: users.length
+                };
+
+                let actionsHtml = '';
+                let welcomeText = '';
+
+                if (currentUser.role === 'admin') {
+                    welcomeText = 'Admin Control Center';
+                    actionsHtml = `
+                        <a href="admin-dashboard.html" class="action-card">
+                            <div class="action-icon">👥</div>
+                            <h3>Manage Users</h3>
+                            <p>Create and manage accounts for rental companies, vendors, and field workers.</p>
+                            <span class="arrow">Open Dashboard →</span>
+                        </a>
+                        <a href="job-history.html" class="action-card">
+                            <div class="action-icon">📋</div>
+                            <h3>All Jobs</h3>
+                            <p>View and search all work orders across the platform.</p>
+                            <span class="arrow">View Jobs →</span>
+                        </a>
+                        <a href="create-job.html" class="action-card">
+                            <div class="action-icon">➕</div>
+                            <h3>Create Work Order</h3>
+                            <p>Manually create a work order on behalf of a rental company.</p>
+                            <span class="arrow">Create Order →</span>
+                        </a>
+                    `;
+                } else if (currentUser.role === 'rental') {
+                    welcomeText = 'Rental Company Portal';
+                    actionsHtml = `
+                        <a href="rental-dashboard.html" class="action-card">
+                            <div class="action-icon">📊</div>
+                            <h3>My Orders</h3>
+                            <p>Track your active work orders, view delivery history, and close completed jobs.</p>
+                            <span class="arrow">View Orders →</span>
+                        </a>
+                        <a href="create-job.html" class="action-card">
+                            <div class="action-icon">➕</div>
+                            <h3>Create Work Order</h3>
+                            <p>Submit a new fuel delivery, equipment tow, or service request.</p>
+                            <span class="arrow">Create Order →</span>
+                        </a>
+                        <a href="job-history.html" class="action-card">
+                            <div class="action-icon">📋</div>
+                            <h3>Full History</h3>
+                            <p>Search all past work orders for audits and records.</p>
+                            <span class="arrow">View History →</span>
+                        </a>
+                    `;
+                } else if (currentUser.role === 'vendor') {
+                    welcomeText = 'Vendor Dashboard';
+                    actionsHtml = `
+                        <a href="vendor-dashboard.html" class="action-card">
+                            <div class="action-icon">🚚</div>
+                            <h3>My Jobs</h3>
+                            <p>View assigned jobs, accept or decline, and manage your work queue.</p>
+                            <span class="arrow">Open Dashboard →</span>
+                        </a>
+                        <a href="job-history.html" class="action-card">
+                            <div class="action-icon">📋</div>
+                            <h3>Job History</h3>
+                            <p>Search completed jobs and review past work orders.</p>
+                            <span class="arrow">View History →</span>
+                        </a>
+                    `;
+                } else if (currentUser.role === 'fieldworker') {
+                    welcomeText = 'Field Worker Portal';
+                    actionsHtml = `
+                        <a href="field-worker.html" class="action-card">
+                            <div class="action-icon">📱</div>
+                            <h3>My Assignments</h3>
+                            <p>View your assigned jobs, get directions, and log fuel deliveries.</p>
+                            <span class="arrow">View Jobs →</span>
+                        </a>
+                    `;
+                }
+
+                document.getElementById('mainContent').innerHTML = `
+                    <div class="hero">
+                        <h1>Welcome back, <span>${currentUser.name.split(' ')[0]}</span></h1>
+                        <p>${welcomeText}</p>
+                    </div>
+
+                    <div class="section-title">Quick Actions</div>
+                    <div class="actions-grid">
+                        ${actionsHtml}
+                    </div>
+
+                    <div class="section-title">Overview</div>
+                    <div class="stats-row">
+                        <div class="stat-card">
+                            <div class="stat-value">${stats.total}</div>
+                            <div class="stat-label">Total Jobs</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${stats.active}</div>
+                            <div class="stat-label">Active</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${stats.completed}</div>
+                            <div class="stat-label">Completed</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${stats.users}</div>
+                            <div class="stat-label">Users</div>
+                        </div>
+                    </div>
                 `;
-            } else if (currentUser.role === 'vendor') {
-                welcomeText = 'Vendor Dashboard';
-                actionsHtml = `
-                    <a href="vendor-dashboard.html" class="action-card">
-                        <div class="action-icon">🚚</div>
-                        <h3>My Jobs</h3>
-                        <p>View assigned jobs, accept or decline, and manage your work queue.</p>
-                        <span class="arrow">Open Dashboard →</span>
-                    </a>
-                    <a href="job-history.html" class="action-card">
-                        <div class="action-icon">📋</div>
-                        <h3>Job History</h3>
-                        <p>Search completed jobs and review past work orders.</p>
-                        <span class="arrow">View History →</span>
-                    </a>
+            } else {
+                // Not logged in
+                document.getElementById('navRight').innerHTML = `
+                    <a href="login.html" class="logout-btn">Sign In</a>
                 `;
-            } else if (currentUser.role === 'fieldworker') {
-                welcomeText = 'Field Worker Portal';
-                actionsHtml = `
-                    <a href="field-worker.html" class="action-card">
-                        <div class="action-icon">📱</div>
-                        <h3>My Assignments</h3>
-                        <p>View your assigned jobs, get directions, and mark jobs complete.</p>
-                        <span class="arrow">View Jobs →</span>
-                    </a>
+
+                document.getElementById('mainContent').innerHTML = `
+                    <div class="hero">
+                        <h1>Fleet Management <span>Simplified</span></h1>
+                        <p>Connect rental companies with vendors and field workers. Streamline fuel delivery, equipment towing, and service requests.</p>
+                    </div>
+
+                    <div class="actions-grid">
+                        <div class="action-card disabled">
+                            <div class="action-icon">🏢</div>
+                            <h3>Rental Companies</h3>
+                            <p>Create work orders, assign vendors, and track job progress in real-time.</p>
+                        </div>
+                        <div class="action-card disabled">
+                            <div class="action-icon">🚚</div>
+                            <h3>Vendors</h3>
+                            <p>Receive job assignments, manage field workers, and complete service requests.</p>
+                        </div>
+                        <div class="action-card disabled">
+                            <div class="action-icon">👷</div>
+                            <h3>Field Workers</h3>
+                            <p>Mobile-friendly job list with navigation, contact info, and delivery logging.</p>
+                        </div>
+                    </div>
+
+                    <div class="login-prompt">
+                        <h2>Ready to get started?</h2>
+                        <p>Sign in to access your dashboard</p>
+                        <a href="login.html" class="login-btn">Sign In</a>
+                    </div>
                 `;
             }
-
-            document.getElementById('mainContent').innerHTML = `
-                <div class="hero">
-                    <h1>Welcome back, <span>${currentUser.name.split(' ')[0]}</span></h1>
-                    <p>${welcomeText}</p>
-                </div>
-
-                <div class="section-title">Quick Actions</div>
-                <div class="actions-grid">
-                    ${actionsHtml}
-                </div>
-
-                <div class="section-title">Overview</div>
-                <div class="stats-row">
-                    <div class="stat-card">
-                        <div class="stat-value">${stats.total}</div>
-                        <div class="stat-label">Total Jobs</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">${stats.active}</div>
-                        <div class="stat-label">Active</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">${stats.completed}</div>
-                        <div class="stat-label">Completed</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">${stats.users}</div>
-                        <div class="stat-label">Users</div>
-                    </div>
-                </div>
-            `;
-        } else {
-            // Not logged in
-            document.getElementById('navRight').innerHTML = `
-                <a href="login.html" class="logout-btn">Sign In</a>
-            `;
-
-            document.getElementById('mainContent').innerHTML = `
-                <div class="hero">
-                    <h1>Fleet Management <span>Simplified</span></h1>
-                    <p>Connect rental companies with vendors and field workers. Streamline fuel delivery, equipment towing, and service requests.</p>
-                </div>
-
-                <div class="actions-grid">
-                    <div class="action-card disabled">
-                        <div class="action-icon">🏢</div>
-                        <h3>Rental Companies</h3>
-                        <p>Create work orders, assign vendors, and track job progress in real-time.</p>
-                    </div>
-                    <div class="action-card disabled">
-                        <div class="action-icon">🚚</div>
-                        <h3>Vendors</h3>
-                        <p>Receive job assignments, manage field workers, and complete service requests.</p>
-                    </div>
-                    <div class="action-card disabled">
-                        <div class="action-icon">👷</div>
-                        <h3>Field Workers</h3>
-                        <p>Mobile-friendly job list with navigation, contact info, and completion tracking.</p>
-                    </div>
-                </div>
-
-                <div class="login-prompt">
-                    <h2>Ready to get started?</h2>
-                    <p>Sign in to access your dashboard</p>
-                    <a href="login.html" class="login-btn">Sign In</a>
-                </div>
-            `;
         }
+
+        loadDashboard();
     </script>
 </body>
 </html>

@@ -7,189 +7,169 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root {
-            --bg-dark: #0a0a0f;
-            --bg-card: #12121a;
-            --bg-input: #1a1a24;
-            --bg-hover: #1e1e2a;
-            --border: #2a2a3a;
-            --text-primary: #ffffff;
-            --text-secondary: #8a8a9a;
-            --text-muted: #5a5a6a;
-            --accent: #00d4aa;
-            --accent-glow: rgba(0, 212, 170, 0.3);
-            --accent-blue: #00a8ff;
-            --warning: #ffaa00;
-            --error: #ff6b6b;
-            --success: #00d4aa;
-        }
+        :root { --bg-dark: #0a0a0f; --bg-card: #12121a; --bg-input: #1a1a24; --bg-hover: #1e1e2a; --border: #2a2a3a; --text-primary: #ffffff; --text-secondary: #8a8a9a; --text-muted: #5a5a6a; --accent: #00d4aa; --accent-glow: rgba(0, 212, 170, 0.3); --accent-blue: #00a8ff; --warning: #ffaa00; --error: #ff6b6b; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'DM Sans', sans-serif; background: var(--bg-dark); color: var(--text-primary); min-height: 100vh; line-height: 1.6; }
         body::before { content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-image: linear-gradient(rgba(0, 212, 170, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 212, 170, 0.03) 1px, transparent 1px); background-size: 50px 50px; pointer-events: none; z-index: 0; }
         .container { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
         .nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
-        .logo { font-family: 'Space Mono', monospace; font-size: 1.5rem; color: var(--accent); letter-spacing: -1px; }
+        .logo { font-family: 'Space Mono', monospace; font-size: 1.5rem; color: var(--accent); letter-spacing: -1px; text-decoration: none; }
+        .nav-right { display: flex; align-items: center; gap: 24px; }
         .nav-links { display: flex; gap: 24px; }
-        .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: color 0.2s; }
+        .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; font-weight: 500; }
         .nav-links a:hover, .nav-links a.active { color: var(--accent); }
+        .logout-btn { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-family: 'DM Sans', sans-serif; }
         .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; }
-        .header-left h1 { font-size: 2rem; font-weight: 700; margin-bottom: 8px; }
-        .header-left p { color: var(--text-secondary); }
-        .new-order-btn { padding: 12px 24px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 600; background: var(--accent); color: var(--bg-dark); border: none; border-radius: 8px; cursor: pointer; text-decoration: none; transition: all 0.2s; }
-        .new-order-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px var(--accent-glow); }
+        .header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 8px; }
+        .header p { color: var(--text-secondary); }
         .search-section { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 24px; }
         .search-row { display: flex; gap: 16px; flex-wrap: wrap; }
-        .search-input-wrapper { flex: 1; min-width: 280px; position: relative; }
-        .search-input-wrapper::before { content: '🔍'; position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 1rem; opacity: 0.5; }
-        .search-input { width: 100%; padding: 12px 14px 12px 44px; font-family: 'DM Sans', sans-serif; font-size: 0.95rem; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); transition: all 0.2s; }
-        .search-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
-        .search-input::placeholder { color: var(--text-muted); }
-        .filter-select, .date-input { padding: 12px 14px; font-family: 'DM Sans', sans-serif; font-size: 0.95rem; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); }
-        .filter-select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%238a8a9a' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; background-size: 18px; padding-right: 40px; }
-        .filter-select:focus, .date-input:focus { outline: none; border-color: var(--accent); }
-        .filter-select option { background: var(--bg-card); }
-        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
-        @media (max-width: 800px) { .stats-row { grid-template-columns: repeat(2, 1fr); } }
-        @media (max-width: 500px) { .stats-row { grid-template-columns: 1fr; } }
-        .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 20px; }
-        .stat-label { font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
-        .stat-value { font-size: 1.75rem; font-weight: 700; font-family: 'Space Mono', monospace; }
-        .stat-value.pending { color: var(--warning); }
-        .stat-value.completed { color: var(--success); }
-        .stat-value.cancelled { color: var(--error); }
-        .table-wrapper { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
-        .table-header { display: grid; grid-template-columns: 140px 1fr 180px 140px 120px 100px; gap: 16px; padding: 16px 24px; background: var(--bg-input); border-bottom: 1px solid var(--border); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); }
-        .table-body { max-height: 600px; overflow-y: auto; }
-        .table-row { display: grid; grid-template-columns: 140px 1fr 180px 140px 120px 100px; gap: 16px; padding: 20px 24px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.2s; }
-        .table-row:last-child { border-bottom: none; }
-        .table-row:hover { background: var(--bg-hover); }
-        .contract-num { font-family: 'Space Mono', monospace; font-size: 0.9rem; color: var(--accent); }
-        .job-site { font-weight: 500; }
-        .job-site-address { font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px; }
-        .customer-name { font-size: 0.9rem; }
-        .job-type { font-size: 0.85rem; color: var(--text-secondary); }
-        .date { font-size: 0.9rem; }
-        .status-badge { display: inline-block; padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .search-input { flex: 1; min-width: 280px; padding: 12px 14px; font-family: 'DM Sans', sans-serif; font-size: 0.95rem; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); }
+        .search-input:focus { outline: none; border-color: var(--accent); }
+        .filter-select { padding: 12px 14px; font-family: 'DM Sans', sans-serif; font-size: 0.95rem; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); cursor: pointer; }
+        .jobs-list { display: flex; flex-direction: column; gap: 16px; }
+        .job-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; transition: border-color 0.2s; }
+        .job-card:hover { border-color: var(--accent); }
+        .job-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+        .job-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 4px; }
+        .job-meta { font-size: 0.85rem; color: var(--text-secondary); }
+        .job-meta span { font-family: 'Space Mono', monospace; color: var(--accent); }
+        .status-badge { display: inline-block; padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
         .status-badge.pending { background: rgba(255, 170, 0, 0.15); color: var(--warning); }
-        .status-badge.assigned { background: rgba(0, 168, 255, 0.15); color: var(--accent-blue); }
-        .status-badge.completed { background: rgba(0, 212, 170, 0.15); color: var(--success); }
-        .status-badge.cancelled { background: rgba(255, 107, 107, 0.15); color: var(--error); }
-        .empty-state { text-align: center; padding: 60px 20px; }
-        .empty-state-icon { font-size: 3rem; margin-bottom: 16px; opacity: 0.5; }
-        .empty-state h3 { font-size: 1.25rem; margin-bottom: 8px; }
-        .empty-state p { color: var(--text-secondary); margin-bottom: 24px; }
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 100; justify-content: center; align-items: center; padding: 20px; }
-        .modal-overlay.show { display: flex; }
-        .modal { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 700px; max-height: 90vh; overflow-y: auto; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 24px; border-bottom: 1px solid var(--border); }
-        .modal-header h2 { font-size: 1.25rem; }
-        .modal-close { background: transparent; border: none; color: var(--text-secondary); font-size: 1.5rem; cursor: pointer; padding: 4px 8px; }
-        .modal-close:hover { color: var(--text-primary); }
-        .modal-body { padding: 24px; }
-        .detail-section { margin-bottom: 24px; }
-        .detail-section:last-child { margin-bottom: 0; }
-        .detail-section-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); margin-bottom: 12px; }
-        .detail-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
-        .detail-item { padding: 12px; background: var(--bg-input); border-radius: 8px; }
-        .detail-item.full-width { grid-column: 1 / -1; }
-        .detail-label { font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 4px; }
-        .detail-value { font-size: 0.95rem; }
-        .detail-value.mono { font-family: 'Space Mono', monospace; }
-        .equipment-list { list-style: none; }
-        .equipment-list li { padding: 10px 12px; background: var(--bg-input); border-radius: 6px; margin-bottom: 8px; display: flex; gap: 16px; }
-        .equipment-list li:last-child { margin-bottom: 0; }
-        .equipment-qty { font-family: 'Space Mono', monospace; color: var(--accent); min-width: 40px; }
-        .modal-footer { display: flex; gap: 12px; padding: 24px; border-top: 1px solid var(--border); }
-        .btn { padding: 12px 24px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 600; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
-        .btn-primary { background: var(--accent); color: var(--bg-dark); border: none; }
-        .btn-primary:hover { box-shadow: 0 4px 16px var(--accent-glow); }
-        .btn-outline { background: transparent; color: var(--text-secondary); border: 1px solid var(--border); }
-        .btn-outline:hover { border-color: var(--text-secondary); color: var(--text-primary); }
-        @media (max-width: 900px) { .table-header { display: none; } .table-row { display: block; padding: 20px; } .table-row > div { margin-bottom: 8px; } }
+        .status-badge.assigned, .status-badge.accepted { background: rgba(0, 168, 255, 0.15); color: var(--accent-blue); }
+        .status-badge.in-progress { background: rgba(0, 212, 170, 0.15); color: var(--accent); }
+        .status-badge.completed { background: rgba(100, 100, 100, 0.15); color: var(--text-secondary); }
+        .job-details { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; padding: 16px; background: var(--bg-input); border-radius: 8px; }
+        @media (max-width: 800px) { .job-details { grid-template-columns: repeat(2, 1fr); } }
+        .job-detail-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
+        .job-detail-value { font-size: 0.9rem; }
+        .loading { text-align: center; padding: 60px; color: var(--text-secondary); }
+        .empty-state { text-align: center; padding: 60px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; }
+        .empty-state h3 { margin-bottom: 8px; }
+        .empty-state p { color: var(--text-secondary); }
     </style>
 </head>
 <body>
     <div class="container">
         <nav class="nav">
-            <a href="index.html" class="logo" style="text-decoration: none;">FLEETCONNECT</a>
-            <div style="display: flex; align-items: center; gap: 24px;">
+            <a href="index.html" class="logo">FLEETCONNECT</a>
+            <div class="nav-right">
                 <div class="nav-links">
                     <a href="index.html">Home</a>
                     <a href="create-job.html">New Order</a>
                     <a href="job-history.html" class="active">Job History</a>
                 </div>
                 <span id="userName" style="color: var(--text-secondary); font-size: 0.9rem;"></span>
-                <button onclick="logout()" style="background: transparent; border: 1px solid var(--border); color: var(--text-secondary); padding: 8px 16px; border-radius: 6px; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; cursor: pointer;">Logout</button>
+                <button class="logout-btn" onclick="logout()">Logout</button>
             </div>
         </nav>
+        
         <header class="header">
-            <div class="header-left">
+            <div>
                 <h1>Job History</h1>
-                <p>Search and manage all work orders</p>
+                <p>Search and view all work orders</p>
             </div>
-            <a href="create-job.html" class="new-order-btn">+ New Order</a>
         </header>
+        
         <div class="search-section">
             <div class="search-row">
-                <div class="search-input-wrapper">
-                    <input type="text" class="search-input" id="searchInput" placeholder="Search by contract #, PO #, customer, job site...">
-                </div>
+                <input type="text" class="search-input" id="searchInput" placeholder="Search by contract #, job site, customer...">
                 <select class="filter-select" id="statusFilter">
                     <option value="">All Status</option>
                     <option value="pending">Pending</option>
                     <option value="assigned">Assigned</option>
+                    <option value="in-progress">In Progress</option>
                     <option value="completed">Completed</option>
-                    <option value="cancelled">Cancelled</option>
-                </select>
-                <select class="filter-select" id="typeFilter">
-                    <option value="">All Types</option>
-                    <option value="fuel-delivery">Fuel Delivery</option>
-                    <option value="equipment-tow">Equipment Tow</option>
-                    <option value="pickup">Equipment Pickup</option>
-                    <option value="delivery">Equipment Delivery</option>
                 </select>
             </div>
         </div>
-        <div class="stats-row">
-            <div class="stat-card"><div class="stat-label">Total Orders</div><div class="stat-value" id="statTotal">0</div></div>
-            <div class="stat-card"><div class="stat-label">Pending</div><div class="stat-value pending" id="statPending">0</div></div>
-            <div class="stat-card"><div class="stat-label">Completed</div><div class="stat-value completed" id="statCompleted">0</div></div>
-            <div class="stat-card"><div class="stat-label">Cancelled</div><div class="stat-value cancelled" id="statCancelled">0</div></div>
-        </div>
-        <div class="table-wrapper">
-            <div class="table-header">
-                <div>Contract #</div><div>Job Site</div><div>Customer</div><div>Type</div><div>Date Out</div><div>Status</div>
-            </div>
-            <div class="table-body" id="tableBody"></div>
+        
+        <div class="jobs-list" id="jobsList">
+            <div class="loading">Loading jobs...</div>
         </div>
     </div>
-    <div class="modal-overlay" id="modalOverlay">
-        <div class="modal">
-            <div class="modal-header">
-                <h2>Work Order Details</h2>
-                <button class="modal-close" onclick="closeModal()">×</button>
-            </div>
-            <div class="modal-body" id="modalBody"></div>
-            <div class="modal-footer">
-                <button class="btn btn-outline" onclick="closeModal()">Close</button>
-                <button class="btn btn-primary" id="markCompleteBtn">Mark Complete</button>
-            </div>
-        </div>
-    </div>
+
+    <script src="supabase-client.js"></script>
     <script>
-        // Auth check
-        const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
-        if (!currentUser) {
-            window.location.href = 'login.html';
-        } else {
+        const currentUser = checkAuth();
+        if (currentUser) {
             document.getElementById('userName').textContent = currentUser.name;
         }
-        function logout() {
-            localStorage.removeItem('currentUser');
-            window.location.href = 'login.html';
+
+        let allJobs = [];
+
+        async function loadJobs() {
+            allJobs = await getAllJobs();
+            renderJobs();
         }
+
+        function renderJobs() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+
+            let filtered = allJobs;
+
+            if (searchTerm) {
+                filtered = filtered.filter(j => 
+                    (j.job_site_name || '').toLowerCase().includes(searchTerm) ||
+                    (j.contract_number || '').toLowerCase().includes(searchTerm) ||
+                    (j.customer_name || '').toLowerCase().includes(searchTerm)
+                );
+            }
+
+            if (statusFilter) {
+                filtered = filtered.filter(j => j.status === statusFilter);
+            }
+
+            const container = document.getElementById('jobsList');
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>No jobs found</h3>
+                        <p>Try adjusting your search or filters</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filtered.map(job => `
+                <div class="job-card">
+                    <div class="job-header">
+                        <div>
+                            <div class="job-title">${job.job_site_name || 'Untitled Job'}</div>
+                            <div class="job-meta">Contract: <span>${job.contract_number || '-'}</span> • ${formatJobType(job.job_type)}</div>
+                        </div>
+                        <span class="status-badge ${job.status}">${job.status}</span>
+                    </div>
+                    <div class="job-details">
+                        <div>
+                            <div class="job-detail-label">Location</div>
+                            <div class="job-detail-value">${job.address_city || '-'}, ${job.address_state || '-'}</div>
+                        </div>
+                        <div>
+                            <div class="job-detail-label">Date</div>
+                            <div class="job-detail-value">${formatDate(job.date_out)}</div>
+                        </div>
+                        <div>
+                            <div class="job-detail-label">Contact</div>
+                            <div class="job-detail-value">${job.contact_name || '-'}</div>
+                        </div>
+                        <div>
+                            <div class="job-detail-label">Created</div>
+                            <div class="job-detail-value">${formatDate(job.created_at)}</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        document.getElementById('searchInput').addEventListener('input', renderJobs);
+        document.getElementById('statusFilter').addEventListener('change', renderJobs);
+
+        loadJobs();
     </script>
-    <script src="job-history.js"></script>
 </body>
 </html>

@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --bg-dark: #0a0a0f;
@@ -160,6 +161,12 @@
         .login-btn:active {
             transform: translateY(0);
         }
+
+        .login-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
         
         .demo-accounts {
             margin-top: 32px;
@@ -199,12 +206,33 @@
             border-color: var(--accent);
             color: var(--accent);
         }
+
+        .demo-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
         
         .demo-btn span {
             display: block;
             font-size: 0.7rem;
             color: var(--text-muted);
             margin-top: 2px;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid transparent;
+            border-top-color: currentColor;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -232,25 +260,25 @@
                     <input type="password" id="password" placeholder="Enter your password" required>
                 </div>
                 
-                <button type="submit" class="login-btn">Sign In</button>
+                <button type="submit" class="login-btn" id="loginBtn">Sign In</button>
             </form>
             
             <div class="demo-accounts">
                 <div class="demo-title">Quick Demo Access</div>
                 <div class="demo-buttons">
-                    <button class="demo-btn" onclick="demoLogin('admin')">
+                    <button class="demo-btn" onclick="demoLogin('admin@fleetconnect.com', 'admin123')">
                         Admin
                         <span>Full access</span>
                     </button>
-                    <button class="demo-btn" onclick="demoLogin('rental')">
+                    <button class="demo-btn" onclick="demoLogin('paul@sunbelt.com', 'rental123')">
                         Rental Co.
                         <span>Create jobs</span>
                     </button>
-                    <button class="demo-btn" onclick="demoLogin('vendor')">
+                    <button class="demo-btn" onclick="demoLogin('owner@yourfleet.com', 'vendor123')">
                         Vendor
                         <span>Manage jobs</span>
                     </button>
-                    <button class="demo-btn" onclick="demoLogin('fieldworker')">
+                    <button class="demo-btn" onclick="demoLogin('driver@yourfleet.com', 'field123')">
                         Field Worker
                         <span>Mobile view</span>
                     </button>
@@ -259,61 +287,62 @@
         </div>
     </div>
     
+    <script src="supabase-client.js"></script>
     <script>
-        // Demo users (in real app, this would be server-side)
-        const users = [
-            { id: 'admin-1', email: 'admin@fleetconnect.com', password: 'admin123', role: 'admin', name: 'System Admin', company: 'FleetConnect' },
-            { id: 'rental-1', email: 'paul@sunbelt.com', password: 'rental123', role: 'rental', name: 'Paul Reyes', company: 'Sunbelt Rentals' },
-            { id: 'vendor-1', email: 'owner@yourfleet.com', password: 'vendor123', role: 'vendor', name: 'Owner', company: 'Your Fleet Services', vendorId: 'your-company' },
-            { id: 'field-1', email: 'driver@yourfleet.com', password: 'field123', role: 'fieldworker', name: 'John Driver', company: 'Your Fleet Services', vendorId: 'your-company' }
-        ];
-        
-        // Save users to localStorage if not exists
-        if (!localStorage.getItem('users')) {
-            localStorage.setItem('users', JSON.stringify(users));
-        }
+        const loginForm = document.getElementById('loginForm');
+        const loginBtn = document.getElementById('loginBtn');
+        const errorMessage = document.getElementById('errorMessage');
         
         // Login form handler
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
+        loginForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             
-            const allUsers = JSON.parse(localStorage.getItem('users') || '[]');
-            const user = allUsers.find(u => u.email === email && u.password === password);
-            
-            if (user) {
-                loginUser(user);
-            } else {
-                document.getElementById('errorMessage').classList.add('show');
-            }
+            await attemptLogin(email, password);
         });
         
-        // Demo login buttons
-        function demoLogin(role) {
-            const allUsers = JSON.parse(localStorage.getItem('users') || '[]');
-            const user = allUsers.find(u => u.role === role);
-            if (user) {
-                loginUser(user);
+        async function attemptLogin(email, password) {
+            // Show loading state
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<span class="loading"></span>Signing in...';
+            errorMessage.classList.remove('show');
+            
+            try {
+                const result = await loginUser(email, password);
+                
+                if (result.success) {
+                    // Redirect to home page
+                    window.location.href = 'index.html';
+                } else {
+                    errorMessage.textContent = result.error || 'Invalid email or password';
+                    errorMessage.classList.add('show');
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = 'Sign In';
+                }
+            } catch (err) {
+                console.error('Login error:', err);
+                errorMessage.textContent = 'Connection error. Please try again.';
+                errorMessage.classList.add('show');
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = 'Sign In';
             }
         }
         
-        // Process login
-        function loginUser(user) {
-            // Store current user
-            localStorage.setItem('currentUser', JSON.stringify(user));
-            
-            // Redirect to home page (it will show role-specific content)
-            window.location.href = 'index.html';
+        // Demo login buttons
+        async function demoLogin(email, password) {
+            document.getElementById('email').value = email;
+            document.getElementById('password').value = password;
+            await attemptLogin(email, password);
         }
         
         // Clear error on input
         document.getElementById('email').addEventListener('input', () => {
-            document.getElementById('errorMessage').classList.remove('show');
+            errorMessage.classList.remove('show');
         });
         document.getElementById('password').addEventListener('input', () => {
-            document.getElementById('errorMessage').classList.remove('show');
+            errorMessage.classList.remove('show');
         });
     </script>
 </body>

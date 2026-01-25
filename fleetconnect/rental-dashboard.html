@@ -4,105 +4,44 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Orders | FleetConnect</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root {
-            --bg-dark: #0a0a0f;
-            --bg-card: #12121a;
-            --bg-input: #1a1a24;
-            --bg-hover: #1e1e2a;
-            --border: #2a2a3a;
-            --text-primary: #ffffff;
-            --text-secondary: #8a8a9a;
-            --text-muted: #5a5a6a;
-            --accent: #00d4aa;
-            --accent-glow: rgba(0, 212, 170, 0.3);
-            --accent-blue: #00a8ff;
-            --warning: #ffaa00;
-            --error: #ff6b6b;
-            --success: #00d4aa;
-        }
+        :root { --bg-dark: #0a0a0f; --bg-card: #12121a; --bg-input: #1a1a24; --border: #2a2a3a; --text-primary: #ffffff; --text-secondary: #8a8a9a; --text-muted: #5a5a6a; --accent: #00d4aa; --accent-blue: #00a8ff; --warning: #ffaa00; --error: #ff6b6b; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'DM Sans', sans-serif; background: var(--bg-dark); color: var(--text-primary); min-height: 100vh; line-height: 1.6; }
-        body::before { content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-image: linear-gradient(rgba(0, 168, 255, 0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 168, 255, 0.02) 1px, transparent 1px); background-size: 50px 50px; pointer-events: none; z-index: 0; }
-        .container { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
-        
+        body { font-family: 'DM Sans', sans-serif; background: var(--bg-dark); color: var(--text-primary); min-height: 100vh; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
         .nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
-        .logo { font-family: 'Space Mono', monospace; font-size: 1.5rem; color: var(--accent); letter-spacing: -1px; text-decoration: none; }
+        .logo { font-family: 'Space Mono', monospace; font-size: 1.5rem; color: var(--accent); text-decoration: none; }
         .nav-right { display: flex; align-items: center; gap: 24px; }
-        .nav-links { display: flex; gap: 24px; }
-        .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: color 0.2s; }
-        .nav-links a:hover, .nav-links a.active { color: var(--accent-blue); }
-        .role-badge { background: var(--accent-blue); color: white; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
-        .logout-btn { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); padding: 8px 16px; border-radius: 6px; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; cursor: pointer; }
-        .logout-btn:hover { border-color: var(--text-secondary); color: var(--text-primary); }
-        
-        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; }
-        .header-left h1 { font-size: 2rem; font-weight: 700; margin-bottom: 8px; }
-        .header-left p { color: var(--text-secondary); }
-        .new-order-btn { padding: 12px 24px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 600; background: var(--accent); color: var(--bg-dark); border: none; border-radius: 8px; cursor: pointer; text-decoration: none; transition: all 0.2s; }
-        .new-order-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px var(--accent-glow); }
-        
-        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
-        @media (max-width: 800px) { .stats-row { grid-template-columns: repeat(2, 1fr); } }
-        .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 20px; }
-        .stat-label { font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
-        .stat-value { font-size: 1.75rem; font-weight: 700; font-family: 'Space Mono', monospace; }
-        .stat-value.blue { color: var(--accent-blue); }
-        .stat-value.accent { color: var(--accent); }
-        .stat-value.warning { color: var(--warning); }
-        
-        .tabs { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
-        .tab { padding: 10px 20px; background: transparent; border: 1px solid var(--border); border-radius: 8px; color: var(--text-secondary); font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 500; cursor: pointer; transition: all 0.2s; }
-        .tab:hover { border-color: var(--accent-blue); color: var(--text-primary); }
+        .nav-links a { color: var(--text-secondary); text-decoration: none; margin-right: 24px; }
+        .nav-links a.active { color: var(--accent-blue); }
+        .logout-btn { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); padding: 8px 16px; border-radius: 6px; cursor: pointer; }
+        .header { display: flex; justify-content: space-between; margin-bottom: 32px; }
+        .header h1 { font-size: 2rem; }
+        .new-btn { padding: 12px 24px; background: var(--accent); color: var(--bg-dark); border: none; border-radius: 8px; font-weight: 600; text-decoration: none; }
+        .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
+        .stat { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 20px; }
+        .stat-value { font-size: 1.75rem; font-weight: 700; font-family: 'Space Mono', monospace; color: var(--accent); }
+        .stat-label { font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; }
+        .tabs { display: flex; gap: 8px; margin-bottom: 24px; }
+        .tab { padding: 10px 20px; background: transparent; border: 1px solid var(--border); border-radius: 8px; color: var(--text-secondary); cursor: pointer; }
         .tab.active { background: var(--accent-blue); border-color: var(--accent-blue); color: white; }
-        .tab .count { margin-left: 8px; background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 10px; font-size: 0.8rem; }
-        
-        .jobs-grid { display: flex; flex-direction: column; gap: 16px; }
-        .job-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; transition: border-color 0.2s; }
-        .job-card:hover { border-color: var(--accent-blue); }
-        
-        .job-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
-        .job-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 4px; }
-        .job-meta { font-size: 0.85rem; color: var(--text-secondary); }
-        
-        .job-details { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 16px; padding: 16px; background: var(--bg-input); border-radius: 8px; }
-        @media (max-width: 800px) { .job-details { grid-template-columns: repeat(2, 1fr); } }
-        .job-detail-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
-        .job-detail-value { font-size: 0.9rem; }
-        .job-detail-value.mono { font-family: 'Space Mono', monospace; color: var(--accent); }
-        
-        .delivery-summary { display: flex; gap: 24px; margin-bottom: 16px; }
-        .delivery-stat { text-align: center; padding: 12px 20px; background: var(--bg-input); border-radius: 8px; }
-        .delivery-stat-value { font-family: 'Space Mono', monospace; font-size: 1.25rem; color: var(--accent); }
-        .delivery-stat-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; margin-top: 4px; }
-        
+        .jobs { display: flex; flex-direction: column; gap: 16px; }
+        .job-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; }
+        .job-header { display: flex; justify-content: space-between; margin-bottom: 16px; }
+        .job-title { font-size: 1.1rem; font-weight: 600; }
+        .status-badge { padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+        .status-badge.pending { background: rgba(255,170,0,0.15); color: var(--warning); }
+        .status-badge.in-progress { background: rgba(0,212,170,0.15); color: var(--accent); }
+        .status-badge.completed { background: rgba(100,100,100,0.15); color: var(--text-secondary); }
+        .job-details { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; padding: 16px; background: var(--bg-input); border-radius: 8px; margin-bottom: 16px; }
+        .job-detail-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; }
         .job-actions { display: flex; gap: 12px; justify-content: flex-end; padding-top: 16px; border-top: 1px solid var(--border); }
-        
-        .btn { padding: 10px 20px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 500; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
-        .btn-primary { background: var(--accent-blue); color: white; border: none; }
-        .btn-primary:hover { box-shadow: 0 4px 16px rgba(0, 168, 255, 0.3); }
+        .btn { padding: 10px 20px; border-radius: 8px; cursor: pointer; font-family: 'DM Sans', sans-serif; }
         .btn-outline { background: transparent; color: var(--text-secondary); border: 1px solid var(--border); }
-        .btn-outline:hover { border-color: var(--text-secondary); color: var(--text-primary); }
         .btn-danger { background: transparent; color: var(--error); border: 1px solid var(--error); }
-        .btn-danger:hover { background: var(--error); color: white; }
-        
-        .status-badge { display: inline-block; padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
-        .status-badge.pending { background: rgba(255, 170, 0, 0.15); color: var(--warning); }
-        .status-badge.assigned { background: rgba(0, 168, 255, 0.15); color: var(--accent-blue); }
-        .status-badge.in-progress { background: rgba(0, 212, 170, 0.15); color: var(--accent); }
-        .status-badge.completed { background: rgba(100, 100, 100, 0.15); color: var(--text-secondary); }
-        .status-badge.open { background: rgba(255, 170, 0, 0.15); color: var(--warning); }
-        
-        .empty-state { text-align: center; padding: 60px 20px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; }
-        .empty-state-icon { font-size: 3rem; margin-bottom: 16px; opacity: 0.5; }
-        .empty-state h3 { font-size: 1.25rem; margin-bottom: 8px; }
-        .empty-state p { color: var(--text-secondary); }
-
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 100; justify-content: center; align-items: center; padding: 20px; }
-        .modal-overlay.show { display: flex; }
+        .empty { text-align: center; padding: 60px; background: var(--bg-card); border-radius: 12px; }
     </style>
 </head>
 <body>
@@ -114,354 +53,82 @@
                     <a href="index.html">Home</a>
                     <a href="rental-dashboard.html" class="active">My Orders</a>
                     <a href="create-job.html">New Order</a>
-                    <a href="job-history.html">History</a>
                 </div>
-                <span class="role-badge">RENTAL</span>
-                <span id="userName" style="color: var(--text-secondary); font-size: 0.9rem;"></span>
+                <span id="userName" style="color: var(--text-secondary);"></span>
                 <button class="logout-btn" onclick="logout()">Logout</button>
             </div>
         </nav>
-        
         <header class="header">
-            <div class="header-left">
-                <h1>My Orders</h1>
-                <p>Track your work orders and delivery progress</p>
-            </div>
-            <a href="create-job.html" class="new-order-btn">+ New Order</a>
+            <div><h1>My Orders</h1></div>
+            <a href="create-job.html" class="new-btn">+ New Order</a>
         </header>
-        
-        <div class="stats-row">
-            <div class="stat-card">
-                <div class="stat-label">Active Orders</div>
-                <div class="stat-value blue" id="statActive">0</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Pending Assignment</div>
-                <div class="stat-value warning" id="statPending">0</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Total Gallons Delivered</div>
-                <div class="stat-value accent" id="statGallons">0</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Completed</div>
-                <div class="stat-value" id="statCompleted">0</div>
-            </div>
+        <div class="stats">
+            <div class="stat"><div class="stat-value" id="statActive">-</div><div class="stat-label">Active</div></div>
+            <div class="stat"><div class="stat-value" id="statPending">-</div><div class="stat-label">Pending</div></div>
+            <div class="stat"><div class="stat-value" id="statGallons">-</div><div class="stat-label">Total Gallons</div></div>
+            <div class="stat"><div class="stat-value" id="statCompleted">-</div><div class="stat-label">Completed</div></div>
         </div>
-        
         <div class="tabs">
-            <button class="tab active" data-tab="active">Active <span class="count" id="countActive">0</span></button>
-            <button class="tab" data-tab="pending">Pending <span class="count" id="countPending">0</span></button>
-            <button class="tab" data-tab="completed">Completed <span class="count" id="countCompleted">0</span></button>
+            <button class="tab active" data-tab="active">Active</button>
+            <button class="tab" data-tab="pending">Pending</button>
+            <button class="tab" data-tab="completed">Completed</button>
         </div>
-        
-        <div class="jobs-grid" id="jobsContainer"></div>
+        <div class="jobs" id="jobs"><div class="empty">Loading...</div></div>
     </div>
-    
+    <script src="supabase-client.js"></script>
     <script>
-        // Auth check
-        const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
-        if (!currentUser || currentUser.role !== 'rental') {
-            window.location.href = 'login.html';
-        }
-        document.getElementById('userName').textContent = currentUser?.name || '';
-        
-        function logout() {
-            localStorage.removeItem('currentUser');
-            window.location.href = 'login.html';
-        }
-        
-        // Get all orders (rental company's perspective)
-        function getAllOrders() {
-            const workOrders = JSON.parse(localStorage.getItem('workOrders') || '[]');
-            const vendorJobs = JSON.parse(localStorage.getItem('vendorJobs') || '[]');
-            
-            // Combine and dedupe
-            const allJobs = [...workOrders];
-            vendorJobs.forEach(job => {
-                if (!allJobs.find(j => j.id === job.id)) {
-                    allJobs.push(job);
-                }
-            });
-            
-            // Add sample data if empty
-            if (allJobs.length === 0) {
-                return getSampleOrders();
-            }
-            
-            return allJobs.sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
-        }
-        
-        function getSampleOrders() {
-            return [
-                {
-                    id: 'WO-1001',
-                    contractNumber: '178435490',
-                    poNumber: '802556817',
-                    jobSiteName: 'D-27 MONROVIA -EATON A-1203',
-                    address: { street: '2528 LA VENEZIA CT', city: 'ALTADENA', state: 'CA', zip: '91001' },
-                    customerName: 'SOUTHERN CALIFORNIA EDISON TSD',
-                    contactName: 'MYERS, MORGAN',
-                    contactPhone: '626-201-6548',
-                    dateOut: '2025-01-24',
-                    equipment: [{ qty: '1', description: '20KW DIESEL GENERATOR' }],
-                    jobType: 'fuel-delivery',
-                    status: 'in-progress',
-                    assignedVendor: 'your-company',
-                    submittedAt: '2025-01-22T14:30:00Z'
-                },
-                {
-                    id: 'WO-1002',
-                    contractNumber: '178435489',
-                    poNumber: '802556816',
-                    jobSiteName: 'SCE POMONA SUBSTATION',
-                    address: { street: '1500 HOLT AVE', city: 'POMONA', state: 'CA', zip: '91768' },
-                    customerName: 'SOUTHERN CALIFORNIA EDISON TSD',
-                    contactName: 'JOHNSON, MIKE',
-                    dateOut: '2025-01-20',
-                    equipment: [{ qty: '1', description: '45KW DIESEL GENERATOR' }],
-                    jobType: 'fuel-delivery',
-                    status: 'assigned',
-                    assignedVendor: 'your-company',
-                    submittedAt: '2025-01-18T09:00:00Z'
-                }
-            ];
-        }
-        
-        function getDeliveriesForJob(jobId) {
-            const deliveries = JSON.parse(localStorage.getItem('fuelDeliveries') || '[]');
-            const fieldJobs = JSON.parse(localStorage.getItem('fieldWorkerJobs') || '[]');
-            const fieldJob = fieldJobs.find(j => j.originalJobId === jobId);
-            const fieldJobId = fieldJob ? fieldJob.id : null;
-            
-            return deliveries.filter(d => d.jobId === jobId || d.jobId === fieldJobId);
-        }
-        
-        function formatJobType(type) {
-            const types = { 'fuel-delivery': 'Fuel Delivery', 'equipment-tow': 'Equipment Tow', 'emergency-fuel': 'Emergency Fuel', 'pickup': 'Pickup', 'delivery': 'Delivery' };
-            return types[type] || type;
-        }
-        
-        function formatDate(dateStr) {
-            if (!dateStr) return '-';
-            return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-        }
-        
-        let currentTab = 'active';
-        
-        function updateStats() {
-            const orders = getAllOrders();
-            const deliveries = JSON.parse(localStorage.getItem('fuelDeliveries') || '[]');
-            
-            const active = orders.filter(o => o.status === 'in-progress' || o.status === 'accepted').length;
-            const pending = orders.filter(o => o.status === 'assigned' || o.status === 'open' || o.status === 'pending').length;
-            const completed = orders.filter(o => o.status === 'completed').length;
-            const totalGallons = deliveries.reduce((sum, d) => sum + (d.gallons || 0), 0);
-            
-            document.getElementById('statActive').textContent = active;
-            document.getElementById('statPending').textContent = pending;
-            document.getElementById('statCompleted').textContent = completed;
-            document.getElementById('statGallons').textContent = totalGallons.toFixed(0);
-            
-            document.getElementById('countActive').textContent = active;
-            document.getElementById('countPending').textContent = pending;
-            document.getElementById('countCompleted').textContent = completed;
-        }
-        
-        function renderJobCard(job) {
-            const jobDeliveries = getDeliveriesForJob(job.id);
-            const totalGallons = jobDeliveries.reduce((sum, d) => sum + d.gallons, 0);
-            const lastDelivery = jobDeliveries.length > 0 ? jobDeliveries[jobDeliveries.length - 1] : null;
-            
-            let actions = '';
-            if (job.status !== 'completed') {
-                actions = `
-                    <button class="btn btn-outline" onclick="viewDeliveryHistory('${job.id}')">View Deliveries (${jobDeliveries.length})</button>
-                    <button class="btn btn-danger" onclick="closeJob('${job.id}')">Close Job</button>
-                `;
-            } else {
-                actions = `<button class="btn btn-outline" onclick="viewDeliveryHistory('${job.id}')">View Deliveries (${jobDeliveries.length})</button>`;
-            }
-            
-            return `
-                <div class="job-card">
-                    <div class="job-header">
-                        <div>
-                            <div class="job-title">${job.jobSiteName}</div>
-                            <div class="job-meta">Contract: <span style="font-family: 'Space Mono', monospace; color: var(--accent);">${job.contractNumber}</span> • ${formatJobType(job.jobType)}</div>
-                        </div>
-                        <span class="status-badge ${job.status}">${job.status}</span>
-                    </div>
-                    
-                    <div class="job-details">
-                        <div>
-                            <div class="job-detail-label">Location</div>
-                            <div class="job-detail-value">${job.address.city}, ${job.address.state}</div>
-                        </div>
-                        <div>
-                            <div class="job-detail-label">Started</div>
-                            <div class="job-detail-value">${formatDate(job.dateOut)}</div>
-                        </div>
-                        <div>
-                            <div class="job-detail-label">Contact</div>
-                            <div class="job-detail-value">${job.contactName || '-'}</div>
-                        </div>
-                        <div>
-                            <div class="job-detail-label">Equipment</div>
-                            <div class="job-detail-value">${job.equipment?.[0]?.description || '-'}</div>
-                        </div>
-                    </div>
-                    
-                    ${jobDeliveries.length > 0 ? `
-                    <div class="delivery-summary">
-                        <div class="delivery-stat">
-                            <div class="delivery-stat-value">${totalGallons.toFixed(1)}</div>
-                            <div class="delivery-stat-label">Total Gallons</div>
-                        </div>
-                        <div class="delivery-stat">
-                            <div class="delivery-stat-value">${jobDeliveries.length}</div>
-                            <div class="delivery-stat-label">Deliveries</div>
-                        </div>
-                        <div class="delivery-stat">
-                            <div class="delivery-stat-value">${lastDelivery ? formatDate(lastDelivery.timestamp) : '-'}</div>
-                            <div class="delivery-stat-label">Last Delivery</div>
-                        </div>
-                    </div>
-                    ` : ''}
-                    
-                    <div class="job-actions">${actions}</div>
-                </div>
-            `;
-        }
-        
-        function renderJobs() {
-            const orders = getAllOrders();
-            let filtered = [];
-            
-            switch(currentTab) {
-                case 'active':
-                    filtered = orders.filter(o => o.status === 'in-progress' || o.status === 'accepted');
-                    break;
-                case 'pending':
-                    filtered = orders.filter(o => o.status === 'assigned' || o.status === 'open' || o.status === 'pending');
-                    break;
-                case 'completed':
-                    filtered = orders.filter(o => o.status === 'completed');
-                    break;
-            }
-            
-            const container = document.getElementById('jobsContainer');
-            
-            if (filtered.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">📋</div>
-                        <h3>No ${currentTab} orders</h3>
-                        <p>${currentTab === 'active' ? 'Orders being serviced will appear here' : currentTab === 'pending' ? 'New orders waiting for vendor acceptance' : 'Completed orders will appear here'}</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            container.innerHTML = filtered.map(renderJobCard).join('');
-        }
-        
-        function closeJob(jobId) {
-            if (!confirm('Close this job? This means the equipment is off-rent.')) return;
-            
-            // Update in workOrders
-            let workOrders = JSON.parse(localStorage.getItem('workOrders') || '[]');
-            let job = workOrders.find(j => j.id === jobId);
-            if (job) {
-                job.status = 'completed';
-                job.completedAt = new Date().toISOString();
-                localStorage.setItem('workOrders', JSON.stringify(workOrders));
-            }
-            
-            // Update in vendorJobs
-            let vendorJobs = JSON.parse(localStorage.getItem('vendorJobs') || '[]');
-            job = vendorJobs.find(j => j.id === jobId);
-            if (job) {
-                job.status = 'completed';
-                job.completedAt = new Date().toISOString();
-                localStorage.setItem('vendorJobs', JSON.stringify(vendorJobs));
-            }
-            
-            // Update field worker jobs
-            let fieldJobs = JSON.parse(localStorage.getItem('fieldWorkerJobs') || '[]');
-            const fieldJob = fieldJobs.find(j => j.originalJobId === jobId || j.id === jobId);
-            if (fieldJob) {
-                fieldJob.status = 'completed';
-                fieldJob.completedAt = new Date().toISOString();
-                localStorage.setItem('fieldWorkerJobs', JSON.stringify(fieldJobs));
-            }
-            
+        const currentUser = checkAuth(['rental']);
+        if (currentUser) document.getElementById('userName').textContent = currentUser.name;
+        let allJobs = [], allDeliveries = [], currentTab = 'active';
+        async function loadData() {
+            allJobs = await getAllJobs();
+            allDeliveries = await getAllDeliveries();
             updateStats();
             renderJobs();
         }
-        
-        function viewDeliveryHistory(jobId) {
-            const jobDeliveries = getDeliveriesForJob(jobId);
-            const totalGallons = jobDeliveries.reduce((sum, d) => sum + d.gallons, 0);
-            
-            let historyHtml = '';
-            if (jobDeliveries.length === 0) {
-                historyHtml = '<p style="color: var(--text-muted); text-align: center; padding: 30px;">No deliveries logged yet</p>';
-            } else {
-                historyHtml = `
-                    <div style="display: flex; gap: 16px; margin-bottom: 20px;">
-                        <div style="flex: 1; text-align: center; padding: 16px; background: var(--bg-input); border-radius: 8px;">
-                            <div style="font-family: 'Space Mono', monospace; font-size: 1.5rem; color: var(--accent);">${totalGallons.toFixed(1)}</div>
-                            <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Total Gallons</div>
-                        </div>
-                        <div style="flex: 1; text-align: center; padding: 16px; background: var(--bg-input); border-radius: 8px;">
-                            <div style="font-family: 'Space Mono', monospace; font-size: 1.5rem; color: var(--text-primary);">${jobDeliveries.length}</div>
-                            <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Deliveries</div>
-                        </div>
+        function updateStats() {
+            document.getElementById('statActive').textContent = allJobs.filter(j => ['in-progress','accepted'].includes(j.status)).length;
+            document.getElementById('statPending').textContent = allJobs.filter(j => ['pending','assigned'].includes(j.status)).length;
+            document.getElementById('statCompleted').textContent = allJobs.filter(j => j.status === 'completed').length;
+            document.getElementById('statGallons').textContent = allDeliveries.reduce((s,d) => s + parseFloat(d.gallons||0), 0).toFixed(0);
+        }
+        function renderJobs() {
+            const filtered = currentTab === 'active' ? allJobs.filter(j => ['in-progress','accepted'].includes(j.status))
+                : currentTab === 'pending' ? allJobs.filter(j => ['pending','assigned'].includes(j.status))
+                : allJobs.filter(j => j.status === 'completed');
+            const container = document.getElementById('jobs');
+            if (!filtered.length) { container.innerHTML = '<div class="empty"><h3>No orders</h3></div>'; return; }
+            container.innerHTML = filtered.map(job => `
+                <div class="job-card">
+                    <div class="job-header">
+                        <div class="job-title">${job.job_site_name || 'Untitled'}</div>
+                        <span class="status-badge ${job.status}">${job.status}</span>
                     </div>
-                `;
-                historyHtml += [...jobDeliveries].reverse().map(d => `
-                    <div style="padding: 14px; background: var(--bg-input); border-radius: 8px; margin-bottom: 10px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                            <span style="font-family: 'Space Mono', monospace; color: var(--accent); font-weight: 600; font-size: 1.1rem;">${d.gallons} gal</span>
-                            <span style="font-size: 0.8rem; color: var(--text-muted);">${new Date(d.timestamp).toLocaleDateString()} ${new Date(d.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                        </div>
-                        <div style="font-size: 0.85rem; color: var(--text-secondary);">${d.fuelType || 'Diesel'} • ${d.deliveredBy}</div>
-                        ${d.notes ? `<div style="font-size: 0.85rem; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); color: var(--text-secondary);">${d.notes}</div>` : ''}
+                    <div class="job-details">
+                        <div><div class="job-detail-label">Contract</div><div>${job.contract_number || '-'}</div></div>
+                        <div><div class="job-detail-label">Location</div><div>${job.address_city||'-'}, ${job.address_state||'-'}</div></div>
+                        <div><div class="job-detail-label">Date</div><div>${formatDate(job.date_out)}</div></div>
+                        <div><div class="job-detail-label">Type</div><div>${formatJobType(job.job_type)}</div></div>
                     </div>
-                `).join('');
-            }
-            
-            const modal = document.createElement('div');
-            modal.className = 'modal-overlay show';
-            modal.id = 'historyModal';
-            modal.innerHTML = `
-                <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 500px; max-height: 80vh; overflow: hidden; display: flex; flex-direction: column;">
-                    <div style="padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
-                        <h3 style="font-size: 1.1rem;">Delivery History</h3>
-                        <button onclick="document.getElementById('historyModal').remove()" style="background: none; border: none; color: var(--text-secondary); font-size: 1.5rem; cursor: pointer; padding: 0 8px;">&times;</button>
-                    </div>
-                    <div style="padding: 20px 24px; overflow-y: auto;">
-                        ${historyHtml}
+                    <div class="job-actions">
+                        <button class="btn btn-outline" onclick="viewDeliveries('${job.id}')">Deliveries</button>
+                        ${job.status !== 'completed' ? `<button class="btn btn-danger" onclick="closeJob('${job.id}')">Close Job</button>` : ''}
                     </div>
                 </div>
-            `;
-            document.body.appendChild(modal);
+            `).join('');
         }
-        
-        // Tab switching
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.addEventListener('click', function() {
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                this.classList.add('active');
-                currentTab = this.dataset.tab;
-                renderJobs();
-            });
-        });
-        
-        // Init
-        updateStats();
-        renderJobs();
+        async function closeJob(id) { if(confirm('Close job?')) { await updateJobStatus(id, 'completed'); loadData(); }}
+        async function viewDeliveries(jobId) {
+            const d = await getDeliveriesForJob(jobId);
+            const total = d.reduce((s,x)=>s+parseFloat(x.gallons),0);
+            const html = d.length ? d.map(x=>`<div style="padding:12px;background:var(--bg-input);border-radius:8px;margin-bottom:8px;"><strong style="color:var(--accent)">${x.gallons} gal</strong><br><small style="color:var(--text-muted)">${new Date(x.timestamp).toLocaleString()}</small></div>`).join('') : '<p style="text-align:center;color:var(--text-muted)">No deliveries</p>';
+            const m = document.createElement('div');
+            m.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:1000;';
+            m.innerHTML = `<div style="background:var(--bg-card);border-radius:16px;padding:24px;width:90%;max-width:400px;max-height:80vh;overflow-y:auto;"><div style="display:flex;justify-content:space-between;margin-bottom:16px;"><h3>Deliveries (${total.toFixed(1)} gal)</h3><button onclick="this.closest('div').parentElement.remove()" style="background:none;border:none;color:var(--text-secondary);font-size:1.5rem;cursor:pointer;">&times;</button></div>${html}</div>`;
+            document.body.appendChild(m);
+        }
+        document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',function(){document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));this.classList.add('active');currentTab=this.dataset.tab;renderJobs();}));
+        loadData();
     </script>
 </body>
 </html>
