@@ -4,360 +4,827 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vendor Dashboard | FleetConnect</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --bg-dark: #0a0a0f; --bg-card: #12121a; --bg-input: #1a1a24; --border: #2a2a3a; --text-primary: #ffffff; --text-secondary: #8a8a9a; --text-muted: #5a5a6a; --accent: #00d4aa; --accent-glow: rgba(0, 212, 170, 0.3); --accent-blue: #00a8ff; --warning: #ffaa00; --error: #ff6b6b; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'DM Sans', sans-serif; background: var(--bg-dark); color: var(--text-primary); min-height: 100vh; line-height: 1.6; }
-        body::before { content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-image: linear-gradient(rgba(0, 212, 170, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 212, 170, 0.03) 1px, transparent 1px); background-size: 50px 50px; pointer-events: none; z-index: 0; }
-        .container { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
-        .nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
-        .logo { font-family: 'Space Mono', monospace; font-size: 1.5rem; color: var(--accent); letter-spacing: -1px; text-decoration: none; }
-        .nav-right { display: flex; align-items: center; gap: 24px; }
-        .nav-links { display: flex; gap: 24px; }
-        .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; font-weight: 500; }
-        .nav-links a:hover, .nav-links a.active { color: var(--accent); }
-        .vendor-badge { background: var(--accent); color: var(--bg-dark); padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
-        .logout-btn { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-family: 'DM Sans', sans-serif; }
-        .header { margin-bottom: 32px; }
-        .header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 8px; }
-        .header p { color: var(--text-secondary); }
-        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
-        @media (max-width: 800px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
-        .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 20px; text-align: center; }
-        .stat-value { font-size: 1.75rem; font-weight: 700; font-family: 'Space Mono', monospace; color: var(--accent); }
-        .stat-label { font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; margin-top: 4px; }
-        .tabs { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
-        .tab { padding: 10px 20px; background: transparent; border: 1px solid var(--border); border-radius: 8px; color: var(--text-secondary); font-family: 'DM Sans', sans-serif; font-size: 0.9rem; cursor: pointer; }
-        .tab:hover { border-color: var(--accent); }
-        .tab.active { background: var(--accent); border-color: var(--accent); color: var(--bg-dark); }
-        .jobs-list { display: flex; flex-direction: column; gap: 16px; }
-        .job-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; }
-        .job-header { display: flex; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; }
-        .job-title { font-size: 1.1rem; font-weight: 600; }
-        .job-meta { font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px; }
-        .status-badge { padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
-        .status-badge.pending { background: rgba(255, 170, 0, 0.15); color: var(--warning); }
-        .status-badge.assigned { background: rgba(0, 168, 255, 0.15); color: var(--accent-blue); }
-        .status-badge.in-progress, .status-badge.accepted { background: rgba(0, 212, 170, 0.15); color: var(--accent); }
-        .status-badge.completed { background: rgba(100,100,100,0.15); color: var(--text-secondary); }
-        .job-details { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; padding: 16px; background: var(--bg-input); border-radius: 8px; margin-bottom: 16px; }
-        @media (max-width: 600px) { .job-details { grid-template-columns: 1fr; } }
-        .job-detail-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; }
-        .job-detail-value { font-size: 0.9rem; margin-top: 4px; }
-        .assigned-worker { margin-top: 12px; padding: 12px; background: rgba(0, 212, 170, 0.1); border-radius: 8px; display: flex; align-items: center; gap: 10px; }
-        .assigned-worker-icon { font-size: 1.2rem; }
-        .assigned-worker-info { flex: 1; }
-        .assigned-worker-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; }
-        .assigned-worker-name { font-size: 0.95rem; color: var(--accent); font-weight: 500; }
-        .job-actions { display: flex; gap: 12px; flex-wrap: wrap; }
-        .btn { padding: 10px 20px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 500; border-radius: 8px; cursor: pointer; }
-        .btn-primary { background: var(--accent); color: var(--bg-dark); border: none; }
-        .btn-secondary { background: var(--accent-blue); color: white; border: none; }
-        .btn-outline { background: transparent; color: var(--text-secondary); border: 1px solid var(--border); }
-        .btn-danger { background: transparent; color: var(--error); border: 1px solid var(--error); }
-        .loading { text-align: center; padding: 60px; color: var(--text-secondary); }
-        .empty-state { text-align: center; padding: 60px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; }
+        body { font-family: 'Inter', sans-serif; background: #f5f7fa; color: #1a1a2e; min-height: 100vh; }
         
-        /* Modal Styles */
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
-        .modal-content { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 450px; max-height: 80vh; overflow: hidden; }
-        .modal-header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-        .modal-header h3 { font-size: 1.1rem; }
-        .modal-close { background: none; border: none; color: var(--text-secondary); font-size: 1.5rem; cursor: pointer; }
-        .modal-body { padding: 20px; overflow-y: auto; max-height: 50vh; }
-        .modal-footer { padding: 20px; border-top: 1px solid var(--border); }
+        /* Layout */
+        .layout { display: flex; min-height: 100vh; }
         
-        /* Worker List */
-        .worker-list { display: flex; flex-direction: column; gap: 10px; }
-        .worker-item { padding: 14px; background: var(--bg-input); border: 2px solid var(--border); border-radius: 10px; cursor: pointer; transition: all 0.2s; }
-        .worker-item:hover { border-color: var(--accent); }
-        .worker-item.selected { border-color: var(--accent); background: rgba(0, 212, 170, 0.1); }
-        .worker-item-name { font-weight: 600; margin-bottom: 2px; }
-        .worker-item-email { font-size: 0.85rem; color: var(--text-secondary); }
-        .no-workers { text-align: center; padding: 30px; color: var(--text-muted); }
+        /* Sidebar */
+        .sidebar { width: 260px; background: #1a1a2e; color: #fff; padding: 0; display: flex; flex-direction: column; position: fixed; height: 100vh; z-index: 100; }
+        .sidebar-header { padding: 24px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-logo { font-size: 1.35rem; font-weight: 700; color: #00d4aa; letter-spacing: -0.5px; }
+        .sidebar-subtitle { font-size: 0.75rem; color: rgba(255,255,255,0.5); margin-top: 4px; }
+        
+        .sidebar-nav { flex: 1; padding: 16px 0; }
+        .nav-section { padding: 0 16px; margin-bottom: 8px; }
+        .nav-section-title { font-size: 0.7rem; text-transform: uppercase; color: rgba(255,255,255,0.4); padding: 8px 12px; letter-spacing: 0.5px; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; margin: 2px 8px; border-radius: 8px; color: rgba(255,255,255,0.7); text-decoration: none; font-size: 0.9rem; transition: all 0.2s; cursor: pointer; }
+        .nav-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
+        .nav-item.active { background: rgba(0, 212, 170, 0.15); color: #00d4aa; }
+        .nav-item svg { width: 20px; height: 20px; opacity: 0.7; }
+        .nav-item.active svg { opacity: 1; }
+        
+        .sidebar-footer { padding: 16px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .user-info { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 8px; background: rgba(255,255,255,0.05); }
+        .user-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #00d4aa, #00a8ff); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 1rem; }
+        .user-details { flex: 1; }
+        .user-name { font-size: 0.9rem; font-weight: 600; }
+        .user-role { font-size: 0.75rem; color: rgba(255,255,255,0.5); }
+        .logout-btn { background: none; border: none; color: rgba(255,255,255,0.5); cursor: pointer; padding: 8px; border-radius: 6px; }
+        .logout-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+        
+        /* Main Content */
+        .main { flex: 1; margin-left: 260px; }
+        
+        .header { background: #fff; padding: 20px 32px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50; }
+        .header-title h1 { font-size: 1.5rem; font-weight: 700; color: #1a1a2e; }
+        .header-title p { font-size: 0.875rem; color: #6b7280; margin-top: 2px; }
+        .header-actions { display: flex; gap: 12px; align-items: center; }
+        .btn { padding: 10px 20px; border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-primary { background: #00d4aa; color: #fff; border: none; }
+        .btn-primary:hover { background: #00b894; }
+        .btn-outline { background: #fff; color: #374151; border: 1px solid #d1d5db; }
+        .btn-outline:hover { background: #f9fafb; border-color: #9ca3af; }
+        
+        .content { padding: 32px; }
+        
+        /* Stats Cards */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 32px; }
+        @media (max-width: 1200px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 600px) { .stats-grid { grid-template-columns: 1fr; } }
+        
+        .stat-card { background: #fff; border-radius: 12px; padding: 24px; border: 1px solid #e5e7eb; }
+        .stat-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+        .stat-card-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+        .stat-card-icon.blue { background: rgba(0, 168, 255, 0.1); color: #00a8ff; }
+        .stat-card-icon.green { background: rgba(0, 212, 170, 0.1); color: #00d4aa; }
+        .stat-card-icon.purple { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
+        .stat-card-icon.orange { background: rgba(249, 115, 22, 0.1); color: #f97316; }
+        .stat-card-icon svg { width: 22px; height: 22px; }
+        .stat-value { font-size: 2rem; font-weight: 700; color: #1a1a2e; line-height: 1; }
+        .stat-label { font-size: 0.875rem; color: #6b7280; margin-top: 4px; }
+        .stat-change { font-size: 0.75rem; margin-top: 8px; display: flex; align-items: center; gap: 4px; }
+        .stat-change.up { color: #10b981; }
+        .stat-change.down { color: #ef4444; }
+        
+        /* Tabs */
+        .tabs-container { background: #fff; border-radius: 12px; border: 1px solid #e5e7eb; overflow: hidden; }
+        .tabs-header { display: flex; border-bottom: 1px solid #e5e7eb; padding: 0 24px; }
+        .tab { padding: 16px 24px; font-size: 0.9rem; font-weight: 500; color: #6b7280; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.2s; }
+        .tab:hover { color: #1a1a2e; }
+        .tab.active { color: #00d4aa; border-bottom-color: #00d4aa; }
+        .tab-badge { background: #e5e7eb; color: #6b7280; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; margin-left: 8px; }
+        .tab.active .tab-badge { background: rgba(0, 212, 170, 0.15); color: #00d4aa; }
+        
+        .tabs-content { padding: 24px; }
+        
+        /* Search & Filters */
+        .filters-row { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+        .search-box { flex: 1; min-width: 250px; position: relative; }
+        .search-box input { width: 100%; padding: 10px 16px 10px 42px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.875rem; font-family: 'Inter', sans-serif; }
+        .search-box input:focus { outline: none; border-color: #00d4aa; box-shadow: 0 0 0 3px rgba(0, 212, 170, 0.1); }
+        .search-box svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: #9ca3af; }
+        .filter-select { padding: 10px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.875rem; font-family: 'Inter', sans-serif; background: #fff; min-width: 150px; }
+        .filter-select:focus { outline: none; border-color: #00d4aa; }
+        
+        /* Table */
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 12px 16px; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #e5e7eb; background: #f9fafb; }
+        td { padding: 16px; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem; }
+        tr:hover { background: #f9fafb; }
+        tr:last-child td { border-bottom: none; }
+        
+        .job-site-cell { display: flex; flex-direction: column; }
+        .job-site-name { font-weight: 600; color: #1a1a2e; }
+        .job-site-address { font-size: 0.8rem; color: #6b7280; margin-top: 2px; }
+        
+        .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+        .status-badge.pending { background: #fef3c7; color: #d97706; }
+        .status-badge.accepted { background: #dbeafe; color: #2563eb; }
+        .status-badge.in-progress { background: #d1fae5; color: #059669; }
+        .status-badge.completed { background: #f3f4f6; color: #6b7280; }
+        .status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+        
+        .worker-cell { display: flex; align-items: center; gap: 10px; }
+        .worker-avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #00d4aa, #00a8ff); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 0.75rem; font-weight: 600; }
+        .worker-name { font-weight: 500; }
+        .no-worker { color: #9ca3af; font-style: italic; }
+        
+        .actions-cell { display: flex; gap: 8px; }
+        .action-btn { padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 500; cursor: pointer; border: none; transition: all 0.2s; }
+        .action-btn.primary { background: #00d4aa; color: #fff; }
+        .action-btn.primary:hover { background: #00b894; }
+        .action-btn.secondary { background: #f3f4f6; color: #374151; }
+        .action-btn.secondary:hover { background: #e5e7eb; }
+        
+        /* Pagination */
+        .pagination { display: flex; justify-content: space-between; align-items: center; padding-top: 20px; border-top: 1px solid #e5e7eb; margin-top: 20px; }
+        .pagination-info { font-size: 0.875rem; color: #6b7280; }
+        .pagination-buttons { display: flex; gap: 8px; }
+        .page-btn { padding: 8px 14px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem; background: #fff; cursor: pointer; }
+        .page-btn:hover { background: #f9fafb; }
+        .page-btn.active { background: #00d4aa; color: #fff; border-color: #00d4aa; }
+        .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        /* Modal */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.show { display: flex; }
+        .modal { background: #fff; border-radius: 16px; width: 100%; max-width: 500px; max-height: 80vh; overflow: hidden; }
+        .modal-header { padding: 20px 24px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { font-size: 1.1rem; font-weight: 600; }
+        .modal-close { background: none; border: none; font-size: 1.5rem; color: #9ca3af; cursor: pointer; }
+        .modal-close:hover { color: #1a1a2e; }
+        .modal-body { padding: 24px; max-height: 50vh; overflow-y: auto; }
+        .modal-footer { padding: 16px 24px; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; gap: 12px; }
+        
+        .worker-option { display: flex; align-items: center; gap: 12px; padding: 14px; border: 2px solid #e5e7eb; border-radius: 10px; cursor: pointer; transition: all 0.2s; margin-bottom: 10px; }
+        .worker-option:hover { border-color: #00d4aa; background: #f9fafb; }
+        .worker-option.selected { border-color: #00d4aa; background: rgba(0, 212, 170, 0.05); }
+        .worker-option-avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #00d4aa, #00a8ff); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 600; }
+        .worker-option-info { flex: 1; }
+        .worker-option-name { font-weight: 600; }
+        .worker-option-email { font-size: 0.85rem; color: #6b7280; }
+        .worker-option-check { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #d1d5db; display: flex; align-items: center; justify-content: center; }
+        .worker-option.selected .worker-option-check { background: #00d4aa; border-color: #00d4aa; color: #fff; }
+        
+        /* Empty State */
+        .empty-state { text-align: center; padding: 60px 20px; }
+        .empty-state svg { width: 64px; height: 64px; color: #d1d5db; margin-bottom: 16px; }
+        .empty-state h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; }
+        .empty-state p { color: #6b7280; font-size: 0.9rem; }
+        
+        /* Mobile Sidebar Toggle */
+        .mobile-toggle { display: none; background: #1a1a2e; color: #fff; border: none; padding: 12px; border-radius: 8px; cursor: pointer; }
+        @media (max-width: 900px) {
+            .sidebar { transform: translateX(-100%); transition: transform 0.3s; }
+            .sidebar.open { transform: translateX(0); }
+            .main { margin-left: 0; }
+            .mobile-toggle { display: block; }
+            .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 99; }
+            .sidebar-overlay.show { display: block; }
+        }
+        
+        /* Loading */
+        .loading { text-align: center; padding: 40px; color: #6b7280; }
+        .spinner { width: 40px; height: 40px; border: 3px solid #e5e7eb; border-top-color: #00d4aa; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
-    <div class="container">
-        <nav class="nav">
-            <a href="index.html" class="logo">FLEETCONNECT</a>
-            <div class="nav-right">
-                <div class="nav-links">
-                    <a href="index.html">Home</a>
-                    <a href="vendor-dashboard.html" class="active">Dashboard</a>
-                    <a href="job-history.html">Job History</a>
-                </div>
-                <div class="vendor-badge">VENDOR</div>
-                <span id="userName" style="color: var(--text-secondary); font-size: 0.9rem;"></span>
-                <button class="logout-btn" onclick="logout()">Logout</button>
+    <div class="layout">
+        <!-- Sidebar Overlay for Mobile -->
+        <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+        
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">FleetConnect</div>
+                <div class="sidebar-subtitle">Vendor Portal</div>
             </div>
-        </nav>
-        <header class="header">
-            <h1>Vendor Dashboard</h1>
-            <p>Manage your assigned jobs and field workers</p>
-        </header>
-        <div class="stats-grid">
-            <div class="stat-card"><div class="stat-value" id="statPending">-</div><div class="stat-label">Pending</div></div>
-            <div class="stat-card"><div class="stat-value" id="statActive">-</div><div class="stat-label">Active</div></div>
-            <div class="stat-card"><div class="stat-value" id="statCompleted">-</div><div class="stat-label">Completed</div></div>
-            <div class="stat-card"><div class="stat-value" id="statTotal">-</div><div class="stat-label">Total</div></div>
-        </div>
-        <div class="tabs">
-            <button class="tab active" data-status="pending">Pending</button>
-            <button class="tab" data-status="active">Active</button>
-            <button class="tab" data-status="completed">Completed</button>
-        </div>
-        <div class="jobs-list" id="jobsList"><div class="loading">Loading...</div></div>
+            
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Main Menu</div>
+                    <a href="vendor-dashboard.html" class="nav-item active">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                        Dashboard
+                    </a>
+                    <a href="#jobs" class="nav-item" onclick="switchTab('active')">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+                        Jobs
+                    </a>
+                    <a href="#invoices" class="nav-item" onclick="switchTab('invoices')">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        Invoices
+                    </a>
+                    <a href="#workers" class="nav-item" onclick="showWorkersSection()">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        Field Workers
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Analytics</div>
+                    <a href="#" class="nav-item">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                        Reports
+                    </a>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Settings</div>
+                    <a href="#" class="nav-item">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        Settings
+                    </a>
+                </div>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar" id="userAvatar">V</div>
+                    <div class="user-details">
+                        <div class="user-name" id="userName">Vendor</div>
+                        <div class="user-role">Vendor Account</div>
+                    </div>
+                    <button class="logout-btn" onclick="logout()" title="Logout">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                    </button>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main">
+            <header class="header">
+                <div style="display:flex;align-items:center;gap:16px;">
+                    <button class="mobile-toggle" onclick="toggleSidebar()">
+                        <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    </button>
+                    <div class="header-title">
+                        <h1>Dashboard</h1>
+                        <p>Welcome back! Here's what's happening with your jobs.</p>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-outline" onclick="loadData()">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        Refresh
+                    </button>
+                </div>
+            </header>
+            
+            <div class="content">
+                <!-- Stats Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-card-header">
+                            <div>
+                                <div class="stat-value" id="statActiveJobs">-</div>
+                                <div class="stat-label">Active Jobs</div>
+                            </div>
+                            <div class="stat-card-icon blue">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-card-header">
+                            <div>
+                                <div class="stat-value" id="statTotalGallons">-</div>
+                                <div class="stat-label">Gallons Delivered</div>
+                            </div>
+                            <div class="stat-card-icon green">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-card-header">
+                            <div>
+                                <div class="stat-value" id="statTotalDEF">-</div>
+                                <div class="stat-label">DEF Delivered</div>
+                            </div>
+                            <div class="stat-card-icon purple">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-card-header">
+                            <div>
+                                <div class="stat-value" id="statFieldWorkers">-</div>
+                                <div class="stat-label">Field Workers</div>
+                            </div>
+                            <div class="stat-card-icon orange">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Tabs Container -->
+                <div class="tabs-container">
+                    <div class="tabs-header">
+                        <div class="tab active" data-tab="active" onclick="switchTab('active')">
+                            Active Jobs
+                            <span class="tab-badge" id="badgeActive">0</span>
+                        </div>
+                        <div class="tab" data-tab="pending" onclick="switchTab('pending')">
+                            Pending
+                            <span class="tab-badge" id="badgePending">0</span>
+                        </div>
+                        <div class="tab" data-tab="completed" onclick="switchTab('completed')">
+                            Completed
+                            <span class="tab-badge" id="badgeCompleted">0</span>
+                        </div>
+                        <div class="tab" data-tab="invoices" onclick="switchTab('invoices')">
+                            Invoices
+                            <span class="tab-badge" id="badgeInvoices">0</span>
+                        </div>
+                    </div>
+                    
+                    <div class="tabs-content">
+                        <div class="filters-row">
+                            <div class="search-box">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                                <input type="text" id="searchInput" placeholder="Search jobs, workers..." oninput="renderCurrentTab()">
+                            </div>
+                            <select class="filter-select" id="workerFilter" onchange="renderCurrentTab()">
+                                <option value="">All Workers</option>
+                            </select>
+                        </div>
+                        
+                        <div class="table-container" id="tableContainer">
+                            <div class="loading">
+                                <div class="spinner"></div>
+                                Loading...
+                            </div>
+                        </div>
+                        
+                        <div class="pagination" id="pagination" style="display:none;">
+                            <div class="pagination-info" id="paginationInfo">Showing 1-10 of 50</div>
+                            <div class="pagination-buttons">
+                                <button class="page-btn" onclick="prevPage()">Previous</button>
+                                <button class="page-btn active">1</button>
+                                <button class="page-btn" onclick="nextPage()">Next</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
     
+    <!-- Assign Worker Modal -->
+    <div class="modal-overlay" id="assignModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Assign Field Worker</h3>
+                <button class="modal-close" onclick="closeAssignModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="workerList">
+                <!-- Worker options loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeAssignModal()">Cancel</button>
+                <button class="btn btn-primary" id="assignBtn" onclick="confirmAssign()" disabled>Assign Worker</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Invoice Details Modal -->
+    <div class="modal-overlay" id="invoiceModal">
+        <div class="modal" style="max-width:600px;">
+            <div class="modal-header">
+                <h3>Invoice Details</h3>
+                <button class="modal-close" onclick="closeInvoiceModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="invoiceDetails">
+                <!-- Invoice details loaded here -->
+            </div>
+        </div>
+    </div>
+
     <script src="supabase-client.js"></script>
     <script>
+        // Auth check
         const currentUser = checkAuth(['vendor']);
-        if (currentUser) document.getElementById('userName').textContent = currentUser.name;
-        
-        let allJobs = [];
-        let fieldWorkers = [];
-        let currentStatus = 'pending';
-        
-        async function loadData() {
-            allJobs = await getAllJobs();
-            fieldWorkers = await getFieldWorkers();
-            updateStats();
-            renderJobs();
+        if (currentUser) {
+            document.getElementById('userName').textContent = currentUser.name;
+            document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
         }
         
-        async function getFieldWorkers() {
+        // Data
+        let allJobs = [];
+        let allInvoices = [];
+        let fieldWorkers = [];
+        let currentTab = 'active';
+        let selectedWorkerId = null;
+        let selectedJobId = null;
+        
+        // Toggle sidebar for mobile
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('sidebarOverlay').classList.toggle('show');
+        }
+        
+        // Load all data
+        async function loadData() {
+            // Load jobs
+            allJobs = await getAllJobs();
+            
+            // Load invoices
+            const { data: invoices } = await db.from('invoices').select('*').order('created_at', { ascending: false });
+            allInvoices = invoices || [];
+            
+            // Load field workers
             const users = await getAllUsers();
-            return users.filter(u => u.role === 'fieldworker');
+            fieldWorkers = users.filter(u => u.role === 'fieldworker');
+            
+            // Update stats
+            updateStats();
+            
+            // Update worker filter dropdown
+            updateWorkerFilter();
+            
+            // Render current tab
+            renderCurrentTab();
         }
         
         function updateStats() {
-            document.getElementById('statPending').textContent = allJobs.filter(j => ['pending','assigned'].includes(j.status)).length;
-            document.getElementById('statActive').textContent = allJobs.filter(j => ['in-progress','accepted'].includes(j.status)).length;
-            document.getElementById('statCompleted').textContent = allJobs.filter(j => j.status === 'completed').length;
-            document.getElementById('statTotal').textContent = allJobs.length;
+            const activeJobs = allJobs.filter(j => ['accepted', 'in-progress', 'assigned'].includes(j.status));
+            document.getElementById('statActiveJobs').textContent = activeJobs.length;
+            
+            const totalDiesel = allInvoices.reduce((sum, inv) => sum + (parseFloat(inv.total_diesel) || 0), 0);
+            document.getElementById('statTotalGallons').textContent = totalDiesel.toFixed(0);
+            
+            const totalDEF = allInvoices.reduce((sum, inv) => sum + (parseFloat(inv.total_def) || 0), 0);
+            document.getElementById('statTotalDEF').textContent = totalDEF.toFixed(0);
+            
+            document.getElementById('statFieldWorkers').textContent = fieldWorkers.length;
+            
+            // Update badges
+            document.getElementById('badgeActive').textContent = allJobs.filter(j => ['accepted', 'in-progress'].includes(j.status)).length;
+            document.getElementById('badgePending').textContent = allJobs.filter(j => ['pending', 'assigned'].includes(j.status)).length;
+            document.getElementById('badgeCompleted').textContent = allJobs.filter(j => j.status === 'completed').length;
+            document.getElementById('badgeInvoices').textContent = allInvoices.length;
+        }
+        
+        function updateWorkerFilter() {
+            const select = document.getElementById('workerFilter');
+            select.innerHTML = '<option value="">All Workers</option>' + 
+                fieldWorkers.map(w => `<option value="${w.id}">${w.name}</option>`).join('');
+        }
+        
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`.tab[data-tab="${tab}"]`).classList.add('active');
+            renderCurrentTab();
+        }
+        
+        function renderCurrentTab() {
+            if (currentTab === 'invoices') {
+                renderInvoices();
+            } else {
+                renderJobs();
+            }
         }
         
         function getWorkerName(workerId) {
             const worker = fieldWorkers.find(w => w.id === workerId);
-            return worker ? worker.name : 'Unknown';
+            return worker ? worker.name : null;
         }
         
         function renderJobs() {
-            let filtered = currentStatus === 'pending' 
-                ? allJobs.filter(j => ['pending','assigned'].includes(j.status))
-                : currentStatus === 'active' 
-                    ? allJobs.filter(j => ['in-progress','accepted'].includes(j.status))
-                    : allJobs.filter(j => j.status === 'completed');
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const workerFilter = document.getElementById('workerFilter').value;
             
-            const container = document.getElementById('jobsList');
+            let filtered = allJobs;
             
-            if (!filtered.length) { 
-                container.innerHTML = `<div class="empty-state"><h3>No ${currentStatus} jobs</h3></div>`; 
-                return; 
+            // Filter by tab
+            if (currentTab === 'active') {
+                filtered = filtered.filter(j => ['accepted', 'in-progress'].includes(j.status));
+            } else if (currentTab === 'pending') {
+                filtered = filtered.filter(j => ['pending', 'assigned'].includes(j.status));
+            } else if (currentTab === 'completed') {
+                filtered = filtered.filter(j => j.status === 'completed');
             }
             
-            container.innerHTML = filtered.map(job => `
-                <div class="job-card">
-                    <div class="job-header">
-                        <div>
-                            <div class="job-title">${job.job_site_name || 'Untitled'}</div>
-                            <div class="job-meta">${formatJobType(job.job_type)} • ${formatDate(job.date_out)}</div>
-                        </div>
-                        <span class="status-badge ${job.status}">${job.status}</span>
-                    </div>
-                    
-                    <div class="job-details">
-                        <div>
-                            <div class="job-detail-label">Location</div>
-                            <div class="job-detail-value">${job.address_city || '-'}, ${job.address_state || '-'}</div>
-                        </div>
-                        <div>
-                            <div class="job-detail-label">Contact</div>
-                            <div class="job-detail-value">${job.contact_name || '-'}</div>
-                        </div>
-                        <div>
-                            <div class="job-detail-label">Phone</div>
-                            <div class="job-detail-value">${job.contact_phone || '-'}</div>
-                        </div>
-                    </div>
-                    
-                    ${job.assigned_worker ? `
-                        <div class="assigned-worker">
-                            <div class="assigned-worker-icon">👷</div>
-                            <div class="assigned-worker-info">
-                                <div class="assigned-worker-label">Assigned To</div>
-                                <div class="assigned-worker-name">${getWorkerName(job.assigned_worker)}</div>
-                            </div>
-                            <button class="btn btn-outline" onclick="openAssignModal('${job.id}')">Change</button>
-                        </div>
-                    ` : ''}
-                    
-                    <div class="job-actions">
-                        ${['pending','assigned'].includes(job.status) ? `
-                            <button class="btn btn-primary" onclick="acceptJob('${job.id}')">Accept Job</button>
-                            <button class="btn btn-outline" onclick="declineJob('${job.id}')">Decline</button>
-                        ` : ''}
-                        
-                        ${['accepted','in-progress'].includes(job.status) ? `
-                            ${!job.assigned_worker ? `<button class="btn btn-secondary" onclick="openAssignModal('${job.id}')">Assign Worker</button>` : ''}
-                            <button class="btn btn-danger" onclick="closeJob('${job.id}')">Close Job</button>
-                        ` : ''}
-                        
-                        <button class="btn btn-outline" onclick="viewDeliveries('${job.id}')">Deliveries</button>
-                    </div>
-                </div>
-            `).join('');
-        }
-        
-        async function acceptJob(id) { 
-            await updateJobStatus(id, 'accepted'); 
-            await loadData(); 
-        }
-        
-        async function declineJob(id) { 
-            if (confirm('Decline this job?')) { 
-                await updateJobStatus(id, 'open'); 
-                await loadData(); 
+            // Filter by search
+            if (search) {
+                filtered = filtered.filter(j => 
+                    (j.job_site_name || '').toLowerCase().includes(search) ||
+                    (j.contract_number || '').toLowerCase().includes(search) ||
+                    (j.address_city || '').toLowerCase().includes(search)
+                );
             }
-        }
-        
-        async function closeJob(id) { 
-            if (confirm('Close this job? This marks it as completed.')) { 
-                await updateJobStatus(id, 'completed'); 
-                await loadData(); 
+            
+            // Filter by worker
+            if (workerFilter) {
+                filtered = filtered.filter(j => j.assigned_worker === workerFilter);
             }
-        }
-        
-        function openAssignModal(jobId) {
-            const modal = document.createElement('div');
-            modal.className = 'modal';
-            modal.id = 'assignModal';
             
-            const workerListHtml = fieldWorkers.length ? fieldWorkers.map(w => `
-                <div class="worker-item" onclick="selectWorker(this, '${w.id}')">
-                    <div class="worker-item-name">${w.name}</div>
-                    <div class="worker-item-email">${w.email}</div>
-                </div>
-            `).join('') : '<div class="no-workers">No field workers available.<br>Add field workers in Admin Dashboard.</div>';
+            const container = document.getElementById('tableContainer');
             
-            modal.innerHTML = `
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h3>Assign Field Worker</h3>
-                        <button class="modal-close" onclick="closeAssignModal()">&times;</button>
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                        <h3>No jobs found</h3>
+                        <p>There are no ${currentTab} jobs matching your criteria.</p>
                     </div>
-                    <div class="modal-body">
-                        <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 0.9rem;">Select a field worker to assign to this job:</p>
-                        <div class="worker-list">
-                            ${workerListHtml}
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn btn-primary" id="assignBtn" onclick="confirmAssign('${jobId}')" disabled style="width:100%; opacity: 0.5;">Select a Worker</button>
-                    </div>
-                </div>
+                `;
+                document.getElementById('pagination').style.display = 'none';
+                return;
+            }
+            
+            container.innerHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Job Site</th>
+                            <th>Contract #</th>
+                            <th>Date</th>
+                            <th>Worker</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${filtered.map(job => `
+                            <tr>
+                                <td>
+                                    <div class="job-site-cell">
+                                        <span class="job-site-name">${job.job_site_name || 'Untitled'}</span>
+                                        <span class="job-site-address">${job.address_city || ''}, ${job.address_state || ''}</span>
+                                    </div>
+                                </td>
+                                <td>${job.contract_number || '-'}</td>
+                                <td>${formatDate(job.date_out)}</td>
+                                <td>
+                                    ${job.assigned_worker ? `
+                                        <div class="worker-cell">
+                                            <div class="worker-avatar">${getWorkerName(job.assigned_worker)?.charAt(0) || '?'}</div>
+                                            <span class="worker-name">${getWorkerName(job.assigned_worker) || 'Unknown'}</span>
+                                        </div>
+                                    ` : '<span class="no-worker">Not assigned</span>'}
+                                </td>
+                                <td><span class="status-badge ${job.status}"><span class="status-dot"></span>${job.status}</span></td>
+                                <td>
+                                    <div class="actions-cell">
+                                        ${['pending', 'assigned'].includes(job.status) ? `
+                                            <button class="action-btn primary" onclick="acceptJob('${job.id}')">Accept</button>
+                                        ` : ''}
+                                        ${!job.assigned_worker && job.status !== 'completed' ? `
+                                            <button class="action-btn secondary" onclick="openAssignModal('${job.id}')">Assign</button>
+                                        ` : ''}
+                                        ${job.assigned_worker && job.status !== 'completed' ? `
+                                            <button class="action-btn secondary" onclick="openAssignModal('${job.id}')">Reassign</button>
+                                        ` : ''}
+                                        <button class="action-btn secondary" onclick="viewJobInvoices('${job.id}')">Invoices</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
             `;
-            document.body.appendChild(modal);
+            
+            document.getElementById('pagination').style.display = filtered.length > 10 ? 'flex' : 'none';
+            document.getElementById('paginationInfo').textContent = `Showing 1-${Math.min(10, filtered.length)} of ${filtered.length}`;
         }
         
-        let selectedWorkerId = null;
-        
-        function selectWorker(element, workerId) {
-            document.querySelectorAll('.worker-item').forEach(el => el.classList.remove('selected'));
-            element.classList.add('selected');
-            selectedWorkerId = workerId;
+        function renderInvoices() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const workerFilter = document.getElementById('workerFilter').value;
             
-            const btn = document.getElementById('assignBtn');
-            btn.disabled = false;
-            btn.style.opacity = '1';
-            btn.textContent = 'Assign Worker';
+            let filtered = allInvoices;
+            
+            if (search) {
+                filtered = filtered.filter(inv => 
+                    (inv.worker_name || '').toLowerCase().includes(search)
+                );
+            }
+            
+            if (workerFilter) {
+                filtered = filtered.filter(inv => inv.worker_id === workerFilter);
+            }
+            
+            const container = document.getElementById('tableContainer');
+            
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        <h3>No invoices found</h3>
+                        <p>Field workers haven't submitted any invoices yet.</p>
+                    </div>
+                `;
+                document.getElementById('pagination').style.display = 'none';
+                return;
+            }
+            
+            container.innerHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Worker</th>
+                            <th>Units</th>
+                            <th>Diesel (gal)</th>
+                            <th>DEF (gal)</th>
+                            <th>Incident</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${filtered.map(inv => {
+                            const units = inv.units_data ? (typeof inv.units_data === 'string' ? JSON.parse(inv.units_data) : inv.units_data) : [];
+                            return `
+                                <tr>
+                                    <td>${formatDate(inv.invoice_date)}</td>
+                                    <td>
+                                        <div class="worker-cell">
+                                            <div class="worker-avatar">${(inv.worker_name || 'U').charAt(0)}</div>
+                                            <span class="worker-name">${inv.worker_name || 'Unknown'}</span>
+                                        </div>
+                                    </td>
+                                    <td>${units.length} unit${units.length !== 1 ? 's' : ''}</td>
+                                    <td><strong>${parseFloat(inv.total_diesel || 0).toFixed(1)}</strong></td>
+                                    <td>${parseFloat(inv.total_def || 0).toFixed(1)}</td>
+                                    <td>${inv.has_incident ? '<span class="status-badge pending"><span class="status-dot"></span>Yes</span>' : '-'}</td>
+                                    <td>
+                                        <button class="action-btn secondary" onclick="viewInvoiceDetails('${inv.id}')">View</button>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            `;
+            
+            document.getElementById('pagination').style.display = filtered.length > 10 ? 'flex' : 'none';
+        }
+        
+        // Job actions
+        async function acceptJob(jobId) {
+            await updateJobStatus(jobId, 'accepted');
+            await loadData();
+        }
+        
+        // Assign worker modal
+        function openAssignModal(jobId) {
+            selectedJobId = jobId;
+            selectedWorkerId = null;
+            
+            const workerList = document.getElementById('workerList');
+            
+            if (fieldWorkers.length === 0) {
+                workerList.innerHTML = `
+                    <div class="empty-state">
+                        <p>No field workers available. Add workers in the admin panel.</p>
+                    </div>
+                `;
+            } else {
+                workerList.innerHTML = fieldWorkers.map(w => `
+                    <div class="worker-option" onclick="selectWorker('${w.id}', this)">
+                        <div class="worker-option-avatar">${w.name.charAt(0)}</div>
+                        <div class="worker-option-info">
+                            <div class="worker-option-name">${w.name}</div>
+                            <div class="worker-option-email">${w.email}</div>
+                        </div>
+                        <div class="worker-option-check">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            document.getElementById('assignBtn').disabled = true;
+            document.getElementById('assignModal').classList.add('show');
+        }
+        
+        function selectWorker(workerId, element) {
+            selectedWorkerId = workerId;
+            document.querySelectorAll('.worker-option').forEach(el => el.classList.remove('selected'));
+            element.classList.add('selected');
+            document.getElementById('assignBtn').disabled = false;
         }
         
         function closeAssignModal() {
-            document.getElementById('assignModal')?.remove();
+            document.getElementById('assignModal').classList.remove('show');
+            selectedJobId = null;
             selectedWorkerId = null;
         }
         
-        async function confirmAssign(jobId) {
-            if (!selectedWorkerId) return;
+        async function confirmAssign() {
+            if (!selectedJobId || !selectedWorkerId) return;
             
             const btn = document.getElementById('assignBtn');
             btn.disabled = true;
             btn.textContent = 'Assigning...';
             
-            const result = await assignWorkerToJob(jobId, selectedWorkerId);
+            await assignWorkerToJob(selectedJobId, selectedWorkerId);
             
-            if (result.success) {
-                closeAssignModal();
-                await loadData();
-            } else {
-                alert('Error: ' + result.error);
-                btn.disabled = false;
-                btn.textContent = 'Assign Worker';
+            btn.textContent = 'Assign Worker';
+            closeAssignModal();
+            await loadData();
+        }
+        
+        // View job invoices
+        async function viewJobInvoices(jobId) {
+            const jobInvoices = allInvoices.filter(inv => inv.job_id === jobId);
+            
+            if (jobInvoices.length === 0) {
+                alert('No invoices submitted for this job yet.');
+                return;
             }
+            
+            // Switch to invoices tab with filter
+            switchTab('invoices');
         }
         
-        async function viewDeliveries(jobId) {
-            const deliveries = await getDeliveriesForJob(jobId);
-            const total = deliveries.reduce((s, d) => s + parseFloat(d.gallons), 0);
+        // Invoice details modal
+        function viewInvoiceDetails(invoiceId) {
+            const invoice = allInvoices.find(inv => inv.id === invoiceId);
+            if (!invoice) return;
             
-            const html = deliveries.length ? deliveries.map(d => `
-                <div style="padding:14px;background:var(--bg-input);border-radius:10px;margin-bottom:10px;">
-                    <div style="display:flex;justify-content:space-between;align-items:center;">
-                        <strong style="color:var(--accent);font-size:1.1rem;">${d.gallons} gal</strong>
-                        <span style="font-size:0.8rem;color:var(--text-muted);">${d.fuel_type || 'Diesel'}</span>
-                    </div>
-                    <div style="font-size:0.8rem;color:var(--text-muted);margin-top:4px;">
-                        ${new Date(d.timestamp).toLocaleString()} • ${d.delivered_by_name || 'Unknown'}
-                    </div>
-                    ${d.notes ? `<p style="margin-top:8px;font-size:0.85rem;color:var(--text-secondary);">${d.notes}</p>` : ''}
-                    ${d.has_incident ? `
-                        <div style="margin-top:10px;padding:10px;background:rgba(255,107,107,0.1);border:1px solid var(--error);border-radius:8px;">
-                            <div style="color:var(--error);font-weight:600;font-size:0.85rem;margin-bottom:4px;">⚠️ INCIDENT REPORTED</div>
-                            <p style="font-size:0.85rem;color:var(--text-secondary);">${d.incident_description || ''}</p>
-                            ${d.incident_photos && d.incident_photos.length ? `
-                                <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">
-                                    ${d.incident_photos.map(url => `<img src="${url}" style="width:50px;height:50px;object-fit:cover;border-radius:6px;cursor:pointer;" onclick="window.open('${url}', '_blank')">`).join('')}
-                                </div>
-                            ` : ''}
-                            ${d.incident_videos && d.incident_videos.length ? `
-                                <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">
-                                    ${d.incident_videos.map(url => `<video src="${url}" style="width:50px;height:50px;object-fit:cover;border-radius:6px;cursor:pointer;" onclick="window.open('${url}', '_blank')"></video>`).join('')}
-                                </div>
-                            ` : ''}
+            const units = invoice.units_data ? (typeof invoice.units_data === 'string' ? JSON.parse(invoice.units_data) : invoice.units_data) : [];
+            
+            document.getElementById('invoiceDetails').innerHTML = `
+                <div style="margin-bottom:20px;">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                        <div>
+                            <div style="font-size:0.75rem;color:#6b7280;text-transform:uppercase;">Date</div>
+                            <div style="font-weight:600;">${formatDate(invoice.invoice_date)}</div>
                         </div>
-                    ` : ''}
-                </div>
-            `).join('') : '<p style="text-align:center;color:var(--text-muted);padding:20px;">No deliveries yet</p>';
-            
-            const modal = document.createElement('div');
-            modal.className = 'modal';
-            modal.innerHTML = `
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h3>Delivery History (${total.toFixed(1)} gal)</h3>
-                        <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
-                    </div>
-                    <div class="modal-body">
-                        ${html}
+                        <div>
+                            <div style="font-size:0.75rem;color:#6b7280;text-transform:uppercase;">Worker</div>
+                            <div style="font-weight:600;">${invoice.worker_name || 'Unknown'}</div>
+                        </div>
+                        <div>
+                            <div style="font-size:0.75rem;color:#6b7280;text-transform:uppercase;">Total Diesel</div>
+                            <div style="font-weight:600;color:#00d4aa;">${parseFloat(invoice.total_diesel || 0).toFixed(1)} gal</div>
+                        </div>
+                        <div>
+                            <div style="font-size:0.75rem;color:#6b7280;text-transform:uppercase;">Total DEF</div>
+                            <div style="font-weight:600;color:#8b5cf6;">${parseFloat(invoice.total_def || 0).toFixed(1)} gal</div>
+                        </div>
                     </div>
                 </div>
+                
+                <div style="margin-bottom:20px;">
+                    <div style="font-size:0.75rem;color:#6b7280;text-transform:uppercase;margin-bottom:8px;">Units Serviced (${units.length})</div>
+                    ${units.map(u => `
+                        <div style="padding:12px;background:#f9fafb;border-radius:8px;margin-bottom:8px;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;">
+                            <div>
+                                <div style="font-size:0.7rem;color:#9ca3af;">Unit</div>
+                                <div style="font-weight:600;">${u.unitNumber || u.equipNum || '-'}</div>
+                            </div>
+                            <div>
+                                <div style="font-size:0.7rem;color:#9ca3af;">Hours</div>
+                                <div>${u.hours || '-'}</div>
+                            </div>
+                            <div>
+                                <div style="font-size:0.7rem;color:#9ca3af;">Diesel</div>
+                                <div>${u.diesel || 0} gal</div>
+                            </div>
+                            <div>
+                                <div style="font-size:0.7rem;color:#9ca3af;">DEF</div>
+                                <div>${u.def || 0} gal</div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                ${invoice.notes ? `
+                    <div style="margin-bottom:20px;">
+                        <div style="font-size:0.75rem;color:#6b7280;text-transform:uppercase;margin-bottom:8px;">Notes</div>
+                        <div style="padding:12px;background:#f9fafb;border-radius:8px;">${invoice.notes}</div>
+                    </div>
+                ` : ''}
+                
+                ${invoice.has_incident ? `
+                    <div style="padding:16px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;">
+                        <div style="font-weight:600;color:#dc2626;margin-bottom:8px;">⚠️ Incident Reported</div>
+                        <p style="color:#7f1d1d;font-size:0.9rem;">${invoice.incident_description || 'No description'}</p>
+                        ${invoice.incident_photos && invoice.incident_photos.length ? `
+                            <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+                                ${invoice.incident_photos.map(url => `<img src="${url}" style="width:60px;height:60px;object-fit:cover;border-radius:6px;cursor:pointer;" onclick="window.open('${url}')">`).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                ` : ''}
             `;
-            document.body.appendChild(modal);
+            
+            document.getElementById('invoiceModal').classList.add('show');
         }
         
-        // Tab switching
-        document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', function() {
-            document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
-            this.classList.add('active');
-            currentStatus = this.dataset.status;
-            renderJobs();
-        }));
+        function closeInvoiceModal() {
+            document.getElementById('invoiceModal').classList.remove('show');
+        }
+        
+        // Pagination (placeholder)
+        function prevPage() {}
+        function nextPage() {}
+        
+        // Close modals on escape
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') {
+                closeAssignModal();
+                closeInvoiceModal();
+            }
+        });
         
         // Load data on start
         loadData();
