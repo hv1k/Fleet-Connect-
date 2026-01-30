@@ -128,8 +128,6 @@
     
     <script src="supabase-client.js"></script>
     <script>
-        const SUPABASE_URL = 'https://ojqoxdsibiutpfhtvyyo.supabase.co';
-        
         const currentUser = checkAuth(['fieldworker']);
         if (currentUser) {
             const hour = new Date().getHours();
@@ -375,7 +373,9 @@
                 return null;
             }
             
-            return `${SUPABASE_URL}/storage/v1/object/public/incidents/${filePath}`;
+            // Get public URL
+            const { data: urlData } = db.storage.from('incidents').getPublicUrl(filePath);
+            return urlData.publicUrl;
         }
         
         async function submitDelivery(jobId) {
