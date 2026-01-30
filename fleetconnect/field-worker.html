@@ -580,13 +580,38 @@
                                     <span class="invoice-item-date">${new Date(d.timestamp).toLocaleDateString()}</span>
                                 </div>
                                 <div class="invoice-item-details">
-                                    <span>⛽ ${d.gallons} gal diesel</span>
+                                    <span>⛽ ${d.gallons || 0} gal diesel</span>
                                     <span>💧 ${d.def_gallons || 0} gal DEF</span>
                                     <span>⏱ ${d.unit_hours || '-'} hrs</span>
                                 </div>
+                                <div style="font-size:0.8rem;color:var(--text-muted);margin-top:6px;">
+                                    By ${d.delivered_by_name || 'Unknown'} at ${new Date(d.timestamp).toLocaleTimeString()}
+                                </div>
+                                ${d.notes ? `<div style="margin-top:8px;font-size:0.85rem;color:var(--text-secondary);">${d.notes}</div>` : ''}
                                 ${d.has_incident ? `
-                                    <div class="invoice-item-incident">
-                                        ⚠️ ${d.incident_description || 'Incident reported'}
+                                    <div style="margin-top:12px;padding:12px;background:rgba(255,170,0,0.1);border:1px solid var(--warning);border-radius:8px;">
+                                        <div style="color:var(--warning);font-weight:600;font-size:0.85rem;margin-bottom:8px;">⚠️ INCIDENT REPORTED</div>
+                                        ${d.incident_description ? `<p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:10px;">${d.incident_description}</p>` : ''}
+                                        ${d.incident_photos && d.incident_photos.length ? `
+                                            <div style="margin-bottom:8px;">
+                                                <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:6px;">Photos:</div>
+                                                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                                                    ${d.incident_photos.map(url => `
+                                                        <img src="${url}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;cursor:pointer;border:1px solid var(--border);" onclick="window.open('${url}', '_blank')">
+                                                    `).join('')}
+                                                </div>
+                                            </div>
+                                        ` : ''}
+                                        ${d.incident_videos && d.incident_videos.length ? `
+                                            <div>
+                                                <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:6px;">Videos:</div>
+                                                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                                                    ${d.incident_videos.map(url => `
+                                                        <video src="${url}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;cursor:pointer;border:1px solid var(--border);" onclick="window.open('${url}', '_blank')"></video>
+                                                    `).join('')}
+                                                </div>
+                                            </div>
+                                        ` : ''}
                                     </div>
                                 ` : ''}
                             </div>
