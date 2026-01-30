@@ -6,7 +6,6 @@
     <title>Create Work Order | FleetConnect</title>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
         :root { --bg-dark: #0a0a0f; --bg-card: #12121a; --bg-input: #1a1a24; --border: #2a2a3a; --text-primary: #ffffff; --text-secondary: #8a8a9a; --text-muted: #5a5a6a; --accent: #00d4aa; --accent-glow: rgba(0, 212, 170, 0.3); --error: #ff6b6b; --warning: #ffaa00; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -264,15 +263,16 @@
         
         document.getElementById('dateOut').value = new Date().toISOString().split('T')[0];
         
-        // ============ INVOICE SCANNING ============
+        // ============ INVOICE SCANNING WITH CLAUDE API ============
         let extractedData = {};
-        let scannedInvoiceFile = null; // Store the original invoice image
+        let scannedInvoiceFile = null;
+        
+        const CLAUDE_API_KEY = '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';
         
         async function handleInvoiceScan(event) {
             const file = event.target.files[0];
             if (!file) return;
             
-            // Store file for later upload
             scannedInvoiceFile = file;
             
             const modal = document.getElementById('scanModal');
@@ -283,36 +283,93 @@
             
             modal.classList.add('show');
             
+            // Show preview
             const reader = new FileReader();
+            let base64Image = '';
+            
             reader.onload = (e) => {
                 preview.src = e.target.result;
                 preview.style.display = 'block';
+                base64Image = e.target.result.split(',')[1]; // Get base64 without prefix
             };
             reader.readAsDataURL(file);
             
-            status.textContent = 'Scanning invoice...';
-            progressText.textContent = 'Loading OCR engine...';
-            progressFill.style.width = '10%';
+            // Wait for image to load
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            status.textContent = 'Analyzing invoice with AI...';
+            progressText.textContent = 'Sending to Claude...';
+            progressFill.style.width = '30%';
             
             try {
-                const result = await Tesseract.recognize(file, 'eng', {
-                    logger: (m) => {
-                        if (m.status === 'recognizing text') {
-                            const progress = Math.round(m.progress * 100);
-                            progressFill.style.width = `${10 + progress * 0.8}%`;
-                            progressText.textContent = `Reading text... ${progress}%`;
-                        }
-                    }
+                // Get base64 from the preview image
+                base64Image = preview.src.split(',')[1];
+                
+                const response = await fetch('https://api.anthropic.com/v1/messages', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-key': CLAUDE_API_KEY,
+                        'anthropic-version': '2023-06-01',
+                        'anthropic-dangerous-direct-browser-access': 'true'
+                    },
+                    body: JSON.stringify({
+                        model: 'claude-sonnet-4-20250514',
+                        max_tokens: 1024,
+                        messages: [{
+                            role: 'user',
+                            content: [
+                                {
+                                    type: 'image',
+                                    source: {
+                                        type: 'base64',
+                                        media_type: file.type || 'image/jpeg',
+                                        data: base64Image
+                                    }
+                                },
+                                {
+                                    type: 'text',
+                                    text: `Analyze this rental/equipment invoice and extract the following information. Return ONLY a JSON object with these exact fields (use empty string if not found):
+
+{
+  "contractNumber": "the contract number",
+  "poNumber": "the PO or purchase order number",
+  "jobSiteName": "the job site name or project name",
+  "addressStreet": "the JOB SITE street address (not the rental company address)",
+  "addressCity": "the JOB SITE city",
+  "addressState": "the JOB SITE state (2 letter code)",
+  "addressZip": "the JOB SITE zip code",
+  "contactName": "the contact person name (often 'Ordered By')",
+  "contactPhone": "the job site contact phone number",
+  "equipment": [{"unitNumber": "equipment/unit number", "description": "equipment description"}]
+}
+
+Important: Extract the JOB SITE/DELIVERY address, NOT the rental company's store address. Look for fields labeled "Job Site", "Job Loc", "Deliver To", or similar.`
+                                }
+                            ]
+                        }]
+                    })
                 });
                 
-                progressFill.style.width = '95%';
-                progressText.textContent = 'Extracting data...';
-                status.textContent = 'Processing...';
+                progressFill.style.width = '80%';
+                progressText.textContent = 'Processing response...';
                 
-                const text = result.data.text;
-                console.log('OCR Text:', text);
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error?.message || 'API request failed');
+                }
                 
-                extractedData = parseInvoiceText(text);
+                const data = await response.json();
+                const content = data.content[0].text;
+                
+                // Parse JSON from response
+                const jsonMatch = content.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                    extractedData = JSON.parse(jsonMatch[0]);
+                    console.log('Extracted data:', extractedData);
+                } else {
+                    throw new Error('Could not parse response');
+                }
                 
                 progressFill.style.width = '100%';
                 
@@ -322,98 +379,16 @@
                 }, 500);
                 
             } catch (error) {
-                console.error('OCR Error:', error);
-                status.textContent = 'Error scanning invoice';
+                console.error('Claude API Error:', error);
+                status.textContent = 'Error analyzing invoice';
                 progressText.textContent = error.message;
                 setTimeout(() => {
                     modal.classList.remove('show');
-                    alert('Failed to scan invoice. Please try again or fill the form manually.');
+                    alert('Failed to analyze invoice: ' + error.message + '\n\nPlease fill the form manually.');
                 }, 2000);
             }
             
             event.target.value = '';
-        }
-        
-        function parseInvoiceText(text) {
-            const data = {
-                contractNumber: '',
-                poNumber: '',
-                jobSiteName: '',
-                addressStreet: '',
-                addressCity: '',
-                addressState: '',
-                addressZip: '',
-                contactName: '',
-                contactPhone: '',
-                equipment: []
-            };
-            
-            // Contract number
-            const contractMatch = text.match(/contract\s*#?\s*:?\s*([A-Z0-9-]+)/i);
-            if (contractMatch) data.contractNumber = contractMatch[1];
-            
-            // PO number
-            const poMatch = text.match(/p\.?o\.?\s*#?\s*:?\s*([A-Z0-9-]+)/i);
-            if (poMatch) data.poNumber = poMatch[1];
-            
-            // Phone number
-            const phoneMatch = text.match(/(\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4})/);
-            if (phoneMatch) data.contactPhone = phoneMatch[1];
-            
-            // ZIP code
-            const zipMatch = text.match(/\b(\d{5}(-\d{4})?)\b/);
-            if (zipMatch) data.addressZip = zipMatch[1];
-            
-            // State (2 letter before ZIP)
-            const stateMatch = text.match(/\b([A-Z]{2})\s+\d{5}/);
-            if (stateMatch) data.addressState = stateMatch[1];
-            
-            // Equipment numbers - look for various patterns
-            const equipPatterns = [
-                /(?:unit|equip|asset|machine|serial)\s*#?\s*:?\s*([A-Z0-9-]{3,})/gi,
-                /\b([A-Z]{1,3}[-]?\d{3,6})\b/g
-            ];
-            
-            const foundEquip = new Set();
-            for (const pattern of equipPatterns) {
-                let match;
-                while ((match = pattern.exec(text)) !== null) {
-                    const num = match[1].toUpperCase();
-                    if (num.length >= 3 && !foundEquip.has(num)) {
-                        foundEquip.add(num);
-                        data.equipment.push({ unitNumber: num, description: '' });
-                    }
-                }
-            }
-            
-            // Job site name
-            const jobSitePatterns = [
-                /(?:job\s*site|deliver\s*to|location|site|project)\s*:?\s*([^\n]{3,50})/i,
-                /(?:customer|client)\s*:?\s*([^\n]{3,50})/i
-            ];
-            for (const pattern of jobSitePatterns) {
-                const match = text.match(pattern);
-                if (match && match[1].trim().length > 3) {
-                    data.jobSiteName = match[1].trim();
-                    break;
-                }
-            }
-            
-            // Street address
-            const addressMatch = text.match(/(\d+\s+[A-Za-z]+(?:\s+[A-Za-z]+)*\s+(?:St|Street|Ave|Avenue|Rd|Road|Blvd|Boulevard|Dr|Drive|Ln|Lane|Way|Ct|Court|Pl|Place)\.?)/i);
-            if (addressMatch) data.addressStreet = addressMatch[1];
-            
-            // City (word before state)
-            if (data.addressState) {
-                const cityMatch = text.match(new RegExp(`([A-Za-z\\s]+),?\\s*${data.addressState}`, 'i'));
-                if (cityMatch) data.addressCity = cityMatch[1].trim().replace(/,\s*$/, '');
-            }
-            
-            // Contact name
-            const contactMatch = text.match(/(?:contact|attn|attention)\s*:?\s*([A-Za-z]+(?:\s+[A-Za-z]+)?)/i);
-            if (contactMatch) data.contactName = contactMatch[1];
-            
-            return data;
         }
         
         function showExtractedData() {
