@@ -209,7 +209,8 @@ async function createJob(jobData, equipmentList) {
             status: jobData.status || 'pending',
             assigned_vendor: jobData.assignedVendor || null,
             allow_open_if_declined: jobData.allowOpenIfDeclined,
-            created_by: jobData.createdBy || null
+            created_by: jobData.createdBy || null,
+            invoice_image: jobData.invoiceImage || null
         }])
         .select()
         .single();

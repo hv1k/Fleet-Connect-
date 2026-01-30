@@ -6,6 +6,7 @@
     <title>Create Work Order | FleetConnect</title>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
         :root { --bg-dark: #0a0a0f; --bg-card: #12121a; --bg-input: #1a1a24; --border: #2a2a3a; --text-primary: #ffffff; --text-secondary: #8a8a9a; --text-muted: #5a5a6a; --accent: #00d4aa; --accent-glow: rgba(0, 212, 170, 0.3); --error: #ff6b6b; --warning: #ffaa00; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -19,6 +20,42 @@
         .header { margin-bottom: 32px; }
         .header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 8px; }
         .header p { color: var(--text-secondary); }
+        
+        /* Scan Invoice Section */
+        .scan-section { background: linear-gradient(135deg, rgba(0, 212, 170, 0.1), rgba(0, 168, 255, 0.1)); border: 2px dashed var(--accent); border-radius: 16px; padding: 32px; margin-bottom: 32px; text-align: center; }
+        .scan-section h2 { font-size: 1.25rem; margin-bottom: 8px; }
+        .scan-section p { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 20px; }
+        .scan-buttons { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+        .scan-btn { padding: 14px 28px; font-family: 'DM Sans', sans-serif; font-size: 1rem; font-weight: 600; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+        .scan-btn-primary { background: var(--accent); color: var(--bg-dark); border: none; }
+        .scan-btn-secondary { background: transparent; color: var(--accent); border: 2px solid var(--accent); }
+        .scan-btn:hover { transform: translateY(-2px); }
+        .scan-input { display: none; }
+        
+        /* Scanning Modal */
+        .scan-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        .scan-modal.show { display: flex; }
+        .scan-modal-content { background: var(--bg-card); border-radius: 16px; padding: 32px; max-width: 500px; width: 100%; text-align: center; }
+        .scan-preview { max-width: 100%; max-height: 300px; border-radius: 12px; margin: 20px 0; }
+        .scan-progress { margin: 20px 0; }
+        .progress-bar { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--accent); transition: width 0.3s; }
+        .progress-text { font-size: 0.9rem; color: var(--text-secondary); margin-top: 8px; }
+        .scan-status { font-size: 1.1rem; font-weight: 600; margin-bottom: 12px; }
+        .scan-cancel { margin-top: 20px; padding: 12px 24px; background: transparent; border: 1px solid var(--border); color: var(--text-secondary); border-radius: 8px; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+        
+        /* Extracted Data Preview */
+        .extracted-preview { display: none; background: var(--bg-card); border: 1px solid var(--accent); border-radius: 12px; padding: 20px; margin-bottom: 24px; }
+        .extracted-preview.show { display: block; }
+        .extracted-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .extracted-header h3 { color: var(--accent); font-size: 1rem; }
+        .extracted-dismiss { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem; }
+        .extracted-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+        .extracted-item:last-child { border-bottom: none; }
+        .extracted-label { color: var(--text-muted); }
+        .extracted-value { color: var(--text-primary); font-family: 'Space Mono', monospace; }
+        .apply-btn { width: 100%; padding: 12px; background: var(--accent); color: var(--bg-dark); border: none; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-weight: 600; cursor: pointer; margin-top: 16px; }
+        
         .form-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 32px; }
         .form-section { margin-bottom: 32px; padding-bottom: 32px; border-bottom: 1px solid var(--border); }
         .form-section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
@@ -30,6 +67,7 @@
         .form-group label { display: block; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px; }
         .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px 14px; font-family: 'DM Sans', sans-serif; font-size: 0.95rem; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); }
         .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--accent); }
+        .form-group input.auto-filled { border-color: var(--accent); background: rgba(0, 212, 170, 0.1); }
         .form-group textarea { min-height: 100px; resize: vertical; }
         .mono { font-family: 'Space Mono', monospace; }
         .required { color: var(--error); }
@@ -39,6 +77,7 @@
         .equipment-item { display: grid; grid-template-columns: 150px 1fr 40px; gap: 12px; align-items: center; padding: 12px; background: var(--bg-input); border-radius: 8px; margin-bottom: 8px; }
         @media (max-width: 600px) { .equipment-item { grid-template-columns: 1fr; } }
         .equipment-item input { padding: 10px; }
+        .equipment-item input.auto-filled { border-color: var(--accent); background: rgba(0, 212, 170, 0.1); }
         .remove-equipment { width: 36px; height: 36px; background: transparent; border: 1px solid var(--error); color: var(--error); border-radius: 6px; cursor: pointer; font-size: 1.2rem; }
         .remove-equipment:hover { background: var(--error); color: white; }
         .add-equipment-btn { padding: 12px 20px; background: transparent; border: 1px dashed var(--border); color: var(--text-secondary); border-radius: 8px; cursor: pointer; width: 100%; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; }
@@ -52,6 +91,9 @@
         .success-message.show { display: block; }
         .success-icon { font-size: 4rem; margin-bottom: 24px; }
         .btn-outline { padding: 12px 24px; background: transparent; color: var(--accent); border: 1px solid var(--accent); border-radius: 8px; text-decoration: none; display: inline-block; font-weight: 600; }
+        
+        .or-divider { display: flex; align-items: center; gap: 16px; margin: 24px 0; color: var(--text-muted); font-size: 0.85rem; }
+        .or-divider::before, .or-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
     </style>
 </head>
 <body>
@@ -73,6 +115,49 @@
             <h1>Create Work Order</h1>
             <p>Submit a new service request</p>
         </header>
+        
+        <!-- Scan Invoice Section -->
+        <div class="scan-section">
+            <h2>📄 Quick Entry: Scan Invoice</h2>
+            <p>Take a photo of your rental invoice and we'll auto-fill the form</p>
+            <div class="scan-buttons">
+                <label class="scan-btn scan-btn-primary">
+                    <span>📷</span> Take Photo
+                    <input type="file" class="scan-input" id="cameraInput" accept="image/*" capture="environment" onchange="handleInvoiceScan(event)">
+                </label>
+                <label class="scan-btn scan-btn-secondary">
+                    <span>📁</span> Upload Image
+                    <input type="file" class="scan-input" id="fileInput" accept="image/*" onchange="handleInvoiceScan(event)">
+                </label>
+            </div>
+        </div>
+        
+        <!-- Scanning Modal -->
+        <div class="scan-modal" id="scanModal">
+            <div class="scan-modal-content">
+                <div class="scan-status" id="scanStatus">Preparing...</div>
+                <img id="scanPreview" class="scan-preview" style="display:none;">
+                <div class="scan-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                    </div>
+                    <div class="progress-text" id="progressText">Starting OCR...</div>
+                </div>
+                <button class="scan-cancel" onclick="cancelScan()">Cancel</button>
+            </div>
+        </div>
+        
+        <!-- Extracted Data Preview -->
+        <div class="extracted-preview" id="extractedPreview">
+            <div class="extracted-header">
+                <h3>✨ Extracted Data</h3>
+                <button class="extracted-dismiss" onclick="dismissExtracted()">×</button>
+            </div>
+            <div id="extractedItems"></div>
+            <button class="apply-btn" onclick="applyExtracted()">Apply to Form</button>
+        </div>
+        
+        <div class="or-divider">or fill manually</div>
         
         <div class="form-card" id="formCard">
             <form id="workOrderForm">
@@ -123,13 +208,9 @@
                     <div class="section-label">Equipment / Units <span class="required">*</span></div>
                     <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 16px;">Add all equipment that needs fueling at this job site</p>
                     
-                    <div class="equipment-list" id="equipmentList">
-                        <!-- Equipment items added here -->
-                    </div>
+                    <div class="equipment-list" id="equipmentList"></div>
                     
-                    <button type="button" class="add-equipment-btn" onclick="addEquipment()">
-                        + Add Equipment
-                    </button>
+                    <button type="button" class="add-equipment-btn" onclick="addEquipment()">+ Add Equipment</button>
                     <div class="equipment-count" id="equipmentCount">0 units added</div>
                 </div>
                 
@@ -181,15 +262,243 @@
         const currentUser = checkAuth();
         if (currentUser) document.getElementById('userName').textContent = currentUser.name;
         
-        // Set default date to today
         document.getElementById('dateOut').value = new Date().toISOString().split('T')[0];
         
-        // Equipment management
+        // ============ INVOICE SCANNING ============
+        let extractedData = {};
+        let scannedInvoiceFile = null; // Store the original invoice image
+        
+        async function handleInvoiceScan(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            // Store file for later upload
+            scannedInvoiceFile = file;
+            
+            const modal = document.getElementById('scanModal');
+            const preview = document.getElementById('scanPreview');
+            const status = document.getElementById('scanStatus');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            
+            modal.classList.add('show');
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+            
+            status.textContent = 'Scanning invoice...';
+            progressText.textContent = 'Loading OCR engine...';
+            progressFill.style.width = '10%';
+            
+            try {
+                const result = await Tesseract.recognize(file, 'eng', {
+                    logger: (m) => {
+                        if (m.status === 'recognizing text') {
+                            const progress = Math.round(m.progress * 100);
+                            progressFill.style.width = `${10 + progress * 0.8}%`;
+                            progressText.textContent = `Reading text... ${progress}%`;
+                        }
+                    }
+                });
+                
+                progressFill.style.width = '95%';
+                progressText.textContent = 'Extracting data...';
+                status.textContent = 'Processing...';
+                
+                const text = result.data.text;
+                console.log('OCR Text:', text);
+                
+                extractedData = parseInvoiceText(text);
+                
+                progressFill.style.width = '100%';
+                
+                setTimeout(() => {
+                    modal.classList.remove('show');
+                    showExtractedData();
+                }, 500);
+                
+            } catch (error) {
+                console.error('OCR Error:', error);
+                status.textContent = 'Error scanning invoice';
+                progressText.textContent = error.message;
+                setTimeout(() => {
+                    modal.classList.remove('show');
+                    alert('Failed to scan invoice. Please try again or fill the form manually.');
+                }, 2000);
+            }
+            
+            event.target.value = '';
+        }
+        
+        function parseInvoiceText(text) {
+            const data = {
+                contractNumber: '',
+                poNumber: '',
+                jobSiteName: '',
+                addressStreet: '',
+                addressCity: '',
+                addressState: '',
+                addressZip: '',
+                contactName: '',
+                contactPhone: '',
+                equipment: []
+            };
+            
+            // Contract number
+            const contractMatch = text.match(/contract\s*#?\s*:?\s*([A-Z0-9-]+)/i);
+            if (contractMatch) data.contractNumber = contractMatch[1];
+            
+            // PO number
+            const poMatch = text.match(/p\.?o\.?\s*#?\s*:?\s*([A-Z0-9-]+)/i);
+            if (poMatch) data.poNumber = poMatch[1];
+            
+            // Phone number
+            const phoneMatch = text.match(/(\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4})/);
+            if (phoneMatch) data.contactPhone = phoneMatch[1];
+            
+            // ZIP code
+            const zipMatch = text.match(/\b(\d{5}(-\d{4})?)\b/);
+            if (zipMatch) data.addressZip = zipMatch[1];
+            
+            // State (2 letter before ZIP)
+            const stateMatch = text.match(/\b([A-Z]{2})\s+\d{5}/);
+            if (stateMatch) data.addressState = stateMatch[1];
+            
+            // Equipment numbers - look for various patterns
+            const equipPatterns = [
+                /(?:unit|equip|asset|machine|serial)\s*#?\s*:?\s*([A-Z0-9-]{3,})/gi,
+                /\b([A-Z]{1,3}[-]?\d{3,6})\b/g
+            ];
+            
+            const foundEquip = new Set();
+            for (const pattern of equipPatterns) {
+                let match;
+                while ((match = pattern.exec(text)) !== null) {
+                    const num = match[1].toUpperCase();
+                    if (num.length >= 3 && !foundEquip.has(num)) {
+                        foundEquip.add(num);
+                        data.equipment.push({ unitNumber: num, description: '' });
+                    }
+                }
+            }
+            
+            // Job site name
+            const jobSitePatterns = [
+                /(?:job\s*site|deliver\s*to|location|site|project)\s*:?\s*([^\n]{3,50})/i,
+                /(?:customer|client)\s*:?\s*([^\n]{3,50})/i
+            ];
+            for (const pattern of jobSitePatterns) {
+                const match = text.match(pattern);
+                if (match && match[1].trim().length > 3) {
+                    data.jobSiteName = match[1].trim();
+                    break;
+                }
+            }
+            
+            // Street address
+            const addressMatch = text.match(/(\d+\s+[A-Za-z]+(?:\s+[A-Za-z]+)*\s+(?:St|Street|Ave|Avenue|Rd|Road|Blvd|Boulevard|Dr|Drive|Ln|Lane|Way|Ct|Court|Pl|Place)\.?)/i);
+            if (addressMatch) data.addressStreet = addressMatch[1];
+            
+            // City (word before state)
+            if (data.addressState) {
+                const cityMatch = text.match(new RegExp(`([A-Za-z\\s]+),?\\s*${data.addressState}`, 'i'));
+                if (cityMatch) data.addressCity = cityMatch[1].trim().replace(/,\s*$/, '');
+            }
+            
+            // Contact name
+            const contactMatch = text.match(/(?:contact|attn|attention)\s*:?\s*([A-Za-z]+(?:\s+[A-Za-z]+)?)/i);
+            if (contactMatch) data.contactName = contactMatch[1];
+            
+            return data;
+        }
+        
+        function showExtractedData() {
+            const preview = document.getElementById('extractedPreview');
+            const items = document.getElementById('extractedItems');
+            
+            const fields = [
+                { key: 'contractNumber', label: 'Contract #' },
+                { key: 'poNumber', label: 'P.O. #' },
+                { key: 'jobSiteName', label: 'Job Site' },
+                { key: 'addressStreet', label: 'Address' },
+                { key: 'addressCity', label: 'City' },
+                { key: 'addressState', label: 'State' },
+                { key: 'addressZip', label: 'ZIP' },
+                { key: 'contactName', label: 'Contact' },
+                { key: 'contactPhone', label: 'Phone' }
+            ];
+            
+            let html = '';
+            let foundAny = false;
+            
+            for (const field of fields) {
+                if (extractedData[field.key]) {
+                    foundAny = true;
+                    html += `<div class="extracted-item"><span class="extracted-label">${field.label}</span><span class="extracted-value">${extractedData[field.key]}</span></div>`;
+                }
+            }
+            
+            if (extractedData.equipment && extractedData.equipment.length > 0) {
+                foundAny = true;
+                html += `<div class="extracted-item"><span class="extracted-label">Equipment</span><span class="extracted-value">${extractedData.equipment.length} unit(s) found</span></div>`;
+            }
+            
+            if (foundAny) {
+                items.innerHTML = html;
+                preview.classList.add('show');
+            } else {
+                alert('Could not extract data from this invoice. The image may be unclear or the format is not recognized. Please fill the form manually.');
+            }
+        }
+        
+        function dismissExtracted() {
+            document.getElementById('extractedPreview').classList.remove('show');
+            extractedData = {};
+        }
+        
+        function applyExtracted() {
+            const fields = ['contractNumber', 'poNumber', 'jobSiteName', 'addressStreet', 'addressCity', 'addressState', 'addressZip', 'contactName', 'contactPhone'];
+            
+            for (const fieldId of fields) {
+                if (extractedData[fieldId]) {
+                    const field = document.getElementById(fieldId);
+                    if (field) {
+                        field.value = extractedData[fieldId];
+                        field.classList.add('auto-filled');
+                    }
+                }
+            }
+            
+            if (extractedData.equipment && extractedData.equipment.length > 0) {
+                equipmentItems = [];
+                extractedData.equipment.forEach(eq => {
+                    equipmentItems.push({
+                        id: Date.now() + Math.random(),
+                        unitNumber: eq.unitNumber,
+                        description: eq.description || '',
+                        autoFilled: true
+                    });
+                });
+                renderEquipment();
+            }
+            
+            document.getElementById('extractedPreview').classList.remove('show');
+            document.getElementById('formCard').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function cancelScan() {
+            document.getElementById('scanModal').classList.remove('show');
+        }
+        
+        // ============ EQUIPMENT MANAGEMENT ============
         let equipmentItems = [];
         
         function addEquipment() {
-            const id = Date.now();
-            equipmentItems.push({ id, unitNumber: '', description: '' });
+            equipmentItems.push({ id: Date.now(), unitNumber: '', description: '' });
             renderEquipment();
         }
         
@@ -205,13 +514,14 @@
         }
         
         function renderEquipment() {
-            const container = document.getElementById('equipmentList');
-            container.innerHTML = equipmentItems.map(item => `
+            document.getElementById('equipmentList').innerHTML = equipmentItems.map(item => `
                 <div class="equipment-item">
                     <input type="text" placeholder="Unit #" value="${item.unitNumber}" 
-                           onchange="updateEquipment(${item.id}, 'unitNumber', this.value)" class="mono">
+                           onchange="updateEquipment(${item.id}, 'unitNumber', this.value)" 
+                           class="mono ${item.autoFilled ? 'auto-filled' : ''}">
                     <input type="text" placeholder="Description (e.g. CAT Excavator 320)" value="${item.description}"
-                           onchange="updateEquipment(${item.id}, 'description', this.value)">
+                           onchange="updateEquipment(${item.id}, 'description', this.value)"
+                           class="${item.autoFilled ? 'auto-filled' : ''}">
                     <button type="button" class="remove-equipment" onclick="removeEquipment(${item.id})">×</button>
                 </div>
             `).join('');
@@ -223,14 +533,12 @@
             document.getElementById('equipmentCount').textContent = `${validItems.length} unit${validItems.length !== 1 ? 's' : ''} added`;
         }
         
-        // Add first equipment row by default
         addEquipment();
         
-        // Form submission
+        // ============ FORM SUBMISSION ============
         document.getElementById('workOrderForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            // Validate at least one equipment
             const validEquipment = equipmentItems.filter(e => e.unitNumber.trim() !== '');
             if (validEquipment.length === 0) {
                 alert('Please add at least one equipment unit');
@@ -240,6 +548,21 @@
             const btn = document.getElementById('submitBtn');
             btn.disabled = true;
             btn.textContent = 'Creating...';
+            
+            // Upload scanned invoice image if exists
+            let invoiceImageUrl = null;
+            if (scannedInvoiceFile) {
+                btn.textContent = 'Uploading invoice...';
+                const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}_${scannedInvoiceFile.name}`;
+                const filePath = `invoices/${fileName}`;
+                
+                const { error: uploadError } = await db.storage.from('incidents').upload(filePath, scannedInvoiceFile);
+                if (!uploadError) {
+                    const { data } = db.storage.from('incidents').getPublicUrl(filePath);
+                    invoiceImageUrl = data.publicUrl;
+                }
+                btn.textContent = 'Creating job...';
+            }
             
             const jobData = {
                 contractNumber: document.getElementById('contractNumber').value,
@@ -259,10 +582,10 @@
                 timeOut: document.getElementById('timeOut').value,
                 instructions: document.getElementById('instructions').value,
                 status: 'pending',
-                createdBy: currentUser?.id
+                createdBy: currentUser?.id,
+                invoiceImage: invoiceImageUrl
             };
             
-            // Format equipment for database
             const equipmentList = validEquipment.map(e => ({
                 equipNum: e.unitNumber,
                 description: e.description,
@@ -273,6 +596,9 @@
             
             if (result.success) {
                 document.getElementById('formCard').style.display = 'none';
+                document.querySelector('.scan-section').style.display = 'none';
+                document.querySelector('.or-divider').style.display = 'none';
+                document.getElementById('extractedPreview').style.display = 'none';
                 document.getElementById('successMessage').classList.add('show');
             } else {
                 alert('Error: ' + result.error);
