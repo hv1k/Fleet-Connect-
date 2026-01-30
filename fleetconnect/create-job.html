@@ -4,23 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Work Order | FleetConnect</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --bg-dark: #0a0a0f; --bg-card: #12121a; --bg-input: #1a1a24; --border: #2a2a3a; --text-primary: #ffffff; --text-secondary: #8a8a9a; --text-muted: #5a5a6a; --accent: #00d4aa; --accent-glow: rgba(0, 212, 170, 0.3); --error: #ff6b6b; }
+        :root { --bg-dark: #0a0a0f; --bg-card: #12121a; --bg-input: #1a1a24; --border: #2a2a3a; --text-primary: #ffffff; --text-secondary: #8a8a9a; --text-muted: #5a5a6a; --accent: #00d4aa; --accent-glow: rgba(0, 212, 170, 0.3); --error: #ff6b6b; --warning: #ffaa00; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'DM Sans', sans-serif; background: var(--bg-dark); color: var(--text-primary); min-height: 100vh; line-height: 1.6; }
-        body::before { content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-image: linear-gradient(rgba(0, 212, 170, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 212, 170, 0.03) 1px, transparent 1px); background-size: 50px 50px; pointer-events: none; z-index: 0; }
-        .container { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 40px 20px; }
+        .container { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
         .nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
-        .logo { font-family: 'Space Mono', monospace; font-size: 1.5rem; color: var(--accent); letter-spacing: -1px; text-decoration: none; }
-        .nav-right { display: flex; align-items: center; gap: 24px; }
-        .nav-links { display: flex; gap: 24px; }
-        .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; font-weight: 500; }
-        .nav-links a:hover, .nav-links a.active { color: var(--accent); }
-        .logout-btn { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+        .logo { font-family: 'Space Mono', monospace; font-size: 1.5rem; color: var(--accent); text-decoration: none; }
+        .nav-links a { color: var(--text-secondary); text-decoration: none; margin-right: 24px; }
+        .nav-links a.active { color: var(--accent); }
+        .logout-btn { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); padding: 8px 16px; border-radius: 6px; cursor: pointer; }
         .header { margin-bottom: 32px; }
         .header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 8px; }
         .header p { color: var(--text-secondary); }
@@ -37,15 +32,25 @@
         .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--accent); }
         .form-group textarea { min-height: 100px; resize: vertical; }
         .mono { font-family: 'Space Mono', monospace; }
-        .required { color: var(--error); margin-left: 2px; }
+        .required { color: var(--error); }
+        
+        /* Equipment Section */
+        .equipment-list { margin-bottom: 16px; }
+        .equipment-item { display: grid; grid-template-columns: 150px 1fr 40px; gap: 12px; align-items: center; padding: 12px; background: var(--bg-input); border-radius: 8px; margin-bottom: 8px; }
+        @media (max-width: 600px) { .equipment-item { grid-template-columns: 1fr; } }
+        .equipment-item input { padding: 10px; }
+        .remove-equipment { width: 36px; height: 36px; background: transparent; border: 1px solid var(--error); color: var(--error); border-radius: 6px; cursor: pointer; font-size: 1.2rem; }
+        .remove-equipment:hover { background: var(--error); color: white; }
+        .add-equipment-btn { padding: 12px 20px; background: transparent; border: 1px dashed var(--border); color: var(--text-secondary); border-radius: 8px; cursor: pointer; width: 100%; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; }
+        .add-equipment-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .equipment-count { font-size: 0.85rem; color: var(--text-muted); margin-top: 8px; }
+        
         .submit-btn { width: 100%; padding: 16px; font-family: 'DM Sans', sans-serif; font-size: 1rem; font-weight: 600; background: var(--accent); color: var(--bg-dark); border: none; border-radius: 10px; cursor: pointer; margin-top: 24px; }
         .submit-btn:hover { box-shadow: 0 8px 24px var(--accent-glow); }
         .submit-btn:disabled { opacity: 0.7; cursor: not-allowed; }
         .success-message { display: none; text-align: center; padding: 60px 20px; }
         .success-message.show { display: block; }
         .success-icon { font-size: 4rem; margin-bottom: 24px; }
-        .success-message h2 { font-size: 1.75rem; margin-bottom: 12px; }
-        .success-message p { color: var(--text-secondary); margin-bottom: 32px; }
         .btn-outline { padding: 12px 24px; background: transparent; color: var(--accent); border: 1px solid var(--accent); border-radius: 8px; text-decoration: none; display: inline-block; font-weight: 600; }
     </style>
 </head>
@@ -53,7 +58,7 @@
     <div class="container">
         <nav class="nav">
             <a href="index.html" class="logo">FLEETCONNECT</a>
-            <div class="nav-right">
+            <div style="display:flex;align-items:center;gap:24px;">
                 <div class="nav-links">
                     <a href="index.html">Home</a>
                     <a href="create-job.html" class="active">New Order</a>
@@ -63,12 +68,15 @@
                 <button class="logout-btn" onclick="logout()">Logout</button>
             </div>
         </nav>
+        
         <header class="header">
             <h1>Create Work Order</h1>
             <p>Submit a new service request</p>
         </header>
+        
         <div class="form-card" id="formCard">
             <form id="workOrderForm">
+                <!-- Order Info -->
                 <div class="form-section">
                     <div class="section-label">Order Information</div>
                     <div class="form-row">
@@ -82,11 +90,13 @@
                         </div>
                     </div>
                 </div>
+                
+                <!-- Job Site -->
                 <div class="form-section">
                     <div class="section-label">Job Site</div>
                     <div class="form-group" style="margin-bottom: 20px;">
                         <label>Job Site Name<span class="required">*</span></label>
-                        <input type="text" id="jobSiteName" required>
+                        <input type="text" id="jobSiteName" required placeholder="e.g. Downtown Construction">
                     </div>
                     <div class="form-group" style="margin-bottom: 20px;">
                         <label>Street Address</label>
@@ -94,17 +104,36 @@
                     </div>
                     <div class="form-row-3">
                         <div class="form-group"><label>City</label><input type="text" id="addressCity"></div>
-                        <div class="form-group"><label>State</label><input type="text" id="addressState" maxlength="2"></div>
+                        <div class="form-group"><label>State</label><input type="text" id="addressState" maxlength="2" style="text-transform:uppercase;"></div>
                         <div class="form-group"><label>ZIP</label><input type="text" id="addressZip"></div>
                     </div>
                 </div>
+                
+                <!-- Contact -->
                 <div class="form-section">
-                    <div class="section-label">Contact</div>
+                    <div class="section-label">Site Contact</div>
                     <div class="form-row">
                         <div class="form-group"><label>Contact Name</label><input type="text" id="contactName"></div>
                         <div class="form-group"><label>Contact Phone</label><input type="tel" id="contactPhone"></div>
                     </div>
                 </div>
+                
+                <!-- Equipment/Units -->
+                <div class="form-section">
+                    <div class="section-label">Equipment / Units <span class="required">*</span></div>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 16px;">Add all equipment that needs fueling at this job site</p>
+                    
+                    <div class="equipment-list" id="equipmentList">
+                        <!-- Equipment items added here -->
+                    </div>
+                    
+                    <button type="button" class="add-equipment-btn" onclick="addEquipment()">
+                        + Add Equipment
+                    </button>
+                    <div class="equipment-count" id="equipmentCount">0 units added</div>
+                </div>
+                
+                <!-- Service Details -->
                 <div class="form-section">
                     <div class="section-label">Service Details</div>
                     <div class="form-row">
@@ -114,8 +143,6 @@
                                 <option value="fuel-delivery">Fuel Delivery</option>
                                 <option value="equipment-tow">Equipment Tow</option>
                                 <option value="emergency-fuel">Emergency Fuel</option>
-                                <option value="pickup">Pickup</option>
-                                <option value="delivery">Delivery</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -128,34 +155,92 @@
                         </div>
                     </div>
                     <div class="form-row">
-                        <div class="form-group"><label>Date Needed</label><input type="date" id="dateOut"></div>
+                        <div class="form-group"><label>Start Date</label><input type="date" id="dateOut"></div>
                         <div class="form-group"><label>Time</label><input type="time" id="timeOut"></div>
                     </div>
                     <div class="form-group">
                         <label>Special Instructions</label>
-                        <textarea id="instructions" placeholder="Gate codes, directions..."></textarea>
+                        <textarea id="instructions" placeholder="Gate codes, access instructions, safety notes..."></textarea>
                     </div>
                 </div>
+                
                 <button type="submit" class="submit-btn" id="submitBtn">Create Work Order</button>
             </form>
         </div>
+        
         <div class="success-message" id="successMessage">
             <div class="success-icon">✓</div>
             <h2>Work Order Created!</h2>
-            <p>Your order has been submitted.</p>
+            <p>Your order has been submitted and vendors will be notified.</p>
             <a href="index.html" class="btn-outline">Back to Dashboard</a>
         </div>
     </div>
+    
     <script src="supabase-client.js"></script>
     <script>
         const currentUser = checkAuth();
         if (currentUser) document.getElementById('userName').textContent = currentUser.name;
+        
+        // Set default date to today
         document.getElementById('dateOut').value = new Date().toISOString().split('T')[0];
+        
+        // Equipment management
+        let equipmentItems = [];
+        
+        function addEquipment() {
+            const id = Date.now();
+            equipmentItems.push({ id, unitNumber: '', description: '' });
+            renderEquipment();
+        }
+        
+        function removeEquipment(id) {
+            equipmentItems = equipmentItems.filter(e => e.id !== id);
+            renderEquipment();
+        }
+        
+        function updateEquipment(id, field, value) {
+            const item = equipmentItems.find(e => e.id === id);
+            if (item) item[field] = value;
+            updateCount();
+        }
+        
+        function renderEquipment() {
+            const container = document.getElementById('equipmentList');
+            container.innerHTML = equipmentItems.map(item => `
+                <div class="equipment-item">
+                    <input type="text" placeholder="Unit #" value="${item.unitNumber}" 
+                           onchange="updateEquipment(${item.id}, 'unitNumber', this.value)" class="mono">
+                    <input type="text" placeholder="Description (e.g. CAT Excavator 320)" value="${item.description}"
+                           onchange="updateEquipment(${item.id}, 'description', this.value)">
+                    <button type="button" class="remove-equipment" onclick="removeEquipment(${item.id})">×</button>
+                </div>
+            `).join('');
+            updateCount();
+        }
+        
+        function updateCount() {
+            const validItems = equipmentItems.filter(e => e.unitNumber.trim() !== '');
+            document.getElementById('equipmentCount').textContent = `${validItems.length} unit${validItems.length !== 1 ? 's' : ''} added`;
+        }
+        
+        // Add first equipment row by default
+        addEquipment();
+        
+        // Form submission
         document.getElementById('workOrderForm').addEventListener('submit', async function(e) {
             e.preventDefault();
+            
+            // Validate at least one equipment
+            const validEquipment = equipmentItems.filter(e => e.unitNumber.trim() !== '');
+            if (validEquipment.length === 0) {
+                alert('Please add at least one equipment unit');
+                return;
+            }
+            
             const btn = document.getElementById('submitBtn');
             btn.disabled = true;
             btn.textContent = 'Creating...';
+            
             const jobData = {
                 contractNumber: document.getElementById('contractNumber').value,
                 poNumber: document.getElementById('poNumber').value,
@@ -163,7 +248,7 @@
                 address: {
                     street: document.getElementById('addressStreet').value,
                     city: document.getElementById('addressCity').value,
-                    state: document.getElementById('addressState').value,
+                    state: document.getElementById('addressState').value.toUpperCase(),
                     zip: document.getElementById('addressZip').value
                 },
                 contactName: document.getElementById('contactName').value,
@@ -176,7 +261,16 @@
                 status: 'pending',
                 createdBy: currentUser?.id
             };
-            const result = await createJob(jobData, []);
+            
+            // Format equipment for database
+            const equipmentList = validEquipment.map(e => ({
+                equipNum: e.unitNumber,
+                description: e.description,
+                qty: 1
+            }));
+            
+            const result = await createJob(jobData, equipmentList);
+            
             if (result.success) {
                 document.getElementById('formCard').style.display = 'none';
                 document.getElementById('successMessage').classList.add('show');

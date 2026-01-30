@@ -4,107 +4,119 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Jobs | FleetConnect</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --bg-dark: #0a0a0f; --bg-card: #12121a; --bg-input: #1a1a24; --border: #2a2a3a; --text-primary: #ffffff; --text-secondary: #8a8a9a; --text-muted: #5a5a6a; --accent: #00d4aa; --warning: #ffaa00; --error: #ff6b6b; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'DM Sans', sans-serif; background: var(--bg-dark); color: var(--text-primary); min-height: 100vh; }
+        body { font-family: 'DM Sans', sans-serif; background: var(--bg-dark); color: var(--text-primary); min-height: 100vh; padding-bottom: 100px; }
+        
         .header { background: var(--bg-card); border-bottom: 1px solid var(--border); padding: 16px 20px; position: sticky; top: 0; z-index: 50; }
-        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
         .logo { font-family: 'Space Mono', monospace; font-size: 1.25rem; color: var(--accent); text-decoration: none; }
         .logout-btn { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; }
-        .welcome { font-size: 1.25rem; font-weight: 600; }
-        .welcome-sub { font-size: 0.85rem; color: var(--text-secondary); }
+        .welcome { font-size: 1.1rem; font-weight: 600; }
+        
         .stats { display: flex; gap: 12px; padding: 16px 20px; }
-        .stat { flex: 1; background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-align: center; }
+        .stat { flex: 1; background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 14px; text-align: center; }
         .stat-value { font-size: 1.5rem; font-weight: 700; font-family: 'Space Mono', monospace; color: var(--accent); }
-        .stat-label { font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; margin-top: 4px; }
-        .tabs { display: flex; border-bottom: 1px solid var(--border); padding: 0 20px; background: var(--bg-card); }
-        .tab { flex: 1; padding: 14px 8px; background: transparent; border: none; border-bottom: 2px solid transparent; color: var(--text-secondary); font-family: 'DM Sans', sans-serif; font-size: 0.85rem; cursor: pointer; }
+        .stat-label { font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; margin-top: 2px; }
+        
+        .tabs { display: flex; border-bottom: 1px solid var(--border); background: var(--bg-card); }
+        .tab { flex: 1; padding: 14px; background: transparent; border: none; border-bottom: 2px solid transparent; color: var(--text-secondary); font-family: 'DM Sans', sans-serif; font-size: 0.85rem; cursor: pointer; }
         .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-        .jobs { padding: 16px 20px; padding-bottom: 100px; }
+        
+        .content { padding: 16px 20px; }
+        
         .job-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 16px; overflow: hidden; }
         .job-card.urgent { border-left: 4px solid var(--warning); }
         .job-header { padding: 16px; border-bottom: 1px solid var(--border); }
         .job-title { font-size: 1rem; font-weight: 600; margin-bottom: 4px; }
         .job-meta { font-size: 0.8rem; color: var(--text-secondary); }
-        .job-body { padding: 16px; }
-        .job-row { display: flex; margin-bottom: 12px; }
-        .job-icon { width: 32px; font-size: 1rem; opacity: 0.7; }
-        .job-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; }
-        .job-value { font-size: 0.9rem; margin-top: 2px; }
-        .job-value a { color: var(--accent); text-decoration: none; }
-        .job-actions { padding: 16px; border-top: 1px solid var(--border); display: flex; gap: 12px; }
-        .btn { flex: 1; padding: 14px; font-family: 'DM Sans', sans-serif; font-size: 0.95rem; font-weight: 600; border-radius: 10px; cursor: pointer; text-align: center; border: none; }
+        .job-info { padding: 12px 16px; background: var(--bg-input); }
+        .job-info-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.85rem; }
+        .job-info-label { color: var(--text-muted); }
+        .job-info-value { color: var(--text-primary); }
+        .job-info-value a { color: var(--accent); text-decoration: none; }
+        .equipment-count { padding: 12px 16px; font-size: 0.85rem; color: var(--accent); border-top: 1px solid var(--border); }
+        .job-actions { padding: 12px 16px; display: flex; gap: 10px; }
+        
+        .btn { flex: 1; padding: 12px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 600; border-radius: 8px; cursor: pointer; text-align: center; border: none; }
         .btn-primary { background: var(--accent); color: var(--bg-dark); }
         .btn-outline { background: transparent; color: var(--text-secondary); border: 1px solid var(--border); }
-        .btn-small { padding: 10px 16px; font-size: 0.85rem; }
+        
         .empty { text-align: center; padding: 60px 20px; color: var(--text-secondary); }
         
-        /* Modal Styles */
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; align-items: flex-start; justify-content: center; z-index: 1000; padding: 20px; overflow-y: auto; }
-        .modal-content { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 500px; margin: 20px 0; }
-        .modal-header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-        .modal-header h3 { font-size: 1.1rem; }
-        .modal-close { background: none; border: none; color: var(--text-secondary); font-size: 1.5rem; cursor: pointer; }
-        .modal-body { padding: 20px; }
-        .modal-footer { padding: 20px; border-top: 1px solid var(--border); display: flex; gap: 12px; }
+        /* Invoice Modal */
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 1000; overflow-y: auto; }
+        .modal-content { background: var(--bg-dark); min-height: 100%; padding: 20px; padding-bottom: 100px; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px; background: var(--bg-card); border-radius: 12px; margin-bottom: 20px; }
+        .modal-header h2 { font-size: 1.1rem; }
+        .modal-close { background: none; border: none; color: var(--text-secondary); font-size: 1.5rem; cursor: pointer; padding: 4px 8px; }
         
-        /* Form Styles */
-        .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px; font-weight: 500; }
+        .invoice-form { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+        .form-section { margin-bottom: 24px; }
+        .form-section-title { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); margin-bottom: 12px; }
+        
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px; }
         .form-group input, .form-group select, .form-group textarea { 
             width: 100%; padding: 14px; background: var(--bg-input); border: 1px solid var(--border); 
             border-radius: 10px; color: var(--text-primary); font-family: 'DM Sans', sans-serif; font-size: 1rem;
         }
-        .form-group textarea { min-height: 80px; resize: vertical; }
-        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--accent); }
+        .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--accent); }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .mono { font-family: 'Space Mono', monospace; }
+        .required { color: var(--error); }
         
-        /* Incident Toggle */
-        .incident-toggle { display: flex; align-items: center; gap: 12px; padding: 16px; background: var(--bg-input); border-radius: 10px; margin-bottom: 20px; cursor: pointer; }
+        /* Unit selector */
+        .unit-selector { display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; }
+        .unit-option { padding: 14px; background: var(--bg-input); border: 2px solid var(--border); border-radius: 10px; cursor: pointer; }
+        .unit-option:hover { border-color: var(--accent); }
+        .unit-option.selected { border-color: var(--accent); background: rgba(0, 212, 170, 0.1); }
+        .unit-option-number { font-family: 'Space Mono', monospace; font-weight: 600; color: var(--accent); }
+        .unit-option-desc { font-size: 0.85rem; color: var(--text-secondary); margin-top: 2px; }
+        
+        /* Fuel inputs */
+        .fuel-input { position: relative; }
+        .fuel-input input { padding-right: 50px; }
+        .fuel-unit { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.85rem; }
+        
+        /* Incident section */
+        .incident-toggle { display: flex; align-items: center; gap: 12px; padding: 14px; background: var(--bg-input); border-radius: 10px; cursor: pointer; margin-bottom: 16px; }
         .incident-toggle input { display: none; }
-        .toggle-switch { width: 50px; height: 28px; background: var(--border); border-radius: 14px; position: relative; transition: background 0.3s; }
-        .toggle-switch::after { content: ''; position: absolute; width: 22px; height: 22px; background: white; border-radius: 50%; top: 3px; left: 3px; transition: transform 0.3s; }
+        .toggle-switch { width: 48px; height: 26px; background: var(--border); border-radius: 13px; position: relative; transition: background 0.3s; flex-shrink: 0; }
+        .toggle-switch::after { content: ''; position: absolute; width: 20px; height: 20px; background: white; border-radius: 50%; top: 3px; left: 3px; transition: transform 0.3s; }
         .incident-toggle input:checked + .toggle-switch { background: var(--warning); }
         .incident-toggle input:checked + .toggle-switch::after { transform: translateX(22px); }
-        .toggle-label { flex: 1; }
-        .toggle-label strong { display: block; font-size: 0.95rem; }
-        .toggle-label span { font-size: 0.8rem; color: var(--text-muted); }
+        .toggle-label { font-size: 0.9rem; }
         
-        /* Incident Section */
-        .incident-section { display: none; padding: 20px; background: rgba(255, 107, 107, 0.1); border: 1px solid var(--error); border-radius: 12px; margin-bottom: 20px; }
-        .incident-section.show { display: block; }
-        .incident-section h4 { color: var(--error); margin-bottom: 16px; font-size: 0.95rem; }
+        .incident-fields { display: none; padding: 16px; background: rgba(255, 170, 0, 0.1); border: 1px solid var(--warning); border-radius: 10px; margin-bottom: 16px; }
+        .incident-fields.show { display: block; }
+        .incident-fields h4 { color: var(--warning); font-size: 0.9rem; margin-bottom: 12px; }
         
-        /* File Upload */
-        .file-upload { border: 2px dashed var(--border); border-radius: 10px; padding: 20px; text-align: center; cursor: pointer; transition: border-color 0.2s; margin-bottom: 12px; }
+        /* File upload */
+        .file-upload { border: 2px dashed var(--border); border-radius: 10px; padding: 20px; text-align: center; cursor: pointer; margin-bottom: 12px; }
         .file-upload:hover { border-color: var(--accent); }
         .file-upload input { display: none; }
-        .file-upload-icon { font-size: 2rem; margin-bottom: 8px; }
+        .file-upload-icon { font-size: 1.5rem; margin-bottom: 4px; }
         .file-upload-text { font-size: 0.85rem; color: var(--text-secondary); }
-        .file-upload-text strong { color: var(--accent); }
-        
-        /* File Preview */
-        .file-preview { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-        .file-preview-item { position: relative; width: 70px; height: 70px; border-radius: 8px; overflow: hidden; background: var(--bg-input); }
+        .file-preview { display: flex; flex-wrap: wrap; gap: 8px; }
+        .file-preview-item { position: relative; width: 60px; height: 60px; border-radius: 8px; overflow: hidden; }
         .file-preview-item img, .file-preview-item video { width: 100%; height: 100%; object-fit: cover; }
-        .file-preview-item .remove-file { position: absolute; top: 2px; right: 2px; width: 20px; height: 20px; background: var(--error); border: none; border-radius: 50%; color: white; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .file-preview-item .video-badge { position: absolute; bottom: 4px; left: 4px; background: rgba(0,0,0,0.7); color: white; font-size: 0.6rem; padding: 2px 6px; border-radius: 4px; }
+        .file-preview-item .remove { position: absolute; top: 2px; right: 2px; width: 18px; height: 18px; background: var(--error); border: none; border-radius: 50%; color: white; font-size: 10px; cursor: pointer; }
         
-        /* Upload Progress */
-        .upload-progress { margin-top: 12px; }
-        .progress-bar { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
-        .progress-fill { height: 100%; background: var(--accent); transition: width 0.3s; }
-        .progress-text { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
+        .submit-invoice { width: 100%; padding: 16px; background: var(--accent); color: var(--bg-dark); border: none; border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 1rem; font-weight: 600; cursor: pointer; margin-top: 20px; }
+        .submit-invoice:disabled { opacity: 0.6; cursor: not-allowed; }
         
-        /* History Incident Badge */
-        .incident-badge { display: inline-flex; align-items: center; gap: 4px; background: rgba(255, 107, 107, 0.15); color: var(--error); padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; margin-top: 8px; }
-        .incident-media { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
-        .incident-media img, .incident-media video { width: 50px; height: 50px; object-fit: cover; border-radius: 6px; cursor: pointer; }
+        /* History */
+        .invoice-history { padding: 16px; }
+        .invoice-item { background: var(--bg-input); border-radius: 10px; padding: 14px; margin-bottom: 10px; }
+        .invoice-item-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
+        .invoice-item-unit { font-family: 'Space Mono', monospace; font-weight: 600; color: var(--accent); }
+        .invoice-item-date { font-size: 0.8rem; color: var(--text-muted); }
+        .invoice-item-details { display: flex; gap: 16px; font-size: 0.85rem; color: var(--text-secondary); }
+        .invoice-item-incident { margin-top: 8px; padding: 8px; background: rgba(255, 170, 0, 0.1); border-radius: 6px; font-size: 0.8rem; color: var(--warning); }
     </style>
 </head>
 <body>
@@ -114,17 +126,21 @@
             <button class="logout-btn" onclick="logout()">Logout</button>
         </div>
         <div class="welcome" id="welcome">Welcome!</div>
-        <div class="welcome-sub">Your assigned jobs</div>
     </header>
+    
     <div class="stats">
-        <div class="stat"><div class="stat-value" id="statActive">-</div><div class="stat-label">Active</div></div>
-        <div class="stat"><div class="stat-value" id="statCompleted">-</div><div class="stat-label">Done</div></div>
+        <div class="stat"><div class="stat-value" id="statActive">-</div><div class="stat-label">Active Jobs</div></div>
+        <div class="stat"><div class="stat-value" id="statInvoices">-</div><div class="stat-label">Invoices Today</div></div>
     </div>
+    
     <div class="tabs">
-        <button class="tab active" data-tab="active">Active</button>
+        <button class="tab active" data-tab="active">Active Jobs</button>
         <button class="tab" data-tab="completed">Completed</button>
     </div>
-    <div class="jobs" id="jobs"><div class="empty">Loading...</div></div>
+    
+    <div class="content" id="content">
+        <div class="empty">Loading...</div>
+    </div>
     
     <script src="supabase-client.js"></script>
     <script>
@@ -135,21 +151,47 @@
             document.getElementById('welcome').textContent = `${greeting}, ${currentUser.name.split(' ')[0]}!`;
         }
         
-        let allJobs = [], currentTab = 'active';
-        let selectedPhotos = [], selectedVideos = [];
+        let allJobs = [];
+        let allEquipment = [];
+        let allDeliveries = [];
+        let currentTab = 'active';
+        let selectedPhotos = [];
+        let selectedVideos = [];
         
-        async function loadJobs() {
+        async function loadData() {
+            // Get jobs assigned to this worker or all jobs if none assigned
             allJobs = await getJobsByWorker(currentUser.id);
             if (allJobs.length === 0) {
                 allJobs = await getAllJobs();
             }
+            
+            // Get all equipment
+            allEquipment = await getAllEquipment();
+            
+            // Get today's deliveries for stats
+            allDeliveries = await getAllDeliveries();
+            
             updateStats();
             renderJobs();
         }
         
+        async function getAllEquipment() {
+            const { data, error } = await db.from('equipment').select('*');
+            return data || [];
+        }
+        
         function updateStats() {
-            document.getElementById('statActive').textContent = allJobs.filter(j => ['assigned','accepted','in-progress'].includes(j.status)).length;
-            document.getElementById('statCompleted').textContent = allJobs.filter(j => j.status === 'completed').length;
+            const activeJobs = allJobs.filter(j => ['assigned','accepted','in-progress'].includes(j.status));
+            document.getElementById('statActive').textContent = activeJobs.length;
+            
+            // Count today's invoices
+            const today = new Date().toDateString();
+            const todayInvoices = allDeliveries.filter(d => new Date(d.timestamp).toDateString() === today);
+            document.getElementById('statInvoices').textContent = todayInvoices.length;
+        }
+        
+        function getEquipmentForJob(jobId) {
+            return allEquipment.filter(e => e.job_id === jobId);
         }
         
         function renderJobs() {
@@ -157,370 +199,406 @@
                 ? allJobs.filter(j => ['assigned','accepted','in-progress'].includes(j.status))
                 : allJobs.filter(j => j.status === 'completed');
             
-            const container = document.getElementById('jobs');
+            const container = document.getElementById('content');
+            
             if (!filtered.length) {
                 container.innerHTML = `<div class="empty">No ${currentTab} jobs</div>`;
                 return;
             }
             
-            container.innerHTML = filtered.map(job => `
-                <div class="job-card ${job.priority === 'urgent' || job.priority === 'emergency' ? 'urgent' : ''}">
-                    <div class="job-header">
-                        <div class="job-title">${job.job_site_name || 'Untitled'}</div>
-                        <div class="job-meta">${formatDate(job.date_out)} • ${formatJobType(job.job_type)}</div>
-                    </div>
-                    <div class="job-body">
-                        <div class="job-row">
-                            <div class="job-icon">📍</div>
-                            <div>
-                                <div class="job-label">Location</div>
-                                <div class="job-value">
+            container.innerHTML = filtered.map(job => {
+                const equipment = getEquipmentForJob(job.id);
+                return `
+                    <div class="job-card ${job.priority === 'urgent' || job.priority === 'emergency' ? 'urgent' : ''}">
+                        <div class="job-header">
+                            <div class="job-title">${job.job_site_name || 'Untitled Job'}</div>
+                            <div class="job-meta">${formatJobType(job.job_type)} • ${formatDate(job.date_out)}</div>
+                        </div>
+                        <div class="job-info">
+                            <div class="job-info-row">
+                                <span class="job-info-label">Location</span>
+                                <span class="job-info-value">
                                     <a href="https://maps.google.com/?q=${encodeURIComponent((job.address_street||'')+' '+(job.address_city||'')+' '+(job.address_state||''))}" target="_blank">
-                                        ${job.address_street || ''}<br>${job.address_city || ''}, ${job.address_state || ''}
+                                        ${job.address_city || '-'}, ${job.address_state || '-'}
                                     </a>
-                                </div>
+                                </span>
+                            </div>
+                            <div class="job-info-row">
+                                <span class="job-info-label">Contact</span>
+                                <span class="job-info-value">
+                                    ${job.contact_phone ? `<a href="tel:${job.contact_phone}">${job.contact_name || job.contact_phone}</a>` : job.contact_name || '-'}
+                                </span>
                             </div>
                         </div>
-                        <div class="job-row">
-                            <div class="job-icon">👤</div>
-                            <div>
-                                <div class="job-label">Contact</div>
-                                <div class="job-value">
-                                    ${job.contact_name || '-'}
-                                    ${job.contact_phone ? `<br><a href="tel:${job.contact_phone}">${job.contact_phone}</a>` : ''}
-                                </div>
-                            </div>
+                        <div class="equipment-count">
+                            🔧 ${equipment.length} unit${equipment.length !== 1 ? 's' : ''} on site
                         </div>
-                        ${job.instructions ? `<div style="margin-top:12px;padding:12px;background:rgba(255,170,0,0.1);border-radius:8px;font-size:0.85rem;"><strong style="color:var(--warning)">Instructions:</strong> ${job.instructions}</div>` : ''}
+                        <div class="job-actions">
+                            ${job.status !== 'completed' ? `
+                                <button class="btn btn-primary" onclick="openInvoiceModal('${job.id}')">Create Invoice</button>
+                            ` : ''}
+                            <button class="btn btn-outline" onclick="viewHistory('${job.id}')">History</button>
+                        </div>
                     </div>
-                    <div class="job-actions">
-                        ${job.status !== 'completed' ? `<button class="btn btn-primary" onclick="openDeliveryModal('${job.id}')">Log Delivery</button>` : ''}
-                        <button class="btn btn-outline" onclick="viewHistory('${job.id}')">History</button>
-                    </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
         
-        function openDeliveryModal(jobId) {
+        function openInvoiceModal(jobId) {
+            const job = allJobs.find(j => j.id === jobId);
+            const equipment = getEquipmentForJob(jobId);
+            
             selectedPhotos = [];
             selectedVideos = [];
             
+            const now = new Date();
+            const dateStr = now.toISOString().split('T')[0];
+            const timeStr = now.toTimeString().slice(0, 5);
+            
             const modal = document.createElement('div');
             modal.className = 'modal';
-            modal.id = 'deliveryModal';
+            modal.id = 'invoiceModal';
             modal.innerHTML = `
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h3>Log Fuel Delivery</h3>
-                        <button class="modal-close" onclick="closeDeliveryModal()">&times;</button>
+                        <h2>Create Invoice</h2>
+                        <button class="modal-close" onclick="closeInvoiceModal()">×</button>
                     </div>
-                    <div class="modal-body">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Gallons *</label>
-                                <input type="number" id="gallonsInput" step="0.1" min="0" placeholder="0.0">
-                            </div>
-                            <div class="form-group">
-                                <label>Fuel Type</label>
-                                <select id="fuelType">
-                                    <option value="diesel">Diesel</option>
-                                    <option value="gasoline">Gasoline</option>
-                                    <option value="def">DEF</option>
-                                    <option value="propane">Propane</option>
-                                </select>
-                            </div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>Notes</label>
-                            <textarea id="notes" placeholder="Any delivery notes..."></textarea>
-                        </div>
-                        
-                        <!-- Incident Toggle -->
-                        <label class="incident-toggle" onclick="toggleIncident()">
-                            <input type="checkbox" id="hasIncident">
-                            <div class="toggle-switch"></div>
-                            <div class="toggle-label">
-                                <strong>Report Incident</strong>
-                                <span>Oil spill, damage, safety issue, etc.</span>
-                            </div>
-                        </label>
-                        
-                        <!-- Incident Section -->
-                        <div class="incident-section" id="incidentSection">
-                            <h4>⚠️ Incident Details</h4>
-                            
-                            <div class="form-group">
-                                <label>What happened? *</label>
-                                <textarea id="incidentDescription" placeholder="Describe what you found at the job site..."></textarea>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label>Photos</label>
-                                <div class="file-upload" onclick="document.getElementById('photoInput').click()">
-                                    <input type="file" id="photoInput" accept="image/*" multiple onchange="handlePhotoSelect(event)">
-                                    <div class="file-upload-icon">📷</div>
-                                    <div class="file-upload-text">Tap to <strong>add photos</strong></div>
-                                </div>
-                                <div class="file-preview" id="photoPreview"></div>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label>Videos (max 1 min each)</label>
-                                <div class="file-upload" onclick="document.getElementById('videoInput').click()">
-                                    <input type="file" id="videoInput" accept="video/*" multiple onchange="handleVideoSelect(event)">
-                                    <div class="file-upload-icon">🎥</div>
-                                    <div class="file-upload-text">Tap to <strong>add videos</strong></div>
-                                </div>
-                                <div class="file-preview" id="videoPreview"></div>
-                            </div>
-                        </div>
-                        
-                        <div class="upload-progress" id="uploadProgress" style="display:none;">
-                            <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
-                            <div class="progress-text" id="progressText">Uploading...</div>
-                        </div>
+                    
+                    <div style="background:var(--bg-card);padding:14px;border-radius:10px;margin-bottom:20px;">
+                        <div style="font-weight:600;margin-bottom:4px;">${job.job_site_name}</div>
+                        <div style="font-size:0.85rem;color:var(--text-secondary);">${job.address_city || ''}, ${job.address_state || ''}</div>
                     </div>
-                    <div class="modal-footer">
-                        <button class="btn btn-outline" onclick="closeDeliveryModal()">Cancel</button>
-                        <button class="btn btn-primary" id="submitBtn" onclick="submitDelivery('${jobId}')">Log Delivery</button>
+                    
+                    <div class="invoice-form">
+                        <!-- Unit Selection -->
+                        <div class="form-section">
+                            <div class="form-section-title">Select Unit <span class="required">*</span></div>
+                            ${equipment.length > 0 ? `
+                                <div class="unit-selector" id="unitSelector">
+                                    ${equipment.map(eq => `
+                                        <div class="unit-option" onclick="selectUnit(this, '${eq.id}', '${eq.equipment_number}')">
+                                            <div class="unit-option-number">${eq.equipment_number || 'No #'}</div>
+                                            <div class="unit-option-desc">${eq.description || 'No description'}</div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            ` : `
+                                <div style="padding:20px;text-align:center;color:var(--text-muted);background:var(--bg-input);border-radius:10px;">
+                                    No equipment added to this job yet.<br>Contact your vendor to add units.
+                                </div>
+                            `}
+                            <input type="hidden" id="selectedUnitId">
+                            <input type="hidden" id="selectedUnitNumber">
+                        </div>
+                        
+                        <!-- Unit Hours -->
+                        <div class="form-section">
+                            <div class="form-section-title">Meter Reading</div>
+                            <div class="form-group">
+                                <label>Unit Hours <span class="required">*</span></label>
+                                <div class="fuel-input">
+                                    <input type="number" id="unitHours" step="0.1" min="0" placeholder="0.0" class="mono">
+                                    <span class="fuel-unit">hrs</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Fuel -->
+                        <div class="form-section">
+                            <div class="form-section-title">Fuel Delivered</div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Diesel <span class="required">*</span></label>
+                                    <div class="fuel-input">
+                                        <input type="number" id="dieselGallons" step="0.1" min="0" placeholder="0.0" class="mono">
+                                        <span class="fuel-unit">gal</span>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>DEF <span class="required">*</span></label>
+                                    <div class="fuel-input">
+                                        <input type="number" id="defGallons" step="0.1" min="0" placeholder="0.0" class="mono">
+                                        <span class="fuel-unit">gal</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Timestamp & Worker -->
+                        <div class="form-section">
+                            <div class="form-section-title">Details</div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Date</label>
+                                    <input type="date" id="invoiceDate" value="${dateStr}">
+                                </div>
+                                <div class="form-group">
+                                    <label>Time</label>
+                                    <input type="time" id="invoiceTime" value="${timeStr}">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Field Worker</label>
+                                <input type="text" id="workerName" value="${currentUser.name}">
+                            </div>
+                            <div class="form-group">
+                                <label>Notes (optional)</label>
+                                <textarea id="invoiceNotes" placeholder="Any notes..." style="min-height:60px;"></textarea>
+                            </div>
+                        </div>
+                        
+                        <!-- Incident -->
+                        <div class="form-section">
+                            <div class="form-section-title">Incident Report</div>
+                            <label class="incident-toggle" onclick="toggleIncident()">
+                                <input type="checkbox" id="hasIncident">
+                                <div class="toggle-switch"></div>
+                                <span class="toggle-label">Report an incident (oil spill, damage, etc.)</span>
+                            </label>
+                            
+                            <div class="incident-fields" id="incidentFields">
+                                <h4>⚠️ Incident Details</h4>
+                                <div class="form-group">
+                                    <label>What happened?</label>
+                                    <textarea id="incidentDescription" placeholder="Describe the incident..."></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label>Photos</label>
+                                    <div class="file-upload" onclick="document.getElementById('photoInput').click()">
+                                        <input type="file" id="photoInput" accept="image/*" multiple onchange="handlePhotos(event)">
+                                        <div class="file-upload-icon">📷</div>
+                                        <div class="file-upload-text">Tap to add photos</div>
+                                    </div>
+                                    <div class="file-preview" id="photoPreview"></div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Videos (max 1 min)</label>
+                                    <div class="file-upload" onclick="document.getElementById('videoInput').click()">
+                                        <input type="file" id="videoInput" accept="video/*" multiple onchange="handleVideos(event)">
+                                        <div class="file-upload-icon">🎥</div>
+                                        <div class="file-upload-text">Tap to add videos</div>
+                                    </div>
+                                    <div class="file-preview" id="videoPreview"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button class="submit-invoice" id="submitBtn" onclick="submitInvoice('${jobId}')">
+                            Create Invoice
+                        </button>
                     </div>
                 </div>
             `;
             document.body.appendChild(modal);
+            document.body.style.overflow = 'hidden';
         }
         
-        function closeDeliveryModal() {
-            document.getElementById('deliveryModal')?.remove();
+        function closeInvoiceModal() {
+            document.getElementById('invoiceModal')?.remove();
+            document.body.style.overflow = '';
             selectedPhotos = [];
             selectedVideos = [];
         }
         
+        let selectedUnitId = null;
+        let selectedUnitNumber = null;
+        
+        function selectUnit(element, unitId, unitNumber) {
+            document.querySelectorAll('.unit-option').forEach(el => el.classList.remove('selected'));
+            element.classList.add('selected');
+            selectedUnitId = unitId;
+            selectedUnitNumber = unitNumber;
+            document.getElementById('selectedUnitId').value = unitId;
+            document.getElementById('selectedUnitNumber').value = unitNumber;
+        }
+        
         function toggleIncident() {
             const checkbox = document.getElementById('hasIncident');
-            const section = document.getElementById('incidentSection');
+            const fields = document.getElementById('incidentFields');
             checkbox.checked = !checkbox.checked;
-            section.classList.toggle('show', checkbox.checked);
+            fields.classList.toggle('show', checkbox.checked);
         }
         
-        function handlePhotoSelect(event) {
+        function handlePhotos(event) {
             const files = Array.from(event.target.files);
             files.forEach(file => {
-                if (file.type.startsWith('image/')) {
-                    selectedPhotos.push(file);
-                }
+                if (file.type.startsWith('image/')) selectedPhotos.push(file);
             });
-            renderPhotoPreviews();
+            renderPhotoPreview();
         }
         
-        function handleVideoSelect(event) {
+        function handleVideos(event) {
             const files = Array.from(event.target.files);
             files.forEach(file => {
-                if (file.type.startsWith('video/')) {
-                    selectedVideos.push(file);
-                }
+                if (file.type.startsWith('video/')) selectedVideos.push(file);
             });
-            renderVideoPreviews();
+            renderVideoPreview();
         }
         
-        function renderPhotoPreviews() {
+        function renderPhotoPreview() {
             const container = document.getElementById('photoPreview');
-            container.innerHTML = selectedPhotos.map((file, i) => {
-                const url = URL.createObjectURL(file);
-                return `
-                    <div class="file-preview-item">
-                        <img src="${url}" alt="Photo">
-                        <button class="remove-file" onclick="removePhoto(${i})">×</button>
-                    </div>
-                `;
-            }).join('');
+            container.innerHTML = selectedPhotos.map((file, i) => `
+                <div class="file-preview-item">
+                    <img src="${URL.createObjectURL(file)}">
+                    <button class="remove" onclick="removePhoto(${i})">×</button>
+                </div>
+            `).join('');
         }
         
-        function renderVideoPreviews() {
+        function renderVideoPreview() {
             const container = document.getElementById('videoPreview');
-            container.innerHTML = selectedVideos.map((file, i) => {
-                const url = URL.createObjectURL(file);
-                return `
-                    <div class="file-preview-item">
-                        <video src="${url}"></video>
-                        <span class="video-badge">VIDEO</span>
-                        <button class="remove-file" onclick="removeVideo(${i})">×</button>
-                    </div>
-                `;
-            }).join('');
+            container.innerHTML = selectedVideos.map((file, i) => `
+                <div class="file-preview-item">
+                    <video src="${URL.createObjectURL(file)}"></video>
+                    <button class="remove" onclick="removeVideo(${i})">×</button>
+                </div>
+            `).join('');
         }
         
         function removePhoto(index) {
             selectedPhotos.splice(index, 1);
-            renderPhotoPreviews();
+            renderPhotoPreview();
         }
         
         function removeVideo(index) {
             selectedVideos.splice(index, 1);
-            renderVideoPreviews();
+            renderVideoPreview();
         }
         
         async function uploadFile(file, folder) {
             const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}_${file.name}`;
             const filePath = `${folder}/${fileName}`;
             
-            const { data, error } = await db.storage
-                .from('incidents')
-                .upload(filePath, file);
-            
+            const { error } = await db.storage.from('incidents').upload(filePath, file);
             if (error) {
                 console.error('Upload error:', error);
                 return null;
             }
             
-            // Get public URL
-            const { data: urlData } = db.storage.from('incidents').getPublicUrl(filePath);
-            return urlData.publicUrl;
+            const { data } = db.storage.from('incidents').getPublicUrl(filePath);
+            return data.publicUrl;
         }
         
-        async function submitDelivery(jobId) {
-            const gallons = parseFloat(document.getElementById('gallonsInput').value);
-            if (!gallons || gallons <= 0) { 
-                alert('Please enter gallons delivered'); 
-                return; 
-            }
-            
-            const hasIncident = document.getElementById('hasIncident').checked;
-            const incidentDescription = document.getElementById('incidentDescription')?.value || '';
-            
-            if (hasIncident && !incidentDescription.trim()) {
-                alert('Please describe the incident');
+        async function submitInvoice(jobId) {
+            // Validate
+            if (!selectedUnitId) {
+                alert('Please select a unit');
                 return;
             }
             
-            const submitBtn = document.getElementById('submitBtn');
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Saving...';
+            const unitHours = document.getElementById('unitHours').value;
+            const dieselGallons = document.getElementById('dieselGallons').value;
+            const defGallons = document.getElementById('defGallons').value;
             
-            let uploadedPhotos = [];
-            let uploadedVideos = [];
-            
-            // Upload files if incident reported
-            if (hasIncident && (selectedPhotos.length > 0 || selectedVideos.length > 0)) {
-                const progressDiv = document.getElementById('uploadProgress');
-                const progressFill = document.getElementById('progressFill');
-                const progressText = document.getElementById('progressText');
-                progressDiv.style.display = 'block';
-                
-                const totalFiles = selectedPhotos.length + selectedVideos.length;
-                let uploadedCount = 0;
-                
-                // Upload photos
-                for (const photo of selectedPhotos) {
-                    progressText.textContent = `Uploading photo ${uploadedCount + 1} of ${totalFiles}...`;
-                    const url = await uploadFile(photo, 'photos');
-                    if (url) uploadedPhotos.push(url);
-                    uploadedCount++;
-                    progressFill.style.width = `${(uploadedCount / totalFiles) * 100}%`;
-                }
-                
-                // Upload videos
-                for (const video of selectedVideos) {
-                    progressText.textContent = `Uploading video ${uploadedCount + 1} of ${totalFiles}...`;
-                    const url = await uploadFile(video, 'videos');
-                    if (url) uploadedVideos.push(url);
-                    uploadedCount++;
-                    progressFill.style.width = `${(uploadedCount / totalFiles) * 100}%`;
-                }
-                
-                progressText.textContent = 'Saving delivery...';
+            if (!unitHours || !dieselGallons || !defGallons) {
+                alert('Please fill in unit hours, diesel, and DEF');
+                return;
             }
             
-            // Create delivery with incident data
-            const deliveryData = {
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.textContent = 'Creating...';
+            
+            // Handle incident uploads
+            let uploadedPhotos = [];
+            let uploadedVideos = [];
+            const hasIncident = document.getElementById('hasIncident').checked;
+            
+            if (hasIncident) {
+                btn.textContent = 'Uploading files...';
+                for (const photo of selectedPhotos) {
+                    const url = await uploadFile(photo, 'photos');
+                    if (url) uploadedPhotos.push(url);
+                }
+                for (const video of selectedVideos) {
+                    const url = await uploadFile(video, 'videos');
+                    if (url) uploadedVideos.push(url);
+                }
+            }
+            
+            btn.textContent = 'Saving...';
+            
+            // Build timestamp
+            const date = document.getElementById('invoiceDate').value;
+            const time = document.getElementById('invoiceTime').value;
+            const timestamp = new Date(`${date}T${time}`).toISOString();
+            
+            // Create invoice (using deliveries table)
+            const invoiceData = {
                 jobId: jobId,
-                gallons: gallons,
-                fuelType: document.getElementById('fuelType').value,
-                notes: document.getElementById('notes').value,
+                gallons: parseFloat(dieselGallons),
+                fuelType: 'diesel',
+                notes: document.getElementById('invoiceNotes').value,
                 deliveredById: currentUser.id,
-                deliveredByName: currentUser.name,
+                deliveredByName: document.getElementById('workerName').value,
                 hasIncident: hasIncident,
-                incidentDescription: hasIncident ? incidentDescription : null,
+                incidentDescription: hasIncident ? document.getElementById('incidentDescription').value : null,
                 incidentPhotos: uploadedPhotos,
-                incidentVideos: uploadedVideos
+                incidentVideos: uploadedVideos,
+                // New fields - we'll add these to the database
+                unitId: selectedUnitId,
+                unitNumber: selectedUnitNumber,
+                unitHours: parseFloat(unitHours),
+                defGallons: parseFloat(defGallons),
+                timestamp: timestamp
             };
             
-            const result = await createDeliveryWithIncident(deliveryData);
+            const result = await createDeliveryWithIncident(invoiceData);
             
             if (result.success) {
-                closeDeliveryModal();
-                alert(hasIncident ? 'Delivery logged with incident report!' : 'Delivery logged!');
-                loadJobs();
+                closeInvoiceModal();
+                alert('Invoice created!');
+                loadData();
             } else {
                 alert('Error: ' + result.error);
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Log Delivery';
+                btn.disabled = false;
+                btn.textContent = 'Create Invoice';
             }
         }
         
         async function viewHistory(jobId) {
+            const job = allJobs.find(j => j.id === jobId);
             const deliveries = await getDeliveriesForJob(jobId);
-            const total = deliveries.reduce((s,d) => s + parseFloat(d.gallons), 0);
-            
-            const html = deliveries.length ? deliveries.map(d => `
-                <div style="padding:14px;background:var(--bg-input);border-radius:10px;margin-bottom:10px;">
-                    <div style="display:flex;justify-content:space-between;align-items:center;">
-                        <strong style="color:var(--accent);font-size:1.1rem;">${d.gallons} gal</strong>
-                        <span style="font-size:0.75rem;color:var(--text-muted);">${d.fuel_type || 'Diesel'}</span>
-                    </div>
-                    <div style="font-size:0.8rem;color:var(--text-muted);margin-top:4px;">
-                        ${new Date(d.timestamp).toLocaleString()}
-                    </div>
-                    ${d.notes ? `<p style="margin-top:8px;font-size:0.85rem;color:var(--text-secondary);">${d.notes}</p>` : ''}
-                    ${d.has_incident ? `
-                        <div class="incident-badge">⚠️ INCIDENT REPORTED</div>
-                        <p style="margin-top:8px;font-size:0.85rem;color:var(--error);">${d.incident_description || ''}</p>
-                        ${d.incident_photos && d.incident_photos.length ? `
-                            <div class="incident-media">
-                                ${d.incident_photos.map(url => `<img src="${url}" onclick="viewMedia('${url}', 'image')">`).join('')}
-                            </div>
-                        ` : ''}
-                        ${d.incident_videos && d.incident_videos.length ? `
-                            <div class="incident-media">
-                                ${d.incident_videos.map(url => `<video src="${url}" onclick="viewMedia('${url}', 'video')"></video>`).join('')}
-                            </div>
-                        ` : ''}
-                    ` : ''}
-                </div>
-            `).join('') : '<p style="text-align:center;color:var(--text-muted);padding:20px;">No deliveries yet</p>';
             
             const modal = document.createElement('div');
             modal.className = 'modal';
             modal.innerHTML = `
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h3>Delivery History (${total.toFixed(1)} gal)</h3>
-                        <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
+                        <h2>Invoice History</h2>
+                        <button class="modal-close" onclick="this.closest('.modal').remove();document.body.style.overflow='';">×</button>
                     </div>
-                    <div class="modal-body" style="max-height:60vh;overflow-y:auto;">
-                        ${html}
+                    <div style="padding:14px;background:var(--bg-card);border-radius:10px;margin-bottom:20px;">
+                        <div style="font-weight:600;">${job.job_site_name}</div>
+                    </div>
+                    <div class="invoice-history">
+                        ${deliveries.length ? deliveries.map(d => `
+                            <div class="invoice-item">
+                                <div class="invoice-item-header">
+                                    <span class="invoice-item-unit">${d.unit_number || 'Unit N/A'}</span>
+                                    <span class="invoice-item-date">${new Date(d.timestamp).toLocaleDateString()}</span>
+                                </div>
+                                <div class="invoice-item-details">
+                                    <span>⛽ ${d.gallons} gal diesel</span>
+                                    <span>💧 ${d.def_gallons || 0} gal DEF</span>
+                                    <span>⏱ ${d.unit_hours || '-'} hrs</span>
+                                </div>
+                                ${d.has_incident ? `
+                                    <div class="invoice-item-incident">
+                                        ⚠️ ${d.incident_description || 'Incident reported'}
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `).join('') : '<div class="empty">No invoices yet</div>'}
                     </div>
                 </div>
             `;
             document.body.appendChild(modal);
+            document.body.style.overflow = 'hidden';
         }
         
-        function viewMedia(url, type) {
-            const modal = document.createElement('div');
-            modal.className = 'modal';
-            modal.style.background = 'rgba(0,0,0,0.95)';
-            modal.onclick = () => modal.remove();
-            modal.innerHTML = `
-                <div style="max-width:90%;max-height:90%;">
-                    ${type === 'image' 
-                        ? `<img src="${url}" style="max-width:100%;max-height:80vh;border-radius:8px;">` 
-                        : `<video src="${url}" controls autoplay style="max-width:100%;max-height:80vh;border-radius:8px;"></video>`
-                    }
-                </div>
-            `;
-            document.body.appendChild(modal);
-        }
-        
+        // Tab switching
         document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', function() {
             document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
             this.classList.add('active');
@@ -528,7 +606,7 @@
             renderJobs();
         }));
         
-        loadJobs();
+        loadData();
     </script>
 </body>
 </html>

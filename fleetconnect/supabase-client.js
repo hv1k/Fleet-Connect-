@@ -328,14 +328,19 @@ async function createDeliveryWithIncident(deliveryData) {
         .insert([{
             job_id: deliveryData.jobId,
             gallons: deliveryData.gallons,
-            fuel_type: deliveryData.fuelType,
+            fuel_type: deliveryData.fuelType || 'diesel',
             notes: deliveryData.notes,
             delivered_by: deliveryData.deliveredById || null,
             delivered_by_name: deliveryData.deliveredByName,
             has_incident: deliveryData.hasIncident || false,
             incident_description: deliveryData.incidentDescription || null,
             incident_photos: deliveryData.incidentPhotos || [],
-            incident_videos: deliveryData.incidentVideos || []
+            incident_videos: deliveryData.incidentVideos || [],
+            unit_id: deliveryData.unitId || null,
+            unit_number: deliveryData.unitNumber || null,
+            unit_hours: deliveryData.unitHours || null,
+            def_gallons: deliveryData.defGallons || null,
+            timestamp: deliveryData.timestamp || new Date().toISOString()
         }])
         .select()
         .single();
