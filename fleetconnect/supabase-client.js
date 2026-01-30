@@ -322,6 +322,31 @@ async function createDelivery(deliveryData) {
     return { success: true, delivery: data };
 }
 
+async function createDeliveryWithIncident(deliveryData) {
+    const { data, error } = await db
+        .from('deliveries')
+        .insert([{
+            job_id: deliveryData.jobId,
+            gallons: deliveryData.gallons,
+            fuel_type: deliveryData.fuelType,
+            notes: deliveryData.notes,
+            delivered_by: deliveryData.deliveredById || null,
+            delivered_by_name: deliveryData.deliveredByName,
+            has_incident: deliveryData.hasIncident || false,
+            incident_description: deliveryData.incidentDescription || null,
+            incident_photos: deliveryData.incidentPhotos || [],
+            incident_videos: deliveryData.incidentVideos || []
+        }])
+        .select()
+        .single();
+    
+    if (error) {
+        console.error('Error creating delivery:', error);
+        return { success: false, error: error.message };
+    }
+    return { success: true, delivery: data };
+}
+
 // ============ HELPER FUNCTIONS ============
 
 function getCurrentUser() {

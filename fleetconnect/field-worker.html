@@ -25,7 +25,7 @@
         .tabs { display: flex; border-bottom: 1px solid var(--border); padding: 0 20px; background: var(--bg-card); }
         .tab { flex: 1; padding: 14px 8px; background: transparent; border: none; border-bottom: 2px solid transparent; color: var(--text-secondary); font-family: 'DM Sans', sans-serif; font-size: 0.85rem; cursor: pointer; }
         .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-        .jobs { padding: 16px 20px; }
+        .jobs { padding: 16px 20px; padding-bottom: 100px; }
         .job-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 16px; overflow: hidden; }
         .job-card.urgent { border-left: 4px solid var(--warning); }
         .job-header { padding: 16px; border-bottom: 1px solid var(--border); }
@@ -41,13 +41,70 @@
         .btn { flex: 1; padding: 14px; font-family: 'DM Sans', sans-serif; font-size: 0.95rem; font-weight: 600; border-radius: 10px; cursor: pointer; text-align: center; border: none; }
         .btn-primary { background: var(--accent); color: var(--bg-dark); }
         .btn-outline { background: transparent; color: var(--text-secondary); border: 1px solid var(--border); }
+        .btn-small { padding: 10px 16px; font-size: 0.85rem; }
         .empty { text-align: center; padding: 60px 20px; color: var(--text-secondary); }
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
-        .modal-content { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 400px; padding: 24px; }
-        .modal-content h3 { margin-bottom: 20px; }
-        .modal-content input, .modal-content select, .modal-content textarea { width: 100%; padding: 12px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); font-family: 'DM Sans', sans-serif; margin-bottom: 16px; }
-        .modal-content label { display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px; }
-        .modal-actions { display: flex; gap: 12px; margin-top: 8px; }
+        
+        /* Modal Styles */
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; align-items: flex-start; justify-content: center; z-index: 1000; padding: 20px; overflow-y: auto; }
+        .modal-content { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 500px; margin: 20px 0; }
+        .modal-header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { font-size: 1.1rem; }
+        .modal-close { background: none; border: none; color: var(--text-secondary); font-size: 1.5rem; cursor: pointer; }
+        .modal-body { padding: 20px; }
+        .modal-footer { padding: 20px; border-top: 1px solid var(--border); display: flex; gap: 12px; }
+        
+        /* Form Styles */
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px; font-weight: 500; }
+        .form-group input, .form-group select, .form-group textarea { 
+            width: 100%; padding: 14px; background: var(--bg-input); border: 1px solid var(--border); 
+            border-radius: 10px; color: var(--text-primary); font-family: 'DM Sans', sans-serif; font-size: 1rem;
+        }
+        .form-group textarea { min-height: 80px; resize: vertical; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--accent); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        
+        /* Incident Toggle */
+        .incident-toggle { display: flex; align-items: center; gap: 12px; padding: 16px; background: var(--bg-input); border-radius: 10px; margin-bottom: 20px; cursor: pointer; }
+        .incident-toggle input { display: none; }
+        .toggle-switch { width: 50px; height: 28px; background: var(--border); border-radius: 14px; position: relative; transition: background 0.3s; }
+        .toggle-switch::after { content: ''; position: absolute; width: 22px; height: 22px; background: white; border-radius: 50%; top: 3px; left: 3px; transition: transform 0.3s; }
+        .incident-toggle input:checked + .toggle-switch { background: var(--warning); }
+        .incident-toggle input:checked + .toggle-switch::after { transform: translateX(22px); }
+        .toggle-label { flex: 1; }
+        .toggle-label strong { display: block; font-size: 0.95rem; }
+        .toggle-label span { font-size: 0.8rem; color: var(--text-muted); }
+        
+        /* Incident Section */
+        .incident-section { display: none; padding: 20px; background: rgba(255, 107, 107, 0.1); border: 1px solid var(--error); border-radius: 12px; margin-bottom: 20px; }
+        .incident-section.show { display: block; }
+        .incident-section h4 { color: var(--error); margin-bottom: 16px; font-size: 0.95rem; }
+        
+        /* File Upload */
+        .file-upload { border: 2px dashed var(--border); border-radius: 10px; padding: 20px; text-align: center; cursor: pointer; transition: border-color 0.2s; margin-bottom: 12px; }
+        .file-upload:hover { border-color: var(--accent); }
+        .file-upload input { display: none; }
+        .file-upload-icon { font-size: 2rem; margin-bottom: 8px; }
+        .file-upload-text { font-size: 0.85rem; color: var(--text-secondary); }
+        .file-upload-text strong { color: var(--accent); }
+        
+        /* File Preview */
+        .file-preview { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+        .file-preview-item { position: relative; width: 70px; height: 70px; border-radius: 8px; overflow: hidden; background: var(--bg-input); }
+        .file-preview-item img, .file-preview-item video { width: 100%; height: 100%; object-fit: cover; }
+        .file-preview-item .remove-file { position: absolute; top: 2px; right: 2px; width: 20px; height: 20px; background: var(--error); border: none; border-radius: 50%; color: white; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .file-preview-item .video-badge { position: absolute; bottom: 4px; left: 4px; background: rgba(0,0,0,0.7); color: white; font-size: 0.6rem; padding: 2px 6px; border-radius: 4px; }
+        
+        /* Upload Progress */
+        .upload-progress { margin-top: 12px; }
+        .progress-bar { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--accent); transition: width 0.3s; }
+        .progress-text { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
+        
+        /* History Incident Badge */
+        .incident-badge { display: inline-flex; align-items: center; gap: 4px; background: rgba(255, 107, 107, 0.15); color: var(--error); padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; margin-top: 8px; }
+        .incident-media { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+        .incident-media img, .incident-media video { width: 50px; height: 50px; object-fit: cover; border-radius: 6px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -71,6 +128,8 @@
     
     <script src="supabase-client.js"></script>
     <script>
+        const SUPABASE_URL = 'https://ojqoxdsibiutpfhtvyyo.supabase.co';
+        
         const currentUser = checkAuth(['fieldworker']);
         if (currentUser) {
             const hour = new Date().getHours();
@@ -79,10 +138,10 @@
         }
         
         let allJobs = [], currentTab = 'active';
+        let selectedPhotos = [], selectedVideos = [];
         
         async function loadJobs() {
             allJobs = await getJobsByWorker(currentUser.id);
-            // Also get all jobs if none assigned to show available work
             if (allJobs.length === 0) {
                 allJobs = await getAllJobs();
             }
@@ -145,49 +204,257 @@
         }
         
         function openDeliveryModal(jobId) {
+            selectedPhotos = [];
+            selectedVideos = [];
+            
             const modal = document.createElement('div');
             modal.className = 'modal';
             modal.id = 'deliveryModal';
             modal.innerHTML = `
                 <div class="modal-content">
-                    <h3>Log Fuel Delivery</h3>
-                    <label>Gallons Delivered *</label>
-                    <input type="number" id="gallonsInput" step="0.1" min="0" placeholder="0.0">
-                    <label>Fuel Type</label>
-                    <select id="fuelType">
-                        <option value="diesel">Diesel</option>
-                        <option value="gasoline">Gasoline</option>
-                        <option value="propane">Propane</option>
-                    </select>
-                    <label>Notes</label>
-                    <textarea id="notes" placeholder="Any notes..."></textarea>
-                    <div class="modal-actions">
-                        <button class="btn btn-outline" onclick="document.getElementById('deliveryModal').remove()">Cancel</button>
-                        <button class="btn btn-primary" onclick="submitDelivery('${jobId}')">Log</button>
+                    <div class="modal-header">
+                        <h3>Log Fuel Delivery</h3>
+                        <button class="modal-close" onclick="closeDeliveryModal()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Gallons *</label>
+                                <input type="number" id="gallonsInput" step="0.1" min="0" placeholder="0.0">
+                            </div>
+                            <div class="form-group">
+                                <label>Fuel Type</label>
+                                <select id="fuelType">
+                                    <option value="diesel">Diesel</option>
+                                    <option value="gasoline">Gasoline</option>
+                                    <option value="def">DEF</option>
+                                    <option value="propane">Propane</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Notes</label>
+                            <textarea id="notes" placeholder="Any delivery notes..."></textarea>
+                        </div>
+                        
+                        <!-- Incident Toggle -->
+                        <label class="incident-toggle" onclick="toggleIncident()">
+                            <input type="checkbox" id="hasIncident">
+                            <div class="toggle-switch"></div>
+                            <div class="toggle-label">
+                                <strong>Report Incident</strong>
+                                <span>Oil spill, damage, safety issue, etc.</span>
+                            </div>
+                        </label>
+                        
+                        <!-- Incident Section -->
+                        <div class="incident-section" id="incidentSection">
+                            <h4>⚠️ Incident Details</h4>
+                            
+                            <div class="form-group">
+                                <label>What happened? *</label>
+                                <textarea id="incidentDescription" placeholder="Describe what you found at the job site..."></textarea>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Photos</label>
+                                <div class="file-upload" onclick="document.getElementById('photoInput').click()">
+                                    <input type="file" id="photoInput" accept="image/*" multiple onchange="handlePhotoSelect(event)">
+                                    <div class="file-upload-icon">📷</div>
+                                    <div class="file-upload-text">Tap to <strong>add photos</strong></div>
+                                </div>
+                                <div class="file-preview" id="photoPreview"></div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Videos (max 1 min each)</label>
+                                <div class="file-upload" onclick="document.getElementById('videoInput').click()">
+                                    <input type="file" id="videoInput" accept="video/*" multiple onchange="handleVideoSelect(event)">
+                                    <div class="file-upload-icon">🎥</div>
+                                    <div class="file-upload-text">Tap to <strong>add videos</strong></div>
+                                </div>
+                                <div class="file-preview" id="videoPreview"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="upload-progress" id="uploadProgress" style="display:none;">
+                            <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+                            <div class="progress-text" id="progressText">Uploading...</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-outline" onclick="closeDeliveryModal()">Cancel</button>
+                        <button class="btn btn-primary" id="submitBtn" onclick="submitDelivery('${jobId}')">Log Delivery</button>
                     </div>
                 </div>
             `;
             document.body.appendChild(modal);
         }
         
+        function closeDeliveryModal() {
+            document.getElementById('deliveryModal')?.remove();
+            selectedPhotos = [];
+            selectedVideos = [];
+        }
+        
+        function toggleIncident() {
+            const checkbox = document.getElementById('hasIncident');
+            const section = document.getElementById('incidentSection');
+            checkbox.checked = !checkbox.checked;
+            section.classList.toggle('show', checkbox.checked);
+        }
+        
+        function handlePhotoSelect(event) {
+            const files = Array.from(event.target.files);
+            files.forEach(file => {
+                if (file.type.startsWith('image/')) {
+                    selectedPhotos.push(file);
+                }
+            });
+            renderPhotoPreviews();
+        }
+        
+        function handleVideoSelect(event) {
+            const files = Array.from(event.target.files);
+            files.forEach(file => {
+                if (file.type.startsWith('video/')) {
+                    selectedVideos.push(file);
+                }
+            });
+            renderVideoPreviews();
+        }
+        
+        function renderPhotoPreviews() {
+            const container = document.getElementById('photoPreview');
+            container.innerHTML = selectedPhotos.map((file, i) => {
+                const url = URL.createObjectURL(file);
+                return `
+                    <div class="file-preview-item">
+                        <img src="${url}" alt="Photo">
+                        <button class="remove-file" onclick="removePhoto(${i})">×</button>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function renderVideoPreviews() {
+            const container = document.getElementById('videoPreview');
+            container.innerHTML = selectedVideos.map((file, i) => {
+                const url = URL.createObjectURL(file);
+                return `
+                    <div class="file-preview-item">
+                        <video src="${url}"></video>
+                        <span class="video-badge">VIDEO</span>
+                        <button class="remove-file" onclick="removeVideo(${i})">×</button>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function removePhoto(index) {
+            selectedPhotos.splice(index, 1);
+            renderPhotoPreviews();
+        }
+        
+        function removeVideo(index) {
+            selectedVideos.splice(index, 1);
+            renderVideoPreviews();
+        }
+        
+        async function uploadFile(file, folder) {
+            const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}_${file.name}`;
+            const filePath = `${folder}/${fileName}`;
+            
+            const { data, error } = await db.storage
+                .from('incidents')
+                .upload(filePath, file);
+            
+            if (error) {
+                console.error('Upload error:', error);
+                return null;
+            }
+            
+            return `${SUPABASE_URL}/storage/v1/object/public/incidents/${filePath}`;
+        }
+        
         async function submitDelivery(jobId) {
             const gallons = parseFloat(document.getElementById('gallonsInput').value);
-            if (!gallons || gallons <= 0) { alert('Enter gallons'); return; }
+            if (!gallons || gallons <= 0) { 
+                alert('Please enter gallons delivered'); 
+                return; 
+            }
             
-            const result = await createDelivery({
+            const hasIncident = document.getElementById('hasIncident').checked;
+            const incidentDescription = document.getElementById('incidentDescription')?.value || '';
+            
+            if (hasIncident && !incidentDescription.trim()) {
+                alert('Please describe the incident');
+                return;
+            }
+            
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Saving...';
+            
+            let uploadedPhotos = [];
+            let uploadedVideos = [];
+            
+            // Upload files if incident reported
+            if (hasIncident && (selectedPhotos.length > 0 || selectedVideos.length > 0)) {
+                const progressDiv = document.getElementById('uploadProgress');
+                const progressFill = document.getElementById('progressFill');
+                const progressText = document.getElementById('progressText');
+                progressDiv.style.display = 'block';
+                
+                const totalFiles = selectedPhotos.length + selectedVideos.length;
+                let uploadedCount = 0;
+                
+                // Upload photos
+                for (const photo of selectedPhotos) {
+                    progressText.textContent = `Uploading photo ${uploadedCount + 1} of ${totalFiles}...`;
+                    const url = await uploadFile(photo, 'photos');
+                    if (url) uploadedPhotos.push(url);
+                    uploadedCount++;
+                    progressFill.style.width = `${(uploadedCount / totalFiles) * 100}%`;
+                }
+                
+                // Upload videos
+                for (const video of selectedVideos) {
+                    progressText.textContent = `Uploading video ${uploadedCount + 1} of ${totalFiles}...`;
+                    const url = await uploadFile(video, 'videos');
+                    if (url) uploadedVideos.push(url);
+                    uploadedCount++;
+                    progressFill.style.width = `${(uploadedCount / totalFiles) * 100}%`;
+                }
+                
+                progressText.textContent = 'Saving delivery...';
+            }
+            
+            // Create delivery with incident data
+            const deliveryData = {
                 jobId: jobId,
                 gallons: gallons,
                 fuelType: document.getElementById('fuelType').value,
                 notes: document.getElementById('notes').value,
                 deliveredById: currentUser.id,
-                deliveredByName: currentUser.name
-            });
+                deliveredByName: currentUser.name,
+                hasIncident: hasIncident,
+                incidentDescription: hasIncident ? incidentDescription : null,
+                incidentPhotos: uploadedPhotos,
+                incidentVideos: uploadedVideos
+            };
+            
+            const result = await createDeliveryWithIncident(deliveryData);
             
             if (result.success) {
-                document.getElementById('deliveryModal').remove();
-                alert('Delivery logged!');
+                closeDeliveryModal();
+                alert(hasIncident ? 'Delivery logged with incident report!' : 'Delivery logged!');
+                loadJobs();
             } else {
                 alert('Error: ' + result.error);
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Log Delivery';
             }
         }
         
@@ -196,22 +463,59 @@
             const total = deliveries.reduce((s,d) => s + parseFloat(d.gallons), 0);
             
             const html = deliveries.length ? deliveries.map(d => `
-                <div style="padding:12px;background:var(--bg-input);border-radius:8px;margin-bottom:8px;">
-                    <strong style="color:var(--accent)">${d.gallons} gal</strong> - ${d.fuel_type || 'Diesel'}<br>
-                    <small style="color:var(--text-muted)">${new Date(d.timestamp).toLocaleString()}</small>
-                    ${d.notes ? `<p style="margin-top:8px;font-size:0.85rem">${d.notes}</p>` : ''}
+                <div style="padding:14px;background:var(--bg-input);border-radius:10px;margin-bottom:10px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <strong style="color:var(--accent);font-size:1.1rem;">${d.gallons} gal</strong>
+                        <span style="font-size:0.75rem;color:var(--text-muted);">${d.fuel_type || 'Diesel'}</span>
+                    </div>
+                    <div style="font-size:0.8rem;color:var(--text-muted);margin-top:4px;">
+                        ${new Date(d.timestamp).toLocaleString()}
+                    </div>
+                    ${d.notes ? `<p style="margin-top:8px;font-size:0.85rem;color:var(--text-secondary);">${d.notes}</p>` : ''}
+                    ${d.has_incident ? `
+                        <div class="incident-badge">⚠️ INCIDENT REPORTED</div>
+                        <p style="margin-top:8px;font-size:0.85rem;color:var(--error);">${d.incident_description || ''}</p>
+                        ${d.incident_photos && d.incident_photos.length ? `
+                            <div class="incident-media">
+                                ${d.incident_photos.map(url => `<img src="${url}" onclick="viewMedia('${url}', 'image')">`).join('')}
+                            </div>
+                        ` : ''}
+                        ${d.incident_videos && d.incident_videos.length ? `
+                            <div class="incident-media">
+                                ${d.incident_videos.map(url => `<video src="${url}" onclick="viewMedia('${url}', 'video')"></video>`).join('')}
+                            </div>
+                        ` : ''}
+                    ` : ''}
                 </div>
-            `).join('') : '<p style="text-align:center;color:var(--text-muted)">No deliveries yet</p>';
+            `).join('') : '<p style="text-align:center;color:var(--text-muted);padding:20px;">No deliveries yet</p>';
             
             const modal = document.createElement('div');
             modal.className = 'modal';
             modal.innerHTML = `
-                <div class="modal-content" style="max-height:80vh;overflow-y:auto;">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-                        <h3>Deliveries (${total.toFixed(1)} gal)</h3>
-                        <button onclick="this.closest('.modal').remove()" style="background:none;border:none;color:var(--text-secondary);font-size:1.5rem;cursor:pointer;">&times;</button>
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>Delivery History (${total.toFixed(1)} gal)</h3>
+                        <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
                     </div>
-                    ${html}
+                    <div class="modal-body" style="max-height:60vh;overflow-y:auto;">
+                        ${html}
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+        
+        function viewMedia(url, type) {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.background = 'rgba(0,0,0,0.95)';
+            modal.onclick = () => modal.remove();
+            modal.innerHTML = `
+                <div style="max-width:90%;max-height:90%;">
+                    ${type === 'image' 
+                        ? `<img src="${url}" style="max-width:100%;max-height:80vh;border-radius:8px;">` 
+                        : `<video src="${url}" controls autoplay style="max-width:100%;max-height:80vh;border-radius:8px;"></video>`
+                    }
                 </div>
             `;
             document.body.appendChild(modal);
