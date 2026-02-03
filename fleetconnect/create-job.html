@@ -230,6 +230,10 @@
                                 <div class="form-group"><label>Order ID #</label><input type="text" id="orderId" placeholder="7452"></div>
                                 <div class="form-group"><label>Job Number</label><input type="text" id="jobNumber" placeholder="52-D-27 MONROVIA-EA"></div>
                             </div>
+                            <div class="form-row">
+                                <div class="form-group"><label>C#</label><input type="text" id="cNumber" placeholder="909-231-3084 J#: 909-231-3084"></div>
+                                <div class="form-group"><label>J#</label><input type="text" id="jNumber" placeholder="909-231-3084"></div>
+                            </div>
                         </div>
 
                         <!-- Customer Info (matches Sunbelt customer box) -->
@@ -241,7 +245,6 @@
                             </div>
                             <div class="form-row">
                                 <div class="form-group"><label>Vendor #</label><input type="text" id="vendorNumber" placeholder="10041159"></div>
-                                <div class="form-group"><label>Payment Terms</label><input type="text" id="paymentTerms" placeholder="2% 15, NET 60"></div>
                             </div>
                         </div>
 
@@ -463,7 +466,8 @@
                 { key: 'customerName', label: 'Customer' },
                 { key: 'customerNumber', label: 'Customer #' },
                 { key: 'vendorNumber', label: 'Vendor #' },
-                { key: 'paymentTerms', label: 'Payment Terms' },
+                { key: 'cNumber', label: 'C#' },
+                { key: 'jNumber', label: 'J#' },
                 { key: 'contactName', label: 'Ordered By' },
                 { key: 'contactPhone', label: 'Phone' },
                 { key: 'rentalCompany', label: 'Rental Company' },
@@ -493,8 +497,8 @@
             const allFields = [
                 'contractNumber', 'poNumber', 'jobSiteName', 'addressStreet', 'addressCity',
                 'addressState', 'addressZip', 'contactName', 'contactPhone', 'orderId',
-                'jobNumber', 'customerName', 'customerNumber', 'vendorNumber', 'paymentTerms',
-                'rentalCompany', 'salesman'
+                'jobNumber', 'customerName', 'customerNumber', 'vendorNumber',
+                'rentalCompany', 'salesman', 'cNumber', 'jNumber'
             ];
             for (const id of allFields) {
                 if (extractedData[id]) {
@@ -599,7 +603,8 @@
                 customerName: document.getElementById('customerName').value,
                 customerNumber: document.getElementById('customerNumber').value,
                 vendorNumber: document.getElementById('vendorNumber').value,
-                paymentTerms: document.getElementById('paymentTerms').value,
+                cNumber: document.getElementById('cNumber').value,
+                jNumber: document.getElementById('jNumber').value,
                 contactName: document.getElementById('contactName').value,
                 contactPhone: document.getElementById('contactPhone').value,
                 rentalCompany: document.getElementById('rentalCompany').value,
