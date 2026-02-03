@@ -292,7 +292,7 @@
                     <a class="nav-item active" href="vendor-dashboard.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>Dashboard</a>
                     <a class="nav-item" href="job-history.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>Jobs<span class="nav-item-badge" id="pendingBadge">0</span></a>
                     <a class="nav-item" href="#"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>Reports</a>
-                    <a class="nav-item" href="#"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Invoices</a>
+                    <a class="nav-item" href="invoices.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Invoices</a>
                 </div>
                 <div class="nav-section">
                     <div class="nav-section-title">System</div>
@@ -327,14 +327,6 @@
                     <button class="quick-action-btn primary" onclick="window.location.href='create-job.html'">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                         Create Job
-                    </button>
-                    <button class="quick-action-btn" onclick="window.location.href='job-history.html'">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                        View Invoices
-                    </button>
-                    <button class="quick-action-btn" onclick="window.location.href='admin.html'">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
-                        Add Worker
                     </button>
                 </div>
                 
@@ -405,10 +397,9 @@
                 <!-- Jobs Table -->
                 <div class="table-card">
                     <div class="table-header">
-                        <div class="table-title">Recent Jobs</div>
+                        <div class="table-title">Active & Pending Jobs</div>
                         <div class="table-actions">
                             <input type="text" class="search-input" id="searchInput" placeholder="Search jobs..." oninput="renderJobs()">
-                            <select class="filter-select" id="statusFilter" onchange="renderJobs()"><option value="">All Status</option><option value="pending">Pending</option><option value="accepted">Accepted</option><option value="in-progress">In Progress</option><option value="completed">Completed</option></select>
                         </div>
                     </div>
                     <div id="jobsTable"><div class="loading"><div class="spinner"></div>Loading...</div></div>
@@ -617,10 +608,8 @@
         
         function renderJobs() {
             const search = document.getElementById('searchInput').value.toLowerCase();
-            const status = document.getElementById('statusFilter').value;
-            let filtered = allJobs;
+            let filtered = allJobs.filter(j => ['pending','assigned','accepted','in-progress','open'].includes(j.status));
             if (search) filtered = filtered.filter(j => (j.job_site_name||'').toLowerCase().includes(search) || (j.contract_number||'').toLowerCase().includes(search));
-            if (status) filtered = filtered.filter(j => j.status === status);
             const container = document.getElementById('jobsTable');
             if (!filtered.length) { container.innerHTML = '<div class="empty-state">No jobs found</div>'; document.getElementById('tableFooter').style.display='none'; return; }
             container.innerHTML = '<table><thead><tr><th>Job Site</th><th>Contract #</th><th>Date</th><th>Worker</th><th>Status</th><th>Actions</th></tr></thead><tbody>' + filtered.slice(0,10).map(j => 
