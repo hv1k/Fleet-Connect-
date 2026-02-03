@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Invoices | FleetConnect</title>
+    <title>Invoices & Fuel History | FleetConnect</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -44,18 +44,29 @@
         .stat-label { font-size: 0.8rem; color: #888; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
         .stat-label svg { width: 16px; height: 16px; }
         .stat-number { font-size: 1.6rem; font-weight: 700; color: #f5f0e8; }
-        .stat-sub { font-size: 0.75rem; color: #666; margin-top: 4px; }
 
-        /* Tabs */
-        .tabs { display: flex; gap: 4px; margin-bottom: 24px; background: #242424; border-radius: 10px; padding: 4px; border: 1px solid #333; width: fit-content; }
-        .tab { padding: 8px 20px; border-radius: 8px; font-size: 0.85rem; font-weight: 500; color: #888; cursor: pointer; transition: all 0.2s; background: none; border: none; }
-        .tab:hover { color: #f5f0e8; }
-        .tab.active { background: #60a5fa; color: #1a1a1a; }
-        .tab-count { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; border-radius: 10px; font-size: 0.7rem; font-weight: 600; margin-left: 6px; padding: 0 6px; }
-        .tab.active .tab-count { background: rgba(0,0,0,0.2); color: #1a1a1a; }
-        .tab:not(.active) .tab-count { background: #333; color: #888; }
+        /* Page Tabs */
+        .page-tabs { display: flex; gap: 0; margin-bottom: 28px; border-bottom: 2px solid #333; }
+        .page-tab { padding: 12px 24px; font-size: 0.95rem; font-weight: 600; color: #888; cursor: pointer; background: none; border: none; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s; display: flex; align-items: center; gap: 8px; }
+        .page-tab:hover { color: #f5f0e8; }
+        .page-tab.active { color: #60a5fa; border-bottom-color: #60a5fa; }
+        .page-tab svg { width: 18px; height: 18px; }
+        .page-tab .tab-badge { background: #333; color: #888; font-size: 0.7rem; font-weight: 600; padding: 2px 8px; border-radius: 10px; }
+        .page-tab.active .tab-badge { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
 
-        /* BCC Info Banner */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Filter Tabs */
+        .filter-tabs { display: flex; gap: 4px; margin-bottom: 24px; background: #242424; border-radius: 10px; padding: 4px; border: 1px solid #333; width: fit-content; }
+        .filter-tab { padding: 8px 20px; border-radius: 8px; font-size: 0.85rem; font-weight: 500; color: #888; cursor: pointer; transition: all 0.2s; background: none; border: none; }
+        .filter-tab:hover { color: #f5f0e8; }
+        .filter-tab.active { background: #60a5fa; color: #1a1a1a; }
+        .filter-tab-count { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; border-radius: 10px; font-size: 0.7rem; font-weight: 600; margin-left: 6px; padding: 0 6px; }
+        .filter-tab.active .filter-tab-count { background: rgba(0,0,0,0.2); color: #1a1a1a; }
+        .filter-tab:not(.active) .filter-tab-count { background: #333; color: #888; }
+
+        /* BCC Banner */
         .bcc-banner { background: rgba(96, 165, 250, 0.1); border: 1px solid rgba(96, 165, 250, 0.3); border-radius: 12px; padding: 16px 24px; margin-bottom: 24px; display: flex; align-items: center; gap: 16px; }
         .bcc-banner-icon { width: 44px; height: 44px; border-radius: 10px; background: rgba(96, 165, 250, 0.15); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .bcc-banner-icon svg { width: 22px; height: 22px; color: #60a5fa; }
@@ -67,7 +78,7 @@
         .copy-toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #60a5fa; color: #1a1a1a; padding: 10px 24px; border-radius: 8px; font-size: 0.85rem; font-weight: 500; opacity: 0; transition: opacity 0.3s; z-index: 999; }
         .copy-toast.show { opacity: 1; }
 
-        /* Invoice Table */
+        /* Table */
         .table-card { background: #242424; border-radius: 16px; border: 1px solid #333; overflow: hidden; }
         .table-header { padding: 20px 24px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
         .table-title { font-size: 1rem; font-weight: 600; color: #f5f0e8; }
@@ -79,22 +90,27 @@
         table { width: 100%; border-collapse: collapse; }
         th { text-align: left; padding: 12px 24px; font-size: 0.7rem; font-weight: 600; color: #888; text-transform: uppercase; background: #2a2a2a; border-bottom: 1px solid #333; }
         td { padding: 14px 24px; border-bottom: 1px solid #333; font-size: 0.85rem; color: #b8b0a8; }
-        tr:hover { background: #2a2a2a; cursor: pointer; }
-        tr.selected { background: rgba(96, 165, 250, 0.1); }
+        tr:hover { background: #2a2a2a; }
 
+        .job-name { font-weight: 600; color: #f5f0e8; }
+        .job-location { font-size: 0.75rem; color: #666; margin-top: 2px; }
         .invoice-num { font-weight: 600; color: #f5f0e8; }
-        .invoice-date { color: #b8b0a8; }
         .invoice-customer { font-weight: 500; color: #f5f0e8; }
         .invoice-address { font-size: 0.75rem; color: #666; margin-top: 2px; }
         .invoice-amount { font-weight: 600; color: #f5f0e8; }
         .invoice-gallons { font-size: 0.75rem; color: #888; }
+        .fuel-amount { font-weight: 600; color: #f5f0e8; }
+
+        .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; text-transform: capitalize; }
+        .status-badge.completed { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
+        .status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 
         .match-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
         .match-badge.matched { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
         .match-badge.pending { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
         .match-badge.unmatched { background: rgba(248, 113, 113, 0.15); color: #f87171; }
+        .match-badge.no-invoice { background: #333; color: #666; }
         .match-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-
         .confidence-badge { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; font-weight: 500; margin-left: 4px; }
         .confidence-badge.high { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
         .confidence-badge.medium { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
@@ -105,7 +121,6 @@
         .action-btn.primary:hover { background: #3b82f6; }
         .action-btn.secondary { background: #333; color: #f5f0e8; }
         .action-btn.secondary:hover { background: #444; }
-        .action-btn.danger { background: rgba(248, 113, 113, 0.15); color: #f87171; }
         .actions-cell { display: flex; gap: 6px; }
 
         .table-footer { padding: 14px 24px; border-top: 1px solid #333; display: flex; justify-content: space-between; align-items: center; background: #2a2a2a; font-size: 0.85rem; color: #888; }
@@ -115,7 +130,7 @@
         .empty-state h3 { color: #888; font-size: 1rem; margin-bottom: 8px; }
         .empty-state p { font-size: 0.85rem; max-width: 400px; margin: 0 auto; line-height: 1.5; }
 
-        /* Invoice Detail Modal */
+        /* Modal */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 200; align-items: flex-start; justify-content: center; padding: 40px 20px; overflow-y: auto; }
         .modal-overlay.show { display: flex; }
         .modal { background: #242424; border-radius: 16px; width: 100%; max-width: 800px; border: 1px solid #333; }
@@ -130,23 +145,13 @@
         .btn-primary:hover { background: #3b82f6; }
         .btn-secondary { background: #333; color: #b8b0a8; border: 1px solid #444; }
         .btn-secondary:hover { background: #444; }
-        .btn-danger { background: rgba(248, 113, 113, 0.15); color: #f87171; }
 
-        /* Detail Grid */
         .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
         .detail-section { background: #2a2a2a; border-radius: 10px; padding: 16px 20px; }
         .detail-section-title { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: #666; margin-bottom: 12px; letter-spacing: 0.5px; }
         .detail-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.85rem; }
         .detail-label { color: #888; }
         .detail-value { color: #f5f0e8; font-weight: 500; }
-        .detail-section.full { grid-column: 1 / -1; }
-
-        /* Line Items */
-        .line-items-table { width: 100%; }
-        .line-items-table th { padding: 8px 12px; font-size: 0.7rem; background: #333; }
-        .line-items-table td { padding: 10px 12px; font-size: 0.8rem; border-color: #333; }
-
-        /* Match Section */
         .match-section { background: #2a2a2a; border-radius: 10px; padding: 20px; margin-bottom: 20px; }
         .match-section-title { font-size: 0.85rem; font-weight: 600; color: #f5f0e8; margin-bottom: 12px; }
         .match-job-card { border: 2px solid #333; border-radius: 10px; padding: 16px; cursor: pointer; transition: all 0.2s; margin-bottom: 8px; }
@@ -154,11 +159,8 @@
         .match-job-card.selected { border-color: #60a5fa; background: rgba(96, 165, 250, 0.1); }
         .match-job-name { font-weight: 600; color: #f5f0e8; }
         .match-job-detail { font-size: 0.8rem; color: #888; margin-top: 4px; }
-
-        /* PDF Viewer */
         .pdf-viewer { width: 100%; height: 500px; border-radius: 8px; border: 1px solid #333; background: #fff; }
 
-        /* Mobile */
         @media (max-width: 1200px) { .invoice-stats { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 900px) {
             .sidebar { display: none; }
@@ -174,7 +176,6 @@
 </head>
 <body>
     <div class="layout">
-        <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
                 <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="#60a5fa"/><path d="M16 8l-8 10h5.5v6h5v-6H24L16 8z" fill="#1a1a1a"/></svg>
@@ -196,124 +197,123 @@
             <div class="sidebar-footer">
                 <div class="user-menu">
                     <div class="user-avatar-lg" id="userAvatar">V</div>
-                    <div class="user-info">
-                        <div class="user-name" id="userName">Vendor</div>
-                        <div class="user-role">Vendor Account</div>
-                    </div>
+                    <div class="user-info"><div class="user-name" id="userName">Vendor</div><div class="user-role">Vendor Account</div></div>
                     <button class="logout-btn" onclick="logout()" title="Logout"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg></button>
                 </div>
             </div>
         </aside>
 
-        <!-- Main Content -->
         <main class="main">
             <div class="header">
                 <div>
-                    <h1>Invoices</h1>
-                    <div class="header-subtitle">QuickBooks invoices matched to completed jobs</div>
+                    <h1>Invoices & Fuel History</h1>
+                    <div class="header-subtitle">Complete fuel delivery records and QuickBooks invoice matching</div>
                 </div>
             </div>
 
             <div class="content">
-                <!-- BCC Info Banner -->
-                <div class="bcc-banner">
-                    <div class="bcc-banner-icon">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                    </div>
-                    <div class="bcc-banner-text">
-                        <div class="bcc-banner-title">Auto-Import from QuickBooks</div>
-                        <div class="bcc-banner-desc">When sending invoices from QuickBooks, add this email as BCC to automatically import and match: <span class="bcc-email" onclick="copyBccEmail()">flashfuels.invoices@gmail.com</span></div>
-                    </div>
-                </div>
-
                 <!-- Stats -->
                 <div class="invoice-stats">
                     <div class="stat-card">
-                        <div class="stat-label"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Total Invoices</div>
-                        <div class="stat-number" id="totalInvoices">0</div>
+                        <div class="stat-label"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Completed Jobs</div>
+                        <div class="stat-number" id="statCompletedJobs">0</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-label"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Matched</div>
-                        <div class="stat-number" id="matchedCount" style="color: #60a5fa;">0</div>
+                        <div class="stat-label"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>Total Gallons</div>
+                        <div class="stat-number" id="statTotalGallons" style="color: #60a5fa;">0</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-label"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Pending Review</div>
-                        <div class="stat-number" id="pendingCount" style="color: #fbbf24;">0</div>
+                        <div class="stat-label"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>QB Invoices</div>
+                        <div class="stat-number" id="statQBInvoices">0</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-label"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Unmatched</div>
-                        <div class="stat-number" id="unmatchedCount" style="color: #f87171;">0</div>
+                        <div class="stat-label"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Needs Matching</div>
+                        <div class="stat-number" id="statNeedsMatch" style="color: #fbbf24;">0</div>
                     </div>
                 </div>
 
-                <!-- Tabs -->
-                <div class="tabs">
-                    <button class="tab active" data-filter="all" onclick="filterInvoices('all')">All<span class="tab-count" id="tabAll">0</span></button>
-                    <button class="tab" data-filter="matched" onclick="filterInvoices('matched')">Matched<span class="tab-count" id="tabMatched">0</span></button>
-                    <button class="tab" data-filter="pending_review" onclick="filterInvoices('pending_review')">Pending<span class="tab-count" id="tabPending">0</span></button>
-                    <button class="tab" data-filter="unmatched" onclick="filterInvoices('unmatched')">Unmatched<span class="tab-count" id="tabUnmatched">0</span></button>
+                <!-- Page Tabs -->
+                <div class="page-tabs">
+                    <button class="page-tab active" onclick="switchPageTab('fuel-history', this)">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        Fuel History <span class="tab-badge" id="fuelHistoryBadge">0</span>
+                    </button>
+                    <button class="page-tab" onclick="switchPageTab('qb-invoices', this)">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        QB Invoices <span class="tab-badge" id="qbInvoicesBadge">0</span>
+                    </button>
                 </div>
 
-                <!-- Invoice Table -->
-                <div class="table-card">
-                    <div class="table-header">
-                        <div class="table-title">Invoice Records</div>
-                        <div class="table-actions">
-                            <input type="text" class="search-input" placeholder="Search invoices..." oninput="searchInvoices(this.value)">
+                <!-- FUEL HISTORY TAB -->
+                <div class="tab-content active" id="tab-fuel-history">
+                    <div class="table-card">
+                        <div class="table-header">
+                            <div class="table-title">Completed Deliveries</div>
+                            <div class="table-actions">
+                                <input type="text" class="search-input" placeholder="Search fuel history..." oninput="searchFuelHistory(this.value)">
+                            </div>
+                        </div>
+                        <div style="overflow-x: auto;">
+                            <table>
+                                <thead><tr><th>Job Site</th><th>Customer</th><th>Date Completed</th><th>Diesel</th><th>DEF</th><th>Worker</th><th>Invoice</th></tr></thead>
+                                <tbody id="fuelHistoryBody"><tr><td colspan="7" class="loading"><div class="spinner"></div>Loading fuel history...</td></tr></tbody>
+                            </table>
+                        </div>
+                        <div class="table-footer">
+                            <span id="fuelHistoryCount">0 deliveries</span>
+                            <span id="fuelHistoryTotal" style="font-weight:600;color:#60a5fa;"></span>
                         </div>
                     </div>
-                    <div style="overflow-x: auto;">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Invoice #</th>
-                                    <th>Date</th>
-                                    <th>Customer / Ship To</th>
-                                    <th>Amount</th>
-                                    <th>Status</th>
-                                    <th>Matched Job</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="invoiceTableBody">
-                                <tr><td colspan="7" class="loading"><div class="spinner"></div>Loading invoices...</td></tr>
-                            </tbody>
-                        </table>
+                </div>
+
+                <!-- QB INVOICES TAB -->
+                <div class="tab-content" id="tab-qb-invoices">
+                    <div class="bcc-banner">
+                        <div class="bcc-banner-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></div>
+                        <div class="bcc-banner-text">
+                            <div class="bcc-banner-title">Auto-Import from QuickBooks</div>
+                            <div class="bcc-banner-desc">When sending invoices from QuickBooks, BCC: <span class="bcc-email" onclick="copyBccEmail()">flashfuels.invoices@gmail.com</span></div>
+                        </div>
                     </div>
-                    <div class="table-footer">
-                        <span id="invoiceCount">0 invoices</span>
+                    <div class="filter-tabs">
+                        <button class="filter-tab active" data-filter="all" onclick="filterInvoices('all')">All<span class="filter-tab-count" id="tabAll">0</span></button>
+                        <button class="filter-tab" data-filter="matched" onclick="filterInvoices('matched')">Matched<span class="filter-tab-count" id="tabMatched">0</span></button>
+                        <button class="filter-tab" data-filter="pending_review" onclick="filterInvoices('pending_review')">Pending<span class="filter-tab-count" id="tabPending">0</span></button>
+                        <button class="filter-tab" data-filter="unmatched" onclick="filterInvoices('unmatched')">Unmatched<span class="filter-tab-count" id="tabUnmatched">0</span></button>
+                    </div>
+                    <div class="table-card">
+                        <div class="table-header">
+                            <div class="table-title">QuickBooks Invoices</div>
+                            <div class="table-actions"><input type="text" class="search-input" placeholder="Search invoices..." oninput="searchInvoices(this.value)"></div>
+                        </div>
+                        <div style="overflow-x: auto;">
+                            <table>
+                                <thead><tr><th>Invoice #</th><th>Date</th><th>Customer / Ship To</th><th>Amount</th><th>Status</th><th>Matched Job</th><th>Actions</th></tr></thead>
+                                <tbody id="invoiceTableBody"><tr><td colspan="7" class="loading"><div class="spinner"></div>Loading invoices...</td></tr></tbody>
+                            </table>
+                        </div>
+                        <div class="table-footer"><span id="invoiceCount">0 invoices</span></div>
                     </div>
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- Invoice Detail Modal -->
+    <!-- Modal -->
     <div class="modal-overlay" id="invoiceModal">
         <div class="modal">
-            <div class="modal-header">
-                <h3 id="modalTitle">Invoice Details</h3>
-                <button class="modal-close" onclick="closeModal()">&times;</button>
-            </div>
-            <div class="modal-body" id="modalBody">
-            </div>
-            <div class="modal-footer" id="modalFooter">
-                <button class="btn btn-secondary" onclick="closeModal()">Close</button>
-            </div>
+            <div class="modal-header"><h3 id="modalTitle">Invoice Details</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-footer" id="modalFooter"><button class="btn btn-secondary" onclick="closeModal()">Close</button></div>
         </div>
     </div>
-
-    <!-- Copy Toast -->
     <div class="copy-toast" id="copyToast">Email copied to clipboard!</div>
 
     <script src="supabase-client.js"></script>
     <script>
-        let allInvoices = [];
-        let allJobs = [];
-        let currentFilter = 'all';
-        let searchTerm = '';
+        let allInvoices = [], allJobs = [], completedJobs = [], allDeliveries = [], allUsers = [];
+        let currentFilter = 'all', searchTerm = '', fuelSearchTerm = '';
 
-        // Initialize
         document.addEventListener('DOMContentLoaded', async () => {
             if (typeof checkAuth !== 'undefined') {
                 const user = checkAuth(['vendor', 'admin']);
@@ -327,268 +327,175 @@
 
         async function loadData() {
             try {
-                // Load invoices
-                const { data: invoices, error: invError } = await db
-                    .from('qb_invoices')
-                    .select('*')
-                    .order('created_at', { ascending: false });
-
-                if (invError) throw invError;
-                allInvoices = invoices || [];
-
-                // Load completed jobs for matching
-                const { data: jobs, error: jobError } = await db
-                    .from('jobs')
-                    .select('*')
-                    .in('status', ['completed', 'in-progress'])
-                    .order('completed_at', { ascending: false });
-
-                if (jobError) throw jobError;
-                allJobs = jobs || [];
+                const [invRes, jobRes, delRes, userRes] = await Promise.all([
+                    db.from('qb_invoices').select('*').order('created_at', { ascending: false }),
+                    db.from('jobs').select('*').order('completed_at', { ascending: false }),
+                    db.from('deliveries').select('*').order('timestamp', { ascending: false }),
+                    db.from('users').select('id, name, role').eq('role', 'fieldworker')
+                ]);
+                allInvoices = invRes.data || [];
+                allJobs = jobRes.data || [];
+                completedJobs = allJobs.filter(j => j.status === 'completed');
+                allDeliveries = delRes.data || [];
+                allUsers = userRes.data || [];
 
                 updateStats();
+                renderFuelHistory();
                 renderInvoices();
             } catch (err) {
                 console.error('Error loading data:', err);
-                document.getElementById('invoiceTableBody').innerHTML = 
-                    '<tr><td colspan="7" class="empty-state"><h3>Error loading data</h3><p>' + err.message + '</p></td></tr>';
             }
         }
 
         function updateStats() {
-            const matched = allInvoices.filter(i => i.match_status === 'matched').length;
-            const pending = allInvoices.filter(i => i.match_status === 'pending_review').length;
-            const unmatched = allInvoices.filter(i => i.match_status === 'unmatched').length;
-
-            document.getElementById('totalInvoices').textContent = allInvoices.length;
-            document.getElementById('matchedCount').textContent = matched;
-            document.getElementById('pendingCount').textContent = pending;
-            document.getElementById('unmatchedCount').textContent = unmatched;
+            const totalGallons = allDeliveries.reduce((s, d) => s + (parseFloat(d.gallons) || 0), 0);
+            const needsMatch = allInvoices.filter(i => i.match_status !== 'matched').length;
+            document.getElementById('statCompletedJobs').textContent = completedJobs.length;
+            document.getElementById('statTotalGallons').textContent = totalGallons.toLocaleString('en-US', { maximumFractionDigits: 0 });
+            document.getElementById('statQBInvoices').textContent = allInvoices.length;
+            document.getElementById('statNeedsMatch').textContent = needsMatch;
+            document.getElementById('fuelHistoryBadge').textContent = completedJobs.length;
+            document.getElementById('qbInvoicesBadge').textContent = allInvoices.length;
             document.getElementById('tabAll').textContent = allInvoices.length;
-            document.getElementById('tabMatched').textContent = matched;
-            document.getElementById('tabPending').textContent = pending;
-            document.getElementById('tabUnmatched').textContent = unmatched;
+            document.getElementById('tabMatched').textContent = allInvoices.filter(i => i.match_status === 'matched').length;
+            document.getElementById('tabPending').textContent = allInvoices.filter(i => i.match_status === 'pending_review').length;
+            document.getElementById('tabUnmatched').textContent = allInvoices.filter(i => i.match_status === 'unmatched').length;
         }
 
+        function switchPageTab(tab, btn) {
+            document.querySelectorAll('.page-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('tab-' + tab).classList.add('active');
+        }
+
+        // ===== FUEL HISTORY =====
+        function searchFuelHistory(term) { fuelSearchTerm = term.toLowerCase(); renderFuelHistory(); }
+
+        function renderFuelHistory() {
+            let filtered = completedJobs;
+            if (fuelSearchTerm) {
+                filtered = filtered.filter(j =>
+                    (j.job_site_name || '').toLowerCase().includes(fuelSearchTerm) ||
+                    (j.customer_name || '').toLowerCase().includes(fuelSearchTerm) ||
+                    (j.address_city || '').toLowerCase().includes(fuelSearchTerm) ||
+                    (j.address_street || '').toLowerCase().includes(fuelSearchTerm)
+                );
+            }
+            const tbody = document.getElementById('fuelHistoryBody');
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="empty-state"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg><h3>No completed deliveries yet</h3><p>Completed fuel delivery jobs will appear here as your full fuel history.</p></td></tr>';
+                document.getElementById('fuelHistoryCount').textContent = '0 deliveries';
+                document.getElementById('fuelHistoryTotal').textContent = '';
+                return;
+            }
+            let totalDiesel = 0, totalDef = 0;
+            tbody.innerHTML = filtered.map(job => {
+                const jobDel = allDeliveries.filter(d => d.job_id === job.id);
+                const diesel = jobDel.reduce((s, d) => s + (parseFloat(d.gallons) || 0), 0);
+                const def = jobDel.reduce((s, d) => s + (parseFloat(d.def_gallons) || 0), 0);
+                totalDiesel += diesel; totalDef += def;
+                const worker = job.assigned_worker ? allUsers.find(u => u.id === job.assigned_worker) : null;
+                const workerName = worker ? worker.name : (jobDel[0]?.delivered_by_name || '—');
+                const matchedInv = allInvoices.find(i => i.matched_job_id === job.id && i.match_status === 'matched');
+                const pendingInv = allInvoices.find(i => i.matched_job_id === job.id && i.match_status === 'pending_review');
+                let invBadge;
+                if (matchedInv) invBadge = `<span class="match-badge matched"><span class="match-dot"></span>${matchedInv.invoice_number || 'Matched'}</span>`;
+                else if (pendingInv) invBadge = `<span class="match-badge pending"><span class="match-dot"></span>Pending</span>`;
+                else invBadge = `<span class="match-badge no-invoice"><span class="match-dot"></span>No Invoice</span>`;
+                return `<tr>
+                    <td><div class="job-name">${job.job_site_name || 'Untitled'}</div><div class="job-location">${[job.address_street, job.address_city, job.address_state].filter(Boolean).join(', ')}</div></td>
+                    <td>${job.customer_name || '—'}</td>
+                    <td>${job.completed_at ? new Date(job.completed_at).toLocaleDateString() : (job.date_out ? new Date(job.date_out).toLocaleDateString() : '—')}</td>
+                    <td><div class="fuel-amount">${diesel > 0 ? diesel.toLocaleString('en-US', {maximumFractionDigits: 1}) + ' gal' : '—'}</div></td>
+                    <td><div class="fuel-amount">${def > 0 ? def.toLocaleString('en-US', {maximumFractionDigits: 1}) + ' gal' : '—'}</div></td>
+                    <td>${workerName}</td>
+                    <td>${invBadge}</td>
+                </tr>`;
+            }).join('');
+            document.getElementById('fuelHistoryCount').textContent = `${filtered.length} completed job${filtered.length !== 1 ? 's' : ''}`;
+            document.getElementById('fuelHistoryTotal').textContent = `Total: ${totalDiesel.toLocaleString('en-US', {maximumFractionDigits: 0})} gal diesel` + (totalDef > 0 ? ` · ${totalDef.toLocaleString('en-US', {maximumFractionDigits: 0})} gal DEF` : '');
+        }
+
+        // ===== QB INVOICES =====
         function filterInvoices(filter) {
             currentFilter = filter;
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelector(`.tab[data-filter="${filter}"]`).classList.add('active');
+            document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`.filter-tab[data-filter="${filter}"]`).classList.add('active');
             renderInvoices();
         }
-
-        function searchInvoices(term) {
-            searchTerm = term.toLowerCase();
-            renderInvoices();
-        }
+        function searchInvoices(term) { searchTerm = term.toLowerCase(); renderInvoices(); }
 
         function renderInvoices() {
             let filtered = allInvoices;
-
-            if (currentFilter !== 'all') {
-                filtered = filtered.filter(i => i.match_status === currentFilter);
-            }
-
-            if (searchTerm) {
-                filtered = filtered.filter(i =>
-                    (i.invoice_number || '').toLowerCase().includes(searchTerm) ||
-                    (i.customer_name || '').toLowerCase().includes(searchTerm) ||
-                    (i.ship_to_name || '').toLowerCase().includes(searchTerm) ||
-                    (i.ship_to_address || '').toLowerCase().includes(searchTerm)
-                );
-            }
-
+            if (currentFilter !== 'all') filtered = filtered.filter(i => i.match_status === currentFilter);
+            if (searchTerm) filtered = filtered.filter(i => (i.invoice_number||'').toLowerCase().includes(searchTerm) || (i.customer_name||'').toLowerCase().includes(searchTerm) || (i.ship_to_name||'').toLowerCase().includes(searchTerm) || (i.ship_to_address||'').toLowerCase().includes(searchTerm));
             const tbody = document.getElementById('invoiceTableBody');
-
             if (filtered.length === 0) {
-                tbody.innerHTML = `
-                    <tr><td colspan="7" class="empty-state">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                        <h3>No invoices found</h3>
-                        <p>When you BCC flashfuels.invoices@gmail.com on QuickBooks invoices, they'll appear here automatically.</p>
-                    </td></tr>`;
+                tbody.innerHTML = '<tr><td colspan="7" class="empty-state"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><h3>No invoices found</h3><p>BCC flashfuels.invoices@gmail.com on QuickBooks invoices to auto-import them here.</p></td></tr>';
             } else {
                 tbody.innerHTML = filtered.map(inv => {
-                    const matchedJob = inv.matched_job_id ? allJobs.find(j => j.id === inv.matched_job_id) : null;
-                    const statusClass = inv.match_status === 'matched' ? 'matched' : inv.match_status === 'pending_review' ? 'pending' : 'unmatched';
-                    const statusText = inv.match_status === 'matched' ? 'Matched' : inv.match_status === 'pending_review' ? 'Pending Review' : 'Unmatched';
-
-                    return `<tr onclick="viewInvoice('${inv.id}')">
+                    const mj = inv.matched_job_id ? allJobs.find(j => j.id === inv.matched_job_id) : null;
+                    const sc = inv.match_status === 'matched' ? 'matched' : inv.match_status === 'pending_review' ? 'pending' : 'unmatched';
+                    const st = inv.match_status === 'matched' ? 'Matched' : inv.match_status === 'pending_review' ? 'Pending Review' : 'Unmatched';
+                    return `<tr onclick="viewInvoice('${inv.id}')" style="cursor:pointer;">
                         <td><span class="invoice-num">${inv.invoice_number || 'N/A'}</span></td>
-                        <td><span class="invoice-date">${inv.invoice_date ? new Date(inv.invoice_date).toLocaleDateString() : '-'}</span></td>
-                        <td>
-                            <div class="invoice-customer">${inv.ship_to_name || inv.customer_name || 'Unknown'}</div>
-                            <div class="invoice-address">${[inv.ship_to_address, inv.ship_to_city, inv.ship_to_state].filter(Boolean).join(', ')}</div>
-                        </td>
-                        <td>
-                            <div class="invoice-amount">$${(inv.total_amount || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
-                            <div class="invoice-gallons">${inv.total_gallons ? inv.total_gallons + ' gal' : ''}</div>
-                        </td>
-                        <td>
-                            <span class="match-badge ${statusClass}"><span class="match-dot"></span>${statusText}</span>
-                            ${inv.match_confidence ? `<span class="confidence-badge ${inv.match_confidence}">${inv.match_confidence}</span>` : ''}
-                        </td>
-                        <td>${matchedJob ? `<span style="color:#60a5fa;">${matchedJob.job_site_name || 'Job'}</span>` : '<span style="color:#666;">—</span>'}</td>
-                        <td class="actions-cell" onclick="event.stopPropagation()">
-                            <button class="action-btn secondary" onclick="viewInvoice('${inv.id}')">View</button>
-                            ${inv.match_status !== 'matched' ? `<button class="action-btn primary" onclick="matchInvoice('${inv.id}')">Match</button>` : ''}
-                        </td>
+                        <td>${inv.invoice_date ? new Date(inv.invoice_date).toLocaleDateString() : '-'}</td>
+                        <td><div class="invoice-customer">${inv.ship_to_name || inv.customer_name || 'Unknown'}</div><div class="invoice-address">${[inv.ship_to_address, inv.ship_to_city, inv.ship_to_state].filter(Boolean).join(', ')}</div></td>
+                        <td><div class="invoice-amount">$${(inv.total_amount || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</div><div class="invoice-gallons">${inv.total_gallons ? inv.total_gallons + ' gal' : ''}</div></td>
+                        <td><span class="match-badge ${sc}"><span class="match-dot"></span>${st}</span>${inv.match_confidence ? `<span class="confidence-badge ${inv.match_confidence}">${inv.match_confidence}</span>` : ''}</td>
+                        <td>${mj ? `<span style="color:#60a5fa;">${mj.job_site_name || 'Job'}</span>` : '<span style="color:#666;">—</span>'}</td>
+                        <td class="actions-cell" onclick="event.stopPropagation()"><button class="action-btn secondary" onclick="viewInvoice('${inv.id}')">View</button>${inv.match_status !== 'matched' ? `<button class="action-btn primary" onclick="matchInvoice('${inv.id}')">Match</button>` : ''}</td>
                     </tr>`;
                 }).join('');
             }
-
             document.getElementById('invoiceCount').textContent = `${filtered.length} invoice${filtered.length !== 1 ? 's' : ''}`;
         }
 
-        async function viewInvoice(invoiceId) {
-            const inv = allInvoices.find(i => i.id === invoiceId);
-            if (!inv) return;
-
-            const matchedJob = inv.matched_job_id ? allJobs.find(j => j.id === inv.matched_job_id) : null;
-
+        // ===== MODAL =====
+        async function viewInvoice(id) {
+            const inv = allInvoices.find(i => i.id === id); if (!inv) return;
+            const mj = inv.matched_job_id ? allJobs.find(j => j.id === inv.matched_job_id) : null;
             document.getElementById('modalTitle').textContent = `Invoice ${inv.invoice_number || 'Details'}`;
             document.getElementById('modalBody').innerHTML = `
                 <div class="detail-grid">
-                    <div class="detail-section">
-                        <div class="detail-section-title">Invoice Info</div>
-                        <div class="detail-row"><span class="detail-label">Invoice #</span><span class="detail-value">${inv.invoice_number || 'N/A'}</span></div>
-                        <div class="detail-row"><span class="detail-label">Date</span><span class="detail-value">${inv.invoice_date ? new Date(inv.invoice_date).toLocaleDateString() : '-'}</span></div>
-                        <div class="detail-row"><span class="detail-label">Due Date</span><span class="detail-value">${inv.due_date ? new Date(inv.due_date).toLocaleDateString() : '-'}</span></div>
-                        <div class="detail-row"><span class="detail-label">Terms</span><span class="detail-value">${inv.payment_terms || '-'}</span></div>
-                        <div class="detail-row"><span class="detail-label">From</span><span class="detail-value">${inv.vendor_name || '-'}</span></div>
-                    </div>
-                    <div class="detail-section">
-                        <div class="detail-section-title">Ship To</div>
-                        <div class="detail-row"><span class="detail-label">Customer</span><span class="detail-value">${inv.customer_name || '-'}</span></div>
-                        <div class="detail-row"><span class="detail-label">Ship To</span><span class="detail-value">${inv.ship_to_name || '-'}</span></div>
-                        <div class="detail-row"><span class="detail-label">Address</span><span class="detail-value">${inv.ship_to_address || '-'}</span></div>
-                        <div class="detail-row"><span class="detail-label">City/State</span><span class="detail-value">${[inv.ship_to_city, inv.ship_to_state, inv.ship_to_zip].filter(Boolean).join(', ') || '-'}</span></div>
-                    </div>
-                    <div class="detail-section">
-                        <div class="detail-section-title">Fuel Details</div>
-                        <div class="detail-row"><span class="detail-label">Fuel Type</span><span class="detail-value">${inv.fuel_type || '-'}</span></div>
-                        <div class="detail-row"><span class="detail-label">Diesel</span><span class="detail-value">${inv.diesel_gallons ? inv.diesel_gallons + ' gal' : '-'}</span></div>
-                        <div class="detail-row"><span class="detail-label">DEF</span><span class="detail-value">${inv.def_gallons ? inv.def_gallons + ' gal' : '-'}</span></div>
-                        <div class="detail-row"><span class="detail-label">Rate</span><span class="detail-value">${inv.rate ? '$' + inv.rate : '-'}</span></div>
-                    </div>
-                    <div class="detail-section">
-                        <div class="detail-section-title">Totals</div>
-                        <div class="detail-row"><span class="detail-label">Subtotal</span><span class="detail-value">$${(inv.subtotal || 0).toFixed(2)}</span></div>
-                        <div class="detail-row"><span class="detail-label">Tax</span><span class="detail-value">$${(inv.tax || 0).toFixed(2)}</span></div>
-                        <div class="detail-row"><span class="detail-label">Delivery Fee</span><span class="detail-value">$${(inv.delivery_fee || 0).toFixed(2)}</span></div>
-                        <div class="detail-row" style="border-top:1px solid #444;padding-top:10px;margin-top:4px;"><span class="detail-label" style="font-weight:600;color:#f5f0e8;">Total</span><span class="detail-value" style="font-size:1.1rem;">$${(inv.total_amount || 0).toFixed(2)}</span></div>
-                        <div class="detail-row"><span class="detail-label">Balance Due</span><span class="detail-value" style="color:${(inv.balance_due || 0) > 0 ? '#f87171' : '#60a5fa'}">$${(inv.balance_due || 0).toFixed(2)}</span></div>
-                    </div>
+                    <div class="detail-section"><div class="detail-section-title">Invoice Info</div><div class="detail-row"><span class="detail-label">Invoice #</span><span class="detail-value">${inv.invoice_number||'N/A'}</span></div><div class="detail-row"><span class="detail-label">Date</span><span class="detail-value">${inv.invoice_date?new Date(inv.invoice_date).toLocaleDateString():'-'}</span></div><div class="detail-row"><span class="detail-label">Due Date</span><span class="detail-value">${inv.due_date?new Date(inv.due_date).toLocaleDateString():'-'}</span></div><div class="detail-row"><span class="detail-label">Terms</span><span class="detail-value">${inv.payment_terms||'-'}</span></div><div class="detail-row"><span class="detail-label">From</span><span class="detail-value">${inv.vendor_name||'-'}</span></div></div>
+                    <div class="detail-section"><div class="detail-section-title">Ship To</div><div class="detail-row"><span class="detail-label">Customer</span><span class="detail-value">${inv.customer_name||'-'}</span></div><div class="detail-row"><span class="detail-label">Ship To</span><span class="detail-value">${inv.ship_to_name||'-'}</span></div><div class="detail-row"><span class="detail-label">Address</span><span class="detail-value">${inv.ship_to_address||'-'}</span></div><div class="detail-row"><span class="detail-label">City/State</span><span class="detail-value">${[inv.ship_to_city,inv.ship_to_state,inv.ship_to_zip].filter(Boolean).join(', ')||'-'}</span></div></div>
+                    <div class="detail-section"><div class="detail-section-title">Fuel Details</div><div class="detail-row"><span class="detail-label">Fuel Type</span><span class="detail-value">${inv.fuel_type||'-'}</span></div><div class="detail-row"><span class="detail-label">Diesel</span><span class="detail-value">${inv.diesel_gallons?inv.diesel_gallons+' gal':'-'}</span></div><div class="detail-row"><span class="detail-label">DEF</span><span class="detail-value">${inv.def_gallons?inv.def_gallons+' gal':'-'}</span></div><div class="detail-row"><span class="detail-label">Rate</span><span class="detail-value">${inv.rate?'$'+inv.rate:'-'}</span></div></div>
+                    <div class="detail-section"><div class="detail-section-title">Totals</div><div class="detail-row"><span class="detail-label">Subtotal</span><span class="detail-value">$${(inv.subtotal||0).toFixed(2)}</span></div><div class="detail-row"><span class="detail-label">Tax</span><span class="detail-value">$${(inv.tax||0).toFixed(2)}</span></div><div class="detail-row"><span class="detail-label">Delivery Fee</span><span class="detail-value">$${(inv.delivery_fee||0).toFixed(2)}</span></div><div class="detail-row" style="border-top:1px solid #444;padding-top:10px;margin-top:4px;"><span class="detail-label" style="font-weight:600;color:#f5f0e8;">Total</span><span class="detail-value" style="font-size:1.1rem;">$${(inv.total_amount||0).toFixed(2)}</span></div><div class="detail-row"><span class="detail-label">Balance Due</span><span class="detail-value" style="color:${(inv.balance_due||0)>0?'#f87171':'#60a5fa'}">$${(inv.balance_due||0).toFixed(2)}</span></div></div>
                 </div>
-                ${matchedJob ? `
-                <div class="match-section">
-                    <div class="match-section-title">✅ Matched to Job</div>
-                    <div class="match-job-card selected">
-                        <div class="match-job-name">${matchedJob.job_site_name || 'Job'}</div>
-                        <div class="match-job-detail">${matchedJob.address_street || ''}, ${matchedJob.address_city || ''} ${matchedJob.address_state || ''} • ${matchedJob.customer_name || ''} • Status: ${matchedJob.status}</div>
-                    </div>
-                </div>` : ''}
-                ${inv.pdf_base64 ? `
-                <div style="margin-top:16px;">
-                    <div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;color:#666;margin-bottom:8px;">PDF Preview</div>
-                    <iframe class="pdf-viewer" src="data:application/pdf;base64,${inv.pdf_base64}"></iframe>
-                </div>` : ''}
-            `;
-
-            // Update footer based on status
+                ${mj?`<div class="match-section"><div class="match-section-title">✅ Matched to Job</div><div class="match-job-card selected"><div class="match-job-name">${mj.job_site_name||'Job'}</div><div class="match-job-detail">${mj.address_street||''}, ${mj.address_city||''} ${mj.address_state||''} · ${mj.customer_name||''} · Status: ${mj.status}</div></div></div>`:''}
+                ${inv.pdf_base64?`<div style="margin-top:16px;"><div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;color:#666;margin-bottom:8px;">PDF Preview</div><iframe class="pdf-viewer" src="data:application/pdf;base64,${inv.pdf_base64}"></iframe></div>`:''}`;
             const footer = document.getElementById('modalFooter');
-            if (inv.match_status !== 'matched') {
-                footer.innerHTML = `
-                    <button class="btn btn-secondary" onclick="closeModal()">Close</button>
-                    <button class="btn btn-primary" onclick="closeModal(); matchInvoice('${inv.id}')">Match to Job</button>
-                `;
-            } else {
-                footer.innerHTML = `<button class="btn btn-secondary" onclick="closeModal()">Close</button>`;
-            }
-
+            footer.innerHTML = inv.match_status !== 'matched' ? `<button class="btn btn-secondary" onclick="closeModal()">Close</button><button class="btn btn-primary" onclick="closeModal(); matchInvoice('${inv.id}')">Match to Job</button>` : `<button class="btn btn-secondary" onclick="closeModal()">Close</button>`;
             document.getElementById('invoiceModal').classList.add('show');
         }
 
-        async function matchInvoice(invoiceId) {
-            const inv = allInvoices.find(i => i.id === invoiceId);
-            if (!inv) return;
-
-            // Get unmatched completed jobs
-            const availableJobs = allJobs.filter(j => {
-                const hasInvoice = allInvoices.some(i => i.matched_job_id === j.id && i.match_status === 'matched');
-                return !hasInvoice;
-            });
-
+        async function matchInvoice(id) {
+            const inv = allInvoices.find(i => i.id === id); if (!inv) return;
+            const available = completedJobs.filter(j => !allInvoices.some(i => i.matched_job_id === j.id && i.match_status === 'matched'));
             document.getElementById('modalTitle').textContent = `Match Invoice ${inv.invoice_number || ''}`;
             document.getElementById('modalBody').innerHTML = `
-                <div style="margin-bottom:16px;">
-                    <div style="font-size:0.85rem;color:#888;margin-bottom:4px;">Invoice: <strong style="color:#f5f0e8;">${inv.invoice_number}</strong> • ${inv.ship_to_name || inv.customer_name || 'Unknown'}</div>
-                    <div style="font-size:0.8rem;color:#666;">${inv.ship_to_address || ''}, ${inv.ship_to_city || ''} ${inv.ship_to_state || ''}</div>
-                </div>
-                <div class="match-section">
-                    <div class="match-section-title">Select a job to match:</div>
-                    ${availableJobs.length === 0 ? '<p style="color:#666;font-size:0.85rem;">No available completed jobs to match.</p>' :
-                    availableJobs.map(job => `
-                        <div class="match-job-card" onclick="selectJobForMatch(this, '${job.id}')" data-job-id="${job.id}">
-                            <div class="match-job-name">${job.job_site_name || 'Unnamed Job'}</div>
-                            <div class="match-job-detail">${job.address_street || ''}, ${job.address_city || ''} ${job.address_state || ''} • ${job.customer_name || ''} • ${job.status}</div>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-
-            document.getElementById('modalFooter').innerHTML = `
-                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-                <button class="btn btn-primary" id="confirmMatchBtn" onclick="confirmMatch('${invoiceId}')" disabled>Confirm Match</button>
-            `;
-
+                <div style="margin-bottom:16px;"><div style="font-size:0.85rem;color:#888;margin-bottom:4px;">Invoice: <strong style="color:#f5f0e8;">${inv.invoice_number}</strong> · ${inv.ship_to_name||inv.customer_name||'Unknown'}</div><div style="font-size:0.8rem;color:#666;">${inv.ship_to_address||''}, ${inv.ship_to_city||''} ${inv.ship_to_state||''}</div></div>
+                <div class="match-section"><div class="match-section-title">Select a job to match:</div>${available.length===0?'<p style="color:#666;font-size:0.85rem;">No available completed jobs to match.</p>':available.map(j=>`<div class="match-job-card" onclick="selectJobForMatch(this,'${j.id}')"><div class="match-job-name">${j.job_site_name||'Unnamed'}</div><div class="match-job-detail">${j.address_street||''}, ${j.address_city||''} ${j.address_state||''} · ${j.customer_name||''} · Completed ${j.completed_at?new Date(j.completed_at).toLocaleDateString():''}</div></div>`).join('')}</div>`;
+            document.getElementById('modalFooter').innerHTML = `<button class="btn btn-secondary" onclick="closeModal()">Cancel</button><button class="btn btn-primary" id="confirmMatchBtn" onclick="confirmMatch('${id}')" disabled>Confirm Match</button>`;
             document.getElementById('invoiceModal').classList.add('show');
         }
 
         let selectedJobId = null;
-
-        function selectJobForMatch(el, jobId) {
-            document.querySelectorAll('.match-job-card').forEach(c => c.classList.remove('selected'));
-            el.classList.add('selected');
-            selectedJobId = jobId;
-            document.getElementById('confirmMatchBtn').disabled = false;
-        }
+        function selectJobForMatch(el, jobId) { document.querySelectorAll('.match-job-card').forEach(c=>c.classList.remove('selected')); el.classList.add('selected'); selectedJobId = jobId; document.getElementById('confirmMatchBtn').disabled = false; }
 
         async function confirmMatch(invoiceId) {
             if (!selectedJobId) return;
-
             try {
-                const { error } = await db
-                    .from('qb_invoices')
-                    .update({
-                        matched_job_id: selectedJobId,
-                        match_status: 'matched',
-                        match_confidence: 'manual',
-                        updated_at: new Date().toISOString()
-                    })
-                    .eq('id', invoiceId);
-
+                const { error } = await db.from('qb_invoices').update({ matched_job_id: selectedJobId, match_status: 'matched', match_confidence: 'manual', updated_at: new Date().toISOString() }).eq('id', invoiceId);
                 if (error) throw error;
-
-                closeModal();
-                selectedJobId = null;
-                await loadData();
-            } catch (err) {
-                alert('Error matching invoice: ' + err.message);
-            }
+                closeModal(); selectedJobId = null; await loadData();
+            } catch (err) { alert('Error: ' + err.message); }
         }
 
-        function closeModal() {
-            document.getElementById('invoiceModal').classList.remove('show');
-        }
-
-        function copyBccEmail() {
-            navigator.clipboard.writeText('flashfuels.invoices@gmail.com').then(() => {
-                const toast = document.getElementById('copyToast');
-                toast.classList.add('show');
-                setTimeout(() => toast.classList.remove('show'), 2000);
-            });
-        }
+        function closeModal() { document.getElementById('invoiceModal').classList.remove('show'); }
+        function copyBccEmail() { navigator.clipboard.writeText('flashfuels.invoices@gmail.com').then(() => { const t = document.getElementById('copyToast'); t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }); }
     </script>
 </body>
 </html>
