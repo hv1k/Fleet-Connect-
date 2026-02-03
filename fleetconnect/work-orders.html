@@ -82,6 +82,29 @@
         .btn-secondary:hover { background: #444; }
         .btn-invoice { background: rgba(96, 165, 250, 0.1); color: #60a5fa; border: 1px solid rgba(96, 165, 250, 0.3); }
         .btn-invoice:hover { background: rgba(96, 165, 250, 0.2); }
+        .btn-accept { background: #22c55e; color: #fff; }
+        .btn-accept:hover { background: #16a34a; }
+        .btn-decline { background: transparent; color: #f87171; border: 1px solid rgba(248,113,113,0.4); }
+        .btn-decline:hover { background: rgba(248,113,113,0.1); }
+        .btn-danger { background: #dc2626; color: #fff; }
+        .btn-danger:hover { background: #b91c1c; }
+
+        /* Confirm Modal */
+        .confirm-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 300; align-items: center; justify-content: center; padding: 20px; }
+        .confirm-overlay.show { display: flex; }
+        .confirm-box { background: #242424; border: 1px solid #333; border-radius: 16px; max-width: 440px; width: 100%; }
+        .confirm-header { padding: 20px 24px 0; display: flex; align-items: center; gap: 12px; }
+        .confirm-icon { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; }
+        .confirm-icon.warning { background: rgba(251,191,36,0.15); }
+        .confirm-body { padding: 16px 24px 24px; }
+        .confirm-title { font-size: 1.05rem; font-weight: 600; }
+        .confirm-text { font-size: 0.85rem; color: #999; line-height: 1.6; margin-top: 12px; }
+        .confirm-text strong { color: #fbbf24; font-weight: 600; }
+        .confirm-footer { padding: 16px 24px; border-top: 1px solid #333; display: flex; gap: 10px; justify-content: flex-end; background: #2a2a2a; border-radius: 0 0 16px 16px; }
+        .toast { position: fixed; bottom: 24px; right: 24px; padding: 14px 20px; border-radius: 10px; font-size: 0.85rem; font-weight: 500; z-index: 400; transform: translateY(100px); opacity: 0; transition: all 0.3s; }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.success { background: #16a34a; color: #fff; }
+        .toast.error { background: #dc2626; color: #fff; }
 
         /* Modal */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 200; align-items: flex-start; justify-content: center; padding: 40px 20px; overflow-y: auto; }
@@ -252,6 +275,30 @@
         <img id="invoiceImage" src="" alt="Invoice">
     </div>
 
+    <!-- Decline Confirm Modal -->
+    <div class="confirm-overlay" id="confirmDecline">
+        <div class="confirm-box">
+            <div class="confirm-header">
+                <div class="confirm-icon warning">⚠️</div>
+                <div class="confirm-title">Decline this work order?</div>
+            </div>
+            <div class="confirm-body">
+                <div class="confirm-text">
+                    <strong>Are you sure you want to decline?</strong> In current market conditions, declining work is strongly discouraged. 
+                    This order will be sent back to the pool and may be reassigned to another vendor.<br><br>
+                    Consider accepting the job and reaching out to the rental company if you have scheduling concerns.
+                </div>
+            </div>
+            <div class="confirm-footer">
+                <button class="btn btn-secondary" onclick="closeConfirmDecline()">Cancel — Keep Job</button>
+                <button class="btn btn-danger" id="confirmDeclineBtn" onclick="confirmDeclineJob()">Decline Anyway</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
     <script src="supabase-client.js"></script>
     <script>
         // ===== AUTH & NAV =====
@@ -408,6 +455,7 @@
                             <button class="btn btn-primary" onclick="openJob('${job.id}')">View Details</button>
                             ${deliveries.length > 0 ? '<button class="btn btn-secondary" onclick="openDeliveries(\'' + job.id + '\')">Deliveries (' + deliveries.length + ')</button>' : ''}
                             ${job.invoice_image ? '<button class="btn btn-invoice" onclick="viewImage(\'' + job.invoice_image + '\')">📄 Invoice</button>' : ''}
+                            ${canRespondToJob(job) ? '<button class="btn btn-accept" onclick="acceptJob(\'' + job.id + '\')">✓ Accept</button><button class="btn btn-decline" onclick="declineJob(\'' + job.id + '\')">✗ Decline</button>' : ''}
                         </div>
                     </div>
                 `;
@@ -511,6 +559,7 @@
             `;
 
             document.getElementById('modalFooter').innerHTML = `
+                ${canRespondToJob(job) ? '<button class="btn btn-accept" onclick="closeModal(); acceptJob(\'' + jobId + '\')">✓ Accept Job</button><button class="btn btn-decline" onclick="closeModal(); declineJob(\'' + jobId + '\')">✗ Decline</button>' : ''}
                 <button class="btn btn-secondary" onclick="closeModal()">Close</button>
                 ${deliveries.length > 0 ? '<button class="btn btn-primary" onclick="closeModal(); openDeliveries(\'' + jobId + '\')">View Deliveries</button>' : ''}
             `;
@@ -562,12 +611,79 @@
 
         // ===== MODAL =====
         function closeModal() { document.getElementById('jobModal').classList.remove('show'); }
-        document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeImageViewer(); closeModal(); } });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeImageViewer(); closeModal(); closeConfirmDecline(); } });
 
         // ===== FILTER LISTENERS =====
         document.getElementById('searchInput').addEventListener('input', renderJobs);
         document.getElementById('statusFilter').addEventListener('change', renderJobs);
         document.getElementById('typeFilter').addEventListener('change', renderJobs);
+
+        // ===== ACCEPT / DECLINE =====
+        function canRespondToJob(job) {
+            // Vendors can accept/decline jobs that are pending or assigned to them
+            if (currentUser.role !== 'vendor') return false;
+            if (!['pending', 'assigned'].includes(job.status)) return false;
+            // If assigned, only the assigned vendor can respond
+            if (job.assigned_vendor && job.assigned_vendor !== currentUser.id) return false;
+            return true;
+        }
+
+        async function acceptJob(jobId) {
+            const job = allJobs.find(j => j.id === jobId);
+            if (!job) return;
+            try {
+                const { error } = await db.from('jobs').update({
+                    status: 'accepted',
+                    assigned_vendor: currentUser.id
+                }).eq('id', jobId);
+                if (error) throw error;
+                job.status = 'accepted';
+                job.assigned_vendor = currentUser.id;
+                updateStats();
+                renderJobs();
+                showToast('Job accepted! You can now start working on this order.', 'success');
+            } catch (err) {
+                console.error('Accept error:', err);
+                showToast('Failed to accept job: ' + err.message, 'error');
+            }
+        }
+
+        let pendingDeclineJobId = null;
+        function declineJob(jobId) {
+            pendingDeclineJobId = jobId;
+            document.getElementById('confirmDecline').classList.add('show');
+        }
+        function closeConfirmDecline() {
+            document.getElementById('confirmDecline').classList.remove('show');
+            pendingDeclineJobId = null;
+        }
+        async function confirmDeclineJob() {
+            if (!pendingDeclineJobId) return;
+            const jobId = pendingDeclineJobId;
+            closeConfirmDecline();
+            try {
+                const { error } = await db.from('jobs').update({
+                    status: 'pending',
+                    assigned_vendor: null
+                }).eq('id', jobId);
+                if (error) throw error;
+                const job = allJobs.find(j => j.id === jobId);
+                if (job) { job.status = 'pending'; job.assigned_vendor = null; }
+                updateStats();
+                renderJobs();
+                showToast('Job declined and returned to pool.', 'success');
+            } catch (err) {
+                console.error('Decline error:', err);
+                showToast('Failed to decline job: ' + err.message, 'error');
+            }
+        }
+
+        function showToast(message, type) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast ' + type + ' show';
+            setTimeout(() => toast.classList.remove('show'), 4000);
+        }
 
         // ===== INIT =====
         loadData();
