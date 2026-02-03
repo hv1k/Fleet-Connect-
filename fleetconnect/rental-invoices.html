@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoices & Fuel History | FleetConnect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #1a1a1a; color: #f5f0e8; min-height: 100vh; }
+        .layout { display: flex; min-height: 100vh; }
+
+        /* Sidebar */
+        .sidebar { width: 240px; background: #242424; border-right: 1px solid #333; position: fixed; top: 0; left: 0; bottom: 0; display: flex; flex-direction: column; z-index: 50; }
+        .sidebar-header { padding: 20px 20px 12px; display: flex; align-items: center; gap: 10px; }
+        .sidebar-logo { font-size: 1.1rem; font-weight: 700; color: #60a5fa; }
+        nav { flex: 1; padding: 0 12px; overflow-y: auto; }
+        .nav-section { margin-bottom: 24px; }
+        .nav-section-title { font-size: 0.65rem; font-weight: 600; text-transform: uppercase; color: #666; padding: 8px 12px; letter-spacing: 0.5px; }
+        .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; color: #b8b0a8; font-size: 0.85rem; text-decoration: none; transition: all 0.2s; cursor: pointer; }
+        .nav-item:hover { background: #333; color: #f5f0e8; }
+        .nav-item.active { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
+        .nav-item svg { width: 20px; height: 20px; flex-shrink: 0; }
+        .nav-item-badge { margin-left: auto; background: #dc2626; color: #fff; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 600; }
+        .sidebar-footer { padding: 12px; border-top: 1px solid #333; }
+        .user-menu { display: flex; align-items: center; gap: 10px; padding: 10px; background: #2a2a2a; border-radius: 10px; }
+        .user-avatar-lg { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #60a5fa, #3b82f6); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 0.85rem; }
+        .user-info { flex: 1; }
+        .user-name { font-size: 0.85rem; font-weight: 600; color: #f5f0e8; }
+        .user-role { font-size: 0.7rem; color: #888; }
+        .logout-btn { background: none; border: none; color: #888; cursor: pointer; padding: 6px; border-radius: 6px; }
+        .logout-btn:hover { background: #333; color: #f87171; }
+
+        /* Main */
+        .main { margin-left: 240px; flex: 1; min-height: 100vh; }
+        .header { padding: 24px 32px; border-bottom: 1px solid #333; }
+        .header h1 { font-size: 1.4rem; font-weight: 700; color: #f5f0e8; }
+        .header-subtitle { font-size: 0.85rem; color: #888; margin-top: 4px; }
+        .content { padding: 24px 32px; }
+
+        /* Stats */
+        .invoice-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: #242424; border-radius: 14px; padding: 20px; border: 1px solid #333; }
+        .stat-label { display: flex; align-items: center; gap: 8px; font-size: 0.75rem; color: #888; text-transform: uppercase; font-weight: 600; letter-spacing: 0.3px; }
+        .stat-label svg { width: 16px; height: 16px; }
+        .stat-number { font-size: 1.8rem; font-weight: 700; color: #f5f0e8; margin-top: 8px; }
+
+        /* Tabs */
+        .page-tabs { display: flex; gap: 4px; background: #242424; padding: 4px; border-radius: 12px; margin-bottom: 24px; border: 1px solid #333; }
+        .page-tab { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 20px; border-radius: 8px; font-size: 0.85rem; font-weight: 500; cursor: pointer; border: none; background: transparent; color: #888; transition: all 0.2s; }
+        .page-tab:hover { color: #f5f0e8; }
+        .page-tab.active { background: #60a5fa; color: #1a1a1a; font-weight: 600; }
+        .page-tab svg { width: 18px; height: 18px; }
+        .tab-badge { padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 600; background: rgba(255,255,255,0.2); }
+        .page-tab.active .tab-badge { background: rgba(0,0,0,0.15); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Table */
+        .table-card { background: #242424; border-radius: 16px; border: 1px solid #333; overflow: hidden; }
+        .table-header { padding: 20px 24px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+        .table-title { font-size: 1rem; font-weight: 600; color: #f5f0e8; }
+        .table-actions { display: flex; gap: 12px; }
+        .search-input { padding: 8px 12px 8px 36px; border: 1px solid #444; border-radius: 8px; font-size: 0.85rem; width: 240px; background: #2a2a2a url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23666'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'/%3E%3C/svg%3E") 10px center no-repeat; background-size: 16px; color: #f5f0e8; }
+        .search-input:focus { outline: none; border-color: #60a5fa; }
+        .search-input::placeholder { color: #666; }
+
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 12px 24px; font-size: 0.7rem; font-weight: 600; color: #888; text-transform: uppercase; background: #2a2a2a; border-bottom: 1px solid #333; }
+        td { padding: 14px 24px; border-bottom: 1px solid #333; font-size: 0.85rem; color: #b8b0a8; }
+        tr:hover { background: #2a2a2a; }
+
+        .job-name { font-weight: 600; color: #f5f0e8; }
+        .job-location { font-size: 0.75rem; color: #666; margin-top: 2px; }
+        .fuel-amount { font-weight: 600; color: #f5f0e8; }
+
+        .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; text-transform: capitalize; }
+        .status-badge.completed { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
+        .status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+        .match-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
+        .match-badge.matched { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
+        .match-badge.pending { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
+        .match-badge.no-invoice { background: #333; color: #666; }
+
+        .invoice-ref { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 600; cursor: pointer; border: 1px solid transparent; transition: all 0.2s; }
+        .invoice-ref.has-invoice { background: rgba(34, 197, 94, 0.12); color: #22c55e; border-color: rgba(34, 197, 94, 0.25); }
+        .invoice-ref.has-invoice:hover { background: rgba(34, 197, 94, 0.2); border-color: #22c55e; }
+        .invoice-ref.open { background: rgba(96, 165, 250, 0.1); color: #60a5fa; border-color: rgba(96, 165, 250, 0.25); }
+        .invoice-ref.open:hover { background: rgba(96, 165, 250, 0.2); border-color: #60a5fa; }
+        .invoice-ref.none { background: #2a2a2a; color: #555; border-color: #333; cursor: default; }
+        .invoice-ref svg { width: 14px; height: 14px; }
+
+        .action-btn { padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 500; cursor: pointer; border: none; transition: all 0.2s; }
+        .action-btn.primary { background: #60a5fa; color: #1a1a1a; }
+        .action-btn.primary:hover { background: #3b82f6; }
+        .action-btn.secondary { background: #333; color: #f5f0e8; }
+        .action-btn.secondary:hover { background: #444; }
+        .actions-cell { display: flex; gap: 6px; }
+
+        .table-footer { padding: 14px 24px; border-top: 1px solid #333; display: flex; justify-content: space-between; align-items: center; background: #2a2a2a; font-size: 0.85rem; color: #888; }
+
+        .empty-state { text-align: center; padding: 60px 20px; color: #666; }
+        .empty-state svg { width: 48px; height: 48px; margin-bottom: 16px; color: #444; }
+        .empty-state h3 { color: #888; font-size: 1rem; margin-bottom: 8px; }
+        .empty-state p { font-size: 0.85rem; max-width: 400px; margin: 0 auto; line-height: 1.5; }
+
+        /* Job Detail Cards (mobile-like list view) */
+        .job-history-list { display: flex; flex-direction: column; gap: 2px; }
+        .job-history-item { display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; border-bottom: 1px solid #333; transition: background 0.15s; cursor: pointer; }
+        .job-history-item:hover { background: #2a2a2a; }
+        .job-history-item:last-child { border-bottom: none; }
+        .job-history-left { display: flex; flex-direction: column; gap: 4px; }
+        .job-history-date-site { font-size: 0.85rem; color: #f5f0e8; font-weight: 500; }
+        .job-history-date-site span.date-part { color: #888; font-weight: 400; }
+        .job-history-details { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .job-history-right { display: flex; align-items: center; gap: 10px; }
+
+        /* Filter tabs for QB invoices */
+        .filter-tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+        .filter-tab { padding: 8px 16px; border-radius: 8px; background: #2a2a2a; border: 1px solid #333; color: #888; font-size: 0.8rem; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+        .filter-tab:hover { border-color: #60a5fa; color: #f5f0e8; }
+        .filter-tab.active { background: rgba(96, 165, 250, 0.15); border-color: #60a5fa; color: #60a5fa; }
+        .filter-tab-count { margin-left: 6px; padding: 1px 6px; border-radius: 6px; background: rgba(255,255,255,0.1); font-size: 0.7rem; }
+        .filter-tab.active .filter-tab-count { background: rgba(96, 165, 250, 0.2); }
+
+        /* Invoice detail row */
+        .invoice-detail-row { background: #2a2a2a; border-radius: 10px; padding: 14px 18px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .invoice-detail-label { font-size: 0.8rem; color: #888; }
+        .invoice-detail-value { font-size: 0.85rem; color: #f5f0e8; font-weight: 500; }
+
+        /* Modal */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 200; align-items: flex-start; justify-content: center; padding: 40px 20px; overflow-y: auto; }
+        .modal-overlay.show { display: flex; }
+        .modal { background: #242424; border-radius: 16px; width: 100%; max-width: 800px; border: 1px solid #333; }
+        .modal-header { padding: 20px 24px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { font-size: 1.1rem; font-weight: 600; color: #f5f0e8; }
+        .modal-close { width: 32px; height: 32px; border-radius: 8px; border: none; background: #333; color: #888; cursor: pointer; font-size: 1.1rem; }
+        .modal-close:hover { background: #444; color: #f5f0e8; }
+        .modal-body { padding: 24px; max-height: 70vh; overflow-y: auto; }
+        .modal-footer { padding: 16px 24px; border-top: 1px solid #333; display: flex; justify-content: flex-end; gap: 12px; background: #2a2a2a; border-radius: 0 0 16px 16px; }
+        .btn { padding: 10px 18px; border-radius: 8px; font-size: 0.85rem; font-weight: 500; cursor: pointer; border: none; }
+        .btn-primary { background: #60a5fa; color: #1a1a1a; }
+        .btn-primary:hover { background: #3b82f6; }
+        .btn-secondary { background: #333; color: #b8b0a8; border: 1px solid #444; }
+        .btn-secondary:hover { background: #444; }
+
+        .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+        .detail-section { background: #2a2a2a; border-radius: 10px; padding: 16px 20px; }
+        .detail-section-title { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: #666; margin-bottom: 12px; letter-spacing: 0.5px; }
+        .detail-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.85rem; }
+        .detail-label { color: #888; }
+        .detail-value { color: #f5f0e8; font-weight: 500; }
+
+        .pdf-viewer { width: 100%; height: 500px; border-radius: 8px; border: 1px solid #333; background: #fff; }
+
+        .loading { text-align: center; padding: 40px; color: #888; }
+        .spinner { width: 36px; height: 36px; border: 3px solid #333; border-top-color: #60a5fa; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .mobile-toggle { display: none; width: 40px; height: 40px; border: 1px solid #444; border-radius: 8px; background: #2a2a2a; color: #f5f0e8; align-items: center; justify-content: center; cursor: pointer; }
+
+        @media (max-width: 1200px) { .invoice-stats { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 900px) {
+            .sidebar { display: none; }
+            .sidebar.open { display: flex; position: fixed; z-index: 100; }
+            .main { margin-left: 0; }
+            .mobile-toggle { display: flex; }
+            .invoice-stats { grid-template-columns: 1fr; }
+            .detail-grid { grid-template-columns: 1fr; }
+            .header { padding: 16px 20px; }
+            .content { padding: 16px 20px; }
+            .search-input { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar-header"><span class="sidebar-logo">FleetConnect</span></div>
+            <nav>
+                <div class="nav-section">
+                    <div class="nav-section-title">Main Menu</div>
+                    <a class="nav-item" href="rental-dashboard.html">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                        Dashboard
+                    </a>
+                    <a class="nav-item" href="create-job.html">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        New Order
+                    </a>
+                    <a class="nav-item" href="work-orders.html">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                        Work Orders
+                    </a>
+                    <a class="nav-item active" href="rental-invoices.html">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        Invoices
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">System</div>
+                    <a class="nav-item" href="#">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        Settings
+                    </a>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-menu">
+                    <div class="user-avatar-lg" id="userAvatar">R</div>
+                    <div class="user-info"><div class="user-name" id="userName">Rental Co.</div><div class="user-role">Rental Account</div></div>
+                    <button class="logout-btn" onclick="logout()" title="Logout"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg></button>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main">
+            <div class="header">
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <button class="mobile-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')"><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+                    <div>
+                        <h1>Invoices & Fuel History</h1>
+                        <div class="header-subtitle">View completed deliveries and vendor invoices</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content">
+                <!-- Stats -->
+                <div class="invoice-stats">
+                    <div class="stat-card">
+                        <div class="stat-label"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Completed Jobs</div>
+                        <div class="stat-number" id="statCompleted">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>Total Gallons</div>
+                        <div class="stat-number" id="statGallons" style="color:#60a5fa;">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Invoices Attached</div>
+                        <div class="stat-number" id="statInvoiced" style="color:#22c55e;">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Awaiting Invoice</div>
+                        <div class="stat-number" id="statAwaiting" style="color:#fbbf24;">0</div>
+                    </div>
+                </div>
+
+                <!-- Tabs -->
+                <div class="page-tabs">
+                    <button class="page-tab active" onclick="switchTab('fuel-history', this)">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        Fuel History <span class="tab-badge" id="fuelBadge">0</span>
+                    </button>
+                    <button class="page-tab" onclick="switchTab('invoices', this)">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        Vendor Invoices <span class="tab-badge" id="invBadge">0</span>
+                    </button>
+                </div>
+
+                <!-- FUEL HISTORY TAB -->
+                <div class="tab-content active" id="tab-fuel-history">
+                    <div class="table-card">
+                        <div class="table-header">
+                            <div class="table-title">Completed Deliveries</div>
+                            <div class="table-actions">
+                                <input type="text" class="search-input" placeholder="Search jobs..." oninput="searchFuel(this.value)">
+                            </div>
+                        </div>
+                        <div class="job-history-list" id="fuelHistoryList">
+                            <div class="loading"><div class="spinner"></div>Loading fuel history...</div>
+                        </div>
+                        <div class="table-footer">
+                            <span id="fuelCount">0 jobs</span>
+                            <span id="fuelTotal" style="font-weight:600;color:#60a5fa;"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VENDOR INVOICES TAB -->
+                <div class="tab-content" id="tab-invoices">
+                    <div class="filter-tabs">
+                        <button class="filter-tab active" data-filter="all" onclick="filterInvoices('all')">All<span class="filter-tab-count" id="tabAll">0</span></button>
+                        <button class="filter-tab" data-filter="matched" onclick="filterInvoices('matched')">Matched<span class="filter-tab-count" id="tabMatched">0</span></button>
+                        <button class="filter-tab" data-filter="pending_review" onclick="filterInvoices('pending_review')">Pending<span class="filter-tab-count" id="tabPending">0</span></button>
+                        <button class="filter-tab" data-filter="unmatched" onclick="filterInvoices('unmatched')">Unmatched<span class="filter-tab-count" id="tabUnmatched">0</span></button>
+                    </div>
+                    <div class="table-card">
+                        <div class="table-header">
+                            <div class="table-title">QuickBooks Invoices from Vendor</div>
+                            <div class="table-actions"><input type="text" class="search-input" placeholder="Search invoices..." oninput="searchInv(this.value)"></div>
+                        </div>
+                        <div style="overflow-x:auto;">
+                            <table>
+                                <thead><tr><th>Invoice #</th><th>Date</th><th>Ship To</th><th>Amount</th><th>Gallons</th><th>Status</th><th>Matched Job</th><th>Actions</th></tr></thead>
+                                <tbody id="invoiceTableBody"><tr><td colspan="8" class="loading"><div class="spinner"></div>Loading invoices...</td></tr></tbody>
+                            </table>
+                        </div>
+                        <div class="table-footer"><span id="invCount">0 invoices</span></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal">
+            <div class="modal-header"><h3 id="modalTitle">Details</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-footer" id="modalFooter"><button class="btn btn-secondary" onclick="closeModal()">Close</button></div>
+        </div>
+    </div>
+
+    <script src="supabase-client.js"></script>
+    <script>
+        let allInvoices = [], allJobs = [], completedJobs = [], allDeliveries = [], allVendors = [];
+        let fuelSearch = '', invSearch = '', invFilter = 'all';
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (typeof checkAuth !== 'undefined') {
+                const user = checkAuth(['rental', 'admin']);
+                if (user) {
+                    document.getElementById('userName').textContent = user.name;
+                    document.getElementById('userAvatar').textContent = user.name.charAt(0).toUpperCase();
+                }
+            }
+            await loadData();
+        });
+
+        async function loadData() {
+            try {
+                const [jobRes, delRes, invRes, vendorRes] = await Promise.all([
+                    db.from('jobs').select('*').order('completed_at', { ascending: false }),
+                    db.from('deliveries').select('*').order('timestamp', { ascending: false }),
+                    db.from('qb_invoices').select('*').order('created_at', { ascending: false }),
+                    db.from('vendors').select('*')
+                ]);
+                allJobs = jobRes.data || [];
+                allDeliveries = delRes.data || [];
+                allInvoices = invRes.data || [];
+                allVendors = vendorRes.data || [];
+                completedJobs = allJobs.filter(j => j.status === 'completed');
+
+                updateStats();
+                renderFuelHistory();
+                renderInvoices();
+            } catch (err) {
+                console.error('Load error:', err);
+            }
+        }
+
+        function updateStats() {
+            const totalGal = allDeliveries.reduce((s, d) => s + (parseFloat(d.gallons) || 0), 0);
+            const invoiced = completedJobs.filter(j => allInvoices.some(i => i.matched_job_id === j.id && i.match_status === 'matched')).length;
+            const awaiting = completedJobs.length - invoiced;
+
+            document.getElementById('statCompleted').textContent = completedJobs.length;
+            document.getElementById('statGallons').textContent = totalGal.toLocaleString('en-US', { maximumFractionDigits: 0 });
+            document.getElementById('statInvoiced').textContent = invoiced;
+            document.getElementById('statAwaiting').textContent = awaiting;
+            document.getElementById('fuelBadge').textContent = completedJobs.length;
+            document.getElementById('invBadge').textContent = allInvoices.length;
+            document.getElementById('tabAll').textContent = allInvoices.length;
+            document.getElementById('tabMatched').textContent = allInvoices.filter(i => i.match_status === 'matched').length;
+            document.getElementById('tabPending').textContent = allInvoices.filter(i => i.match_status === 'pending_review').length;
+            document.getElementById('tabUnmatched').textContent = allInvoices.filter(i => i.match_status === 'unmatched').length;
+        }
+
+        function switchTab(tab, btn) {
+            document.querySelectorAll('.page-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('tab-' + tab).classList.add('active');
+        }
+
+        // ===== FUEL HISTORY (card-style like screenshot) =====
+        function searchFuel(term) { fuelSearch = term.toLowerCase(); renderFuelHistory(); }
+
+        function renderFuelHistory() {
+            let filtered = completedJobs;
+            if (fuelSearch) {
+                filtered = filtered.filter(j =>
+                    (j.job_site_name || '').toLowerCase().includes(fuelSearch) ||
+                    (j.customer_name || '').toLowerCase().includes(fuelSearch) ||
+                    (j.contract_number || '').toLowerCase().includes(fuelSearch) ||
+                    (j.address_city || '').toLowerCase().includes(fuelSearch)
+                );
+            }
+
+            const container = document.getElementById('fuelHistoryList');
+            if (filtered.length === 0) {
+                container.innerHTML = '<div class="empty-state"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg><h3>No completed deliveries</h3><p>Completed fuel delivery jobs will appear here.</p></div>';
+                document.getElementById('fuelCount').textContent = '0 jobs';
+                document.getElementById('fuelTotal').textContent = '';
+                return;
+            }
+
+            let totalDiesel = 0;
+            container.innerHTML = filtered.map(job => {
+                const jobDel = allDeliveries.filter(d => d.job_id === job.id);
+                const diesel = jobDel.reduce((s, d) => s + (parseFloat(d.gallons) || 0), 0);
+                totalDiesel += diesel;
+
+                // Find matched invoice
+                const matchedInv = allInvoices.find(i => i.matched_job_id === job.id && i.match_status === 'matched');
+                const pendingInv = allInvoices.find(i => i.matched_job_id === job.id && i.match_status === 'pending_review');
+
+                // Format date
+                const dateStr = job.completed_at
+                    ? new Date(job.completed_at).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })
+                    : (job.date_out ? new Date(job.date_out).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }) : '—');
+
+                // Invoice badge (like screenshot: ref code + Complete/Open)
+                let invoiceHtml = '';
+                if (matchedInv) {
+                    invoiceHtml = `
+                        <div class="job-history-details">
+                            <span class="invoice-ref has-invoice" onclick="event.stopPropagation(); viewInvoice('${matchedInv.id}')">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4"/></svg>
+                                ${matchedInv.invoice_number || 'Invoice'}
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:12px;height:12px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            </span>
+                            <span class="invoice-ref has-invoice" style="background:rgba(34,197,94,0.15);color:#22c55e;border-color:rgba(34,197,94,0.3);">Complete</span>
+                        </div>`;
+                } else if (pendingInv) {
+                    invoiceHtml = `
+                        <div class="job-history-details">
+                            <span class="invoice-ref open" onclick="event.stopPropagation(); viewInvoice('${pendingInv.id}')">
+                                ${pendingInv.invoice_number || 'Invoice'} — Pending
+                            </span>
+                        </div>`;
+                } else {
+                    invoiceHtml = `
+                        <div class="job-history-details">
+                            <span class="invoice-ref open">Open</span>
+                        </div>`;
+                }
+
+                return `
+                    <div class="job-history-item" onclick="viewJobDetail('${job.id}')">
+                        <div class="job-history-left">
+                            <div class="job-history-date-site">
+                                <span class="date-part">${dateStr}</span>&nbsp;&nbsp;|&nbsp;&nbsp;${(job.job_site_name || 'Untitled').toUpperCase()}
+                            </div>
+                            ${invoiceHtml}
+                        </div>
+                        <div class="job-history-right">
+                            ${diesel > 0 ? '<span style="font-size:0.8rem;color:#60a5fa;font-weight:600;">' + diesel.toLocaleString('en-US', {maximumFractionDigits:1}) + ' gal</span>' : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('fuelCount').textContent = `${filtered.length} completed job${filtered.length !== 1 ? 's' : ''}`;
+            document.getElementById('fuelTotal').textContent = `Total: ${totalDiesel.toLocaleString('en-US', {maximumFractionDigits: 0})} gal`;
+        }
+
+        // ===== JOB DETAIL MODAL =====
+        function viewJobDetail(jobId) {
+            const job = allJobs.find(j => j.id === jobId);
+            if (!job) return;
+
+            const jobDel = allDeliveries.filter(d => d.job_id === jobId);
+            const totalGal = jobDel.reduce((s, d) => s + (parseFloat(d.gallons) || 0), 0);
+            const totalDef = jobDel.reduce((s, d) => s + (parseFloat(d.def_gallons) || 0), 0);
+            const vendor = job.assigned_vendor ? allVendors.find(v => v.id === job.assigned_vendor) : null;
+            const vendorName = vendor ? vendor.company_name || vendor.name : '—';
+            const matchedInv = allInvoices.find(i => i.matched_job_id === jobId && i.match_status === 'matched');
+
+            document.getElementById('modalTitle').textContent = job.job_site_name || 'Job Details';
+            document.getElementById('modalBody').innerHTML = `
+                <div class="detail-grid">
+                    <div class="detail-section">
+                        <div class="detail-section-title">Job Info</div>
+                        <div class="detail-row"><span class="detail-label">Contract #</span><span class="detail-value">${job.contract_number || '—'}</span></div>
+                        <div class="detail-row"><span class="detail-label">PO Number</span><span class="detail-value">${job.po_number || '—'}</span></div>
+                        <div class="detail-row"><span class="detail-label">Type</span><span class="detail-value">${job.job_type || '—'}</span></div>
+                        <div class="detail-row"><span class="detail-label">Status</span><span class="detail-value"><span class="status-badge completed"><span class="status-dot"></span>Completed</span></span></div>
+                        <div class="detail-row"><span class="detail-label">Completed</span><span class="detail-value">${job.completed_at ? new Date(job.completed_at).toLocaleDateString() : '—'}</span></div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-section-title">Location</div>
+                        <div class="detail-row"><span class="detail-label">Customer</span><span class="detail-value">${job.customer_name || '—'}</span></div>
+                        <div class="detail-row"><span class="detail-label">Address</span><span class="detail-value">${[job.address_street, job.address_city, job.address_state, job.address_zip].filter(Boolean).join(', ') || '—'}</span></div>
+                        <div class="detail-row"><span class="detail-label">Vendor</span><span class="detail-value">${vendorName}</span></div>
+                        <div class="detail-row"><span class="detail-label">Contact</span><span class="detail-value">${job.contact_name || '—'}${job.contact_phone ? ' · ' + job.contact_phone : ''}</span></div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-section-title">Fuel Delivered</div>
+                        <div class="detail-row"><span class="detail-label">Diesel</span><span class="detail-value" style="color:#60a5fa;font-weight:700;">${totalGal.toLocaleString('en-US',{maximumFractionDigits:1})} gal</span></div>
+                        ${totalDef > 0 ? '<div class="detail-row"><span class="detail-label">DEF</span><span class="detail-value">' + totalDef.toLocaleString('en-US',{maximumFractionDigits:1}) + ' gal</span></div>' : ''}
+                        <div class="detail-row"><span class="detail-label">Deliveries</span><span class="detail-value">${jobDel.length}</span></div>
+                        ${jobDel.length > 0 ? jobDel.map(d => `
+                            <div style="margin-top:8px;padding:10px;background:#333;border-radius:8px;font-size:0.8rem;">
+                                <div style="display:flex;justify-content:space-between;"><span style="color:#60a5fa;font-weight:600;">${d.gallons} gal</span><span style="color:#888;">${new Date(d.timestamp).toLocaleDateString()}</span></div>
+                                <div style="color:#666;margin-top:4px;">${d.delivered_by_name || ''}${d.unit_number ? ' · Unit #' + d.unit_number : ''}</div>
+                            </div>
+                        `).join('') : ''}
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-section-title">Invoice</div>
+                        ${matchedInv ? `
+                            <div class="detail-row"><span class="detail-label">Invoice #</span><span class="detail-value" style="color:#22c55e;">${matchedInv.invoice_number || '—'}</span></div>
+                            <div class="detail-row"><span class="detail-label">Date</span><span class="detail-value">${matchedInv.invoice_date ? new Date(matchedInv.invoice_date).toLocaleDateString() : '—'}</span></div>
+                            <div class="detail-row"><span class="detail-label">Amount</span><span class="detail-value" style="font-weight:700;">$${(matchedInv.total_amount || 0).toLocaleString('en-US', {minimumFractionDigits:2})}</span></div>
+                            <div class="detail-row"><span class="detail-label">Gallons</span><span class="detail-value">${matchedInv.total_gallons || matchedInv.diesel_gallons || '—'} gal</span></div>
+                            <div class="detail-row"><span class="detail-label">Status</span><span class="detail-value"><span class="match-badge matched">✓ Matched</span></span></div>
+                            ${matchedInv.pdf_base64 ? '<button class="btn btn-primary" style="margin-top:12px;width:100%;" onclick="viewInvoicePdf(\'' + matchedInv.id + '\')">View Invoice PDF</button>' : ''}
+                        ` : `
+                            <div style="text-align:center;padding:20px;color:#666;">
+                                <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-bottom:8px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                <div style="font-size:0.85rem;">No invoice attached yet</div>
+                            </div>
+                        `}
+                    </div>
+                </div>
+                ${job.instructions ? '<div style="padding:14px;background:#2a2a2a;border-radius:10px;"><div class="detail-section-title">Instructions</div><div style="font-size:0.85rem;color:#b8b0a8;line-height:1.5;">' + job.instructions + '</div></div>' : ''}
+            `;
+
+            document.getElementById('modalFooter').innerHTML = `
+                <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+                ${matchedInv ? '<button class="btn btn-primary" onclick="closeModal(); viewInvoice(\'' + matchedInv.id + '\')">View Full Invoice</button>' : ''}
+            `;
+            document.getElementById('detailModal').classList.add('show');
+        }
+
+        // ===== INVOICE DETAIL =====
+        function viewInvoice(id) {
+            const inv = allInvoices.find(i => i.id === id);
+            if (!inv) return;
+            const mj = inv.matched_job_id ? allJobs.find(j => j.id === inv.matched_job_id) : null;
+
+            document.getElementById('modalTitle').textContent = 'Invoice ' + (inv.invoice_number || '');
+            document.getElementById('modalBody').innerHTML = `
+                <div class="detail-grid">
+                    <div class="detail-section">
+                        <div class="detail-section-title">Invoice Info</div>
+                        <div class="detail-row"><span class="detail-label">Invoice #</span><span class="detail-value">${inv.invoice_number || '—'}</span></div>
+                        <div class="detail-row"><span class="detail-label">Date</span><span class="detail-value">${inv.invoice_date ? new Date(inv.invoice_date).toLocaleDateString() : '—'}</span></div>
+                        <div class="detail-row"><span class="detail-label">Due Date</span><span class="detail-value">${inv.due_date ? new Date(inv.due_date).toLocaleDateString() : '—'}</span></div>
+                        <div class="detail-row"><span class="detail-label">Terms</span><span class="detail-value">${inv.payment_terms || '—'}</span></div>
+                        <div class="detail-row"><span class="detail-label">From</span><span class="detail-value">${inv.vendor_name || '—'}</span></div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-section-title">Ship To</div>
+                        <div class="detail-row"><span class="detail-label">Customer</span><span class="detail-value">${inv.customer_name || '—'}</span></div>
+                        <div class="detail-row"><span class="detail-label">Ship To</span><span class="detail-value">${inv.ship_to_name || '—'}</span></div>
+                        <div class="detail-row"><span class="detail-label">Address</span><span class="detail-value">${inv.ship_to_address || '—'}</span></div>
+                        <div class="detail-row"><span class="detail-label">City/State</span><span class="detail-value">${[inv.ship_to_city, inv.ship_to_state, inv.ship_to_zip].filter(Boolean).join(', ') || '—'}</span></div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-section-title">Fuel Details</div>
+                        <div class="detail-row"><span class="detail-label">Diesel</span><span class="detail-value">${inv.diesel_gallons ? inv.diesel_gallons + ' gal' : '—'}</span></div>
+                        <div class="detail-row"><span class="detail-label">DEF</span><span class="detail-value">${inv.def_gallons ? inv.def_gallons + ' gal' : '—'}</span></div>
+                        <div class="detail-row"><span class="detail-label">Rate</span><span class="detail-value">${inv.rate ? '$' + inv.rate : '—'}</span></div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-section-title">Totals</div>
+                        <div class="detail-row"><span class="detail-label">Subtotal</span><span class="detail-value">$${(inv.subtotal || 0).toFixed(2)}</span></div>
+                        <div class="detail-row"><span class="detail-label">Tax</span><span class="detail-value">$${(inv.tax || 0).toFixed(2)}</span></div>
+                        <div class="detail-row"><span class="detail-label">Delivery Fee</span><span class="detail-value">$${(inv.delivery_fee || 0).toFixed(2)}</span></div>
+                        <div class="detail-row" style="border-top:1px solid #444;padding-top:10px;margin-top:4px;">
+                            <span class="detail-label" style="font-weight:600;color:#f5f0e8;">Total</span>
+                            <span class="detail-value" style="font-size:1.1rem;">$${(inv.total_amount || 0).toFixed(2)}</span>
+                        </div>
+                        <div class="detail-row"><span class="detail-label">Balance Due</span><span class="detail-value" style="color:${(inv.balance_due || 0) > 0 ? '#f87171' : '#60a5fa'}">$${(inv.balance_due || 0).toFixed(2)}</span></div>
+                    </div>
+                </div>
+                ${mj ? '<div style="background:#2a2a2a;border-radius:10px;padding:16px;margin-bottom:16px;"><div class="detail-section-title">✅ Matched Job</div><div style="font-size:0.85rem;color:#f5f0e8;font-weight:500;">' + (mj.job_site_name || 'Job') + '</div><div style="font-size:0.8rem;color:#888;margin-top:4px;">' + [mj.address_street, mj.address_city, mj.address_state].filter(Boolean).join(', ') + ' · ' + (mj.customer_name || '') + '</div></div>' : ''}
+                ${inv.pdf_base64 ? '<div style="margin-top:8px;"><div class="detail-section-title">PDF Preview</div><iframe class="pdf-viewer" src="data:application/pdf;base64,' + inv.pdf_base64 + '"></iframe></div>' : ''}
+            `;
+
+            document.getElementById('modalFooter').innerHTML = '<button class="btn btn-secondary" onclick="closeModal()">Close</button>';
+            document.getElementById('detailModal').classList.add('show');
+        }
+
+        function viewInvoicePdf(id) {
+            const inv = allInvoices.find(i => i.id === id);
+            if (!inv || !inv.pdf_base64) return;
+            document.getElementById('modalTitle').textContent = 'Invoice PDF — ' + (inv.invoice_number || '');
+            document.getElementById('modalBody').innerHTML = '<iframe class="pdf-viewer" src="data:application/pdf;base64,' + inv.pdf_base64 + '"></iframe>';
+            document.getElementById('modalFooter').innerHTML = '<button class="btn btn-secondary" onclick="closeModal()">Close</button>';
+            document.getElementById('detailModal').classList.add('show');
+        }
+
+        // ===== VENDOR INVOICES TABLE =====
+        function filterInvoices(filter) {
+            invFilter = filter;
+            document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+            document.querySelector('.filter-tab[data-filter="' + filter + '"]').classList.add('active');
+            renderInvoices();
+        }
+        function searchInv(term) { invSearch = term.toLowerCase(); renderInvoices(); }
+
+        function renderInvoices() {
+            let filtered = allInvoices;
+            if (invFilter !== 'all') filtered = filtered.filter(i => i.match_status === invFilter);
+            if (invSearch) filtered = filtered.filter(i =>
+                (i.invoice_number || '').toLowerCase().includes(invSearch) ||
+                (i.customer_name || '').toLowerCase().includes(invSearch) ||
+                (i.ship_to_name || '').toLowerCase().includes(invSearch) ||
+                (i.ship_to_address || '').toLowerCase().includes(invSearch)
+            );
+
+            const tbody = document.getElementById('invoiceTableBody');
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="empty-state"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><h3>No invoices found</h3><p>Vendor invoices imported from QuickBooks will appear here.</p></td></tr>';
+            } else {
+                tbody.innerHTML = filtered.map(inv => {
+                    const mj = inv.matched_job_id ? allJobs.find(j => j.id === inv.matched_job_id) : null;
+                    const sc = inv.match_status === 'matched' ? 'matched' : inv.match_status === 'pending_review' ? 'pending' : 'no-invoice';
+                    const st = inv.match_status === 'matched' ? 'Matched' : inv.match_status === 'pending_review' ? 'Pending' : 'Unmatched';
+                    return `<tr onclick="viewInvoice('${inv.id}')" style="cursor:pointer;">
+                        <td><span style="font-weight:600;color:#f5f0e8;">${inv.invoice_number || '—'}</span></td>
+                        <td>${inv.invoice_date ? new Date(inv.invoice_date).toLocaleDateString() : '—'}</td>
+                        <td><div style="font-weight:500;color:#f5f0e8;">${inv.ship_to_name || inv.customer_name || '—'}</div><div style="font-size:0.75rem;color:#666;">${[inv.ship_to_address, inv.ship_to_city].filter(Boolean).join(', ')}</div></td>
+                        <td><span style="font-weight:600;color:#f5f0e8;">$${(inv.total_amount || 0).toLocaleString('en-US', {minimumFractionDigits:2})}</span></td>
+                        <td>${inv.total_gallons || inv.diesel_gallons || '—'} gal</td>
+                        <td><span class="match-badge ${sc}">${st}</span></td>
+                        <td>${mj ? '<span style="color:#60a5fa;">' + (mj.job_site_name || 'Job') + '</span>' : '<span style="color:#555;">—</span>'}</td>
+                        <td class="actions-cell" onclick="event.stopPropagation()"><button class="action-btn secondary" onclick="viewInvoice('${inv.id}')">View</button></td>
+                    </tr>`;
+                }).join('');
+            }
+            document.getElementById('invCount').textContent = `${filtered.length} invoice${filtered.length !== 1 ? 's' : ''}`;
+        }
+
+        function closeModal() { document.getElementById('detailModal').classList.remove('show'); }
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+    </script>
+</body>
+</html>

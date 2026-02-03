@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Work Orders | FleetConnect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #1a1a1a; color: #f5f0e8; min-height: 100vh; }
+        .layout { display: flex; min-height: 100vh; }
+
+        /* Sidebar */
+        .sidebar { width: 240px; background: #242424; border-right: 1px solid #333; position: fixed; top: 0; left: 0; bottom: 0; display: flex; flex-direction: column; z-index: 50; }
+        .sidebar-header { padding: 20px 20px 12px; }
+        .sidebar-logo { font-size: 1.1rem; font-weight: 700; color: #60a5fa; }
+        nav { flex: 1; padding: 0 12px; overflow-y: auto; }
+        .nav-section { margin-bottom: 24px; }
+        .nav-section-title { font-size: 0.65rem; font-weight: 600; text-transform: uppercase; color: #666; padding: 8px 12px; letter-spacing: 0.5px; }
+        .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; color: #b8b0a8; font-size: 0.85rem; text-decoration: none; transition: all 0.15s; }
+        .nav-item:hover { background: #333; color: #f5f0e8; }
+        .nav-item.active { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
+        .nav-item svg { width: 20px; height: 20px; flex-shrink: 0; }
+        .nav-item-badge { margin-left: auto; background: #dc2626; color: #fff; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 600; }
+        .sidebar-footer { padding: 12px; border-top: 1px solid #333; }
+        .user-menu { display: flex; align-items: center; gap: 10px; padding: 10px; background: #2a2a2a; border-radius: 10px; }
+        .user-avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #60a5fa, #3b82f6); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 0.85rem; flex-shrink: 0; }
+        .user-info { flex: 1; min-width: 0; }
+        .user-name { font-size: 0.85rem; font-weight: 600; color: #f5f0e8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .user-role { font-size: 0.7rem; color: #888; }
+        .logout-btn { background: none; border: none; color: #888; cursor: pointer; padding: 6px; border-radius: 6px; flex-shrink: 0; }
+        .logout-btn:hover { background: #333; color: #f87171; }
+
+        /* Main */
+        .main { margin-left: 240px; flex: 1; min-height: 100vh; }
+        .header { padding: 24px 32px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+        .header-left { display: flex; align-items: center; gap: 12px; }
+        .header h1 { font-size: 1.4rem; font-weight: 700; }
+        .header-subtitle { font-size: 0.85rem; color: #888; margin-top: 2px; }
+        .content { padding: 24px 32px; }
+
+        /* Stats row */
+        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: #242424; border: 1px solid #333; border-radius: 14px; padding: 18px 20px; }
+        .stat-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: #888; letter-spacing: 0.3px; display: flex; align-items: center; gap: 6px; }
+        .stat-label svg { width: 15px; height: 15px; }
+        .stat-value { font-size: 1.8rem; font-weight: 700; color: #f5f0e8; margin-top: 6px; }
+
+        /* Search & Filters */
+        .filters-card { background: #242424; border: 1px solid #333; border-radius: 14px; padding: 16px 20px; margin-bottom: 24px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+        .search-input { flex: 1; min-width: 220px; padding: 10px 14px 10px 38px; border: 1px solid #444; border-radius: 8px; font-size: 0.85rem; font-family: inherit; background: #2a2a2a url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23666'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'/%3E%3C/svg%3E") 12px center no-repeat; background-size: 16px; color: #f5f0e8; }
+        .search-input:focus { outline: none; border-color: #60a5fa; }
+        .search-input::placeholder { color: #666; }
+        .filter-select { padding: 10px 14px; border: 1px solid #444; border-radius: 8px; font-size: 0.85rem; font-family: inherit; background: #2a2a2a; color: #f5f0e8; cursor: pointer; }
+        .filter-select:focus { outline: none; border-color: #60a5fa; }
+        .results-count { font-size: 0.8rem; color: #888; margin-left: auto; white-space: nowrap; }
+
+        /* Jobs list */
+        .jobs-list { display: flex; flex-direction: column; gap: 12px; }
+        .job-card { background: #242424; border: 1px solid #333; border-radius: 14px; padding: 20px 24px; cursor: pointer; transition: all 0.15s; }
+        .job-card:hover { border-color: #60a5fa; background: #282828; }
+        .job-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+        .job-title { font-size: 1rem; font-weight: 600; color: #f5f0e8; margin-bottom: 3px; }
+        .job-meta { font-size: 0.8rem; color: #888; display: flex; gap: 12px; flex-wrap: wrap; }
+        .job-meta span { color: #60a5fa; font-weight: 500; }
+        .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; text-transform: capitalize; flex-shrink: 0; }
+        .status-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+        .status-badge.pending { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
+        .status-badge.assigned, .status-badge.accepted { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
+        .status-badge.in-progress { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+        .status-badge.completed { background: rgba(148, 163, 184, 0.15); color: #94a3b8; }
+        .status-badge.open { background: rgba(96, 165, 250, 0.1); color: #60a5fa; }
+        .job-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; padding: 14px 16px; background: #2a2a2a; border-radius: 10px; }
+        .job-grid-label { font-size: 0.65rem; font-weight: 600; text-transform: uppercase; color: #666; margin-bottom: 3px; letter-spacing: 0.3px; }
+        .job-grid-value { font-size: 0.85rem; color: #f5f0e8; }
+        .job-actions { display: flex; gap: 8px; margin-top: 14px; }
+        .btn { padding: 8px 16px; border-radius: 8px; font-size: 0.8rem; font-weight: 500; font-family: inherit; cursor: pointer; border: none; transition: all 0.15s; }
+        .btn-primary { background: #60a5fa; color: #1a1a1a; }
+        .btn-primary:hover { background: #3b82f6; }
+        .btn-secondary { background: #333; color: #f5f0e8; }
+        .btn-secondary:hover { background: #444; }
+        .btn-invoice { background: rgba(96, 165, 250, 0.1); color: #60a5fa; border: 1px solid rgba(96, 165, 250, 0.3); }
+        .btn-invoice:hover { background: rgba(96, 165, 250, 0.2); }
+
+        /* Modal */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 200; align-items: flex-start; justify-content: center; padding: 40px 20px; overflow-y: auto; }
+        .modal-overlay.show { display: flex; }
+        .modal { background: #242424; border-radius: 16px; width: 100%; max-width: 800px; border: 1px solid #333; }
+        .modal-header { padding: 20px 24px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { font-size: 1.1rem; font-weight: 600; }
+        .modal-close { width: 32px; height: 32px; border-radius: 8px; border: none; background: #333; color: #888; cursor: pointer; font-size: 1.1rem; }
+        .modal-close:hover { background: #444; color: #f5f0e8; }
+        .modal-body { padding: 24px; max-height: 70vh; overflow-y: auto; }
+        .modal-footer { padding: 16px 24px; border-top: 1px solid #333; display: flex; justify-content: flex-end; gap: 10px; background: #2a2a2a; border-radius: 0 0 16px 16px; }
+
+        .detail-section { margin-bottom: 20px; }
+        .detail-section-title { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: #60a5fa; margin-bottom: 10px; letter-spacing: 0.5px; }
+        .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .detail-item { padding: 12px 14px; background: #2a2a2a; border-radius: 8px; }
+        .detail-item.full { grid-column: span 2; }
+        .detail-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: #666; margin-bottom: 3px; letter-spacing: 0.3px; }
+        .detail-value { font-size: 0.9rem; color: #f5f0e8; }
+
+        .equipment-list { display: flex; flex-direction: column; gap: 6px; }
+        .equipment-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #2a2a2a; border-radius: 8px; }
+        .equipment-num { font-weight: 600; color: #60a5fa; }
+        .equipment-desc { font-size: 0.85rem; color: #888; }
+
+        .delivery-item { padding: 12px 16px; background: #2a2a2a; border-radius: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .delivery-gallons { font-size: 1.05rem; font-weight: 700; color: #60a5fa; }
+        .delivery-meta { font-size: 0.8rem; color: #888; }
+        .delivery-total { padding: 14px 16px; background: rgba(96,165,250,0.1); border: 1px solid rgba(96,165,250,0.25); border-radius: 10px; margin-top: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .delivery-total-label { font-size: 0.85rem; color: #888; }
+        .delivery-total-value { font-size: 1.2rem; font-weight: 700; color: #60a5fa; }
+
+        .invoice-btn { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: rgba(96,165,250,0.08); border: 1px solid rgba(96,165,250,0.25); border-radius: 10px; cursor: pointer; width: 100%; text-align: left; transition: all 0.15s; }
+        .invoice-btn:hover { background: rgba(96,165,250,0.15); }
+        .invoice-btn-icon { font-size: 1.3rem; }
+        .invoice-btn-text { flex: 1; }
+        .invoice-btn-title { font-weight: 600; color: #60a5fa; font-size: 0.85rem; }
+        .invoice-btn-sub { font-size: 0.8rem; color: #888; }
+        .no-data { padding: 16px; background: #2a2a2a; border-radius: 10px; text-align: center; color: #555; font-size: 0.85rem; }
+
+        /* Image viewer */
+        .image-viewer { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 300; align-items: center; justify-content: center; padding: 20px; }
+        .image-viewer.show { display: flex; }
+        .image-viewer img { max-width: 100%; max-height: 90vh; border-radius: 8px; }
+        .image-viewer-close { position: absolute; top: 20px; right: 20px; background: #333; border: none; color: #fff; width: 40px; height: 40px; border-radius: 50%; font-size: 1.3rem; cursor: pointer; }
+        .image-viewer-close:hover { background: #444; }
+
+        .empty-state { text-align: center; padding: 60px 20px; color: #666; }
+        .empty-state svg { width: 48px; height: 48px; margin-bottom: 16px; color: #444; }
+        .empty-state h3 { color: #888; font-size: 1rem; margin-bottom: 8px; }
+        .empty-state p { font-size: 0.85rem; }
+        .loading { text-align: center; padding: 60px; color: #888; }
+        .spinner { width: 36px; height: 36px; border: 3px solid #333; border-top-color: #60a5fa; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .mobile-toggle { display: none; width: 40px; height: 40px; border: 1px solid #444; border-radius: 8px; background: #2a2a2a; color: #f5f0e8; align-items: center; justify-content: center; cursor: pointer; }
+
+        @media (max-width: 1100px) { .stats-row { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 900px) {
+            .sidebar { display: none; }
+            .sidebar.open { display: flex; position: fixed; z-index: 100; }
+            .main { margin-left: 0; }
+            .mobile-toggle { display: flex; }
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+            .job-grid { grid-template-columns: repeat(2, 1fr); }
+            .detail-grid { grid-template-columns: 1fr; }
+            .detail-item.full { grid-column: span 1; }
+            .header { padding: 16px 20px; }
+            .content { padding: 16px 20px; }
+        }
+        @media (max-width: 500px) {
+            .stats-row { grid-template-columns: 1fr 1fr; }
+            .filters-card { flex-direction: column; }
+            .search-input { min-width: unset; width: 100%; }
+            .results-count { margin-left: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar-header"><span class="sidebar-logo">FleetConnect</span></div>
+            <nav id="sidebarNav"></nav>
+            <div class="sidebar-footer">
+                <div class="user-menu">
+                    <div class="user-avatar" id="userAvatar">?</div>
+                    <div class="user-info"><div class="user-name" id="userName">User</div><div class="user-role" id="userRole">Account</div></div>
+                    <button class="logout-btn" onclick="logout()" title="Logout"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg></button>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main">
+            <header class="header">
+                <div class="header-left">
+                    <button class="mobile-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')"><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+                    <div>
+                        <h1>Work Orders</h1>
+                        <p class="header-subtitle">Search and manage all work orders</p>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content">
+                <!-- Stats -->
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="stat-label"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>Total</div>
+                        <div class="stat-value" id="statTotal">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>Active</div>
+                        <div class="stat-value" id="statActive" style="color:#22c55e;">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Pending</div>
+                        <div class="stat-value" id="statPending" style="color:#fbbf24;">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Completed</div>
+                        <div class="stat-value" id="statCompleted" style="color:#60a5fa;">0</div>
+                    </div>
+                </div>
+
+                <!-- Search & Filters -->
+                <div class="filters-card">
+                    <input type="text" class="search-input" id="searchInput" placeholder="Search by site, contract #, customer, city...">
+                    <select class="filter-select" id="statusFilter">
+                        <option value="">All Statuses</option>
+                        <option value="pending">Pending</option>
+                        <option value="assigned">Assigned</option>
+                        <option value="accepted">Accepted</option>
+                        <option value="in-progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                        <option value="open">Open</option>
+                    </select>
+                    <select class="filter-select" id="typeFilter">
+                        <option value="">All Types</option>
+                        <option value="fuel-delivery">Fuel Delivery</option>
+                        <option value="equipment-tow">Equipment Tow</option>
+                        <option value="emergency-fuel">Emergency Fuel</option>
+                        <option value="pickup">Pickup</option>
+                        <option value="delivery">Delivery</option>
+                    </select>
+                    <span class="results-count" id="resultsCount"></span>
+                </div>
+
+                <!-- Jobs List -->
+                <div class="jobs-list" id="jobsList">
+                    <div class="loading"><div class="spinner"></div>Loading work orders...</div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Job Detail Modal -->
+    <div class="modal-overlay" id="jobModal">
+        <div class="modal">
+            <div class="modal-header"><h3 id="modalTitle">Work Order Details</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-footer" id="modalFooter"><button class="btn btn-secondary" onclick="closeModal()">Close</button></div>
+        </div>
+    </div>
+
+    <!-- Image Viewer -->
+    <div class="image-viewer" id="imageViewer" onclick="closeImageViewer()">
+        <button class="image-viewer-close" onclick="closeImageViewer()">&times;</button>
+        <img id="invoiceImage" src="" alt="Invoice">
+    </div>
+
+    <script src="supabase-client.js"></script>
+    <script>
+        // ===== AUTH & NAV =====
+        const currentUser = checkAuth();
+        if (!currentUser) throw new Error('Not authenticated');
+
+        // Set user info
+        document.getElementById('userName').textContent = currentUser.name;
+        document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+        const roleLabels = { admin: 'Admin', rental: 'Rental Company', vendor: 'Vendor', fieldworker: 'Field Worker' };
+        document.getElementById('userRole').textContent = roleLabels[currentUser.role] || currentUser.role;
+
+        // Role-based sidebar nav
+        const navConfig = {
+            admin: [
+                { label: 'Dashboard', href: 'index.html', icon: 'grid' },
+                { label: 'Work Orders', href: 'work-orders.html', icon: 'clipboard', active: true },
+                { label: 'Create Order', href: 'create-job.html', icon: 'plus' }
+            ],
+            rental: [
+                { label: 'Dashboard', href: 'rental-dashboard.html', icon: 'grid' },
+                { label: 'New Order', href: 'create-job.html', icon: 'plus' },
+                { label: 'Work Orders', href: 'work-orders.html', icon: 'clipboard', active: true },
+                { label: 'Invoices', href: 'rental-invoices.html', icon: 'invoice' }
+            ],
+            vendor: [
+                { label: 'Dashboard', href: 'vendor-dashboard.html', icon: 'grid' },
+                { label: 'Work Orders', href: 'work-orders.html', icon: 'clipboard', active: true },
+                { label: 'Invoices', href: 'invoices.html', icon: 'invoice' }
+            ],
+            fieldworker: [
+                { label: 'My Jobs', href: 'field-worker.html', icon: 'grid' },
+                { label: 'Work Orders', href: 'work-orders.html', icon: 'clipboard', active: true }
+            ]
+        };
+
+        const icons = {
+            grid: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>',
+            clipboard: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>',
+            plus: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>',
+            invoice: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>',
+            settings: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>'
+        };
+
+        const navItems = navConfig[currentUser.role] || navConfig.admin;
+        document.getElementById('sidebarNav').innerHTML = `
+            <div class="nav-section">
+                <div class="nav-section-title">Main Menu</div>
+                ${navItems.map(item => `
+                    <a class="nav-item${item.active ? ' active' : ''}" href="${item.href}">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">${icons[item.icon]}</svg>
+                        ${item.label}
+                    </a>
+                `).join('')}
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">System</div>
+                <a class="nav-item" href="#">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">${icons.settings}</svg>
+                    Settings
+                </a>
+            </div>
+        `;
+
+        // ===== DATA =====
+        let allJobs = [], allEquipment = [], allDeliveries = [], allVendors = [];
+
+        async function loadData() {
+            try {
+                const [jobs, deliveries, vendors, eqRes] = await Promise.all([
+                    getAllJobs(),
+                    getAllDeliveries(),
+                    getAllVendors(),
+                    db.from('equipment').select('*')
+                ]);
+                allJobs = jobs;
+                allDeliveries = deliveries;
+                allVendors = vendors;
+                allEquipment = eqRes.data || [];
+
+                updateStats();
+                renderJobs();
+            } catch (err) {
+                console.error('Load error:', err);
+                document.getElementById('jobsList').innerHTML = '<div class="empty-state"><h3>Error loading data</h3><p>' + err.message + '</p></div>';
+            }
+        }
+
+        function updateStats() {
+            const active = allJobs.filter(j => ['accepted', 'in-progress'].includes(j.status)).length;
+            const pending = allJobs.filter(j => ['pending', 'assigned', 'open'].includes(j.status)).length;
+            const completed = allJobs.filter(j => j.status === 'completed').length;
+            document.getElementById('statTotal').textContent = allJobs.length;
+            document.getElementById('statActive').textContent = active;
+            document.getElementById('statPending').textContent = pending;
+            document.getElementById('statCompleted').textContent = completed;
+        }
+
+        // ===== RENDER =====
+        function renderJobs() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const status = document.getElementById('statusFilter').value;
+            const type = document.getElementById('typeFilter').value;
+
+            let filtered = allJobs;
+            if (search) {
+                filtered = filtered.filter(j =>
+                    (j.job_site_name || '').toLowerCase().includes(search) ||
+                    (j.contract_number || '').toLowerCase().includes(search) ||
+                    (j.po_number || '').toLowerCase().includes(search) ||
+                    (j.customer_name || '').toLowerCase().includes(search) ||
+                    (j.address_city || '').toLowerCase().includes(search) ||
+                    (j.address_street || '').toLowerCase().includes(search)
+                );
+            }
+            if (status) filtered = filtered.filter(j => j.status === status);
+            if (type) filtered = filtered.filter(j => j.job_type === type);
+
+            document.getElementById('resultsCount').textContent = filtered.length + ' order' + (filtered.length !== 1 ? 's' : '');
+
+            const container = document.getElementById('jobsList');
+            if (filtered.length === 0) {
+                container.innerHTML = '<div class="empty-state"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg><h3>No work orders found</h3><p>Try adjusting your search or filters</p></div>';
+                return;
+            }
+
+            container.innerHTML = filtered.map(job => {
+                const equipment = allEquipment.filter(e => e.job_id === job.id);
+                const vendor = job.assigned_vendor ? allVendors.find(v => v.id === job.assigned_vendor) : null;
+                const vendorName = vendor ? (vendor.company_name || vendor.name) : null;
+                const deliveries = allDeliveries.filter(d => d.job_id === job.id);
+                const totalGal = deliveries.reduce((s, d) => s + (parseFloat(d.gallons) || 0), 0);
+
+                return `
+                    <div class="job-card" onclick="openJob('${job.id}')">
+                        <div class="job-top">
+                            <div>
+                                <div class="job-title">${job.job_site_name || 'Untitled'}</div>
+                                <div class="job-meta">
+                                    ${job.contract_number ? 'Contract: <span>' + job.contract_number + '</span>' : ''}
+                                    ${job.po_number ? '&nbsp;·&nbsp;PO: <span>' + job.po_number + '</span>' : ''}
+                                    ${job.customer_name ? '&nbsp;·&nbsp;' + job.customer_name : ''}
+                                </div>
+                            </div>
+                            <span class="status-badge ${job.status}"><span class="dot"></span>${job.status}</span>
+                        </div>
+                        <div class="job-grid">
+                            <div><div class="job-grid-label">Location</div><div class="job-grid-value">${job.address_city || '—'}${job.address_state ? ', ' + job.address_state : ''}</div></div>
+                            <div><div class="job-grid-label">Date</div><div class="job-grid-value">${formatDate(job.date_out)}</div></div>
+                            <div><div class="job-grid-label">Vendor</div><div class="job-grid-value">${vendorName || '<span style="color:#555;">Unassigned</span>'}</div></div>
+                            <div><div class="job-grid-label">Fuel / Equipment</div><div class="job-grid-value">${totalGal > 0 ? totalGal.toFixed(0) + ' gal' : ''} ${equipment.length > 0 ? equipment.length + ' unit' + (equipment.length > 1 ? 's' : '') : (totalGal > 0 ? '' : '—')}</div></div>
+                        </div>
+                        <div class="job-actions" onclick="event.stopPropagation()">
+                            <button class="btn btn-primary" onclick="openJob('${job.id}')">View Details</button>
+                            ${deliveries.length > 0 ? '<button class="btn btn-secondary" onclick="openDeliveries(\'' + job.id + '\')">Deliveries (' + deliveries.length + ')</button>' : ''}
+                            ${job.invoice_image ? '<button class="btn btn-invoice" onclick="viewImage(\'' + job.invoice_image + '\')">📄 Invoice</button>' : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ===== JOB DETAIL MODAL =====
+        async function openJob(jobId) {
+            const job = allJobs.find(j => j.id === jobId);
+            if (!job) return;
+
+            const equipment = allEquipment.filter(e => e.job_id === jobId);
+            const deliveries = allDeliveries.filter(d => d.job_id === jobId);
+            const totalGal = deliveries.reduce((s, d) => s + (parseFloat(d.gallons) || 0), 0);
+            const totalDef = deliveries.reduce((s, d) => s + (parseFloat(d.def_gallons) || 0), 0);
+            const vendor = job.assigned_vendor ? allVendors.find(v => v.id === job.assigned_vendor) : null;
+            const vendorName = vendor ? (vendor.company_name || vendor.name) : '—';
+
+            document.getElementById('modalTitle').textContent = job.job_site_name || 'Work Order Details';
+            document.getElementById('modalBody').innerHTML = `
+                <div class="detail-section">
+                    <div class="detail-section-title">Order Information</div>
+                    <div class="detail-grid">
+                        <div class="detail-item"><div class="detail-label">Contract #</div><div class="detail-value">${job.contract_number || '—'}</div></div>
+                        <div class="detail-item"><div class="detail-label">PO #</div><div class="detail-value">${job.po_number || '—'}</div></div>
+                        <div class="detail-item"><div class="detail-label">Job Type</div><div class="detail-value">${formatJobType(job.job_type)}</div></div>
+                        <div class="detail-item"><div class="detail-label">Status</div><div class="detail-value"><span class="status-badge ${job.status}"><span class="dot"></span>${job.status}</span></div></div>
+                        <div class="detail-item"><div class="detail-label">Priority</div><div class="detail-value">${job.priority || 'normal'}</div></div>
+                        <div class="detail-item"><div class="detail-label">Created</div><div class="detail-value">${formatDate(job.created_at)}</div></div>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <div class="detail-section-title">Location & Contact</div>
+                    <div class="detail-grid">
+                        <div class="detail-item full"><div class="detail-label">Address</div><div class="detail-value">${[job.address_street, job.address_city, job.address_state, job.address_zip].filter(Boolean).join(', ') || '—'}</div></div>
+                        <div class="detail-item"><div class="detail-label">Customer</div><div class="detail-value">${job.customer_name || '—'}</div></div>
+                        <div class="detail-item"><div class="detail-label">Contact</div><div class="detail-value">${job.contact_name || '—'}${job.contact_phone ? ' · <a href="tel:' + job.contact_phone + '" style="color:#60a5fa;">' + job.contact_phone + '</a>' : ''}</div></div>
+                        <div class="detail-item"><div class="detail-label">Vendor</div><div class="detail-value">${vendorName}</div></div>
+                        <div class="detail-item"><div class="detail-label">Rental Company</div><div class="detail-value">${job.rental_company || '—'}</div></div>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <div class="detail-section-title">Schedule</div>
+                    <div class="detail-grid">
+                        <div class="detail-item"><div class="detail-label">Date Out</div><div class="detail-value">${formatDate(job.date_out)}${job.time_out ? ' ' + formatTime(job.time_out) : ''}</div></div>
+                        <div class="detail-item"><div class="detail-label">Est. Return</div><div class="detail-value">${formatDate(job.est_return)}${job.time_return ? ' ' + formatTime(job.time_return) : ''}</div></div>
+                        ${job.completed_at ? '<div class="detail-item"><div class="detail-label">Completed</div><div class="detail-value" style="color:#60a5fa;">' + formatDate(job.completed_at) + '</div></div>' : ''}
+                    </div>
+                </div>
+
+                ${equipment.length > 0 ? `
+                    <div class="detail-section">
+                        <div class="detail-section-title">Equipment (${equipment.length} unit${equipment.length > 1 ? 's' : ''})</div>
+                        <div class="equipment-list">
+                            ${equipment.map(eq => '<div class="equipment-item"><span class="equipment-num">' + (eq.equipment_number || '—') + '</span><span class="equipment-desc">' + (eq.description || '—') + '</span></div>').join('')}
+                        </div>
+                    </div>
+                ` : ''}
+
+                ${deliveries.length > 0 ? `
+                    <div class="detail-section">
+                        <div class="detail-section-title">Deliveries (${deliveries.length})</div>
+                        ${deliveries.map(d => `
+                            <div class="delivery-item">
+                                <div>
+                                    <div class="delivery-gallons">${d.gallons || 0} gal${d.def_gallons ? ' + ' + d.def_gallons + ' DEF' : ''}</div>
+                                    <div class="delivery-meta">${d.delivered_by_name || 'Unknown'}${d.fuel_type ? ' · ' + d.fuel_type : ''}${d.unit_number ? ' · Unit #' + d.unit_number : ''}</div>
+                                </div>
+                                <div style="text-align:right;">
+                                    <div class="delivery-meta">${d.timestamp ? new Date(d.timestamp).toLocaleDateString() : '—'}</div>
+                                    <div class="delivery-meta">${d.timestamp ? new Date(d.timestamp).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : ''}</div>
+                                </div>
+                            </div>
+                        `).join('')}
+                        <div class="delivery-total">
+                            <span class="delivery-total-label">Total Delivered</span>
+                            <span class="delivery-total-value">${totalGal.toFixed(1)} gal${totalDef > 0 ? ' + ' + totalDef.toFixed(1) + ' DEF' : ''}</span>
+                        </div>
+                    </div>
+                ` : ''}
+
+                ${job.instructions ? `
+                    <div class="detail-section">
+                        <div class="detail-section-title">Instructions</div>
+                        <div style="padding:12px 14px;background:#2a2a2a;border-radius:8px;font-size:0.9rem;color:#b8b0a8;line-height:1.6;">${job.instructions}</div>
+                    </div>
+                ` : ''}
+
+                <div class="detail-section">
+                    <div class="detail-section-title">Invoice</div>
+                    ${job.invoice_image ? `
+                        <button class="invoice-btn" onclick="closeModal(); viewImage('${job.invoice_image}')">
+                            <span class="invoice-btn-icon">📄</span>
+                            <div class="invoice-btn-text"><div class="invoice-btn-title">View Original Invoice</div><div class="invoice-btn-sub">Scanned invoice used to create this order</div></div>
+                            <svg width="20" height="20" fill="none" stroke="#60a5fa" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        </button>
+                    ` : '<div class="no-data">No invoice image — this order was created manually</div>'}
+                </div>
+            `;
+
+            document.getElementById('modalFooter').innerHTML = `
+                <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+                ${deliveries.length > 0 ? '<button class="btn btn-primary" onclick="closeModal(); openDeliveries(\'' + jobId + '\')">View Deliveries</button>' : ''}
+            `;
+            document.getElementById('jobModal').classList.add('show');
+        }
+
+        // ===== DELIVERIES MODAL =====
+        async function openDeliveries(jobId) {
+            const job = allJobs.find(j => j.id === jobId);
+            const deliveries = await getDeliveriesForJob(jobId);
+            const total = deliveries.reduce((s, d) => s + (parseFloat(d.gallons) || 0), 0);
+            const totalDef = deliveries.reduce((s, d) => s + (parseFloat(d.def_gallons) || 0), 0);
+
+            document.getElementById('modalTitle').textContent = 'Deliveries — ' + (job ? job.job_site_name : 'Order');
+
+            if (deliveries.length === 0) {
+                document.getElementById('modalBody').innerHTML = '<div class="empty-state" style="padding:30px;">No deliveries recorded</div>';
+            } else {
+                document.getElementById('modalBody').innerHTML = deliveries.map(d => `
+                    <div class="delivery-item">
+                        <div>
+                            <div class="delivery-gallons">${d.gallons || 0} gal${d.def_gallons ? ' + ' + d.def_gallons + ' DEF' : ''}</div>
+                            <div class="delivery-meta">${d.delivered_by_name || 'Unknown'}${d.fuel_type ? ' · ' + d.fuel_type : ''}${d.unit_number ? ' · Unit #' + d.unit_number : ''}</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div class="delivery-meta">${d.timestamp ? new Date(d.timestamp).toLocaleDateString() : '—'}</div>
+                            <div class="delivery-meta">${d.timestamp ? new Date(d.timestamp).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : ''}</div>
+                        </div>
+                    </div>
+                `).join('') + `
+                    <div class="delivery-total">
+                        <span class="delivery-total-label">Total Delivered</span>
+                        <span class="delivery-total-value">${total.toFixed(1)} gal${totalDef > 0 ? ' + ' + totalDef.toFixed(1) + ' DEF' : ''}</span>
+                    </div>
+                `;
+            }
+            document.getElementById('modalFooter').innerHTML = '<button class="btn btn-secondary" onclick="closeModal()">Close</button>';
+            document.getElementById('jobModal').classList.add('show');
+        }
+
+        // ===== IMAGE VIEWER =====
+        function viewImage(url) {
+            document.getElementById('invoiceImage').src = url;
+            document.getElementById('imageViewer').classList.add('show');
+        }
+        function closeImageViewer() {
+            document.getElementById('imageViewer').classList.remove('show');
+        }
+
+        // ===== MODAL =====
+        function closeModal() { document.getElementById('jobModal').classList.remove('show'); }
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeImageViewer(); closeModal(); } });
+
+        // ===== FILTER LISTENERS =====
+        document.getElementById('searchInput').addEventListener('input', renderJobs);
+        document.getElementById('statusFilter').addEventListener('change', renderJobs);
+        document.getElementById('typeFilter').addEventListener('change', renderJobs);
+
+        // ===== INIT =====
+        loadData();
+    </script>
+</body>
+</html>
