@@ -619,26 +619,59 @@
         document.getElementById('typeFilter').addEventListener('change', renderJobs);
 
         // ===== ACCEPT / DECLINE =====
+        // The users table has a vendor_id field that links to the vendors table.
+        // jobs.assigned_vendor FK -> vendors.id, so we use currentUser.vendor_id
+        function getVendorId() {
+            // Match vendor record by user_id (linked in DB), then fallback to email/name
+            const v = allVendors.find(v =>
+                v.user_id === currentUser.id ||
+                (v.email && v.email === currentUser.email) ||
+                (v.name && v.name.toLowerCase() === currentUser.name?.toLowerCase())
+            );
+            return v ? v.id : null;
+        }
+
         function canRespondToJob(job) {
-            // Vendors can accept/decline jobs that are pending or assigned to them
             if (currentUser.role !== 'vendor') return false;
             if (!['pending', 'assigned'].includes(job.status)) return false;
-            // If assigned, only the assigned vendor can respond
-            if (job.assigned_vendor && job.assigned_vendor !== currentUser.id) return false;
+            const vendorId = getVendorId();
+            // If assigned to a specific vendor, only they can respond
+            if (job.assigned_vendor && vendorId && job.assigned_vendor !== vendorId) return false;
             return true;
         }
 
         async function acceptJob(jobId) {
             const job = allJobs.find(j => j.id === jobId);
             if (!job) return;
+
+            let vendorId = getVendorId();
+
+            // If still no vendor ID, try a DB lookup
+            if (!vendorId) {
+                const { data: found } = await db.from('vendors')
+                    .select('id')
+                    .or(`name.ilike.%${currentUser.name}%,company_name.ilike.%${currentUser.company || currentUser.name}%`)
+                    .limit(1);
+                if (found && found.length > 0) {
+                    vendorId = found[0].id;
+                    // Save it to the user record for future use
+                    await db.from('users').update({ vendor_id: vendorId }).eq('id', currentUser.id);
+                    currentUser.vendor_id = vendorId;
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                } else {
+                    showToast('No vendor profile found. Contact admin to link your account.', 'error');
+                    return;
+                }
+            }
+
             try {
                 const { error } = await db.from('jobs').update({
                     status: 'accepted',
-                    assigned_vendor: currentUser.id
+                    assigned_vendor: vendorId
                 }).eq('id', jobId);
                 if (error) throw error;
                 job.status = 'accepted';
-                job.assigned_vendor = currentUser.id;
+                job.assigned_vendor = vendorId;
                 updateStats();
                 renderJobs();
                 showToast('Job accepted! You can now start working on this order.', 'success');
