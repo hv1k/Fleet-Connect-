@@ -272,7 +272,7 @@
                         <div class="bcc-banner-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></div>
                         <div class="bcc-banner-text">
                             <div class="bcc-banner-title">Auto-Import from QuickBooks</div>
-                            <div class="bcc-banner-desc">When sending invoices from QuickBooks, BCC: <span class="bcc-email" onclick="copyBccEmail()"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="07616b66746f6172626b74296e6971686e64627447606a666e6b2964686a">[email&#160;protected]</a></span></div>
+                            <div class="bcc-banner-desc">When sending invoices from QuickBooks, BCC: <span class="bcc-email" onclick="copyBccEmail()">flashfuels.invoices@gmail.com</span></div>
                         </div>
                     </div>
                     <div class="filter-tabs">
@@ -309,7 +309,7 @@
     </div>
     <div class="copy-toast" id="copyToast">Email copied to clipboard!</div>
 
-    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="supabase-client.js"></script>
+    <script src="supabase-client.js"></script>
     <script>
         let allInvoices = [], allJobs = [], completedJobs = [], allDeliveries = [], allUsers = [];
         let currentFilter = 'all', searchTerm = '', fuelSearchTerm = '';
@@ -432,7 +432,7 @@
             if (searchTerm) filtered = filtered.filter(i => (i.invoice_number||'').toLowerCase().includes(searchTerm) || (i.customer_name||'').toLowerCase().includes(searchTerm) || (i.ship_to_name||'').toLowerCase().includes(searchTerm) || (i.ship_to_address||'').toLowerCase().includes(searchTerm));
             const tbody = document.getElementById('invoiceTableBody');
             if (filtered.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="empty-state"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><h3>No invoices found</h3><p>BCC flashfuels.invoices@gmail.com on QuickBooks invoices to auto-import them here.</p></td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="empty-state"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><h3>No invoices found</h3><p>BCC flashfuels.invoices' + '@' + 'gmail.com on QuickBooks invoices to auto-import them here.</p></td></tr>';
             } else {
                 tbody.innerHTML = filtered.map(inv => {
                     const mj = inv.matched_job_id ? allJobs.find(j => j.id === inv.matched_job_id) : null;
@@ -495,4 +495,14 @@
         }
 
         function closeModal() { document.getElementById('invoiceModal').classList.remove('show'); }
-        function copyBccEmail()
+        function copyBccEmail() {
+            navigator.clipboard.writeText('flashfuels.invoices' + '@' + 'gmail.com').then(() => {
+                const toast = document.getElementById('copyToast');
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 2000);
+            });
+        }
+
+    </script>
+</body>
+</html>
