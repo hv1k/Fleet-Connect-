@@ -291,12 +291,7 @@
                     <div class="nav-section-title">Main Menu</div>
                     <a class="nav-item active" href="vendor-dashboard.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>Dashboard</a>
                     <a class="nav-item" href="work-orders.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>Jobs<span class="nav-item-badge" id="pendingBadge">0</span></a>
-
                     <a class="nav-item" href="invoices.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Invoices</a>
-                </div>
-                <div class="nav-section">
-                    <div class="nav-section-title">System</div>
-                    <a class="nav-item" href="#"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Settings</a>
                 </div>
             </nav>
             <div class="sidebar-footer">
@@ -318,7 +313,6 @@
                         <p class="header-subtitle" id="welcomeMsg">Welcome back!</p>
                     </div>
                 </div>
-                <button class="time-filter"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>This Month</button>
             </header>
             
             <div class="content">
@@ -334,19 +328,19 @@
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="stat-header"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>Active Jobs</div>
-                        <div class="stat-value-row"><span class="stat-value" id="statActiveJobs">0</span><span class="stat-change up">↗ 12%</span></div>
+                        <div class="stat-value-row"><span class="stat-value" id="statActiveJobs">0</span></div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-header"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>Total Diesel</div>
-                        <div class="stat-value-row"><span class="stat-value" id="statDiesel">0</span><span class="stat-unit">gal</span><span class="stat-change up">↗ 8.5%</span></div>
+                        <div class="stat-value-row"><span class="stat-value" id="statDiesel">0</span><span class="stat-unit">gal</span></div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-header"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>Total DEF</div>
-                        <div class="stat-value-row"><span class="stat-value" id="statDEF">0</span><span class="stat-unit">gal</span><span class="stat-change down">↘ 2.1%</span></div>
+                        <div class="stat-value-row"><span class="stat-value" id="statDEF">0</span><span class="stat-unit">gal</span></div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-header"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Field Workers</div>
-                        <div class="stat-value-row"><span class="stat-value" id="statWorkers">0</span><span class="stat-change up">+2</span></div>
+                        <div class="stat-value-row"><span class="stat-value" id="statWorkers">0</span></div>
                     </div>
                 </div>
                 
@@ -387,9 +381,6 @@
                         </div>
                         <div class="activity-list" id="activityList">
                             <div class="loading"><div class="spinner"></div>Loading...</div>
-                        </div>
-                        <div class="activity-footer">
-                            <button class="view-all-btn">View all activity →</button>
                         </div>
                     </div>
                 </div>
@@ -475,13 +466,29 @@
             document.getElementById('statDiesel').textContent = allInvoices.reduce((s,i) => s + (parseFloat(i.total_diesel)||0), 0).toFixed(0);
             document.getElementById('statDEF').textContent = allInvoices.reduce((s,i) => s + (parseFloat(i.total_def)||0), 0).toFixed(0);
             document.getElementById('statWorkers').textContent = fieldWorkers.length;
-            document.getElementById('pendingBadge').textContent = allJobs.filter(j => ['pending','assigned'].includes(j.status)).length;
+            const pendingCount = allJobs.filter(j => ['pending','assigned'].includes(j.status)).length;
+            const badge = document.getElementById('pendingBadge');
+            badge.textContent = pendingCount;
+            badge.style.display = pendingCount > 0 ? 'inline' : 'none';
         }
         
         function renderChart() {
             const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-            const diesel = [45,62,38,71,55,30,48], def = [12,18,8,22,15,10,14];
-            const max = Math.max(...diesel,...def);
+            // Build real data from invoices by day of week
+            const diesel = [0,0,0,0,0,0,0], def = [0,0,0,0,0,0,0];
+            allInvoices.forEach(inv => {
+                if (inv.created_at) {
+                    const dayIdx = (new Date(inv.created_at).getDay() + 6) % 7; // Mon=0
+                    diesel[dayIdx] += parseFloat(inv.total_diesel) || 0;
+                    def[dayIdx] += parseFloat(inv.total_def) || 0;
+                }
+            });
+            const max = Math.max(...diesel, ...def, 1);
+            const hasData = diesel.some(v => v > 0) || def.some(v => v > 0);
+            if (!hasData) {
+                document.getElementById('fuelChart').innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;width:100%;color:#666;font-size:0.85rem;">No delivery data yet</div>';
+                return;
+            }
             document.getElementById('fuelChart').innerHTML = days.map((d,i) => 
                 '<div class="chart-bar-group"><div class="chart-bars"><div class="chart-bar orange" style="height:'+((diesel[i]/max)*130)+'px"></div><div class="chart-bar green" style="height:'+((def[i]/max)*130)+'px"></div></div><span class="chart-label">'+d+'</span></div>'
             ).join('');
