@@ -352,7 +352,7 @@
 
         const navConfig = {
             admin: [
-                { label: 'Dashboard', href: 'index.html', icon: 'grid' },
+                { label: 'Dashboard', href: 'work-orders.html', icon: 'grid' },
                 { label: 'Create Order', href: 'create-job.html', icon: 'plus', active: true },
                 { label: 'Work Orders', href: 'work-orders.html', icon: 'clipboard' }
             ],
@@ -380,8 +380,8 @@
             </div>`;
 
         // Success link based on role
-        const dashLinks = { admin: 'index.html', rental: 'rental-dashboard.html', vendor: 'vendor-dashboard.html', fieldworker: 'field-worker.html' };
-        document.getElementById('successLink').href = dashLinks[currentUser.role] || 'index.html';
+        const dashLinks = { admin: 'work-orders.html', rental: 'rental-dashboard.html', vendor: 'vendor-dashboard.html', fieldworker: 'field-worker.html' };
+        document.getElementById('successLink').href = dashLinks[currentUser.role] || 'work-orders.html';
 
         // Default date
         document.getElementById('dateOut').value = new Date().toISOString().split('T')[0];

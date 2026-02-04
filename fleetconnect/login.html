@@ -313,8 +313,8 @@
                 const result = await loginUser(email, password);
                 
                 if (result.success) {
-                    // Redirect to home page
-                    window.location.href = 'index.html';
+                    // Redirect to role-appropriate dashboard
+                    window.location.href = getDashboardUrl(result.user.role);
                 } else {
                     errorMessage.textContent = result.error || 'Invalid email or password';
                     errorMessage.classList.add('show');

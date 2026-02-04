@@ -360,6 +360,16 @@ function getCurrentUser() {
     return user ? JSON.parse(user) : null;
 }
 
+function getDashboardUrl(role) {
+    const dashboards = {
+        admin: 'work-orders.html',
+        vendor: 'vendor-dashboard.html',
+        rental: 'rental-dashboard.html',
+        fieldworker: 'field-worker.html'
+    };
+    return dashboards[role] || 'login.html';
+}
+
 function logout() {
     localStorage.removeItem('currentUser');
     window.location.href = 'login.html';
@@ -372,7 +382,7 @@ function checkAuth(allowedRoles = null) {
         return null;
     }
     if (allowedRoles && !allowedRoles.includes(user.role)) {
-        window.location.href = 'index.html';
+        window.location.href = getDashboardUrl(user.role);
         return null;
     }
     return user;
