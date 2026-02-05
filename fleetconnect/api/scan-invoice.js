@@ -1,5 +1,19 @@
+const ALLOWED_ORIGINS = [
+    'https://fleet-connect-three.vercel.app',
+    'http://localhost:3000',
+    'http://localhost:5500',
+    'http://127.0.0.1:5500'
+];
+
+function getCorsOrigin(req) {
+    const origin = req.headers?.origin || '';
+    if (ALLOWED_ORIGINS.includes(origin)) return origin;
+    if (origin.endsWith('.vercel.app')) return origin;
+    return ALLOWED_ORIGINS[0];
+}
+
 export default async function handler(req, res) {
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Origin', getCorsOrigin(req));
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     
