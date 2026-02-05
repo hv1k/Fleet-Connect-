@@ -1,0 +1,10 @@
+{
+  "name": "fleetconnect",
+  "version": "1.3.0",
+  "private": true,
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "@supabase/supabase-js": "^2.39.0"
+  }
+}

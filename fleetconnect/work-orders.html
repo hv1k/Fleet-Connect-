@@ -376,8 +376,8 @@
         async function loadData() {
             try {
                 const [jobs, deliveries, vendors, eqRes] = await Promise.all([
-                    getAllJobs(),
-                    getAllDeliveries(),
+                    getJobsForCurrentUser(),
+                    getDeliveriesForCurrentUser(),
                     getAllVendors(),
                     db.from('equipment').select('*')
                 ]);
@@ -665,7 +665,7 @@
                     // Save it to the user record for future use
                     await db.from('users').update({ vendor_id: vendorId }).eq('id', currentUser.id);
                     currentUser.vendor_id = vendorId;
-                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    sessionStorage.setItem('fc_user', JSON.stringify(currentUser));
                 } else {
                     showToast('No vendor profile found. Contact admin to link your account.', 'error');
                     return;

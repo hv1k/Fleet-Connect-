@@ -335,7 +335,7 @@
     <script src="supabase-client.js"></script>
     <script>
         // ===== AUTH & NAV =====
-        const currentUser = checkAuth();
+        const currentUser = checkAuth(['admin', 'rental']);
         if (!currentUser) throw new Error('Not authenticated');
         document.getElementById('userName').textContent = currentUser.name;
         document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();

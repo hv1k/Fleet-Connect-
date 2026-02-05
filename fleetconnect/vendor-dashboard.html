@@ -453,7 +453,7 @@
         let selectedWorkerId = null, selectedJobId = null;
         
         async function loadData() {
-            allJobs = await getAllJobs();
+            allJobs = await getJobsForCurrentUser();
             const { data: invoices } = await db.from('invoices').select('*').order('created_at', { ascending: false });
             allInvoices = invoices || [];
             const users = await getAllUsers();

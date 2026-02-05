@@ -490,8 +490,8 @@
         let allJobs = [], allDeliveries = [], vendors = [];
         
         async function loadData() {
-            allJobs = await getAllJobs();
-            allDeliveries = await getAllDeliveries();
+            allJobs = await getJobsForCurrentUser();
+            allDeliveries = await getDeliveriesForCurrentUser();
             vendors = await getAllVendors();
             updateStats();
             renderChart();

@@ -799,7 +799,7 @@
                             name="password"
                             placeholder="Enter your password"
                             autocomplete="current-password"
-                            minlength="6"
+                            minlength="8"
                             required
                         >
                         <button type="button" class="password-toggle" id="togglePassword" aria-label="Show password">
@@ -831,7 +831,7 @@
             </div>
 
             <div class="demo-grid">
-                <button class="demo-btn" onclick="demoLogin('admin@fleetconnect.com', 'admin123')">
+                <button class="demo-btn" onclick="handleDemoLogin('admin')">
                     <div class="demo-icon admin">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15l8.385-8.415a2.1 2.1 0 00-2.97-2.97L9 12"/><path d="M9 12l-1.5 6L14 16.5"/><path d="M4 20h4"/></svg>
                     </div>
@@ -840,7 +840,7 @@
                         <span class="desc">Full access</span>
                     </div>
                 </button>
-                <button class="demo-btn" onclick="demoLogin('paul@sunbelt.com', 'rental123')">
+                <button class="demo-btn" onclick="handleDemoLogin('rental')">
                     <div class="demo-icon rental">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
                     </div>
@@ -849,7 +849,7 @@
                         <span class="desc">Create jobs</span>
                     </div>
                 </button>
-                <button class="demo-btn" onclick="demoLogin('owner@yourfleet.com', 'vendor123')">
+                <button class="demo-btn" onclick="handleDemoLogin('vendor')">
                     <div class="demo-icon vendor">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6"/><path d="M23 11h-6"/></svg>
                     </div>
@@ -858,7 +858,7 @@
                         <span class="desc">Manage jobs</span>
                     </div>
                 </button>
-                <button class="demo-btn" onclick="demoLogin('driver@yourfleet.com', 'field123')">
+                <button class="demo-btn" onclick="handleDemoLogin('fieldworker')">
                     <div class="demo-icon worker">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
                     </div>
@@ -887,6 +887,11 @@
         const passwordInput = document.getElementById('password');
         const emailInput = document.getElementById('email');
 
+        // Rate limiting
+        let loginAttempts = 0;
+        const MAX_ATTEMPTS = 5;
+        let loginCooldownActive = false;
+
         // Form submit
         loginForm.addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -896,6 +901,12 @@
         });
 
         async function attemptLogin(email, password) {
+            // Check rate limiting
+            if (loginCooldownActive) {
+                showError('Too many login attempts. Please wait before trying again.');
+                return;
+            }
+
             // Loading state
             loginBtn.disabled = true;
             loginBtn.classList.add('loading');
@@ -906,18 +917,55 @@
             try {
                 const result = await loginUser(email, password);
                 if (result.success) {
+                    // Reset attempts on successful login
+                    loginAttempts = 0;
                     window.location.href = getDashboardUrl(result.user.role);
                 } else {
+                    // Increment failed attempts
+                    loginAttempts++;
                     showError(result.error || 'Invalid email or password');
                     passwordInput.classList.add('error');
+
+                    // Check if max attempts reached
+                    if (loginAttempts >= MAX_ATTEMPTS) {
+                        enableLoginCooldown();
+                    }
                 }
             } catch (err) {
                 console.error('Login error:', err);
+                loginAttempts++;
                 showError('Connection error. Please try again.');
+
+                // Check if max attempts reached
+                if (loginAttempts >= MAX_ATTEMPTS) {
+                    enableLoginCooldown();
+                }
             }
 
             loginBtn.disabled = false;
             loginBtn.classList.remove('loading');
+        }
+
+        function enableLoginCooldown() {
+            loginCooldownActive = true;
+            loginBtn.disabled = true;
+            const originalText = loginBtn.querySelector('.btn-text').textContent;
+            let secondsRemaining = 30;
+
+            const cooldownInterval = setInterval(() => {
+                loginBtn.querySelector('.btn-text').textContent = `Try again in ${secondsRemaining}s`;
+                secondsRemaining--;
+
+                if (secondsRemaining < 0) {
+                    clearInterval(cooldownInterval);
+                    loginCooldownActive = false;
+                    loginAttempts = 0;
+                    loginBtn.disabled = false;
+                    loginBtn.querySelector('.btn-text').textContent = originalText;
+                    showError('');
+                    errorMessage.classList.remove('show');
+                }
+            }, 1000);
         }
 
         function showError(msg) {
@@ -925,11 +973,26 @@
             errorMessage.classList.add('show');
         }
 
-        // Demo login
-        async function demoLogin(email, password) {
-            emailInput.value = email;
-            passwordInput.value = password;
-            await attemptLogin(email, password);
+        // Demo login with new secure approach
+        async function handleDemoLogin(role) {
+            const btns = document.querySelectorAll('.demo-btn');
+            btns.forEach(b => b.disabled = true);
+
+            try {
+                const result = await demoLogin(role);
+                if (result.success) {
+                    // Reset attempts on successful demo login
+                    loginAttempts = 0;
+                    window.location.href = getDashboardUrl(result.user.role);
+                } else {
+                    alert('Demo login failed: ' + result.error);
+                    btns.forEach(b => b.disabled = false);
+                }
+            } catch (err) {
+                console.error('Demo login error:', err);
+                alert('Demo login error: ' + err.message);
+                btns.forEach(b => b.disabled = false);
+            }
         }
 
         // Clear errors on input
