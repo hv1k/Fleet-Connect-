@@ -234,6 +234,21 @@ async function createJob(jobData, equipmentList) {
     return { success: true, job: job };
 }
 
+async function updateJob(jobId, updates) {
+    const { data, error } = await db
+        .from('jobs')
+        .update(updates)
+        .eq('id', jobId)
+        .select()
+        .single();
+
+    if (error) {
+        console.error('Error updating job:', error);
+        return { success: false, error: error.message };
+    }
+    return { success: true, job: data };
+}
+
 async function updateJobStatus(jobId, status, additionalData = {}) {
     const updateData = { status, ...additionalData };
     

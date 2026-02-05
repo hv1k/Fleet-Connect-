@@ -185,7 +185,7 @@
                 <div class="nav-section">
                     <div class="nav-section-title">Main Menu</div>
                     <a class="nav-item" href="vendor-dashboard.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>Dashboard</a>
-                    <a class="nav-item" href="work-orders.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>Jobs</a>
+                    <a class="nav-item" href="work-orders.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>Work Orders</a>
 
                     <a class="nav-item active" href="invoices.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Invoices</a>
                 </div>
@@ -329,6 +329,10 @@
                     db.from('deliveries').select('*').order('timestamp', { ascending: false }),
                     db.from('users').select('id, name, role').eq('role', 'fieldworker')
                 ]);
+                if (invRes.error) throw invRes.error;
+                if (jobRes.error) throw jobRes.error;
+                if (delRes.error) throw delRes.error;
+                if (userRes.error) throw userRes.error;
                 allInvoices = invRes.data || [];
                 allJobs = jobRes.data || [];
                 completedJobs = allJobs.filter(j => j.status === 'completed');
@@ -340,6 +344,8 @@
                 renderInvoices();
             } catch (err) {
                 console.error('Error loading data:', err);
+                document.getElementById('fuelHistoryBody').innerHTML = '<tr><td colspan="7" class="empty-state"><h3>Error loading data</h3><p>' + (err.message || 'Please try refreshing the page.') + '</p></td></tr>';
+                document.getElementById('invoiceTableBody').innerHTML = '<tr><td colspan="7" class="empty-state"><h3>Error loading data</h3><p>' + (err.message || 'Please try refreshing the page.') + '</p></td></tr>';
             }
         }
 
@@ -495,7 +501,10 @@
             } catch (err) { alert('Error: ' + err.message); }
         }
 
-        function closeModal() { document.getElementById('invoiceModal').classList.remove('show'); }
+        function closeModal() { document.getElementById('invoiceModal').classList.remove('show'); selectedJobId = null; }
         function copyBccEmail() {
             navigator.clipboard.writeText('flashfuels.invoices' + '@' + 'gmail.com').then(() => {
- 
+                document.getElementById('copyToast').classList.add('show');
+                setTimeout(() => document.getElementById('copyToast').classList.remove('show'), 2000);
+            });
+        }

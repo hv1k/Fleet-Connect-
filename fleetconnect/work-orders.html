@@ -219,7 +219,7 @@
                         <p class="header-subtitle">Search and manage all work orders</p>
                     </div>
                 </div>
-                <a href="create-job.html" class="btn btn-primary" style="display:flex;align-items:center;gap:8px;padding:10px 20px;font-size:0.85rem;text-decoration:none;"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>Create Job</a>
+                <a href="create-job.html" class="btn btn-primary" style="display:flex;align-items:center;gap:8px;padding:10px 20px;font-size:0.85rem;text-decoration:none;"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>Create Work Order</a>
             </header>
 
             <div class="content">
@@ -328,12 +328,13 @@
         // Role-based sidebar nav
         const navConfig = {
             admin: [
-                { label: 'Dashboard', href: 'work-orders.html', icon: 'grid', active: true },
-                { label: 'Create Order', href: 'create-job.html', icon: 'plus' }
+                { label: 'Dashboard', href: 'admin-dashboard.html', icon: 'grid' },
+                { label: 'Create Work Order', href: 'create-job.html', icon: 'plus' },
+                { label: 'Work Orders', href: 'work-orders.html', icon: 'clipboard', active: true }
             ],
             rental: [
                 { label: 'Dashboard', href: 'rental-dashboard.html', icon: 'grid' },
-                { label: 'New Order', href: 'create-job.html', icon: 'plus' },
+                { label: 'Create Work Order', href: 'create-job.html', icon: 'plus' },
                 { label: 'Work Orders', href: 'work-orders.html', icon: 'clipboard', active: true },
                 { label: 'Invoices', href: 'rental-invoices.html', icon: 'invoice' }
             ],

@@ -278,12 +278,17 @@
         }
 
         async function loadData() {
-            // Only load jobs assigned to this worker — no fallback to all jobs
-            allJobs = await getJobsByWorker(currentUser.id);
-            allEquipment = await getAllEquipment();
-            allInvoices = await getAllWorkerInvoices();
-            updateStats();
-            renderJobs();
+            try {
+                // Only load jobs assigned to this worker — no fallback to all jobs
+                allJobs = await getJobsByWorker(currentUser.id);
+                allEquipment = await getAllEquipment();
+                allInvoices = await getAllWorkerInvoices();
+                updateStats();
+                renderJobs();
+            } catch (err) {
+                console.error('Load error:', err);
+                document.getElementById('jobsList').innerHTML = '<div class="empty"><h3>Error loading data</h3><p>' + (err.message || 'Please try refreshing the page.') + '</p></div>';
+            }
         }
 
         async function getAllEquipment() {
