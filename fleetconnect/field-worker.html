@@ -4,177 +4,264 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Jobs | FleetConnect</title>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --bg-dark: #0a0a0f; --bg-card: #12121a; --bg-input: #1a1a24; --border: #2a2a3a; --text-primary: #ffffff; --text-secondary: #8a8a9a; --text-muted: #5a5a6a; --accent: #00d4aa; --warning: #ffaa00; --error: #ff6b6b; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'DM Sans', sans-serif; background: var(--bg-dark); color: var(--text-primary); min-height: 100vh; padding-bottom: 100px; }
-        
-        .header { background: var(--bg-card); border-bottom: 1px solid var(--border); padding: 16px 20px; position: sticky; top: 0; z-index: 50; }
-        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-        .logo { font-family: 'Space Mono', monospace; font-size: 1.25rem; color: var(--accent); text-decoration: none; }
-        .logout-btn { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; }
-        .welcome { font-size: 1.1rem; font-weight: 600; }
-        
-        .stats { display: flex; gap: 12px; padding: 16px 20px; }
-        .stat { flex: 1; background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 14px; text-align: center; }
-        .stat-value { font-size: 1.5rem; font-weight: 700; font-family: 'Space Mono', monospace; color: var(--accent); }
-        .stat-label { font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; margin-top: 2px; }
-        
-        .tabs { display: flex; border-bottom: 1px solid var(--border); background: var(--bg-card); }
-        .tab { flex: 1; padding: 14px; background: transparent; border: none; border-bottom: 2px solid transparent; color: var(--text-secondary); font-family: 'DM Sans', sans-serif; font-size: 0.85rem; cursor: pointer; }
-        .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-        
-        .content { padding: 16px 20px; }
-        
-        .job-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 16px; overflow: hidden; }
-        .job-card.urgent { border-left: 4px solid var(--warning); }
-        .job-header { padding: 16px; border-bottom: 1px solid var(--border); }
+        body { font-family: 'Inter', sans-serif; background: #1a1a1a; color: #f5f0e8; min-height: 100vh; }
+        .layout { display: flex; min-height: 100vh; }
+
+        /* Sidebar */
+        .sidebar { width: 240px; background: #242424; border-right: 1px solid #333; position: fixed; top: 0; left: 0; bottom: 0; display: flex; flex-direction: column; z-index: 50; }
+        .sidebar-header { padding: 20px 20px 12px; }
+        .sidebar-logo { font-size: 1.1rem; font-weight: 700; color: #60a5fa; }
+        nav { flex: 1; padding: 0 12px; overflow-y: auto; }
+        .nav-section { margin-bottom: 24px; }
+        .nav-section-title { font-size: 0.65rem; font-weight: 600; text-transform: uppercase; color: #666; padding: 8px 12px; letter-spacing: 0.5px; }
+        .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; color: #b8b0a8; font-size: 0.85rem; text-decoration: none; transition: all 0.15s; }
+        .nav-item:hover { background: #333; color: #f5f0e8; }
+        .nav-item.active { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
+        .nav-item svg { width: 20px; height: 20px; flex-shrink: 0; }
+        .sidebar-footer { padding: 12px; border-top: 1px solid #333; }
+        .user-menu { display: flex; align-items: center; gap: 10px; padding: 10px; background: #2a2a2a; border-radius: 10px; }
+        .user-avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #60a5fa, #3b82f6); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 0.85rem; flex-shrink: 0; }
+        .user-info { flex: 1; min-width: 0; }
+        .user-name { font-size: 0.85rem; font-weight: 600; color: #f5f0e8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .user-role { font-size: 0.7rem; color: #888; }
+        .logout-btn { background: none; border: none; color: #888; cursor: pointer; padding: 6px; border-radius: 6px; flex-shrink: 0; }
+        .logout-btn:hover { background: #333; color: #f87171; }
+
+        /* Mobile sidebar toggle */
+        .mobile-toggle { display: none; background: none; border: none; color: #f5f0e8; cursor: pointer; padding: 4px; }
+        @media (max-width: 768px) {
+            .sidebar { left: -260px; transition: left 0.3s; }
+            .sidebar.open { left: 0; box-shadow: 4px 0 20px rgba(0,0,0,0.5); }
+            .main { margin-left: 0 !important; }
+            .mobile-toggle { display: block; }
+        }
+
+        /* Main */
+        .main { margin-left: 240px; flex: 1; min-height: 100vh; padding-bottom: 20px; }
+        .header { padding: 24px 32px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+        .header-left { display: flex; align-items: center; gap: 12px; }
+        .header h1 { font-size: 1.4rem; font-weight: 700; }
+        .header-subtitle { font-size: 0.85rem; color: #888; margin-top: 2px; }
+        .content { padding: 24px 32px; }
+
+        /* Stats row */
+        .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: #242424; border: 1px solid #333; border-radius: 14px; padding: 18px 20px; }
+        .stat-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: #888; letter-spacing: 0.3px; display: flex; align-items: center; gap: 6px; }
+        .stat-label svg { width: 15px; height: 15px; }
+        .stat-value { font-size: 1.8rem; font-weight: 700; color: #f5f0e8; margin-top: 6px; }
+
+        /* Tabs */
+        .tabs { display: flex; border-bottom: 1px solid #333; margin-bottom: 20px; }
+        .tab { flex: 1; padding: 14px; background: transparent; border: none; border-bottom: 2px solid transparent; color: #888; font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 500; cursor: pointer; text-align: center; transition: all 0.2s; }
+        .tab:hover { color: #f5f0e8; }
+        .tab.active { color: #60a5fa; border-bottom-color: #60a5fa; }
+
+        /* Job Cards */
+        .job-card { background: #242424; border: 1px solid #333; border-radius: 12px; margin-bottom: 16px; overflow: hidden; }
+        .job-card.urgent { border-left: 4px solid #fbbf24; }
+        .job-header { padding: 16px; border-bottom: 1px solid #333; }
         .job-title { font-size: 1rem; font-weight: 600; margin-bottom: 4px; }
-        .job-meta { font-size: 0.8rem; color: var(--text-secondary); }
-        .job-info { padding: 12px 16px; background: var(--bg-input); }
+        .job-meta { font-size: 0.8rem; color: #888; }
+        .job-info { padding: 12px 16px; background: #1e1e1e; }
         .job-info-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.85rem; }
-        .job-info-label { color: var(--text-muted); }
-        .job-info-value { color: var(--text-primary); }
-        .job-info-value a { color: var(--accent); text-decoration: none; }
-        .equipment-count { padding: 12px 16px; font-size: 0.85rem; color: var(--accent); border-top: 1px solid var(--border); }
+        .job-info-label { color: #666; }
+        .job-info-value { color: #f5f0e8; }
+        .job-info-value a { color: #60a5fa; text-decoration: none; }
+        .equipment-count { padding: 12px 16px; font-size: 0.85rem; color: #60a5fa; border-top: 1px solid #333; }
         .job-actions { padding: 12px 16px; display: flex; gap: 10px; }
-        
-        .btn { flex: 1; padding: 12px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 600; border-radius: 8px; cursor: pointer; text-align: center; border: none; }
-        .btn-primary { background: var(--accent); color: var(--bg-dark); }
-        .btn-outline { background: transparent; color: var(--text-secondary); border: 1px solid var(--border); }
-        
-        .empty { text-align: center; padding: 60px 20px; color: var(--text-secondary); }
-        
+
+        .btn { flex: 1; padding: 12px; font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 600; border-radius: 8px; cursor: pointer; text-align: center; border: none; }
+        .btn-primary { background: #60a5fa; color: #1a1a1a; }
+        .btn-primary:hover { background: #3b82f6; }
+        .btn-outline { background: transparent; color: #888; border: 1px solid #333; }
+        .btn-outline:hover { background: #333; color: #f5f0e8; }
+
+        .empty { text-align: center; padding: 60px 20px; color: #888; font-size: 0.9rem; }
+        .empty svg { width: 48px; height: 48px; margin-bottom: 12px; opacity: 0.4; }
+
         /* Invoice Modal */
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 1000; overflow-y: auto; }
-        .modal-content { background: var(--bg-dark); min-height: 100%; padding: 20px; padding-bottom: 120px; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px; background: var(--bg-card); border-radius: 12px; margin-bottom: 20px; position: sticky; top: 0; z-index: 10; }
+        .modal-content { background: #1a1a1a; min-height: 100%; padding: 20px; padding-bottom: 120px; max-width: 700px; margin: 0 auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px; background: #242424; border-radius: 12px; margin-bottom: 20px; position: sticky; top: 0; z-index: 10; }
         .modal-header h2 { font-size: 1.1rem; }
-        .modal-close { background: none; border: none; color: var(--text-secondary); font-size: 1.5rem; cursor: pointer; padding: 4px 8px; }
-        
-        .job-site-info { background: var(--bg-card); padding: 16px; border-radius: 12px; margin-bottom: 20px; }
+        .modal-close { background: none; border: none; color: #888; font-size: 1.5rem; cursor: pointer; padding: 4px 8px; }
+        .modal-close:hover { color: #f5f0e8; }
+
+        .job-site-info { background: #242424; padding: 16px; border-radius: 12px; margin-bottom: 20px; }
         .job-site-name { font-weight: 600; font-size: 1.1rem; margin-bottom: 4px; }
-        .job-site-address { font-size: 0.85rem; color: var(--text-secondary); }
-        
-        .section-title { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); margin-bottom: 12px; margin-top: 24px; }
-        
+        .job-site-address { font-size: 0.85rem; color: #888; }
+
+        .section-title { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #60a5fa; margin-bottom: 12px; margin-top: 24px; }
+
         /* Unit Cards */
-        .unit-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 12px; overflow: hidden; }
-        .unit-card.active { border-color: var(--accent); }
+        .unit-card { background: #242424; border: 1px solid #333; border-radius: 12px; margin-bottom: 12px; overflow: hidden; }
+        .unit-card.active { border-color: #60a5fa; }
         .unit-header { padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
         .unit-info { display: flex; align-items: center; gap: 12px; }
-        .unit-checkbox { width: 24px; height: 24px; border: 2px solid var(--border); border-radius: 6px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
-        .unit-card.active .unit-checkbox { background: var(--accent); border-color: var(--accent); }
-        .unit-card.active .unit-checkbox::after { content: '✓'; color: var(--bg-dark); font-weight: bold; font-size: 14px; }
-        .unit-number { font-family: 'Space Mono', monospace; font-weight: 600; color: var(--accent); }
-        .unit-desc { font-size: 0.85rem; color: var(--text-secondary); }
-        .unit-toggle { color: var(--text-muted); font-size: 0.8rem; }
-        
-        .unit-fields { display: none; padding: 16px; border-top: 1px solid var(--border); background: var(--bg-input); }
+        .unit-checkbox { width: 24px; height: 24px; border: 2px solid #333; border-radius: 6px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .unit-card.active .unit-checkbox { background: #60a5fa; border-color: #60a5fa; }
+        .unit-card.active .unit-checkbox::after { content: '✓'; color: #1a1a1a; font-weight: bold; font-size: 14px; }
+        .unit-number { font-weight: 600; color: #60a5fa; }
+        .unit-desc { font-size: 0.85rem; color: #888; }
+        .unit-toggle { color: #666; font-size: 0.8rem; }
+
+        .unit-fields { display: none; padding: 16px; border-top: 1px solid #333; background: #1e1e1e; }
         .unit-card.active .unit-fields { display: block; }
-        
+
         .field-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
-        .field-group { }
-        .field-group label { display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px; text-transform: uppercase; }
-        .field-group input { width: 100%; padding: 12px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); font-family: 'Space Mono', monospace; font-size: 1rem; text-align: center; }
-        .field-group input:focus { outline: none; border-color: var(--accent); }
-        .field-group .unit-label { font-size: 0.7rem; color: var(--text-muted); text-align: center; margin-top: 2px; }
-        
+        .field-group label { display: block; font-size: 0.75rem; color: #666; margin-bottom: 4px; text-transform: uppercase; }
+        .field-group input { width: 100%; padding: 12px; background: #242424; border: 1px solid #333; border-radius: 8px; color: #f5f0e8; font-family: 'Inter', sans-serif; font-size: 1rem; text-align: center; }
+        .field-group input:focus { outline: none; border-color: #60a5fa; }
+        .field-group .unit-label { font-size: 0.7rem; color: #666; text-align: center; margin-top: 2px; }
+
         /* Invoice Details */
-        .invoice-details { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-top: 20px; }
+        .invoice-details { background: #242424; border: 1px solid #333; border-radius: 12px; padding: 16px; margin-top: 20px; }
         .detail-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
-        .detail-group label { display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px; }
-        .detail-group input, .detail-group textarea { width: 100%; padding: 12px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); font-family: 'DM Sans', sans-serif; }
-        .detail-group input:focus, .detail-group textarea:focus { outline: none; border-color: var(--accent); }
+        .detail-group label { display: block; font-size: 0.8rem; color: #888; margin-bottom: 6px; }
+        .detail-group input, .detail-group textarea { width: 100%; padding: 12px; background: #1e1e1e; border: 1px solid #333; border-radius: 8px; color: #f5f0e8; font-family: 'Inter', sans-serif; }
+        .detail-group input:focus, .detail-group textarea:focus { outline: none; border-color: #60a5fa; }
         .detail-group textarea { min-height: 70px; resize: vertical; }
-        
-        /* Incident Section */
-        .incident-toggle { display: flex; align-items: center; gap: 12px; padding: 14px; background: var(--bg-input); border-radius: 10px; cursor: pointer; margin-top: 16px; }
+
+        /* Incident */
+        .incident-toggle { display: flex; align-items: center; gap: 12px; padding: 14px; background: #1e1e1e; border-radius: 10px; cursor: pointer; margin-top: 16px; }
         .incident-toggle input { display: none; }
-        .toggle-switch { width: 48px; height: 26px; background: var(--border); border-radius: 13px; position: relative; transition: background 0.3s; flex-shrink: 0; }
+        .toggle-switch { width: 48px; height: 26px; background: #333; border-radius: 13px; position: relative; transition: background 0.3s; flex-shrink: 0; }
         .toggle-switch::after { content: ''; position: absolute; width: 20px; height: 20px; background: white; border-radius: 50%; top: 3px; left: 3px; transition: transform 0.3s; }
-        .incident-toggle input:checked + .toggle-switch { background: var(--warning); }
+        .incident-toggle input:checked + .toggle-switch { background: #fbbf24; }
         .incident-toggle input:checked + .toggle-switch::after { transform: translateX(22px); }
-        
-        .incident-fields { display: none; padding: 16px; background: rgba(255, 170, 0, 0.1); border: 1px solid var(--warning); border-radius: 10px; margin-top: 12px; }
+        .incident-fields { display: none; padding: 16px; background: rgba(251, 191, 36, 0.1); border: 1px solid #fbbf24; border-radius: 10px; margin-top: 12px; }
         .incident-fields.show { display: block; }
-        .incident-fields h4 { color: var(--warning); font-size: 0.9rem; margin-bottom: 12px; }
-        
-        .file-upload { border: 2px dashed var(--border); border-radius: 10px; padding: 16px; text-align: center; cursor: pointer; margin-bottom: 10px; }
-        .file-upload:hover { border-color: var(--accent); }
+        .incident-fields h4 { color: #fbbf24; font-size: 0.9rem; margin-bottom: 12px; }
+        .file-upload { border: 2px dashed #333; border-radius: 10px; padding: 16px; text-align: center; cursor: pointer; margin-bottom: 10px; }
+        .file-upload:hover { border-color: #60a5fa; }
         .file-upload input { display: none; }
-        .file-upload-text { font-size: 0.85rem; color: var(--text-secondary); }
+        .file-upload-text { font-size: 0.85rem; color: #888; }
         .file-preview { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
         .file-preview-item { position: relative; width: 60px; height: 60px; border-radius: 8px; overflow: hidden; }
         .file-preview-item img, .file-preview-item video { width: 100%; height: 100%; object-fit: cover; }
-        .file-preview-item .remove { position: absolute; top: 2px; right: 2px; width: 18px; height: 18px; background: var(--error); border: none; border-radius: 50%; color: white; font-size: 10px; cursor: pointer; }
-        
+        .file-preview-item .remove { position: absolute; top: 2px; right: 2px; width: 18px; height: 18px; background: #ef4444; border: none; border-radius: 50%; color: white; font-size: 10px; cursor: pointer; }
+
         /* Summary */
-        .invoice-summary { background: var(--bg-card); border: 1px solid var(--accent); border-radius: 12px; padding: 16px; margin-top: 20px; }
-        .summary-title { font-size: 0.8rem; color: var(--accent); text-transform: uppercase; margin-bottom: 12px; }
-        .summary-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); }
+        .invoice-summary { background: #242424; border: 1px solid #60a5fa; border-radius: 12px; padding: 16px; margin-top: 20px; }
+        .summary-title { font-size: 0.8rem; color: #60a5fa; text-transform: uppercase; margin-bottom: 12px; }
+        .summary-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #333; }
         .summary-row:last-child { border-bottom: none; font-weight: 600; }
-        .summary-label { color: var(--text-secondary); }
-        .summary-value { font-family: 'Space Mono', monospace; }
-        
-        .submit-invoice { position: fixed; bottom: 20px; left: 20px; right: 20px; padding: 16px; background: var(--accent); color: var(--bg-dark); border: none; border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 1rem; font-weight: 600; cursor: pointer; z-index: 100; }
+        .summary-label { color: #888; }
+        .summary-value { font-weight: 600; }
+
+        .submit-invoice { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: calc(100% - 40px); max-width: 660px; padding: 16px; background: #60a5fa; color: #1a1a1a; border: none; border-radius: 10px; font-family: 'Inter', sans-serif; font-size: 1rem; font-weight: 600; cursor: pointer; z-index: 100; }
+        .submit-invoice:hover { background: #3b82f6; }
         .submit-invoice:disabled { opacity: 0.6; cursor: not-allowed; }
-        
-        /* History Styles */
-        .history-invoice { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 16px; overflow: hidden; }
-        .history-header { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; }
+
+        /* History */
+        .history-invoice { background: #242424; border: 1px solid #333; border-radius: 12px; margin-bottom: 16px; overflow: hidden; }
+        .history-header { padding: 14px 16px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; }
         .history-date { font-weight: 600; }
-        .history-worker { font-size: 0.85rem; color: var(--text-secondary); }
+        .history-worker { font-size: 0.85rem; color: #888; }
         .history-units { padding: 12px 16px; }
-        .history-unit { display: flex; justify-content: space-between; padding: 10px; background: var(--bg-input); border-radius: 8px; margin-bottom: 8px; }
+        .history-unit { display: flex; justify-content: space-between; padding: 10px; background: #1e1e1e; border-radius: 8px; margin-bottom: 8px; }
         .history-unit:last-child { margin-bottom: 0; }
-        .history-unit-number { font-family: 'Space Mono', monospace; color: var(--accent); font-weight: 600; }
-        .history-unit-details { font-size: 0.85rem; color: var(--text-secondary); text-align: right; }
-        .history-totals { padding: 12px 16px; background: var(--bg-input); border-top: 1px solid var(--border); display: flex; justify-content: space-around; }
+        .history-unit-number { font-weight: 600; color: #60a5fa; }
+        .history-unit-details { font-size: 0.85rem; color: #888; text-align: right; }
+        .history-totals { padding: 12px 16px; background: #1e1e1e; border-top: 1px solid #333; display: flex; justify-content: space-around; }
         .history-total { text-align: center; }
-        .history-total-value { font-family: 'Space Mono', monospace; font-size: 1.1rem; color: var(--accent); }
-        .history-total-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; }
-        .history-incident { margin: 12px 16px; padding: 12px; background: rgba(255,170,0,0.1); border: 1px solid var(--warning); border-radius: 8px; }
-        .history-incident-title { color: var(--warning); font-weight: 600; font-size: 0.85rem; margin-bottom: 6px; }
-        .history-incident-desc { font-size: 0.85rem; color: var(--text-secondary); }
+        .history-total-value { font-size: 1.1rem; font-weight: 700; color: #60a5fa; }
+        .history-total-label { font-size: 0.7rem; color: #666; text-transform: uppercase; }
+        .history-incident { margin: 12px 16px; padding: 12px; background: rgba(251,191,36,0.1); border: 1px solid #fbbf24; border-radius: 8px; }
+        .history-incident-title { color: #fbbf24; font-weight: 600; font-size: 0.85rem; margin-bottom: 6px; }
+        .history-incident-desc { font-size: 0.85rem; color: #888; }
         .history-incident-media { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
         .history-incident-media img, .history-incident-media video { width: 70px; height: 70px; object-fit: cover; border-radius: 6px; cursor: pointer; }
+
+        /* Toast */
+        .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); padding: 12px 24px; border-radius: 10px; font-size: 0.85rem; font-weight: 500; z-index: 2000; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+        .toast.show { opacity: 1; }
+        .toast.success { background: #22c55e; color: #fff; }
+        .toast.error { background: #ef4444; color: #fff; }
     </style>
 </head>
 <body>
-    <header class="header">
-        <div class="header-top">
-            <a href="index.html" class="logo">FLEETCONNECT</a>
-            <button class="logout-btn" onclick="logout()">Logout</button>
-        </div>
-        <div class="welcome" id="welcome">Welcome!</div>
-    </header>
-    
-    <div class="stats">
-        <div class="stat"><div class="stat-value" id="statActive">-</div><div class="stat-label">Active Jobs</div></div>
-        <div class="stat"><div class="stat-value" id="statInvoices">-</div><div class="stat-label">Invoices Today</div></div>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar-header"><span class="sidebar-logo">FleetConnect</span></div>
+            <nav id="sidebarNav"></nav>
+            <div class="sidebar-footer">
+                <div class="user-menu">
+                    <div class="user-avatar" id="userAvatar">?</div>
+                    <div class="user-info"><div class="user-name" id="userName">User</div><div class="user-role">Field Worker</div></div>
+                    <button class="logout-btn" onclick="logout()" title="Logout"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg></button>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main">
+            <header class="header">
+                <div class="header-left">
+                    <button class="mobile-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')"><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+                    <div>
+                        <h1 id="headerGreeting">My Jobs</h1>
+                        <p class="header-subtitle">Manage your assigned work orders</p>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content">
+                <!-- Stats -->
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="stat-label"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>Active Jobs</div>
+                        <div class="stat-value" id="statActive" style="color:#22c55e;">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Invoices Today</div>
+                        <div class="stat-value" id="statInvoices" style="color:#60a5fa;">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Completed</div>
+                        <div class="stat-value" id="statCompleted" style="color:#fbbf24;">-</div>
+                    </div>
+                </div>
+
+                <!-- Tabs -->
+                <div class="tabs">
+                    <button class="tab active" data-tab="active">Active Jobs</button>
+                    <button class="tab" data-tab="completed">Completed</button>
+                </div>
+
+                <!-- Jobs List -->
+                <div id="jobsList">
+                    <div class="empty">Loading...</div>
+                </div>
+            </div>
+        </main>
     </div>
-    
-    <div class="tabs">
-        <button class="tab active" data-tab="active">Active Jobs</button>
-        <button class="tab" data-tab="completed">Completed</button>
-    </div>
-    
-    <div class="content" id="content">
-        <div class="empty">Loading...</div>
-    </div>
-    
+
+    <div class="toast" id="toast"></div>
+
     <script src="supabase-client.js"></script>
     <script>
         const currentUser = checkAuth(['fieldworker']);
-        if (currentUser) {
-            const hour = new Date().getHours();
-            const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
-            document.getElementById('welcome').textContent = `${greeting}, ${currentUser.name.split(' ')[0]}!`;
-        }
-        
+        if (!currentUser) throw new Error('Not authenticated');
+
+        // Setup user info
+        document.getElementById('userName').textContent = currentUser.name;
+        document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+        const hour = new Date().getHours();
+        const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+        document.getElementById('headerGreeting').textContent = `${greeting}, ${currentUser.name.split(' ')[0]}!`;
+
+        // Sidebar nav
+        document.getElementById('sidebarNav').innerHTML = `
+            <div class="nav-section"><div class="nav-section-title">Main Menu</div>
+                <a class="nav-item active" href="field-worker.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>My Jobs</a>
+                <a class="nav-item" href="work-orders.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>Work Orders</a>
+            </div>`;
+
         let allJobs = [];
         let allEquipment = [];
         let allInvoices = [];
@@ -182,57 +269,71 @@
         let selectedPhotos = [];
         let selectedVideos = [];
         let activeUnits = {};
-        
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast show ${type}`;
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
         async function loadData() {
+            // Only load jobs assigned to this worker — no fallback to all jobs
             allJobs = await getJobsByWorker(currentUser.id);
-            if (allJobs.length === 0) {
-                allJobs = await getAllJobs();
-            }
             allEquipment = await getAllEquipment();
-            allInvoices = await getAllInvoices();
+            allInvoices = await getAllWorkerInvoices();
             updateStats();
             renderJobs();
         }
-        
+
         async function getAllEquipment() {
             const { data } = await db.from('equipment').select('*');
             return data || [];
         }
-        
-        async function getAllInvoices() {
-            const { data } = await db.from('invoices').select('*').order('created_at', { ascending: false });
+
+        async function getAllWorkerInvoices() {
+            // Only get invoices created by this worker
+            const { data } = await db.from('invoices').select('*')
+                .eq('worker_id', currentUser.id)
+                .order('created_at', { ascending: false });
             return data || [];
         }
-        
+
         function updateStats() {
             const activeJobs = allJobs.filter(j => ['assigned','accepted','in-progress'].includes(j.status));
+            const completedJobs = allJobs.filter(j => j.status === 'completed');
             document.getElementById('statActive').textContent = activeJobs.length;
-            
+            document.getElementById('statCompleted').textContent = completedJobs.length;
+
+            // Only count invoices actually created today
             const today = new Date().toDateString();
             const todayInvoices = allInvoices.filter(inv => new Date(inv.created_at).toDateString() === today);
             document.getElementById('statInvoices').textContent = todayInvoices.length;
         }
-        
+
         function getEquipmentForJob(jobId) {
             return allEquipment.filter(e => e.job_id === jobId);
         }
-        
+
         function getInvoicesForJob(jobId) {
             return allInvoices.filter(inv => inv.job_id === jobId);
         }
-        
+
         function renderJobs() {
-            const filtered = currentTab === 'active' 
+            const filtered = currentTab === 'active'
                 ? allJobs.filter(j => ['assigned','accepted','in-progress'].includes(j.status))
                 : allJobs.filter(j => j.status === 'completed');
-            
-            const container = document.getElementById('content');
-            
+
+            const container = document.getElementById('jobsList');
+
             if (!filtered.length) {
-                container.innerHTML = `<div class="empty">No ${currentTab} jobs</div>`;
+                container.innerHTML = `<div class="empty">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                    <p>No ${currentTab} jobs${currentTab === 'active' ? ' assigned to you' : ''}</p>
+                </div>`;
                 return;
             }
-            
+
             container.innerHTML = filtered.map(job => {
                 const equipment = getEquipmentForJob(job.id);
                 const invoices = getInvoicesForJob(job.id);
@@ -267,19 +368,19 @@
                 `;
             }).join('');
         }
-        
+
         function openInvoiceModal(jobId) {
             const job = allJobs.find(j => j.id === jobId);
             const equipment = getEquipmentForJob(jobId);
-            
+
             selectedPhotos = [];
             selectedVideos = [];
             activeUnits = {};
-            
+
             const now = new Date();
             const dateStr = now.toISOString().split('T')[0];
             const timeStr = now.toTimeString().slice(0, 5);
-            
+
             const modal = document.createElement('div');
             modal.className = 'modal';
             modal.id = 'invoiceModal';
@@ -289,15 +390,15 @@
                         <h2>Create Invoice</h2>
                         <button class="modal-close" onclick="closeInvoiceModal()">×</button>
                     </div>
-                    
+
                     <div class="job-site-info">
                         <div class="job-site-name">${job.job_site_name}</div>
                         <div class="job-site-address">${job.address_street || ''} ${job.address_city || ''}, ${job.address_state || ''}</div>
                     </div>
-                    
+
                     <div class="section-title">Select Units Serviced</div>
-                    <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:16px;">Tap each unit you fueled and enter the details</p>
-                    
+                    <p style="font-size:0.85rem;color:#888;margin-bottom:16px;">Tap each unit you fueled and enter the details</p>
+
                     <div id="unitsList">
                         ${equipment.length > 0 ? equipment.map(eq => `
                             <div class="unit-card" id="unit-${eq.id}" onclick="toggleUnit('${eq.id}')">
@@ -332,12 +433,12 @@
                                 </div>
                             </div>
                         `).join('') : `
-                            <div style="padding:30px;text-align:center;color:var(--text-muted);background:var(--bg-card);border-radius:12px;">
+                            <div style="padding:30px;text-align:center;color:#666;background:#242424;border-radius:12px;">
                                 No equipment added to this job.<br>Contact your vendor to add units.
                             </div>
                         `}
                     </div>
-                    
+
                     <div class="invoice-details">
                         <div class="section-title" style="margin-top:0;">Invoice Details</div>
                         <div class="detail-row">
@@ -358,13 +459,13 @@
                             <label>Notes (optional)</label>
                             <textarea id="invoiceNotes" placeholder="Gate codes, issues, etc..."></textarea>
                         </div>
-                        
+
                         <label class="incident-toggle" onclick="toggleIncident()">
                             <input type="checkbox" id="hasIncident">
                             <div class="toggle-switch"></div>
                             <span style="font-size:0.9rem;">Report an incident</span>
                         </label>
-                        
+
                         <div class="incident-fields" id="incidentFields">
                             <h4>⚠️ Incident Details</h4>
                             <div class="detail-group">
@@ -389,7 +490,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="invoice-summary" id="invoiceSummary">
                         <div class="summary-title">Invoice Summary</div>
                         <div class="summary-row">
@@ -405,7 +506,7 @@
                             <span class="summary-value" id="summaryDef">0 gal</span>
                         </div>
                     </div>
-                    
+
                     <button class="submit-invoice" id="submitBtn" onclick="submitInvoice('${jobId}')">
                         Create Invoice
                     </button>
@@ -414,7 +515,7 @@
             document.body.appendChild(modal);
             document.body.style.overflow = 'hidden';
         }
-        
+
         function closeInvoiceModal() {
             document.getElementById('invoiceModal')?.remove();
             document.body.style.overflow = '';
@@ -422,11 +523,10 @@
             selectedVideos = [];
             activeUnits = {};
         }
-        
+
         function toggleUnit(unitId) {
             const card = document.getElementById(`unit-${unitId}`);
             const isActive = card.classList.contains('active');
-            
             if (isActive) {
                 card.classList.remove('active');
                 delete activeUnits[unitId];
@@ -434,56 +534,40 @@
                 card.classList.add('active');
                 activeUnits[unitId] = true;
             }
-            
             updateSummary();
         }
-        
+
         function updateSummary() {
-            let totalDiesel = 0;
-            let totalDef = 0;
-            let unitCount = 0;
-            
+            let totalDiesel = 0, totalDef = 0, unitCount = 0;
             Object.keys(activeUnits).forEach(unitId => {
-                const diesel = parseFloat(document.getElementById(`diesel-${unitId}`)?.value) || 0;
-                const def = parseFloat(document.getElementById(`def-${unitId}`)?.value) || 0;
-                totalDiesel += diesel;
-                totalDef += def;
+                totalDiesel += parseFloat(document.getElementById(`diesel-${unitId}`)?.value) || 0;
+                totalDef += parseFloat(document.getElementById(`def-${unitId}`)?.value) || 0;
                 unitCount++;
             });
-            
             document.getElementById('summaryUnits').textContent = unitCount;
             document.getElementById('summaryDiesel').textContent = `${totalDiesel.toFixed(1)} gal`;
             document.getElementById('summaryDef').textContent = `${totalDef.toFixed(1)} gal`;
         }
-        
-        // Update summary when inputs change
+
         document.addEventListener('input', function(e) {
-            if (e.target.id?.startsWith('diesel-') || e.target.id?.startsWith('def-')) {
-                updateSummary();
-            }
+            if (e.target.id?.startsWith('diesel-') || e.target.id?.startsWith('def-')) updateSummary();
         });
-        
+
         function toggleIncident() {
             const checkbox = document.getElementById('hasIncident');
             const fields = document.getElementById('incidentFields');
             checkbox.checked = !checkbox.checked;
             fields.classList.toggle('show', checkbox.checked);
         }
-        
+
         function handlePhotos(event) {
-            Array.from(event.target.files).forEach(file => {
-                if (file.type.startsWith('image/')) selectedPhotos.push(file);
-            });
+            Array.from(event.target.files).forEach(file => { if (file.type.startsWith('image/')) selectedPhotos.push(file); });
             renderPhotoPreview();
         }
-        
         function handleVideos(event) {
-            Array.from(event.target.files).forEach(file => {
-                if (file.type.startsWith('video/')) selectedVideos.push(file);
-            });
+            Array.from(event.target.files).forEach(file => { if (file.type.startsWith('video/')) selectedVideos.push(file); });
             renderVideoPreview();
         }
-        
         function renderPhotoPreview() {
             document.getElementById('photoPreview').innerHTML = selectedPhotos.map((file, i) => `
                 <div class="file-preview-item">
@@ -492,7 +576,6 @@
                 </div>
             `).join('');
         }
-        
         function renderVideoPreview() {
             document.getElementById('videoPreview').innerHTML = selectedVideos.map((file, i) => `
                 <div class="file-preview-item">
@@ -501,7 +584,7 @@
                 </div>
             `).join('');
         }
-        
+
         async function uploadFile(file, folder) {
             const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}_${file.name}`;
             const filePath = `${folder}/${fileName}`;
@@ -510,50 +593,33 @@
             const { data } = db.storage.from('incidents').getPublicUrl(filePath);
             return data.publicUrl;
         }
-        
+
         async function submitInvoice(jobId) {
             const unitIds = Object.keys(activeUnits);
-            if (unitIds.length === 0) {
-                alert('Please select at least one unit');
-                return;
-            }
-            
-            // Validate all active units have data
+            if (unitIds.length === 0) { showToast('Please select at least one unit', 'error'); return; }
+
             for (const unitId of unitIds) {
                 const hours = document.getElementById(`hours-${unitId}`).value;
                 const diesel = document.getElementById(`diesel-${unitId}`).value;
                 const def = document.getElementById(`def-${unitId}`).value;
-                
-                if (!hours || !diesel || !def) {
-                    alert('Please fill in hours, diesel, and DEF for all selected units');
-                    return;
-                }
+                if (!hours || !diesel || !def) { showToast('Fill in hours, diesel, and DEF for all selected units', 'error'); return; }
             }
-            
+
             const btn = document.getElementById('submitBtn');
             btn.disabled = true;
             btn.textContent = 'Creating...';
-            
-            // Upload incident files
-            let uploadedPhotos = [];
-            let uploadedVideos = [];
+
+            let uploadedPhotos = [], uploadedVideos = [];
             const hasIncident = document.getElementById('hasIncident').checked;
-            
+
             if (hasIncident) {
                 btn.textContent = 'Uploading files...';
-                for (const photo of selectedPhotos) {
-                    const url = await uploadFile(photo, 'photos');
-                    if (url) uploadedPhotos.push(url);
-                }
-                for (const video of selectedVideos) {
-                    const url = await uploadFile(video, 'videos');
-                    if (url) uploadedVideos.push(url);
-                }
+                for (const photo of selectedPhotos) { const url = await uploadFile(photo, 'photos'); if (url) uploadedPhotos.push(url); }
+                for (const video of selectedVideos) { const url = await uploadFile(video, 'videos'); if (url) uploadedVideos.push(url); }
             }
-            
+
             btn.textContent = 'Saving...';
-            
-            // Build units data
+
             const equipment = getEquipmentForJob(jobId);
             const unitsData = unitIds.map(unitId => {
                 const eq = equipment.find(e => e.id === unitId);
@@ -566,17 +632,12 @@
                     def_gallons: parseFloat(document.getElementById(`def-${unitId}`).value)
                 };
             });
-            
-            // Calculate totals
+
             const totalDiesel = unitsData.reduce((sum, u) => sum + u.diesel_gallons, 0);
             const totalDef = unitsData.reduce((sum, u) => sum + u.def_gallons, 0);
-            
-            // Build timestamp
             const date = document.getElementById('invoiceDate').value;
             const time = document.getElementById('invoiceTime').value;
-            const timestamp = new Date(`${date}T${time}`).toISOString();
-            
-            // Create invoice
+
             const { data, error } = await db.from('invoices').insert([{
                 job_id: jobId,
                 worker_id: currentUser.id,
@@ -592,24 +653,24 @@
                 incident_photos: uploadedPhotos,
                 incident_videos: uploadedVideos
             }]).select().single();
-            
+
             if (error) {
                 console.error('Error:', error);
-                alert('Error creating invoice: ' + error.message);
+                showToast('Error creating invoice: ' + error.message, 'error');
                 btn.disabled = false;
                 btn.textContent = 'Create Invoice';
                 return;
             }
-            
+
             closeInvoiceModal();
-            alert('Invoice created successfully!');
+            showToast('Invoice created successfully!');
             loadData();
         }
-        
+
         function viewHistory(jobId) {
             const job = allJobs.find(j => j.id === jobId);
             const invoices = getInvoicesForJob(jobId);
-            
+
             const modal = document.createElement('div');
             modal.className = 'modal';
             modal.innerHTML = `
@@ -618,12 +679,12 @@
                         <h2>Invoice History</h2>
                         <button class="modal-close" onclick="this.closest('.modal').remove();document.body.style.overflow='';">×</button>
                     </div>
-                    
+
                     <div class="job-site-info">
                         <div class="job-site-name">${job.job_site_name}</div>
                         <div class="job-site-address">${job.address_city || ''}, ${job.address_state || ''}</div>
                     </div>
-                    
+
                     <div style="padding:0 0 100px 0;">
                         ${invoices.length ? invoices.map(inv => {
                             const units = inv.units_data || [];
@@ -640,7 +701,7 @@
                                             <div class="history-unit">
                                                 <div>
                                                     <div class="history-unit-number">${u.unit_number}</div>
-                                                    <div style="font-size:0.8rem;color:var(--text-muted);">${u.unit_description || ''}</div>
+                                                    <div style="font-size:0.8rem;color:#666;">${u.unit_description || ''}</div>
                                                 </div>
                                                 <div class="history-unit-details">
                                                     <div>⏱ ${u.unit_hours} hrs</div>
@@ -650,34 +711,17 @@
                                         `).join('')}
                                     </div>
                                     <div class="history-totals">
-                                        <div class="history-total">
-                                            <div class="history-total-value">${inv.total_diesel}</div>
-                                            <div class="history-total-label">Total Diesel</div>
-                                        </div>
-                                        <div class="history-total">
-                                            <div class="history-total-value">${inv.total_def}</div>
-                                            <div class="history-total-label">Total DEF</div>
-                                        </div>
-                                        <div class="history-total">
-                                            <div class="history-total-value">${units.length}</div>
-                                            <div class="history-total-label">Units</div>
-                                        </div>
+                                        <div class="history-total"><div class="history-total-value">${inv.total_diesel}</div><div class="history-total-label">Total Diesel</div></div>
+                                        <div class="history-total"><div class="history-total-value">${inv.total_def}</div><div class="history-total-label">Total DEF</div></div>
+                                        <div class="history-total"><div class="history-total-value">${units.length}</div><div class="history-total-label">Units</div></div>
                                     </div>
-                                    ${inv.notes ? `<div style="padding:12px 16px;font-size:0.85rem;color:var(--text-secondary);border-top:1px solid var(--border);">📝 ${inv.notes}</div>` : ''}
+                                    ${inv.notes ? `<div style="padding:12px 16px;font-size:0.85rem;color:#888;border-top:1px solid #333;">📝 ${inv.notes}</div>` : ''}
                                     ${inv.has_incident ? `
                                         <div class="history-incident">
                                             <div class="history-incident-title">⚠️ Incident Reported</div>
                                             <div class="history-incident-desc">${inv.incident_description || ''}</div>
-                                            ${inv.incident_photos?.length ? `
-                                                <div class="history-incident-media">
-                                                    ${inv.incident_photos.map(url => `<img src="${url}" onclick="window.open('${url}','_blank')">`).join('')}
-                                                </div>
-                                            ` : ''}
-                                            ${inv.incident_videos?.length ? `
-                                                <div class="history-incident-media">
-                                                    ${inv.incident_videos.map(url => `<video src="${url}" onclick="window.open('${url}','_blank')"></video>`).join('')}
-                                                </div>
-                                            ` : ''}
+                                            ${inv.incident_photos?.length ? `<div class="history-incident-media">${inv.incident_photos.map(url => `<img src="${url}" onclick="window.open('${url}','_blank')">`).join('')}</div>` : ''}
+                                            ${inv.incident_videos?.length ? `<div class="history-incident-media">${inv.incident_videos.map(url => `<video src="${url}" onclick="window.open('${url}','_blank')"></video>`).join('')}</div>` : ''}
                                         </div>
                                     ` : ''}
                                 </div>
@@ -689,7 +733,7 @@
             document.body.appendChild(modal);
             document.body.style.overflow = 'hidden';
         }
-        
+
         // Tab switching
         document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', function() {
             document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
@@ -697,7 +741,7 @@
             currentTab = this.dataset.tab;
             renderJobs();
         }));
-        
+
         loadData();
     </script>
 </body>
