@@ -341,6 +341,7 @@
     <script>
         // ===== AUTH & NAV =====
         const currentUser = checkAuth();
+        const safe = (v) => sanitizeInput(v == null ? '' : String(v));
         if (!currentUser) throw new Error('Not authenticated');
 
         // Set user info
@@ -478,7 +479,7 @@
                     <div class="job-card" onclick="openJob('${job.id}')">
                         <div class="job-top">
                             <div>
-                                <div class="job-title">${job.job_site_name || 'Untitled'}</div>
+                                <div class="job-title">${safe(job.job_site_name || 'Untitled')}</div>
                                 <div class="job-meta">
                                     ${job.contract_number ? 'Contract: <span>' + job.contract_number + '</span>' : ''}
                                     ${job.po_number ? '&nbsp;·&nbsp;PO: <span>' + job.po_number + '</span>' : ''}
@@ -586,7 +587,7 @@
                 ${job.instructions ? `
                     <div class="detail-section">
                         <div class="detail-section-title">Instructions</div>
-                        <div style="padding:12px 14px;background:#2a2a2a;border-radius:8px;font-size:0.9rem;color:#b8b0a8;line-height:1.6;">${job.instructions}</div>
+                        <div style="padding:12px 14px;background:#2a2a2a;border-radius:8px;font-size:0.9rem;color:#b8b0a8;line-height:1.6;">${safe(job.instructions)}</div>
                     </div>
                 ` : ''}
 
@@ -702,7 +703,11 @@
                     // Save it to the user record for future use
                     await db.from('users').update({ vendor_id: vendorId }).eq('id', currentUser.id);
                     currentUser.vendor_id = vendorId;
-                    sessionStorage.setItem('fc_user', JSON.stringify(currentUser));
+                    if (typeof setCurrentUser === 'function') {
+                        setCurrentUser(currentUser);
+                    } else {
+                        sessionStorage.setItem('fc_user', JSON.stringify(currentUser));
+                    }
                 } else {
                     showToast('No vendor profile found. Contact admin to link your account.', 'error');
                     return;
@@ -818,11 +823,11 @@
                 <div class="detail-section">
                     <div class="detail-section-title">Order Information</div>
                     <div class="edit-field-row">
-                        <div class="edit-group"><div class="edit-label">Job Site Name</div><input class="edit-field" id="editJobSite" value="${(job.job_site_name || '').replace(/"/g, '&quot;')}"></div>
-                        <div class="edit-group"><div class="edit-label">Contract #</div><input class="edit-field" id="editContract" value="${(job.contract_number || '').replace(/"/g, '&quot;')}"></div>
+                        <div class="edit-group"><div class="edit-label">Job Site Name</div><input class="edit-field" id="editJobSite" value="${safe(job.job_site_name || '')}"></div>
+                        <div class="edit-group"><div class="edit-label">Contract #</div><input class="edit-field" id="editContract" value="${safe(job.contract_number || '')}"></div>
                     </div>
                     <div class="edit-field-row">
-                        <div class="edit-group"><div class="edit-label">PO #</div><input class="edit-field" id="editPO" value="${(job.po_number || '').replace(/"/g, '&quot;')}"></div>
+                        <div class="edit-group"><div class="edit-label">PO #</div><input class="edit-field" id="editPO" value="${safe(job.po_number || '')}"></div>
                         <div class="edit-group"><div class="edit-label">Job Type</div>
                             <select class="edit-field" id="editJobType">
                                 <option value="fuel-delivery" ${job.job_type==='fuel-delivery'?'selected':''}>Fuel Delivery</option>
@@ -857,20 +862,20 @@
 
                 <div class="detail-section">
                     <div class="detail-section-title">Location & Contact</div>
-                    <div class="edit-group"><div class="edit-label">Street Address</div><input class="edit-field" id="editStreet" value="${(job.address_street || '').replace(/"/g, '&quot;')}"></div>
+                    <div class="edit-group"><div class="edit-label">Street Address</div><input class="edit-field" id="editStreet" value="${safe(job.address_street || '')}"></div>
                     <div class="edit-field-row">
-                        <div class="edit-group"><div class="edit-label">City</div><input class="edit-field" id="editCity" value="${(job.address_city || '').replace(/"/g, '&quot;')}"></div>
-                        <div class="edit-group"><div class="edit-label">State</div><input class="edit-field" id="editState" value="${(job.address_state || '').replace(/"/g, '&quot;')}" maxlength="2" style="text-transform:uppercase;"></div>
+                        <div class="edit-group"><div class="edit-label">City</div><input class="edit-field" id="editCity" value="${safe(job.address_city || '')}"></div>
+                        <div class="edit-group"><div class="edit-label">State</div><input class="edit-field" id="editState" value="${safe(job.address_state || '')}" maxlength="2" style="text-transform:uppercase;"></div>
                     </div>
                     <div class="edit-field-row">
-                        <div class="edit-group"><div class="edit-label">Zip</div><input class="edit-field" id="editZip" value="${(job.address_zip || '').replace(/"/g, '&quot;')}"></div>
-                        <div class="edit-group"><div class="edit-label">Customer</div><input class="edit-field" id="editCustomer" value="${(job.customer_name || '').replace(/"/g, '&quot;')}"></div>
+                        <div class="edit-group"><div class="edit-label">Zip</div><input class="edit-field" id="editZip" value="${safe(job.address_zip || '')}"></div>
+                        <div class="edit-group"><div class="edit-label">Customer</div><input class="edit-field" id="editCustomer" value="${safe(job.customer_name || '')}"></div>
                     </div>
                     <div class="edit-field-row">
-                        <div class="edit-group"><div class="edit-label">Contact Name</div><input class="edit-field" id="editContact" value="${(job.contact_name || '').replace(/"/g, '&quot;')}"></div>
-                        <div class="edit-group"><div class="edit-label">Contact Phone</div><input class="edit-field" id="editPhone" value="${(job.contact_phone || '').replace(/"/g, '&quot;')}"></div>
+                        <div class="edit-group"><div class="edit-label">Contact Name</div><input class="edit-field" id="editContact" value="${safe(job.contact_name || '')}"></div>
+                        <div class="edit-group"><div class="edit-label">Contact Phone</div><input class="edit-field" id="editPhone" value="${safe(job.contact_phone || '')}"></div>
                     </div>
-                    <div class="edit-group"><div class="edit-label">Rental Company</div><input class="edit-field" id="editRentalCo" value="${(job.rental_company || '').replace(/"/g, '&quot;')}"></div>
+                    <div class="edit-group"><div class="edit-label">Rental Company</div><input class="edit-field" id="editRentalCo" value="${safe(job.rental_company || '')}"></div>
                 </div>
 
                 <div class="detail-section">
@@ -887,7 +892,7 @@
 
                 <div class="detail-section">
                     <div class="detail-section-title">Instructions</div>
-                    <textarea class="edit-field" id="editInstructions">${job.instructions || ''}</textarea>
+                    <textarea class="edit-field" id="editInstructions">${safe(job.instructions || '')}</textarea>
                 </div>
             `;
 

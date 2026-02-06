@@ -411,6 +411,7 @@
             document.querySelector('.content').innerHTML = '<div style="padding:40px;text-align:center;color:#dc2626;"><h2>Error: supabase-client.js not found</h2><p>Make sure supabase-client.js is in the same folder as this file.</p></div>';
         } else {
             const currentUser = checkAuth(['vendor']);
+            const safe = (v) => sanitizeInput(v == null ? '' : String(v));
             if (currentUser) {
                 document.getElementById('userName').textContent = currentUser.name;
                 document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
@@ -502,14 +503,14 @@
                 if (job.status === 'completed') {
                     activities.push({
                         type: 'job',
-                        text: 'Job <strong>' + (job.job_site_name || 'Untitled') + '</strong> completed',
+                        text: 'Job <strong>' + safe(job.job_site_name || 'Untitled') + '</strong> completed',
                         time: job.updated_at || job.created_at,
                         isNew: false
                     });
                 } else if (job.assigned_worker) {
                     activities.push({
                         type: 'worker',
-                        text: 'Worker assigned to <strong>' + (job.job_site_name || 'job') + '</strong>',
+                        text: 'Worker assigned to <strong>' + safe(job.job_site_name || 'job') + '</strong>',
                         time: job.updated_at || job.created_at,
                         isNew: false
                     });
@@ -596,7 +597,7 @@
                 const statusHtml = isAvailable
                     ? '<span class="status-badge available" style="background:rgba(249,115,22,0.15);color:#f97316;"><span class="status-dot" style="background:#f97316;"></span>Available</span>'
                     : '<span class="status-badge '+j.status+'"><span class="status-dot"></span>'+j.status+'</span>';
-                return '<tr'+(isAvailable ? ' style="border-left:3px solid #f97316;"' : '')+'><td><div class="job-name">'+(j.job_site_name||'Untitled')+'</div><div class="job-location">'+(j.address_city||'')+', '+(j.address_state||'')+'</div></td><td>'+(j.contract_number||'-')+'</td><td>'+formatDate(j.date_out)+'</td><td>'+statusHtml+'</td><td><div class="actions-cell">'+(isAvailable || ['pending','assigned'].includes(j.status)?'<button class="action-btn primary" onclick="acceptJob(\''+j.id+'\')">Accept</button>':'')+'</div></td></tr>';
+                return '<tr'+(isAvailable ? ' style="border-left:3px solid #f97316;"' : '')+'><td><div class="job-name">'+safe(j.job_site_name||'Untitled')+'</div><div class="job-location">'+safe(j.address_city||'')+', '+safe(j.address_state||'')+'</div></td><td>'+safe(j.contract_number||'-')+'</td><td>'+formatDate(j.date_out)+'</td><td>'+statusHtml+'</td><td><div class="actions-cell">'+(isAvailable || ['pending','assigned'].includes(j.status)?'<button class="action-btn primary" onclick="acceptJob(\''+j.id+'\')">Accept</button>':'')+'</div></td></tr>';
             }).join('') + '</tbody></table>';
             document.getElementById('tableFooter').style.display = filtered.length > 10 ? 'flex' : 'none';
             document.getElementById('paginationInfo').textContent = 'Showing 1-'+Math.min(10,filtered.length)+' of '+filtered.length;
@@ -613,7 +614,11 @@
                     .limit(1);
                 if (found && found.length > 0) {
                     user.vendor_id = found[0].id;
-                    sessionStorage.setItem('fc_user', JSON.stringify(user));
+                    if (typeof setCurrentUser === 'function') {
+                        setCurrentUser(user);
+                    } else {
+                        sessionStorage.setItem('fc_user', JSON.stringify(user));
+                    }
                     vendorId = found[0].id;
                 } else {
                     alert('No vendor profile linked. Contact admin.');

@@ -271,6 +271,7 @@
     <script src="realtime.js"></script>
     <script>
         const currentUser = checkAuth(['fieldworker']);
+        const safe = (v) => sanitizeInput(v == null ? '' : String(v));
         if (!currentUser) throw new Error('Not authenticated');
 
         // Setup user info
@@ -372,7 +373,7 @@
                 return `
                     <div class="job-card ${job.priority === 'urgent' || job.priority === 'emergency' ? 'urgent' : ''}">
                         <div class="job-header">
-                            <div class="job-title">${job.job_site_name || 'Untitled Job'}</div>
+                            <div class="job-title">${safe(job.job_site_name || 'Untitled Job')}</div>
                             <div class="job-meta">${formatJobType(job.job_type)} • ${invoices.length} invoice${invoices.length !== 1 ? 's' : ''}</div>
                         </div>
                         <div class="job-info">
@@ -380,14 +381,14 @@
                                 <span class="job-info-label">Location</span>
                                 <span class="job-info-value">
                                     <a href="https://maps.google.com/?q=${encodeURIComponent((job.address_street||'')+' '+(job.address_city||'')+' '+(job.address_state||''))}" target="_blank">
-                                        ${job.address_city || '-'}, ${job.address_state || '-'}
+                                        ${safe(job.address_city || '-')}, ${safe(job.address_state || '-')}
                                     </a>
                                 </span>
                             </div>
                             <div class="job-info-row">
                                 <span class="job-info-label">Contact</span>
                                 <span class="job-info-value">
-                                    ${job.contact_phone ? `<a href="tel:${job.contact_phone}">${job.contact_name || job.contact_phone}</a>` : job.contact_name || '-'}
+                                    ${job.contact_phone ? `<a href="tel:${job.contact_phone}">${safe(job.contact_name || job.contact_phone)}</a>` : safe(job.contact_name || '-')}
                                 </span>
                             </div>
                         </div>
@@ -424,8 +425,8 @@
                     </div>
 
                     <div class="job-site-info">
-                        <div class="job-site-name">${job.job_site_name}</div>
-                        <div class="job-site-address">${job.address_street || ''} ${job.address_city || ''}, ${job.address_state || ''}</div>
+                        <div class="job-site-name">${safe(job.job_site_name)}</div>
+                        <div class="job-site-address">${safe(job.address_street || '')} ${safe(job.address_city || '')}, ${safe(job.address_state || '')}</div>
                     </div>
 
                     <div class="section-title">Select Units Serviced</div>
@@ -438,8 +439,8 @@
                                     <div class="unit-info">
                                         <div class="unit-checkbox"></div>
                                         <div>
-                                            <div class="unit-number">${eq.equipment_number || 'No #'}</div>
-                                            <div class="unit-desc">${eq.description || 'No description'}</div>
+                                            <div class="unit-number">${safe(eq.equipment_number || 'No #')}</div>
+                                            <div class="unit-desc">${safe(eq.description || 'No description')}</div>
                                         </div>
                                     </div>
                                     <div class="unit-toggle">Tap to add</div>
@@ -813,8 +814,8 @@
                     </div>
 
                     <div class="job-site-info">
-                        <div class="job-site-name">${job.job_site_name}</div>
-                        <div class="job-site-address">${job.address_city || ''}, ${job.address_state || ''}</div>
+                        <div class="job-site-name">${safe(job.job_site_name)}</div>
+                        <div class="job-site-address">${safe(job.address_city || '')}, ${safe(job.address_state || '')}</div>
                     </div>
 
                     <div style="padding:0 0 100px 0;">
@@ -825,15 +826,15 @@
                                     <div class="history-header">
                                         <div>
                                             <div class="history-date">${new Date(inv.invoice_date).toLocaleDateString()}</div>
-                                            <div class="history-worker">By ${inv.worker_name} at ${inv.invoice_time}</div>
+                                            <div class="history-worker">By ${safe(inv.worker_name)} at ${safe(inv.invoice_time)}</div>
                                         </div>
                                     </div>
                                     <div class="history-units">
                                         ${units.map(u => `
                                             <div class="history-unit">
                                                 <div>
-                                                    <div class="history-unit-number">${u.unit_number}</div>
-                                                    <div style="font-size:0.8rem;color:#666;">${u.unit_description || ''}</div>
+                                                    <div class="history-unit-number">${safe(u.unit_number)}</div>
+                                                    <div style="font-size:0.8rem;color:#666;">${safe(u.unit_description || '')}</div>
                                                 </div>
                                                 <div class="history-unit-details">
                                                     <div>⏱ ${u.unit_hours} hrs</div>
@@ -847,11 +848,11 @@
                                         <div class="history-total"><div class="history-total-value">${inv.total_def}</div><div class="history-total-label">Total DEF</div></div>
                                         <div class="history-total"><div class="history-total-value">${units.length}</div><div class="history-total-label">Units</div></div>
                                     </div>
-                                    ${inv.notes ? `<div style="padding:12px 16px;font-size:0.85rem;color:#888;border-top:1px solid #333;">📝 ${inv.notes}</div>` : ''}
+                                    ${inv.notes ? `<div style="padding:12px 16px;font-size:0.85rem;color:#888;border-top:1px solid #333;">📝 ${safe(inv.notes)}</div>` : ''}
                                     ${inv.has_incident ? `
                                         <div class="history-incident">
                                             <div class="history-incident-title">⚠️ Incident Reported</div>
-                                            <div class="history-incident-desc">${inv.incident_description || ''}</div>
+                                            <div class="history-incident-desc">${safe(inv.incident_description || '')}</div>
                                             ${inv.incident_photos?.length ? `<div class="history-incident-media">${inv.incident_photos.map(url => `<img src="${url}" onclick="window.open('${url}','_blank')">`).join('')}</div>` : ''}
                                             ${inv.incident_videos?.length ? `<div class="history-incident-media">${inv.incident_videos.map(url => `<video src="${url}" onclick="window.open('${url}','_blank')"></video>`).join('')}</div>` : ''}
                                         </div>

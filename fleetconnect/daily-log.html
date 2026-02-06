@@ -284,6 +284,7 @@
         document.addEventListener('DOMContentLoaded', async () => {
             if (typeof checkAuth !== 'undefined') {
                 const user = checkAuth(['rental', 'admin', 'vendor']);
+                const safe = (v) => sanitizeInput(v == null ? '' : String(v));
                 if (user) {
                     document.getElementById('userName').textContent = user.name;
                     document.getElementById('userAvatar').textContent = user.name.charAt(0).toUpperCase();
@@ -412,8 +413,8 @@
                     html += `
                         <div class="job-group-card">
                             <div class="job-group-header">
-                                <div class="job-site-name">${job.job_site_name || 'Unnamed Site'}</div>
-                                <div class="job-site-address">${(job.address_street || '') + ' ' + (job.address_city || '')} ${job.address_state || ''}</div>
+                                <div class="job-site-name">${safe(job.job_site_name || 'Unnamed Site')}</div>
+                                <div class="job-site-address">${safe((job.address_street || '') + ' ' + (job.address_city || ''))} ${safe(job.address_state || '')}</div>
                             </div>
                             <div class="job-group-table">
                                 <table>

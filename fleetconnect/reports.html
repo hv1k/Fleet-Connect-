@@ -333,6 +333,7 @@
             document.querySelector('.content').innerHTML = '<div style="padding:40px;text-align:center;color:#dc2626;"><h2>Error: supabase-client.js not found</h2><p>Make sure supabase-client.js is in the same folder as this file.</p></div>';
         } else {
             const currentUser = checkAuth();
+            const safe = (v) => sanitizeInput(v == null ? '' : String(v));
             if (currentUser) {
                 document.getElementById('userName').textContent = currentUser.name;
                 document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
@@ -559,8 +560,8 @@
             container.innerHTML = '<table><thead><tr><th>Site Name</th><th>Location</th><th>Deliveries</th><th>Diesel (gal)</th><th>DEF (gal)</th><th>Last Delivery</th></tr></thead><tbody>' +
                 sites.map(site => `
                     <tr>
-                        <td><span class="job-name">${site.name}</span></td>
-                        <td>${site.location}</td>
+                        <td><span class="job-name">${safe(site.name)}</span></td>
+                        <td>${safe(site.location)}</td>
                         <td>${site.deliveries}</td>
                         <td>${site.diesel.toFixed(1)}</td>
                         <td>${site.def.toFixed(1)}</td>
@@ -600,12 +601,12 @@
                     return `
                         <tr>
                             <td>${formatDate(d.timestamp || d.created_at)} ${new Date(d.timestamp || d.created_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</td>
-                            <td><span class="job-name">${job ? job.job_site_name : 'Unknown'}</span><div class="job-location">${job ? (job.address_city || '') : ''}</div></td>
-                            <td>${d.delivered_by_name || 'Unknown'}</td>
+                            <td><span class="job-name">${safe(job ? job.job_site_name : 'Unknown')}</span><div class="job-location">${safe(job ? (job.address_city || '') : '')}</div></td>
+                            <td>${safe(d.delivered_by_name || 'Unknown')}</td>
                             <td>${parseFloat(d.gallons || 0).toFixed(1)}</td>
                             <td>${parseFloat(d.def_gallons || 0).toFixed(1)}</td>
-                            <td>${d.unit_number || '-'}</td>
-                            <td>${(d.notes || '-').substring(0, 30)}${(d.notes || '').length > 30 ? '...' : ''}</td>
+                            <td>${safe(d.unit_number || '-')}</td>
+                            <td>${safe((d.notes || '-').substring(0, 30))}${(d.notes || '').length > 30 ? '...' : ''}</td>
                         </tr>
                     `;
                 }).join('') + '</tbody></table>';

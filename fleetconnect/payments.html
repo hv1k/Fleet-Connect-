@@ -332,6 +332,7 @@
     <script>
         // Check authentication
         const currentUser = checkAuth(['admin', 'vendor']);
+        const safe = (v) => sanitizeInput(v == null ? '' : String(v));
         if (!currentUser) {
             window.location.href = 'login.html';
         }
@@ -712,11 +713,11 @@
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">Job Site</div>
-                            <div class="detail-value">${job?.job_site_name || '-'}</div>
+                            <div class="detail-value">${safe(job?.job_site_name || '-')}</div>
                         </div>
                         <div class="detail-item">
                             <div class="detail-label">Customer</div>
-                            <div class="detail-value">${job?.rental_company || '-'}</div>
+                            <div class="detail-value">${safe(job?.rental_company || '-')}</div>
                         </div>
                         <div class="detail-item full">
                             <div class="detail-label">Date Created</div>
@@ -768,7 +769,7 @@
                         <div class="detail-section-title">Notes</div>
                         <div class="detail-grid">
                             <div class="detail-item full">
-                                <div class="detail-value">${delivery.notes}</div>
+                            <div class="detail-value">${safe(delivery.notes)}</div>
                             </div>
                         </div>
                     </div>

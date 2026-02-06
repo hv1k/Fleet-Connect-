@@ -221,6 +221,7 @@
         
         let allUsers = [];
         let editingUserId = null;
+        const safe = (v) => sanitizeInput(v == null ? '' : String(v));
         
         async function loadUsers() {
             allUsers = await getAllUsers();
@@ -245,10 +246,10 @@
             
             tbody.innerHTML = allUsers.map(user => `
                 <div class="table-grid row">
-                    <div>${user.name}</div>
-                    <div>${user.email}</div>
-                    <div><span class="role-badge ${user.role}">${user.role}</span></div>
-                    <div>${user.company || '-'}</div>
+                    <div>${safe(user.name)}</div>
+                    <div>${safe(user.email)}</div>
+                    <div><span class="role-badge ${safe(user.role)}">${safe(user.role)}</span></div>
+                    <div>${safe(user.company || '-')}</div>
                     <div>
                         <button class="btn btn-small btn-outline" onclick="editUser('${user.id}')">Edit</button>
                         <button class="btn btn-small btn-danger" onclick="removeUser('${user.id}')">Delete</button>
@@ -272,7 +273,7 @@
             document.getElementById('modalTitle').textContent = 'Edit User';
             document.getElementById('formName').value = user.name;
             document.getElementById('formEmail').value = user.email;
-            document.getElementById('formPassword').value = user.password;
+            document.getElementById('formPassword').value = '';
             document.getElementById('formRole').value = user.role;
             document.getElementById('formCompany').value = user.company || '';
             document.getElementById('userModal').classList.add('show');
@@ -286,10 +287,17 @@
             const userData = {
                 name: document.getElementById('formName').value,
                 email: document.getElementById('formEmail').value,
-                password: document.getElementById('formPassword').value,
                 role: document.getElementById('formRole').value,
                 company: document.getElementById('formCompany').value
             };
+
+            const passwordValue = document.getElementById('formPassword').value;
+            if (passwordValue) {
+                userData.password = passwordValue;
+            } else if (!editingUserId) {
+                alert('Password is required for new users.');
+                return;
+            }
             
             let result;
             if (editingUserId) {

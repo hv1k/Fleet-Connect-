@@ -364,6 +364,7 @@
         document.addEventListener('DOMContentLoaded', async () => {
             if (typeof checkAuth !== 'undefined') {
                 const user = checkAuth(['vendor', 'admin']);
+                const safe = (v) => sanitizeInput(v == null ? '' : String(v));
                 if (user) {
                     document.getElementById('userName').textContent = user.name;
                     document.getElementById('userAvatar').textContent = user.name.charAt(0).toUpperCase();
@@ -458,7 +459,7 @@
                 else invBadge = `<span class="match-badge no-invoice"><span class="match-dot"></span>No Invoice</span>`;
                 const hasDeliveryData = jobDel.length > 0;
                 return `<tr>
-                    <td><div class="job-name">${job.job_site_name || 'Untitled'}</div><div class="job-location">${[job.address_street, job.address_city, job.address_state].filter(Boolean).join(', ')}</div></td>
+                    <td><div class="job-name">${safe(job.job_site_name || 'Untitled')}</div><div class="job-location">${safe([job.address_street, job.address_city, job.address_state].filter(Boolean).join(', '))}</div></td>
                     <td>${job.customer_name || '—'}</td>
                     <td>${job.completed_at ? new Date(job.completed_at).toLocaleDateString() : (job.date_out ? new Date(job.date_out).toLocaleDateString() : '—')}</td>
                     ${hasDeliveryData ? `
@@ -502,7 +503,7 @@
                         <td><div class="invoice-customer">${inv.ship_to_name || inv.customer_name || 'Unknown'}</div><div class="invoice-address">${[inv.ship_to_address, inv.ship_to_city, inv.ship_to_state].filter(Boolean).join(', ')}</div></td>
                         <td><div class="invoice-amount">$${(inv.total_amount || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</div><div class="invoice-gallons">${inv.total_gallons ? inv.total_gallons + ' gal' : ''}</div></td>
                         <td><span class="match-badge ${sc}"><span class="match-dot"></span>${st}</span>${inv.match_confidence ? `<span class="confidence-badge ${inv.match_confidence}">${inv.match_confidence}</span>` : ''}</td>
-                        <td>${mj ? `<span style="color:#60a5fa;">${mj.job_site_name || 'Job'}</span>` : '<span style="color:#666;">—</span>'}</td>
+                        <td>${mj ? `<span style="color:#60a5fa;">${safe(mj.job_site_name || 'Job')}</span>` : '<span style="color:#666;">—</span>'}</td>
                         <td class="actions-cell" onclick="event.stopPropagation()"><button class="action-btn secondary" onclick="viewInvoice('${inv.id}')">View</button>${inv.match_status !== 'matched' ? `<button class="action-btn primary" onclick="matchInvoice('${inv.id}')">Match</button>` : ''}</td>
                     </tr>`;
                 }).join('');
@@ -522,7 +523,7 @@
                     <div class="detail-section"><div class="detail-section-title">Fuel Details</div><div class="detail-row"><span class="detail-label">Fuel Type</span><span class="detail-value">${inv.fuel_type||'-'}</span></div><div class="detail-row"><span class="detail-label">Diesel</span><span class="detail-value">${inv.diesel_gallons?inv.diesel_gallons+' gal':'-'}</span></div><div class="detail-row"><span class="detail-label">DEF</span><span class="detail-value">${inv.def_gallons?inv.def_gallons+' gal':'-'}</span></div><div class="detail-row"><span class="detail-label">Rate</span><span class="detail-value">${inv.rate?'$'+inv.rate:'-'}</span></div></div>
                     <div class="detail-section"><div class="detail-section-title">Totals</div><div class="detail-row"><span class="detail-label">Subtotal</span><span class="detail-value">$${(inv.subtotal||0).toFixed(2)}</span></div><div class="detail-row"><span class="detail-label">Tax</span><span class="detail-value">$${(inv.tax||0).toFixed(2)}</span></div><div class="detail-row"><span class="detail-label">Delivery Fee</span><span class="detail-value">$${(inv.delivery_fee||0).toFixed(2)}</span></div><div class="detail-row" style="border-top:1px solid #444;padding-top:10px;margin-top:4px;"><span class="detail-label" style="font-weight:600;color:#f5f0e8;">Total</span><span class="detail-value" style="font-size:1.1rem;">$${(inv.total_amount||0).toFixed(2)}</span></div><div class="detail-row"><span class="detail-label">Balance Due</span><span class="detail-value" style="color:${(inv.balance_due||0)>0?'#f87171':'#60a5fa'}">$${(inv.balance_due||0).toFixed(2)}</span></div></div>
                 </div>
-                ${mj?`<div class="match-section"><div class="match-section-title">✅ Matched to Job</div><div class="match-job-card selected"><div class="match-job-name">${mj.job_site_name||'Job'}</div><div class="match-job-detail">${mj.address_street||''}, ${mj.address_city||''} ${mj.address_state||''} · ${mj.customer_name||''} · Status: ${mj.status}</div></div></div>`:''}
+                ${mj?`<div class="match-section"><div class="match-section-title">✅ Matched to Job</div><div class="match-job-card selected"><div class="match-job-name">${safe(mj.job_site_name||'Job')}</div><div class="match-job-detail">${safe(mj.address_street||'')}, ${safe(mj.address_city||'')} ${safe(mj.address_state||'')} · ${safe(mj.customer_name||'')} · Status: ${safe(mj.status)}</div></div></div>`:''}
                 ${inv.pdf_base64?`<div style="margin-top:16px;"><div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;color:#666;margin-bottom:8px;">PDF Preview</div><iframe class="pdf-viewer" src="data:application/pdf;base64,${inv.pdf_base64}"></iframe></div>`:''}`;
             const footer = document.getElementById('modalFooter');
             footer.innerHTML = inv.match_status !== 'matched' ? `<button class="btn btn-secondary" onclick="closeModal()">Close</button><button class="btn btn-primary" onclick="closeModal(); matchInvoice('${inv.id}')">Match to Job</button>` : `<button class="btn btn-secondary" onclick="closeModal()">Close</button>`;
@@ -535,7 +536,7 @@
             document.getElementById('modalTitle').textContent = `Match Invoice ${inv.invoice_number || ''}`;
             document.getElementById('modalBody').innerHTML = `
                 <div style="margin-bottom:16px;"><div style="font-size:0.85rem;color:#888;margin-bottom:4px;">Invoice: <strong style="color:#f5f0e8;">${inv.invoice_number}</strong> · ${inv.ship_to_name||inv.customer_name||'Unknown'}</div><div style="font-size:0.8rem;color:#666;">${inv.ship_to_address||''}, ${inv.ship_to_city||''} ${inv.ship_to_state||''}</div></div>
-                <div class="match-section"><div class="match-section-title">Select a job to match:</div>${available.length===0?'<p style="color:#666;font-size:0.85rem;">No available completed jobs to match.</p>':available.map(j=>`<div class="match-job-card" onclick="selectJobForMatch(this,'${j.id}')"><div class="match-job-name">${j.job_site_name||'Unnamed'}</div><div class="match-job-detail">${j.address_street||''}, ${j.address_city||''} ${j.address_state||''} · ${j.customer_name||''} · Completed ${j.completed_at?new Date(j.completed_at).toLocaleDateString():''}</div></div>`).join('')}</div>`;
+                <div class="match-section"><div class="match-section-title">Select a job to match:</div>${available.length===0?'<p style="color:#666;font-size:0.85rem;">No available completed jobs to match.</p>':available.map(j=>`<div class="match-job-card" onclick="selectJobForMatch(this,'${j.id}')"><div class="match-job-name">${safe(j.job_site_name||'Unnamed')}</div><div class="match-job-detail">${safe(j.address_street||'')}, ${safe(j.address_city||'')} ${safe(j.address_state||'')} · ${safe(j.customer_name||'')} · Completed ${j.completed_at?new Date(j.completed_at).toLocaleDateString():''}</div></div>`).join('')}</div>`;
             document.getElementById('modalFooter').innerHTML = `<button class="btn btn-secondary" onclick="closeModal()">Cancel</button><button class="btn btn-primary" id="confirmMatchBtn" onclick="confirmMatch('${id}')" disabled>Confirm Match</button>`;
             document.getElementById('invoiceModal').classList.add('show');
         }

@@ -475,6 +475,7 @@
             document.querySelector('.content').innerHTML = '<div style="padding:40px;text-align:center;color:#dc2626;"><h2>Error: supabase-client.js not found</h2><p>Make sure supabase-client.js is in the same folder as this file.</p></div>';
         } else {
             const currentUser = checkAuth(['rental']);
+            const safe = (v) => sanitizeInput(v == null ? '' : String(v));
             if (currentUser) {
                 document.getElementById('userName').textContent = currentUser.name;
                 document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
@@ -563,7 +564,7 @@
                 const job = allJobs.find(j => j.id === del.job_id);
                 activities.push({
                     type: 'delivery',
-                    text: '<strong>' + (del.gallons || 0) + ' gal</strong> delivered to <strong>' + (job ? job.job_site_name : 'job') + '</strong>',
+                    text: '<strong>' + (del.gallons || 0) + ' gal</strong> delivered to <strong>' + safe(job ? job.job_site_name : 'job') + '</strong>',
                     time: del.timestamp || del.created_at,
                     isNew: isWithinHours(del.timestamp || del.created_at, 4)
                 });
@@ -574,7 +575,7 @@
                 if (job.status === 'completed') {
                     activities.push({
                         type: 'status',
-                        text: 'Order <strong>' + (job.job_site_name || 'Untitled') + '</strong> completed',
+                        text: 'Order <strong>' + safe(job.job_site_name || 'Untitled') + '</strong> completed',
                         time: job.completed_at || job.updated_at || job.created_at,
                         isNew: false
                     });
@@ -582,14 +583,14 @@
                     const vendorName = getVendorName(job.assigned_vendor);
                     activities.push({
                         type: 'vendor',
-                        text: (vendorName ? '<strong>' + vendorName + '</strong>' : 'Vendor') + ' accepted <strong>' + (job.job_site_name || 'order') + '</strong>',
+                        text: (vendorName ? '<strong>' + safe(vendorName) + '</strong>' : 'Vendor') + ' accepted <strong>' + safe(job.job_site_name || 'order') + '</strong>',
                         time: job.updated_at || job.created_at,
                         isNew: isWithinHours(job.updated_at || job.created_at, 6)
                     });
                 } else if (job.status === 'pending') {
                     activities.push({
                         type: 'order',
-                        text: 'Order <strong>' + (job.job_site_name || 'Untitled') + '</strong> created',
+                        text: 'Order <strong>' + safe(job.job_site_name || 'Untitled') + '</strong> created',
                         time: job.created_at,
                         isNew: isWithinHours(job.created_at, 12)
                     });
@@ -687,8 +688,8 @@
                 filtered.slice(0, 15).map(j => {
                     const vendorName = getVendorName(j.assigned_vendor);
                     return '<tr>' +
-                        '<td><div class="job-name">' + (j.job_site_name||'Untitled') + '</div><div class="job-location">' + (j.address_city||'') + ', ' + (j.address_state||'') + '</div></td>' +
-                        '<td>' + (j.contract_number||'-') + '</td>' +
+                        '<td><div class="job-name">' + safe(j.job_site_name||'Untitled') + '</div><div class="job-location">' + safe(j.address_city||'') + ', ' + safe(j.address_state||'') + '</div></td>' +
+                        '<td>' + safe(j.contract_number||'-') + '</td>' +
                         '<td>' + formatJobType(j.job_type) + '</td>' +
                         '<td>' + formatDate(j.date_out) + '</td>' +
                         '<td>' + (vendorName ? '<div class="vendor-cell"><div class="vendor-avatar">' + vendorName.charAt(0) + '</div><span>' + vendorName + '</span></div>' : '<span class="no-vendor">Unassigned</span>') + '</td>' +

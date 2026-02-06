@@ -738,7 +738,11 @@
                     email: email
                 };
 
-                sessionStorage.setItem('fc_user', JSON.stringify(updatedUser));
+                if (typeof setCurrentUser === 'function') {
+                    setCurrentUser(updatedUser);
+                } else {
+                    sessionStorage.setItem('fc_user', JSON.stringify(updatedUser));
+                }
 
                 document.getElementById('profileSuccess').textContent = 'Profile updated successfully';
                 document.getElementById('profileSuccess').style.display = 'block';

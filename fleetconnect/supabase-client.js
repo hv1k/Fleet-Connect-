@@ -7,17 +7,45 @@ const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ============ AUTH TOKEN MANAGEMENT ============
 
+const REMEMBER_KEY = 'fc_remember';
+
+function isRemembered() {
+    return localStorage.getItem(REMEMBER_KEY) === 'true';
+}
+
+function setRemembered(remember) {
+    localStorage.setItem(REMEMBER_KEY, remember ? 'true' : 'false');
+}
+
 function getAuthToken() {
-    return sessionStorage.getItem('fc_token');
+    return sessionStorage.getItem('fc_token') || localStorage.getItem('fc_token');
 }
 
 function setAuthToken(token) {
-    sessionStorage.setItem('fc_token', token);
+    if (isRemembered()) {
+        localStorage.setItem('fc_token', token);
+        sessionStorage.removeItem('fc_token');
+    } else {
+        sessionStorage.setItem('fc_token', token);
+        localStorage.removeItem('fc_token');
+    }
+}
+
+function setCurrentUser(user) {
+    if (isRemembered()) {
+        localStorage.setItem('fc_user', JSON.stringify(user));
+        sessionStorage.removeItem('fc_user');
+    } else {
+        sessionStorage.setItem('fc_user', JSON.stringify(user));
+        localStorage.removeItem('fc_user');
+    }
 }
 
 function clearAuth() {
     sessionStorage.removeItem('fc_token');
     sessionStorage.removeItem('fc_user');
+    localStorage.removeItem('fc_token');
+    localStorage.removeItem('fc_user');
 }
 
 function isTokenExpired(token) {
@@ -68,9 +96,9 @@ async function loginUser(email, password) {
             return { success: false, error: data.error || 'Invalid email or password' };
         }
 
-        // Store token and user data (no password) in sessionStorage
+        // Store token and user data (no password)
         setAuthToken(data.token);
-        sessionStorage.setItem('fc_user', JSON.stringify(data.user));
+        setCurrentUser(data.user);
 
         return { success: true, user: data.user };
     } catch (err) {
@@ -94,7 +122,7 @@ async function demoLogin(role) {
         }
 
         setAuthToken(data.token);
-        sessionStorage.setItem('fc_user', JSON.stringify(data.user));
+        setCurrentUser(data.user);
 
         return { success: true, user: data.user };
     } catch (err) {
@@ -167,16 +195,26 @@ async function updateUser(userId, userData) {
 }
 
 async function deleteUser(userId) {
-    const { error } = await db
-        .from('users')
-        .delete()
-        .eq('id', userId);
+    const token = getAuthToken();
+    try {
+        const response = await fetch('/api/delete-user', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ userId })
+        });
 
-    if (error) {
-        console.error('Error deleting user:', error);
-        return { success: false, error: error.message };
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+            return { success: false, error: data.error || 'Failed to delete user' };
+        }
+        return { success: true };
+    } catch (err) {
+        console.error('Delete user error:', err);
+        return { success: false, error: 'Network error. Please try again.' };
     }
-    return { success: true };
 }
 
 // ============ VENDOR FUNCTIONS ============
@@ -567,7 +605,7 @@ function getCurrentUser() {
         clearAuth();
         return null;
     }
-    const user = sessionStorage.getItem('fc_user');
+    const user = sessionStorage.getItem('fc_user') || localStorage.getItem('fc_user');
     return user ? JSON.parse(user) : null;
 }
 
