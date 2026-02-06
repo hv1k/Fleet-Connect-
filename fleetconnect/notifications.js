@@ -465,7 +465,7 @@
             try {
                 const { data: deliveries, error: deliveryError } = await db
                     .from('deliveries')
-                    .select('id, gallons, job_id, created_at, jobs(name)')
+                    .select('id, gallons, job_id, created_at, jobs(job_site_name)')
                     .gte('created_at', sevenDaysAgo.toISOString())
                     .order('created_at', { ascending: false })
                     .limit(10);
@@ -474,7 +474,7 @@
                     console.warn('[Notifications] Error loading deliveries:', deliveryError.message);
                 } else if (deliveries && deliveries.length > 0) {
                     deliveries.forEach(delivery => {
-                        const jobName = delivery.jobs?.name || 'Unknown Site';
+                        const jobName = delivery.jobs?.job_site_name || 'Unknown Site';
                         notifications.push({
                             id: `delivery-${delivery.id}`,
                             type: 'delivery',
@@ -493,7 +493,7 @@
             try {
                 const { data: jobs, error: jobError } = await db
                     .from('jobs')
-                    .select('id, name, status, updated_at')
+                    .select('id, job_site_name, status, updated_at')
                     .gte('updated_at', sevenDaysAgo.toISOString())
                     .order('updated_at', { ascending: false })
                     .limit(10);
@@ -508,7 +508,7 @@
                             type: 'status',
                             icon: '📋',
                             title: 'Job Status Changed',
-                            description: `${job.name} - Status: ${statusText}`,
+                            description: `${job.job_site_name || 'Unknown Job'} - Status: ${statusText}`,
                             timestamp: job.updated_at
                         });
                     });
