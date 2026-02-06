@@ -1022,15 +1022,91 @@
         });
 
         // =============================================
-        // FORGOT PASSWORD (placeholder)
+        // FORGOT PASSWORD
         // =============================================
-        document.getElementById('forgotLink').addEventListener('click', (e) => {
+        document.getElementById('forgotLink').addEventListener('click', async (e) => {
             e.preventDefault();
             const email = emailInput.value.trim();
-            if (email) {
-                alert('Password reset instructions would be sent to: ' + email + '\n\n(This feature requires Supabase password reset to be configured.)');
-            } else {
-                alert('Enter your email address first, then click "Forgot password?"');
+
+            if (!email) {
+                showError('Please enter your email address');
+                return;
+            }
+
+            // Validate email format
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showError('Please enter a valid email address');
+                return;
+            }
+
+            // Disable button during request
+            const forgotLink = document.getElementById('forgotLink');
+            const originalText = forgotLink.textContent;
+            forgotLink.disabled = true;
+            forgotLink.style.opacity = '0.5';
+            forgotLink.style.pointerEvents = 'none';
+
+            try {
+                const response = await fetch('/api/request-reset', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Show success message with reset link
+                    const messageDiv = document.createElement('div');
+                    messageDiv.style.cssText = `
+                        position: fixed;
+                        top: 20px;
+                        left: 50%;
+                        transform: translateX(-50%);
+                        background: rgba(0, 212, 170, 0.1);
+                        border: 1px solid rgba(0, 212, 170, 0.25);
+                        border-radius: 8px;
+                        padding: 16px 20px;
+                        color: #00d4aa;
+                        font-size: 14px;
+                        max-width: 90%;
+                        z-index: 10000;
+                        animation: slideDown 0.3s ease-out;
+                    `;
+
+                    let messageHTML = '<strong>Password Reset</strong><br>';
+                    messageHTML += 'If an account exists with that email, a reset link has been generated.<br>';
+
+                    // Show reset link if account exists (temporary until email is configured)
+                    if (data.exists && data.resetUrl) {
+                        messageHTML += `<br><a href="${data.resetUrl}" style="color: #00d4aa; text-decoration: underline;">Click here to reset your password</a>`;
+                    }
+
+                    messageDiv.innerHTML = messageHTML;
+                    document.body.appendChild(messageDiv);
+
+                    setTimeout(() => {
+                        messageDiv.remove();
+                        forgotLink.disabled = false;
+                        forgotLink.style.opacity = '1';
+                        forgotLink.style.pointerEvents = 'auto';
+                        forgotLink.textContent = originalText;
+                    }, 6000);
+                } else {
+                    showError(data.error || 'Failed to process password reset');
+                    forgotLink.disabled = false;
+                    forgotLink.style.opacity = '1';
+                    forgotLink.style.pointerEvents = 'auto';
+                }
+            } catch (err) {
+                console.error('Password reset error:', err);
+                showError('Connection error. Please try again.');
+                forgotLink.disabled = false;
+                forgotLink.style.opacity = '1';
+                forgotLink.style.pointerEvents = 'auto';
             }
         });
 

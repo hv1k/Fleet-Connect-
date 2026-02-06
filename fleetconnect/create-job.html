@@ -333,6 +333,7 @@
     </div>
 
     <script src="supabase-client.js"></script>
+    <script src="notifications.js"></script>
     <script>
         // ===== AUTH & NAV =====
         const currentUser = checkAuth(['admin', 'rental']);
@@ -354,23 +355,27 @@
             admin: [
                 { label: 'Dashboard', href: 'admin-dashboard.html', icon: 'grid' },
                 { label: 'Create Work Order', href: 'create-job.html', icon: 'plus', active: true },
-                { label: 'Work Orders', href: 'work-orders.html', icon: 'clipboard' }
+                { label: 'Work Orders', href: 'work-orders.html', icon: 'clipboard' },
+                { label: 'Settings', href: 'settings.html', icon: 'settings' }
             ],
             rental: [
                 { label: 'Dashboard', href: 'rental-dashboard.html', icon: 'grid' },
                 { label: 'Create Work Order', href: 'create-job.html', icon: 'plus', active: true },
                 { label: 'Work Orders', href: 'work-orders.html', icon: 'clipboard' },
-                { label: 'Invoices', href: 'rental-invoices.html', icon: 'invoice' }
+                { label: 'Invoices', href: 'rental-invoices.html', icon: 'invoice' },
+                { label: 'Settings', href: 'settings.html', icon: 'settings' }
             ],
             vendor: [
                 { label: 'Dashboard', href: 'vendor-dashboard.html', icon: 'grid' },
                 { label: 'Create Work Order', href: 'create-job.html', icon: 'plus', active: true },
                 { label: 'Work Orders', href: 'work-orders.html', icon: 'clipboard' },
-                { label: 'Invoices', href: 'invoices.html', icon: 'invoice' }
+                { label: 'Invoices', href: 'invoices.html', icon: 'invoice' },
+                { label: 'Settings', href: 'settings.html', icon: 'settings' }
             ],
             fieldworker: [
                 { label: 'My Jobs', href: 'field-worker.html', icon: 'grid' },
-                { label: 'Work Orders', href: 'work-orders.html', icon: 'clipboard' }
+                { label: 'Work Orders', href: 'work-orders.html', icon: 'clipboard' },
+                { label: 'Settings', href: 'settings.html', icon: 'settings' }
             ]
         };
         const navItems = navConfig[currentUser.role] || navConfig.admin;

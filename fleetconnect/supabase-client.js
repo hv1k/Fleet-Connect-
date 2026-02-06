@@ -598,3 +598,39 @@ function formatTime(timeStr) {
     const hour12 = hour % 12 || 12;
     return `${hour12}:${m} ${ampm}`;
 }
+
+// ============ AUDIT LOGGING ============
+
+async function logAudit(action, targetType, targetId, details) {
+    const token = getAuthToken();
+    if (!token) return;
+
+    try {
+        await fetch('/api/audit-log', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ action, targetType, targetId, details })
+        });
+    } catch (err) {
+        console.error('Audit log error:', err);
+    }
+}
+
+async function getAuditLogs(limit = 50) {
+    const token = getAuthToken();
+    if (!token) return [];
+
+    try {
+        const response = await fetch(`/api/audit-log?limit=${limit}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        return data.logs || [];
+    } catch (err) {
+        console.error('Error fetching audit logs:', err);
+        return [];
+    }
+}

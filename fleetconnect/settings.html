@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings | FleetConnect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0a0a0a;
+            color: #f5f0e8;
+            min-height: 100vh;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        /* Dark/Light Mode */
+        body.light { background: #f5f0e8; color: #1a1a1a; }
+        body.light .sidebar { background: #ffffff; border-color: #e8e4dc; }
+        body.light .sidebar-logo { color: #3b82f6; }
+        body.light .nav-item { color: #5c5c5c; }
+        body.light .nav-item:hover { background: #f0ebe3; color: #1a1a1a; }
+        body.light .nav-item.active { background: #dbeafe; color: #2563eb; }
+        body.light .nav-section-title { color: #8c8c8c; }
+        body.light .user-menu { background: #f0ebe3; }
+        body.light .user-name { color: #1a1a1a; }
+        body.light .header { background: #ffffff; border-color: #e8e4dc; }
+        body.light .header h1 { color: #1a1a1a; }
+        body.light .header-subtitle { color: #5c5c5c; }
+        body.light .main { background: #f5f0e8; }
+        body.light .content { background: #f5f0e8; }
+        body.light .card { background: #ffffff; border-color: #e8e4dc; }
+        body.light .card-title { color: #1a1a1a; }
+        body.light .card-subtitle { color: #5c5c5c; }
+        body.light input, body.light textarea { background: #f0ebe3; border-color: #e8e4dc; color: #1a1a1a; }
+        body.light input:focus, body.light textarea:focus { border-color: #2563eb; }
+        body.light input::placeholder, body.light textarea::placeholder { color: #8c8c8c; }
+        body.light .form-label { color: #1a1a1a; }
+        body.light .badge { background: #dbeafe; color: #2563eb; }
+        body.light .toggle-switch { background: #e8e4dc; }
+        body.light .toggle-switch.active { background: #2563eb; }
+        body.light .btn-secondary { background: #f0ebe3; color: #1a1a1a; border-color: #e8e4dc; }
+        body.light .btn-secondary:hover { background: #e8e4dc; }
+        body.light .strength-meter { background: #e8e4dc; }
+        body.light .strength-bar { background: #e8e4dc; }
+        body.light .strength-text { color: #5c5c5c; }
+        body.light .error-text { color: #dc2626; }
+        body.light .success-text { color: #059669; }
+        body.light .info-text { color: #5c5c5c; }
+        body.light .sidebar-footer { border-color: #e8e4dc; }
+        body.light .logout-btn:hover { background: #f0ebe3; color: #f87171; }
+
+        .layout { display: flex; min-height: 100vh; }
+
+        /* Sidebar */
+        .sidebar {
+            width: 240px;
+            background: #1a1a1a;
+            border-right: 1px solid #333;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            display: flex;
+            flex-direction: column;
+            z-index: 50;
+        }
+
+        .sidebar-header {
+            padding: 20px 20px 12px;
+        }
+
+        .sidebar-logo {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #60a5fa;
+        }
+
+        nav {
+            flex: 1;
+            padding: 0 12px;
+            overflow-y: auto;
+        }
+
+        .nav-section {
+            margin-bottom: 24px;
+        }
+
+        .nav-section-title {
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #666;
+            padding: 8px 12px;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            color: #b8b0a8;
+            font-size: 0.85rem;
+            text-decoration: none;
+            transition: all 0.15s;
+            cursor: pointer;
+        }
+
+        .nav-item:hover {
+            background: #333;
+            color: #f5f0e8;
+        }
+
+        .nav-item.active {
+            background: rgba(96, 165, 250, 0.15);
+            color: #60a5fa;
+        }
+
+        .nav-item svg {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-footer {
+            padding: 12px;
+            border-top: 1px solid #333;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: #242424;
+            border-radius: 10px;
+        }
+
+        .user-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #60a5fa, #3b82f6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+
+        .user-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .user-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #f5f0e8;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-role {
+            font-size: 0.7rem;
+            color: #888;
+        }
+
+        .logout-btn {
+            background: none;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 6px;
+            flex-shrink: 0;
+            transition: all 0.15s;
+        }
+
+        .logout-btn:hover {
+            background: #333;
+            color: #f87171;
+        }
+
+        /* Main */
+        .main {
+            margin-left: 240px;
+            flex: 1;
+            min-height: 100vh;
+            background: #0a0a0a;
+        }
+
+        .header {
+            padding: 24px 32px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #1a1a1a;
+        }
+
+        .header h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        .header-subtitle {
+            font-size: 0.85rem;
+            color: #888;
+            margin-top: 2px;
+        }
+
+        .content {
+            padding: 32px;
+            background: #0a0a0a;
+        }
+
+        /* Cards */
+        .card {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 14px;
+            padding: 28px;
+            margin-bottom: 24px;
+        }
+
+        .card-title {
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: #f5f0e8;
+            margin-bottom: 8px;
+        }
+
+        .card-subtitle {
+            font-size: 0.85rem;
+            color: #888;
+            margin-bottom: 20px;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #b8b0a8;
+            margin-bottom: 6px;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #333;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-family: inherit;
+            background: #242424;
+            color: #f5f0e8;
+            transition: border-color 0.15s;
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="password"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #00d4aa;
+            box-shadow: 0 0 0 3px rgba(0, 212, 170, 0.1);
+        }
+
+        input[type="text"]::placeholder,
+        input[type="email"]::placeholder,
+        input[type="password"]::placeholder,
+        textarea::placeholder {
+            color: #666;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: capitalize;
+            background: rgba(96, 165, 250, 0.15);
+            color: #60a5fa;
+        }
+
+        .badge.admin { background: rgba(248, 113, 113, 0.15); color: #f87171; }
+        .badge.vendor { background: rgba(99, 102, 241, 0.15); color: #6366f1; }
+        .badge.rental { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+        .badge.fieldworker { background: rgba(168, 85, 247, 0.15); color: #a855f7; }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            border: none;
+            transition: all 0.15s;
+        }
+
+        .btn-primary {
+            background: #00d4aa;
+            color: #0a0a0a;
+        }
+
+        .btn-primary:hover {
+            background: #00b8a3;
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        .btn-secondary {
+            background: #333;
+            color: #f5f0e8;
+            border: 1px solid #444;
+        }
+
+        .btn-secondary:hover {
+            background: #3a3a3a;
+        }
+
+        .btn-danger {
+            background: rgba(248, 113, 113, 0.15);
+            color: #f87171;
+            border: 1px solid rgba(248, 113, 113, 0.3);
+        }
+
+        .btn-danger:hover {
+            background: rgba(248, 113, 113, 0.25);
+        }
+
+        /* Password Strength */
+        .strength-meter {
+            margin-top: 8px;
+            background: #242424;
+            border-radius: 4px;
+            height: 6px;
+            overflow: hidden;
+        }
+
+        .strength-bar {
+            height: 100%;
+            width: 0%;
+            background: #666;
+            transition: width 0.2s, background 0.2s;
+        }
+
+        .strength-bar.weak { background: #f87171; width: 33%; }
+        .strength-bar.medium { background: #fbbf24; width: 66%; }
+        .strength-bar.strong { background: #22c55e; width: 100%; }
+
+        .strength-text {
+            font-size: 0.75rem;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        .strength-text.weak { color: #f87171; }
+        .strength-text.medium { color: #fbbf24; }
+        .strength-text.strong { color: #22c55e; }
+
+        /* Toggle Switch */
+        .toggle-switch {
+            width: 44px;
+            height: 24px;
+            background: #444;
+            border-radius: 12px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.2s;
+            border: none;
+            padding: 0;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            background: #f5f0e8;
+            border-radius: 50%;
+            top: 3px;
+            left: 3px;
+            transition: left 0.2s;
+        }
+
+        .toggle-switch.active {
+            background: #00d4aa;
+        }
+
+        .toggle-switch.active::after {
+            left: 23px;
+        }
+
+        /* Messages */
+        .error-text {
+            font-size: 0.8rem;
+            color: #f87171;
+            margin-top: 4px;
+        }
+
+        .success-text {
+            font-size: 0.8rem;
+            color: #22c55e;
+            margin-top: 4px;
+        }
+
+        .info-text {
+            font-size: 0.8rem;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        /* Section Grid */
+        .settings-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar { width: 200px; }
+            .main { margin-left: 200px; }
+            .content { padding: 24px; }
+            .card { padding: 20px; }
+            .header { padding: 20px 24px; }
+            .header h1 { font-size: 1.2rem; }
+        }
+
+        @media (max-width: 600px) {
+            .sidebar { width: 0; transform: translateX(-100%); }
+            .main { margin-left: 0; }
+        }
+
+        /* Utils */
+        .flex { display: flex; }
+        .items-center { align-items: center; }
+        .gap-12 { gap: 12px; }
+        .gap-16 { gap: 16px; }
+        .mt-8 { margin-top: 8px; }
+        .mt-16 { margin-top: 16px; }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">FleetConnect</div>
+            </div>
+            <nav id="sidebarNav"></nav>
+            <div class="sidebar-footer">
+                <div class="user-menu">
+                    <div class="user-avatar" id="userAvatar">U</div>
+                    <div class="user-info">
+                        <div class="user-name" id="userName">User</div>
+                        <div class="user-role" id="userRole">role</div>
+                    </div>
+                    <button class="logout-btn" id="logoutBtn" title="Sign out">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:18px;height:18px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main -->
+        <div class="main">
+            <div class="header">
+                <div>
+                    <h1>Settings</h1>
+                    <div class="header-subtitle">Manage your account and preferences</div>
+                </div>
+            </div>
+
+            <div class="content">
+                <div class="settings-grid">
+                    <!-- Profile Section -->
+                    <div class="card">
+                        <h2 class="card-title">Profile Information</h2>
+                        <p class="card-subtitle">Update your basic account details</p>
+
+                        <div class="form-group">
+                            <label class="form-label">Name</label>
+                            <input type="text" id="profileName" placeholder="Your full name">
+                            <div class="error-text" id="profileNameError"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Email</label>
+                            <input type="email" id="profileEmail" placeholder="your@email.com">
+                            <div class="error-text" id="profileEmailError"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Company</label>
+                            <input type="text" id="profileCompany" placeholder="Company name" readonly>
+                            <div class="info-text">Company information is managed by administrators</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Role</label>
+                            <div class="flex items-center gap-12" style="margin-top: 6px;">
+                                <span id="profileRole" style="font-size: 0.9rem;"></span>
+                                <span class="badge" id="roleBadge"></span>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-primary mt-16" id="saveProfileBtn">Save Profile</button>
+                        <div class="success-text" id="profileSuccess" style="display: none; margin-top: 12px;"></div>
+                    </div>
+
+                    <!-- Change Password Section -->
+                    <div class="card">
+                        <h2 class="card-title">Change Password</h2>
+                        <p class="card-subtitle">Update your password to keep your account secure</p>
+
+                        <div class="form-group">
+                            <label class="form-label">Current Password</label>
+                            <input type="password" id="currentPassword" placeholder="Enter current password">
+                            <div class="error-text" id="currentPasswordError"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">New Password</label>
+                            <input type="password" id="newPassword" placeholder="Enter new password (min 8 characters)" id="newPasswordInput">
+                            <div class="strength-meter">
+                                <div class="strength-bar" id="strengthBar"></div>
+                            </div>
+                            <div class="strength-text" id="strengthText"></div>
+                            <div class="error-text" id="newPasswordError"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Confirm Password</label>
+                            <input type="password" id="confirmPassword" placeholder="Confirm new password">
+                            <div class="error-text" id="confirmPasswordError"></div>
+                        </div>
+
+                        <button class="btn btn-primary mt-16" id="changePasswordBtn">Change Password</button>
+                        <div class="success-text" id="passwordSuccess" style="display: none; margin-top: 12px;"></div>
+                    </div>
+
+                    <!-- Appearance Section -->
+                    <div class="card">
+                        <h2 class="card-title">Appearance</h2>
+                        <p class="card-subtitle">Customize how FleetConnect looks</p>
+
+                        <div class="form-group">
+                            <div class="flex items-center" style="justify-content: space-between;">
+                                <div>
+                                    <label class="form-label" style="margin-bottom: 0;">Dark Mode</label>
+                                    <p class="info-text">Use a dark theme for reduced eye strain</p>
+                                </div>
+                                <button class="toggle-switch active" id="darkModeToggle"></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Session & Security Section -->
+                    <div class="card">
+                        <h2 class="card-title">Session & Security</h2>
+                        <p class="card-subtitle">Manage your active session and security settings</p>
+
+                        <div class="form-group">
+                            <label class="form-label">Current Session</label>
+                            <p class="info-text">Session expires in <strong id="sessionExpires">-</strong></p>
+                        </div>
+
+                        <div class="form-group mt-8">
+                            <button class="btn btn-danger" id="signOutBtn" style="margin-bottom: 12px;">Sign Out</button>
+                            <div class="info-text">This will end your current session</div>
+                        </div>
+
+                        <div style="padding-top: 16px; border-top: 1px solid #333; margin-top: 20px;">
+                            <p class="info-text">FleetConnect v1.3.0</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="supabase-client.js"></script>
+    <script src="notifications.js"></script>
+    <script>
+        // ===== INITIALIZATION =====
+        const currentUser = checkAuth();
+        if (!currentUser) {
+            window.location.href = 'login.html';
+        }
+
+        // Icon definitions
+        const icons = {
+            grid: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>',
+            clipboard: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>',
+            plus: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>',
+            invoice: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>',
+            settings: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>'
+        };
+
+        // Navigation config per role
+        const navConfig = {
+            admin: [
+                { label: 'Dashboard', href: 'admin-dashboard.html', icon: 'grid' },
+                { label: 'Create Work Order', href: 'create-job.html', icon: 'plus' },
+                { label: 'Work Orders', href: 'work-orders.html', icon: 'clipboard' },
+                { label: 'Settings', href: 'settings.html', icon: 'settings', active: true }
+            ],
+            rental: [
+                { label: 'Dashboard', href: 'rental-dashboard.html', icon: 'grid' },
+                { label: 'Create Work Order', href: 'create-job.html', icon: 'plus' },
+                { label: 'Work Orders', href: 'work-orders.html', icon: 'clipboard' },
+                { label: 'Invoices', href: 'rental-invoices.html', icon: 'invoice' },
+                { label: 'Settings', href: 'settings.html', icon: 'settings', active: true }
+            ],
+            vendor: [
+                { label: 'Dashboard', href: 'vendor-dashboard.html', icon: 'grid' },
+                { label: 'Work Orders', href: 'work-orders.html', icon: 'clipboard' },
+                { label: 'Invoices', href: 'invoices.html', icon: 'invoice' },
+                { label: 'Settings', href: 'settings.html', icon: 'settings', active: true }
+            ],
+            fieldworker: [
+                { label: 'My Jobs', href: 'field-worker.html', icon: 'grid' },
+                { label: 'Work Orders', href: 'work-orders.html', icon: 'clipboard' },
+                { label: 'Settings', href: 'settings.html', icon: 'settings', active: true }
+            ]
+        };
+
+        // Render navigation
+        const navItems = navConfig[currentUser.role] || navConfig.admin;
+        document.getElementById('sidebarNav').innerHTML = `
+            <div class="nav-section">
+                <div class="nav-section-title">Main Menu</div>
+                ${navItems.map(item => `
+                    <a class="nav-item${item.active ? ' active' : ''}" href="${item.href}">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">${icons[item.icon]}</svg>
+                        ${item.label}
+                    </a>
+                `).join('')}
+            </div>
+        `;
+
+        // Update user info in sidebar
+        document.getElementById('userAvatar').textContent = currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U';
+        document.getElementById('userName').textContent = currentUser.name || 'User';
+        document.getElementById('userRole').textContent = currentUser.role || 'User';
+
+        // Load appearance preference
+        const darkMode = localStorage.getItem('fc_darkMode') !== 'false';
+        if (!darkMode) {
+            document.body.classList.add('light');
+            document.getElementById('darkModeToggle').classList.remove('active');
+        }
+
+        // ===== PROFILE FUNCTIONS =====
+        function loadProfile() {
+            document.getElementById('profileName').value = currentUser.name || '';
+            document.getElementById('profileEmail').value = currentUser.email || '';
+            document.getElementById('profileCompany').value = currentUser.company || '';
+            document.getElementById('profileRole').textContent = currentUser.role || '';
+            document.getElementById('roleBadge').textContent = currentUser.role || 'User';
+            document.getElementById('roleBadge').className = `badge ${currentUser.role || 'admin'}`;
+        }
+
+        document.getElementById('saveProfileBtn').addEventListener('click', async () => {
+            const errors = {};
+            const name = document.getElementById('profileName').value.trim();
+            const email = document.getElementById('profileEmail').value.trim();
+
+            if (!name) errors.name = 'Name is required';
+            if (!email) errors.email = 'Email is required';
+            if (email && !validateEmail(email)) errors.email = 'Invalid email format';
+
+            // Clear errors
+            document.getElementById('profileNameError').textContent = '';
+            document.getElementById('profileEmailError').textContent = '';
+            document.getElementById('profileSuccess').style.display = 'none';
+
+            if (Object.keys(errors).length > 0) {
+                if (errors.name) document.getElementById('profileNameError').textContent = errors.name;
+                if (errors.email) document.getElementById('profileEmailError').textContent = errors.email;
+                return;
+            }
+
+            try {
+                document.getElementById('saveProfileBtn').disabled = true;
+                document.getElementById('saveProfileBtn').textContent = 'Saving...';
+
+                // For self-edit, update sessionStorage (note: server-side update would require admin token)
+                // In production, you'd call updateUser() from supabase-client.js
+                const updatedUser = {
+                    ...currentUser,
+                    name: name,
+                    email: email
+                };
+
+                sessionStorage.setItem('fc_user', JSON.stringify(updatedUser));
+
+                document.getElementById('profileSuccess').textContent = 'Profile updated successfully';
+                document.getElementById('profileSuccess').style.display = 'block';
+
+                setTimeout(() => {
+                    document.getElementById('profileSuccess').style.display = 'none';
+                }, 3000);
+            } catch (err) {
+                document.getElementById('profileNameError').textContent = 'Error saving profile. Try again.';
+                console.error('Profile save error:', err);
+            } finally {
+                document.getElementById('saveProfileBtn').disabled = false;
+                document.getElementById('saveProfileBtn').textContent = 'Save Profile';
+            }
+        });
+
+        // ===== PASSWORD FUNCTIONS =====
+        function calculatePasswordStrength(password) {
+            let strength = 0;
+            if (password.length >= 8) strength++;
+            if (password.length >= 12) strength++;
+            if (/[0-9]/.test(password)) strength++;
+            if (/[A-Z]/.test(password)) strength++;
+            if (/[^A-Za-z0-9]/.test(password)) strength++;
+
+            if (strength <= 1) return 'weak';
+            if (strength <= 3) return 'medium';
+            return 'strong';
+        }
+
+        document.getElementById('newPassword').addEventListener('input', (e) => {
+            const password = e.target.value;
+            const strength = calculatePasswordStrength(password);
+            const bar = document.getElementById('strengthBar');
+            const text = document.getElementById('strengthText');
+
+            bar.className = 'strength-bar ' + strength;
+            text.className = 'strength-text ' + strength;
+            text.textContent = strength.charAt(0).toUpperCase() + strength.slice(1) + ' password';
+        });
+
+        document.getElementById('changePasswordBtn').addEventListener('click', async () => {
+            const errors = {};
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (!currentPassword) errors.current = 'Current password is required';
+            if (!newPassword) errors.new = 'New password is required';
+            if (newPassword.length < 8) errors.new = 'Password must be at least 8 characters';
+            if (newPassword !== confirmPassword) errors.confirm = 'Passwords do not match';
+
+            // Clear errors
+            document.getElementById('currentPasswordError').textContent = '';
+            document.getElementById('newPasswordError').textContent = '';
+            document.getElementById('confirmPasswordError').textContent = '';
+            document.getElementById('passwordSuccess').style.display = 'none';
+
+            if (Object.keys(errors).length > 0) {
+                if (errors.current) document.getElementById('currentPasswordError').textContent = errors.current;
+                if (errors.new) document.getElementById('newPasswordError').textContent = errors.new;
+                if (errors.confirm) document.getElementById('confirmPasswordError').textContent = errors.confirm;
+                return;
+            }
+
+            try {
+                document.getElementById('changePasswordBtn').disabled = true;
+                document.getElementById('changePasswordBtn').textContent = 'Changing...';
+
+                const token = getAuthToken();
+                const response = await fetch('/api/change-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        currentPassword,
+                        newPassword
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to change password');
+                }
+
+                document.getElementById('currentPassword').value = '';
+                document.getElementById('newPassword').value = '';
+                document.getElementById('confirmPassword').value = '';
+                document.getElementById('strengthBar').className = 'strength-bar';
+                document.getElementById('strengthText').textContent = '';
+
+                document.getElementById('passwordSuccess').textContent = 'Password changed successfully';
+                document.getElementById('passwordSuccess').style.display = 'block';
+
+                setTimeout(() => {
+                    document.getElementById('passwordSuccess').style.display = 'none';
+                }, 3000);
+            } catch (err) {
+                document.getElementById('currentPasswordError').textContent = err.message || 'Error changing password';
+                console.error('Password change error:', err);
+            } finally {
+                document.getElementById('changePasswordBtn').disabled = false;
+                document.getElementById('changePasswordBtn').textContent = 'Change Password';
+            }
+        });
+
+        // ===== APPEARANCE FUNCTIONS =====
+        document.getElementById('darkModeToggle').addEventListener('click', function() {
+            this.classList.toggle('active');
+            const isDark = this.classList.contains('active');
+            localStorage.setItem('fc_darkMode', isDark ? 'true' : 'false');
+
+            if (isDark) {
+                document.body.classList.remove('light');
+            } else {
+                document.body.classList.add('light');
+            }
+        });
+
+        // ===== SESSION FUNCTIONS =====
+        function updateSessionTime() {
+            const token = getAuthToken();
+            if (token) {
+                try {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    const expiresAt = new Date(payload.exp * 1000);
+                    const now = new Date();
+                    const hoursLeft = Math.max(0, Math.round((expiresAt - now) / (1000 * 60 * 60)));
+                    document.getElementById('sessionExpires').textContent = hoursLeft + ' hour' + (hoursLeft !== 1 ? 's' : '');
+                } catch (err) {
+                    console.error('Error parsing token:', err);
+                }
+            }
+        }
+
+        updateSessionTime();
+        setInterval(updateSessionTime, 60000); // Update every minute
+
+        document.getElementById('logoutBtn').addEventListener('click', logout);
+        document.getElementById('signOutBtn').addEventListener('click', logout);
+
+        function logout() {
+            clearAuth();
+            window.location.href = 'login.html';
+        }
+
+        // ===== LOAD PAGE =====
+        loadProfile();
+    </script>
+</body>
+</html>
