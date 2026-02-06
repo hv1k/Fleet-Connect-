@@ -61,47 +61,90 @@ export default async function handler(req, res) {
                         },
                         {
                             type: 'text',
-                            text: `Analyze this rental/equipment invoice and extract ALL information. Return ONLY a JSON object with these exact fields (use empty string "" if not found):
+                            text: `Analyze this document image. First, determine the document type:
+- If it says "POWER PLUS" or "FIELD WORK TICKET" → it is a Power Plus Field Ticket
+- If it says "SUNBELT RENTALS" or looks like a rental/equipment invoice → it is a Sunbelt Rental Invoice
+- Otherwise → treat as a generic work order document
 
+Return ONLY a JSON object. Use empty string "" for fields not found.
+
+ALWAYS include these base fields:
 {
-  "jobSiteName": "the job site name/project name (look for 'Job Site:' label in top-left box)",
-  "addressStreet": "the JOB SITE street address (NOT the rental company store address)",
-  "addressCity": "the JOB SITE city",
-  "addressState": "the JOB SITE state (2 letter code)",
-  "addressZip": "the JOB SITE zip code",
-  "orderId": "the Order ID number (look for 'ORDER ID #' in the job site box)",
-  "jobNumber": "the Job Number (look for 'Job No.' in the contract box)",
-  "cNumber": "the C# value (look for 'C#:' in the job site box - this is usually a phone number)",
-  "jNumber": "the J# value (look for 'J#:' after C# - this is usually a phone number)",
-  "customerName": "the customer/company name (look for 'Customer:' box - e.g. SOUTHERN CALIFORNIA EDISON)",
-  "customerNumber": "the customer account number (look for number next to 'Customer:' label)",
-  "vendorNumber": "the vendor number (look for 'VENDOR #' in customer box)",
-  "contractNumber": "the contract number (look for 'Contract #.' in top-right box)",
-  "poNumber": "the P.O. number (look for 'P.O. #' in the contract box)",
-  "contactName": "the person who ordered (look for 'Ordered By..' field)",
-  "contactPhone": "the contact phone number (from C# field or job site box)",
-  "rentalCompany": "the rental company name and PC# (e.g. 'SUNBELT RENTALS PC# 1388')",
-  "salesman": "the salesman name and ID (look for 'Salesman:' field)",
-  "dateOut": "the date out in YYYY-MM-DD format (look for 'Date out....' field)",
-  "timeOut": "the time out in HH:MM format 24hr (look for time next to date out)",
-  "estReturn": "the estimated return date in YYYY-MM-DD format (look for 'Est return.' field)",
-  "timeReturn": "the return time in HH:MM format 24hr (look for time next to est return)",
-  "equipment": [
-    {
-      "qty": 1,
-      "unitNumber": "equipment/unit number (the number like 0090030)",
-      "description": "equipment description (like 20KW DIESEL GENERATOR)"
-    }
-  ]
+  "documentType": "powerplus" or "sunbelt" or "other",
+  "jobSiteName": "job/project name",
+  "addressStreet": "job site street address",
+  "addressCity": "city",
+  "addressState": "state (2 letter code)",
+  "addressZip": "zip code",
+  "customerName": "customer/company name",
+  "customerNumber": "customer account number",
+  "contractNumber": "contract number or Contract ID",
+  "poNumber": "P.O. number",
+  "contactName": "contact person name",
+  "contactPhone": "contact phone number",
+  "dateOut": "scheduled/start date in YYYY-MM-DD format",
+  "equipment": [{ "qty": 1, "unitNumber": "unit/equipment number", "description": "description" }]
 }
 
-IMPORTANT NOTES:
-- Extract the JOB SITE/DELIVERY address, NOT the rental company's store address.
-- For Sunbelt Rentals invoices: the job site info is in the top-left box, customer info is in the left-middle box, and contract/schedule info is in the top-right box.
-- The C# and J# fields are usually phone numbers found in the job site box after the address.
-- Equipment is listed with QTY, an equipment number, and a description. Extract ALL equipment items.
-- Convert dates to YYYY-MM-DD format (e.g. 12/30/25 becomes 2025-12-30).
-- Convert times to 24hr HH:MM format (e.g. 7:00 AM becomes 07:00).
+IF documentType is "sunbelt", ALSO include:
+{
+  "orderId": "Order ID number",
+  "jobNumber": "Job Number",
+  "cNumber": "C# value (usually a phone number)",
+  "jNumber": "J# value (usually a phone number)",
+  "vendorNumber": "Vendor # in customer box",
+  "rentalCompany": "rental company name and PC#",
+  "salesman": "salesman name and ID",
+  "timeOut": "time out in HH:MM 24hr format",
+  "estReturn": "estimated return date YYYY-MM-DD",
+  "timeReturn": "return time in HH:MM 24hr format"
+}
+
+IF documentType is "powerplus", ALSO include:
+{
+  "fieldTicketId": "Field Ticket ID number (top of form)",
+  "unitId": "Unit ID (e.g. A0147)",
+  "ticketType": "Ticket Type (e.g. SWAP, SERVICE, DELIVERY)",
+  "area": "Area code (e.g. SAN, LA)",
+  "ticketStatus": "Status (e.g. TENTATIVE, CONFIRMED)",
+  "workPerformed": ["array of checked work types, e.g. Fuel Delivery, Swap, Service, Hour Check, Mechanic Inspection, etc."],
+  "oldGenHour": "Old Gen Hour reading",
+  "newGenId": "New Gen ID",
+  "newGenHour": "New Gen Hour reading",
+  "fuelGallons": "fuel gallons delivered",
+  "defGallons": "DEF gallons delivered",
+  "oil": "oil amount",
+  "fuelFilter": "fuel filter info",
+  "oilFilter": "oil filter info",
+  "racorFilter": "racor filter info",
+  "coolantFilter": "coolant filter info",
+  "airFilterOuter": "air filter outer info",
+  "airFilterInner": "air filter inner info",
+  "otherBillableServices": "other billable services text",
+  "genType": "Generator Type (e.g. 400 KVA GENERATOR)",
+  "tankCapacity": "Tank Capacity number",
+  "lastServiceDate": "Last Service Date in YYYY-MM-DD format",
+  "lastServiceHour": "Last Service Hour reading",
+  "unitDimensions": "Unit dimensions",
+  "unitNotes": "Unit Notes text",
+  "fuelFilterParts": "fuel filter part numbers",
+  "oilFilterParts": "oil filter part numbers",
+  "airFilterParts": "air filter part numbers",
+  "racorFilterParts": "racor filter part numbers",
+  "coolantFilterParts": "coolant filter part numbers",
+  "beltPart": "belt part number",
+  "otherPart": "other part numbers",
+  "mechanicalNotes": "Mechanical Notes text (tires, battery, etc.)",
+  "technicianName": "Technician Name"
+}
+
+IMPORTANT:
+- For Power Plus tickets: Customer is top-left, Job/location is below it, ticket info (type, date, PO, area) is top-right.
+- The Unit ID appears in both the header AND the ticket type box.
+- Work Performed has checkboxes — only include the ones that are checked/marked.
+- Generator Information is in a box near the bottom with Gen Type, Tank Capacity, filter counts and part numbers.
+- Extract ALL part numbers from the generator information section and mechanical notes.
+- Convert dates to YYYY-MM-DD format.
 - Return ONLY the JSON object, no markdown, no explanation.`
                         }
                     ]
