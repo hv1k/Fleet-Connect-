@@ -232,16 +232,23 @@ async function getJobsForCurrentUser() {
         case 'admin':
             return await getAllJobs();
         case 'vendor':
-            // Try vendor_id first, fall back to name match
+            // Get jobs assigned to this vendor
+            let myJobs = [];
             if (user.vendor_id) {
-                return await getJobsByVendor(user.vendor_id);
+                myJobs = await getJobsByVendor(user.vendor_id);
             }
-            // Fall back: get all jobs assigned to vendors matching user's company
-            const allVendorJobs = await getAllJobs();
-            return allVendorJobs.filter(j =>
-                j.assigned_vendor === user.vendor_id ||
-                j.assigned_vendor === user.id
-            );
+            // Also get unassigned jobs (available job pool)
+            const { data: unassignedJobs } = await db
+                .from('jobs')
+                .select('*')
+                .is('assigned_vendor', null)
+                .in('status', ['pending', 'open'])
+                .order('created_at', { ascending: false });
+            // Merge without duplicates
+            const seenIds = new Set(myJobs.map(j => j.id));
+            const merged = [...myJobs];
+            (unassignedJobs || []).forEach(j => { if (!seenIds.has(j.id)) merged.push(j); });
+            return merged;
         case 'rental':
             const allRentalJobs = await getAllJobs();
             return allRentalJobs.filter(j =>

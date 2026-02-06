@@ -509,7 +509,7 @@
                         <div class="detail-item full"><div class="detail-label">Address</div><div class="detail-value">${[job.address_street, job.address_city, job.address_state, job.address_zip].filter(Boolean).join(', ') || '—'}</div></div>
                         <div class="detail-item"><div class="detail-label">Customer</div><div class="detail-value">${job.customer_name || '—'}</div></div>
                         <div class="detail-item"><div class="detail-label">Contact</div><div class="detail-value">${job.contact_name || '—'}${job.contact_phone ? ' · <a href="tel:' + job.contact_phone + '" style="color:#60a5fa;">' + job.contact_phone + '</a>' : ''}</div></div>
-                        <div class="detail-item"><div class="detail-label">Vendor</div><div class="detail-value">${vendorName}</div></div>
+                        <div class="detail-item"><div class="detail-label">Vendor</div><div class="detail-value">${vendorName}${(!job.assigned_vendor && ['admin','rental'].includes(currentUser.role) && job.status !== 'completed') ? ' <button class="btn btn-small" onclick="showAssignVendor(\'' + jobId + '\')" style="margin-left:8px;padding:2px 10px;font-size:0.75rem;background:#60a5fa;color:#fff;border:none;border-radius:6px;cursor:pointer;">Assign</button>' : ''}</div></div>
                         <div class="detail-item"><div class="detail-label">Rental Company</div><div class="detail-value">${job.rental_company || '—'}</div></div>
                     </div>
                 </div>
@@ -732,6 +732,51 @@
             toast.textContent = message;
             toast.className = 'toast ' + type + ' show';
             setTimeout(() => toast.classList.remove('show'), 4000);
+        }
+
+        // ===== ASSIGN VENDOR =====
+        async function showAssignVendor(jobId) {
+            const vendorOptions = allVendors.map(v =>
+                '<option value="' + v.id + '">' + (v.company_name || v.name || v.email) + '</option>'
+            ).join('');
+            closeModal();
+            document.getElementById('modalTitle').textContent = 'Assign Vendor';
+            document.getElementById('modalBody').innerHTML = `
+                <div class="detail-section">
+                    <div class="detail-section-title">Select a vendor for this job</div>
+                    <select id="vendorAssignSelect" style="width:100%;padding:10px 12px;background:#2a2a2a;border:1px solid #444;border-radius:8px;color:#f5f0e8;font-size:0.9rem;margin-top:8px;">
+                        <option value="">— Choose a vendor —</option>
+                        ${vendorOptions}
+                    </select>
+                </div>
+            `;
+            document.getElementById('modalFooter').innerHTML = `
+                <button class="btn btn-primary" onclick="assignVendorToJob('${jobId}')">Assign Vendor</button>
+                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+            `;
+            document.getElementById('jobModal').classList.add('show');
+        }
+
+        async function assignVendorToJob(jobId) {
+            const vendorId = document.getElementById('vendorAssignSelect').value;
+            if (!vendorId) { showToast('Please select a vendor.', 'error'); return; }
+            try {
+                const { error } = await db.from('jobs').update({
+                    assigned_vendor: vendorId,
+                    status: 'assigned'
+                }).eq('id', jobId);
+                if (error) throw error;
+                const job = allJobs.find(j => j.id === jobId);
+                if (job) { job.assigned_vendor = vendorId; job.status = 'assigned'; }
+                closeModal();
+                updateStats();
+                renderJobs();
+                const vendor = allVendors.find(v => v.id === vendorId);
+                showToast('Vendor ' + (vendor?.company_name || vendor?.name || '') + ' assigned!', 'success');
+            } catch (err) {
+                console.error('Assign vendor error:', err);
+                showToast('Failed to assign vendor: ' + err.message, 'error');
+            }
         }
 
         // ===== EDIT JOB =====

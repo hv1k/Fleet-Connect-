@@ -312,6 +312,13 @@
                                 </div>
                             </div>
                             <div class="form-group">
+                                <label>Assign Vendor</label>
+                                <select id="assignVendor">
+                                    <option value="">Unassigned — Available to all vendors</option>
+                                </select>
+                                <p style="color:#666;font-size:0.78rem;margin-top:4px;">Leave unassigned to let any vendor accept this job</p>
+                            </div>
+                            <div class="form-group">
                                 <label>Special Instructions</label>
                                 <textarea id="instructions" placeholder="Gate codes, access instructions, safety notes..."></textarea>
                             </div>
@@ -570,6 +577,22 @@
         }
         addEquipment();
 
+        // ===== LOAD VENDORS FOR DROPDOWN =====
+        (async function loadVendorDropdown() {
+            try {
+                const vendors = await getAllVendors();
+                const sel = document.getElementById('assignVendor');
+                vendors.forEach(v => {
+                    const opt = document.createElement('option');
+                    opt.value = v.id;
+                    opt.textContent = v.company_name || v.name || v.email;
+                    sel.appendChild(opt);
+                });
+            } catch (err) {
+                console.error('Failed to load vendors:', err);
+            }
+        })();
+
         // ===== FORM SUBMIT =====
         document.getElementById('workOrderForm').addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -621,7 +644,8 @@
                 jobType: document.getElementById('jobType').value,
                 priority: document.getElementById('priority').value,
                 instructions: document.getElementById('instructions').value,
-                status: 'pending',
+                assignedVendor: document.getElementById('assignVendor').value || null,
+                status: document.getElementById('assignVendor').value ? 'assigned' : 'pending',
                 createdBy: currentUser?.id,
                 invoiceImage: invoiceImageUrl
             };
