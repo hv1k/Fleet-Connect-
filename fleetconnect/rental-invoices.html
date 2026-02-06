@@ -6,6 +6,7 @@
     <title>Invoices & Fuel History | FleetConnect</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: #1a1a1a; color: #f5f0e8; min-height: 100vh; }
@@ -200,6 +201,10 @@
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                         Invoices
                     </a>
+                    <a class="nav-item" href="daily-log.html">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        Daily Log
+                    </a>
                     <a class="nav-item" href="settings.html">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
                         Settings
@@ -216,7 +221,7 @@
         </aside>
 
         <main class="main">
-            <div class="header">
+            <div class="header" style="display:flex;justify-content:space-between;align-items:center;">
                 <div style="display:flex;align-items:center;gap:12px;">
                     <button class="mobile-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')"><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button>
                     <div>
@@ -224,6 +229,10 @@
                         <div class="header-subtitle">View completed deliveries and vendor invoices</div>
                     </div>
                 </div>
+                <button class="btn btn-primary" onclick="openExportModal()" style="display:flex;align-items:center;gap:8px;white-space:nowrap;">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    Export Report
+                </button>
             </div>
 
             <div class="content">
@@ -310,6 +319,50 @@
             <div class="modal-header"><h3 id="modalTitle">Details</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
             <div class="modal-body" id="modalBody"></div>
             <div class="modal-footer" id="modalFooter"><button class="btn btn-secondary" onclick="closeModal()">Close</button></div>
+        </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div class="modal-overlay" id="exportModal">
+        <div class="modal" style="max-width:500px;">
+            <div class="modal-header"><h3>Export Delivery Report</h3><button class="modal-close" onclick="closeExportModal()">&times;</button></div>
+            <div class="modal-body">
+                <div style="margin-bottom:16px;">
+                    <label style="display:block;font-size:0.75rem;color:#888;text-transform:uppercase;margin-bottom:6px;">Job Site</label>
+                    <select id="exportJobSite" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid #444;background:#2a2a2a;color:#f5f0e8;font-size:0.85rem;">
+                        <option value="all">All Job Sites</option>
+                    </select>
+                </div>
+                <div style="margin-bottom:16px;">
+                    <label style="display:block;font-size:0.75rem;color:#888;text-transform:uppercase;margin-bottom:6px;">Date Range</label>
+                    <select id="exportDateRange" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid #444;background:#2a2a2a;color:#f5f0e8;font-size:0.85rem;" onchange="toggleCustomDates()">
+                        <option value="today">Today</option>
+                        <option value="7days">Last 7 Days</option>
+                        <option value="30days">Last 30 Days</option>
+                        <option value="all" selected>All Dates</option>
+                        <option value="custom">Custom Range</option>
+                    </select>
+                </div>
+                <div id="customDateRange" style="display:none;margin-bottom:16px;">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                        <div>
+                            <label style="display:block;font-size:0.75rem;color:#888;margin-bottom:6px;">From</label>
+                            <input type="date" id="exportFrom" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid #444;background:#2a2a2a;color:#f5f0e8;font-size:0.85rem;">
+                        </div>
+                        <div>
+                            <label style="display:block;font-size:0.75rem;color:#888;margin-bottom:6px;">To</label>
+                            <input type="date" id="exportTo" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid #444;background:#2a2a2a;color:#f5f0e8;font-size:0.85rem;">
+                        </div>
+                    </div>
+                </div>
+                <div id="exportPreview" style="padding:12px;background:#2a2a2a;border-radius:8px;font-size:0.85rem;color:#888;">
+                    Select a job site and date range, then click Export.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeExportModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="exportToExcel()">Export to Excel</button>
+            </div>
         </div>
     </div>
 
@@ -630,7 +683,76 @@
         }
 
         function closeModal() { document.getElementById('detailModal').classList.remove('show'); }
-        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+        // ============ EXPORT FUNCTIONS ============
+        function openExportModal() {
+            const select = document.getElementById('exportJobSite');
+            const sites = [...new Set(allJobs.map(j => j.job_site_name).filter(Boolean))].sort();
+            select.innerHTML = '<option value="all">All Job Sites</option>' +
+                sites.map(s => '<option value="' + s.replace(/"/g, '&quot;') + '">' + s + '</option>').join('');
+            document.getElementById('exportPreview').innerHTML = 'Select a job site and date range, then click Export.';
+            document.getElementById('exportPreview').style.color = '#888';
+            document.getElementById('exportModal').classList.add('show');
+        }
+        function closeExportModal() { document.getElementById('exportModal').classList.remove('show'); }
+        function toggleCustomDates() {
+            document.getElementById('customDateRange').style.display =
+                document.getElementById('exportDateRange').value === 'custom' ? 'block' : 'none';
+        }
+        async function exportToExcel() {
+            const jobSite = document.getElementById('exportJobSite').value;
+            const range = document.getElementById('exportDateRange').value;
+            const preview = document.getElementById('exportPreview');
+
+            let jobsToExport = allJobs;
+            if (jobSite !== 'all') jobsToExport = allJobs.filter(j => j.job_site_name === jobSite);
+            if (jobsToExport.length === 0) { preview.innerHTML = '<span style="color:#f87171;">No jobs found.</span>'; return; }
+
+            // Use allDeliveries already loaded on this page
+            let filtered = allDeliveries.filter(d => jobsToExport.some(j => j.id === d.job_id));
+            const now = new Date();
+            if (range === 'today') {
+                const today = now.toISOString().split('T')[0];
+                filtered = filtered.filter(d => d.timestamp && d.timestamp.startsWith(today));
+            } else if (range === '7days') {
+                filtered = filtered.filter(d => d.timestamp && new Date(d.timestamp) >= new Date(now.getTime() - 7*86400000));
+            } else if (range === '30days') {
+                filtered = filtered.filter(d => d.timestamp && new Date(d.timestamp) >= new Date(now.getTime() - 30*86400000));
+            } else if (range === 'custom') {
+                const f = document.getElementById('exportFrom').value, t = document.getElementById('exportTo').value;
+                if (f) filtered = filtered.filter(d => d.timestamp && d.timestamp >= f);
+                if (t) filtered = filtered.filter(d => d.timestamp && d.timestamp <= t + 'T23:59:59');
+            }
+            // Sort by date ascending
+            filtered.sort((a, b) => (a.timestamp || '').localeCompare(b.timestamp || ''));
+
+            if (filtered.length === 0) { preview.innerHTML = '<span style="color:#f87171;">No deliveries found for this date range.</span>'; return; }
+
+            const rows = filtered.map((d, i) => {
+                const job = allJobs.find(j => j.id === d.job_id);
+                const site = job ? job.job_site_name || '' : '';
+                const addr = job ? [job.address_street, job.address_city, job.address_state, job.address_zip].filter(Boolean).join(', ') : '';
+                return {
+                    'JOB SITE / ADDRESS': site + (addr ? ' — ' + addr : ''),
+                    'INVOICE': 'A' + (i + 1),
+                    'DATE': d.timestamp ? new Date(d.timestamp).toLocaleDateString('en-US') : '',
+                    'DIESEL GAL': parseFloat(d.gallons) || 0,
+                    'DEF': parseFloat(d.def_gallons) || 0,
+                    'HOURS': parseFloat(d.unit_hours) || 0
+                };
+            });
+
+            const ws = XLSX.utils.json_to_sheet(rows);
+            ws['!cols'] = [{ wch: 50 }, { wch: 12 }, { wch: 14 }, { wch: 12 }, { wch: 10 }, { wch: 10 }];
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Delivery Report');
+            const fileName = 'FleetConnect-Report-' + (jobSite !== 'all' ? jobSite.replace(/[^a-zA-Z0-9]/g, '-').substring(0, 30) : 'All-Sites') + '.xlsx';
+            XLSX.writeFile(wb, fileName);
+            preview.innerHTML = '<span style="color:#22c55e;">Exported ' + filtered.length + ' deliveries!</span>';
+            setTimeout(() => closeExportModal(), 1500);
+        }
+
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); closeExportModal(); } });
     </script>
 </body>
 </html>

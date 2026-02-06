@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Log | FleetConnect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #1a1a1a; color: #f5f0e8; min-height: 100vh; }
+        .layout { display: flex; min-height: 100vh; }
+
+        /* Sidebar */
+        .sidebar { width: 240px; background: #242424; border-right: 1px solid #333; padding: 24px 16px; position: fixed; left: 0; height: 100vh; z-index: 100; display: flex; flex-direction: column; }
+        .sidebar-header { display: flex; align-items: center; gap: 10px; margin-bottom: 32px; padding: 20px 20px 12px; }
+        .sidebar-logo { font-size: 1.2rem; font-weight: 700; color: #60a5fa; }
+        nav { flex: 1; overflow-y: auto; }
+        .nav-section { margin-bottom: 24px; }
+        .nav-section-title { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: #666; padding: 0 12px; letter-spacing: 0.5px; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; color: #b8b0a8; font-size: 0.85rem; text-decoration: none; transition: all 0.2s; cursor: pointer; font-weight: 500; }
+        .nav-item:hover { background: #333; color: #f5f0e8; }
+        .nav-item.active { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
+        .nav-item svg { width: 20px; height: 20px; flex-shrink: 0; }
+        .sidebar-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid #333; }
+        .user-menu { display: flex; align-items: center; gap: 12px; padding: 12px; background: #333; border-radius: 10px; }
+        .user-avatar-lg { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #60a5fa, #3b82f6); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 0.85rem; }
+        .user-info { flex: 1; }
+        .user-name { font-size: 0.85rem; font-weight: 600; color: #f5f0e8; }
+        .user-role { font-size: 0.7rem; color: #888; }
+        .logout-btn { background: none; border: none; color: #888; cursor: pointer; padding: 6px; border-radius: 6px; }
+        .logout-btn:hover { background: #444; color: #f5f0e8; }
+
+        /* Main */
+        .main { margin-left: 240px; flex: 1; min-height: 100vh; }
+        .header { padding: 24px 32px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+        .header-left { display: flex; align-items: center; gap: 12px; flex: 1; }
+        .header-right { display: flex; align-items: center; gap: 12px; }
+        .header h1 { font-size: 1.4rem; font-weight: 700; color: #f5f0e8; }
+        .header-subtitle { font-size: 0.85rem; color: #888; margin-top: 4px; }
+        .content { padding: 24px 32px; }
+
+        /* Stats */
+        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: #242424; border: 1px solid #333; border-radius: 14px; padding: 20px; }
+        .stat-label { font-size: 0.75rem; color: #888; text-transform: uppercase; font-weight: 600; letter-spacing: 0.3px; display: flex; align-items: center; gap: 8px; }
+        .stat-label svg { width: 16px; height: 16px; }
+        .stat-number { font-size: 1.8rem; font-weight: 700; color: #f5f0e8; margin-top: 8px; }
+
+        /* Date Navigation */
+        .date-nav { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+        .date-nav-btn { padding: 8px 12px; border: 1px solid #444; background: #2a2a2a; color: #b8b0a8; border-radius: 8px; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
+        .date-nav-btn:hover { background: #333; color: #f5f0e8; border-color: #60a5fa; }
+        .current-date { font-size: 1rem; font-weight: 600; color: #f5f0e8; min-width: 180px; text-align: center; }
+
+        /* Job Site Group Card */
+        .job-group-card { background: #242424; border: 1px solid #333; border-left: 4px solid #60a5fa; border-radius: 16px; overflow: hidden; margin-bottom: 24px; }
+        .job-group-header { padding: 20px 24px; background: #2a2a2a; border-bottom: 1px solid #333; }
+        .job-site-name { font-size: 1rem; font-weight: 600; color: #f5f0e8; }
+        .job-site-address { font-size: 0.75rem; color: #888; margin-top: 4px; }
+        .job-group-table { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 12px 24px; font-size: 0.7rem; font-weight: 600; color: #888; text-transform: uppercase; background: #242424; border-bottom: 1px solid #333; }
+        td { padding: 14px 24px; border-bottom: 1px solid #333; font-size: 0.85rem; color: #b8b0a8; }
+        tr:hover { background: #2a2a2a; }
+        .group-subtotal { background: #2a2a2a; font-weight: 600; color: #f5f0e8; }
+
+        /* Grand Total Card */
+        .grand-total-card { background: #242424; border: 2px solid #60a5fa; border-radius: 16px; padding: 24px; }
+        .grand-total-title { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: #888; letter-spacing: 0.3px; margin-bottom: 20px; }
+        .grand-total-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+        .grand-total-item { text-align: center; }
+        .grand-total-label { font-size: 0.75rem; color: #888; text-transform: uppercase; font-weight: 600; letter-spacing: 0.3px; margin-bottom: 8px; }
+        .grand-total-number { font-size: 1.6rem; font-weight: 700; color: #60a5fa; }
+
+        /* Week Summary */
+        .week-summary-card { background: #242424; border: 1px solid #333; border-radius: 16px; padding: 24px; margin-top: 24px; }
+        .week-summary-title { font-size: 0.9rem; font-weight: 600; color: #f5f0e8; margin-bottom: 20px; }
+        .week-chart { display: flex; align-items: flex-end; gap: 16px; height: 300px; margin-bottom: 16px; }
+        .week-bar-container { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; }
+        .week-bar { width: 100%; background: linear-gradient(180deg, #60a5fa 0%, #1e3a5f 100%); border-radius: 8px 8px 0 0; min-height: 40px; transition: all 0.3s; cursor: pointer; }
+        .week-bar:hover { filter: brightness(1.1); }
+        .week-bar-label { font-size: 0.75rem; color: #888; margin-top: 8px; font-weight: 600; }
+        .week-bar-count { font-size: 0.7rem; color: #666; margin-top: 2px; }
+
+        /* Buttons */
+        .btn { padding: 10px 18px; border-radius: 8px; font-size: 0.85rem; font-weight: 500; cursor: pointer; border: none; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+        .btn-primary { background: #60a5fa; color: #1a1a1a; }
+        .btn-primary:hover { background: #3b82f6; }
+        .btn-secondary { background: #333; color: #b8b0a8; border: 1px solid #444; }
+        .btn-secondary:hover { background: #444; }
+
+        /* Loading/Empty States */
+        .loading { text-align: center; padding: 40px; color: #888; }
+        .spinner { width: 36px; height: 36px; border: 3px solid #333; border-top-color: #60a5fa; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .empty-state { text-align: center; padding: 60px 20px; color: #666; }
+        .empty-state svg { width: 48px; height: 48px; margin-bottom: 16px; color: #444; }
+        .empty-state h3 { color: #888; font-size: 1rem; margin-bottom: 8px; }
+
+        /* Mobile Toggle */
+        .mobile-toggle { display: none; width: 40px; height: 40px; border: 1px solid #444; border-radius: 8px; background: #2a2a2a; color: #f5f0e8; align-items: center; justify-content: center; cursor: pointer; }
+
+        /* Modal */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 200; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
+        .modal-overlay.show { display: flex; }
+        .modal { background: #242424; border-radius: 16px; width: 100%; max-width: 500px; border: 1px solid #333; }
+        .modal-header { padding: 20px 24px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { font-size: 1.1rem; font-weight: 600; color: #f5f0e8; }
+        .modal-close { width: 32px; height: 32px; border-radius: 8px; border: none; background: #333; color: #888; cursor: pointer; font-size: 1.1rem; }
+        .modal-close:hover { background: #444; color: #f5f0e8; }
+        .modal-body { padding: 24px; max-height: 70vh; overflow-y: auto; }
+        .modal-footer { padding: 16px 24px; border-top: 1px solid #333; display: flex; justify-content: flex-end; gap: 12px; background: #2a2a2a; border-radius: 0 0 16px 16px; }
+
+        /* Responsive */
+        @media (max-width: 1200px) { .stats-row { grid-template-columns: repeat(2, 1fr); } .grand-total-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 900px) {
+            .sidebar { display: none; }
+            .sidebar.open { display: flex; position: fixed; z-index: 100; }
+            .main { margin-left: 0; }
+            .mobile-toggle { display: flex; }
+            .stats-row { grid-template-columns: 1fr; }
+            .grand-total-grid { grid-template-columns: 1fr; }
+            .header { flex-direction: column; align-items: flex-start; }
+            .header-left { flex-direction: column; }
+            .header-right { width: 100%; }
+            .header-right > * { flex: 1; }
+            .header { padding: 16px 20px; }
+            .content { padding: 16px 20px; }
+            .date-nav { flex-wrap: wrap; }
+        }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <span class="sidebar-logo">FleetConnect</span>
+            </div>
+            <nav>
+                <div class="nav-section">
+                    <div class="nav-section-title">Main Menu</div>
+                    <a class="nav-item" href="rental-dashboard.html" id="dashboardLink">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                        Dashboard
+                    </a>
+                    <a class="nav-item" href="create-job.html" id="createJobLink">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        Create Work Order
+                    </a>
+                    <a class="nav-item" href="work-orders.html">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                        Work Orders
+                    </a>
+                    <a class="nav-item" href="rental-invoices.html" id="invoicesLink">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        Invoices
+                    </a>
+                    <a class="nav-item active" href="daily-log.html">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        Daily Log
+                    </a>
+                    <a class="nav-item" href="settings.html">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                        Settings
+                    </a>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-menu">
+                    <div class="user-avatar-lg" id="userAvatar">R</div>
+                    <div class="user-info"><div class="user-name" id="userName">Rental Co.</div><div class="user-role">Rental Account</div></div>
+                    <button class="logout-btn" onclick="logout()" title="Logout"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg></button>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main">
+            <div class="header">
+                <div class="header-left">
+                    <button class="mobile-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')"><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+                    <div>
+                        <h1>Daily Log</h1>
+                        <div class="header-subtitle">Day-by-day delivery breakdown by job site</div>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <button class="btn btn-primary" onclick="exportToExcel()" style="display:flex;align-items:center;gap:8px;">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        Excel
+                    </button>
+                    <button class="btn btn-primary" onclick="exportToPDF()" style="display:flex;align-items:center;gap:8px;">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                        PDF
+                    </button>
+                </div>
+            </div>
+
+            <div class="content">
+                <!-- Stats Row -->
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="stat-label"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Total Deliveries</div>
+                        <div class="stat-number" id="statDeliveries">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>Total Diesel (GAL)</div>
+                        <div class="stat-number" id="statDiesel" style="color:#60a5fa;">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>Total DEF (GAL)</div>
+                        <div class="stat-number" id="statDEF" style="color:#22c55e;">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Total Hours</div>
+                        <div class="stat-number" id="statHours" style="color:#fbbf24;">0</div>
+                    </div>
+                </div>
+
+                <!-- Date Navigation -->
+                <div class="date-nav">
+                    <button class="date-nav-btn" onclick="previousDay()">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                        Prev
+                    </button>
+                    <div class="current-date" id="currentDate">February 6, 2026</div>
+                    <button class="date-nav-btn" onclick="nextDay()">
+                        Next
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </button>
+                    <button class="date-nav-btn" onclick="goToday()">Today</button>
+                </div>
+
+                <!-- Job Site Groups Container -->
+                <div id="jobGroupsContainer">
+                    <div class="loading"><div class="spinner"></div>Loading daily log...</div>
+                </div>
+
+                <!-- Grand Total Card -->
+                <div class="grand-total-card">
+                    <div class="grand-total-title">Daily Grand Total</div>
+                    <div class="grand-total-grid">
+                        <div class="grand-total-item">
+                            <div class="grand-total-label">Total Deliveries</div>
+                            <div class="grand-total-number" id="gtDeliveries">0</div>
+                        </div>
+                        <div class="grand-total-item">
+                            <div class="grand-total-label">Total Diesel</div>
+                            <div class="grand-total-number" id="gtDiesel">0</div>
+                        </div>
+                        <div class="grand-total-item">
+                            <div class="grand-total-label">Total DEF</div>
+                            <div class="grand-total-number" id="gtDEF">0</div>
+                        </div>
+                        <div class="grand-total-item">
+                            <div class="grand-total-label">Total Hours</div>
+                            <div class="grand-total-number" id="gtHours">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Week Summary -->
+                <div class="week-summary-card">
+                    <div class="week-summary-title">This Week Summary</div>
+                    <div class="week-chart" id="weekChart">
+                        <div class="loading"><div class="spinner"></div>Loading week data...</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="supabase-client.js"></script>
+    <script src="notifications.js"></script>
+    <script src="realtime.js"></script>
+    <script>
+        let allJobs = [];
+        let allDeliveries = [];
+        let currentDate = new Date();
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (typeof checkAuth !== 'undefined') {
+                const user = checkAuth(['rental', 'admin', 'vendor']);
+                if (user) {
+                    document.getElementById('userName').textContent = user.name;
+                    document.getElementById('userAvatar').textContent = user.name.charAt(0).toUpperCase();
+
+                    // Update nav links based on role
+                    if (user.role === 'vendor') {
+                        document.getElementById('dashboardLink').href = 'vendor-dashboard.html';
+                        document.getElementById('invoicesLink').href = 'invoices.html';
+                        document.getElementById('createJobLink').style.display = 'none';
+                    }
+                }
+            }
+            await loadData();
+        });
+
+        async function loadData() {
+            try {
+                if (typeof getJobsForCurrentUser !== 'undefined') {
+                    allJobs = await getJobsForCurrentUser();
+                } else {
+                    const { data } = await db.from('jobs').select('*');
+                    allJobs = data || [];
+                }
+
+                const jobIds = allJobs.map(j => j.id);
+                if (jobIds.length > 0) {
+                    const { data } = await db.from('deliveries').select('*').in('job_id', jobIds).order('timestamp', { ascending: true });
+                    allDeliveries = data || [];
+                } else {
+                    allDeliveries = [];
+                }
+
+                renderDay();
+                renderWeekSummary();
+            } catch(err) {
+                console.error('Load error:', err);
+                showError('Failed to load daily log data');
+            }
+        }
+
+        function formatDate(date) {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
+        }
+
+        function formatTime(timestamp) {
+            if (!timestamp) return '';
+            const date = new Date(timestamp);
+            return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function getDateKey(date) {
+            return date.toISOString().split('T')[0];
+        }
+
+        function previousDay() {
+            currentDate.setDate(currentDate.getDate() - 1);
+            renderDay();
+            renderWeekSummary();
+        }
+
+        function nextDay() {
+            currentDate.setDate(currentDate.getDate() + 1);
+            renderDay();
+            renderWeekSummary();
+        }
+
+        function goToday() {
+            currentDate = new Date();
+            renderDay();
+            renderWeekSummary();
+        }
+
+        function renderDay() {
+            const dateKey = getDateKey(currentDate);
+            document.getElementById('currentDate').textContent = formatDate(currentDate);
+
+            // Filter deliveries for this day
+            const dayDeliveries = allDeliveries.filter(d => {
+                const dDate = new Date(d.timestamp);
+                return getDateKey(dDate) === dateKey;
+            });
+
+            // Group by job site
+            const grouped = {};
+            dayDeliveries.forEach(del => {
+                const job = allJobs.find(j => j.id === del.job_id);
+                if (job) {
+                    if (!grouped[job.id]) {
+                        grouped[job.id] = { job, deliveries: [] };
+                    }
+                    grouped[job.id].deliveries.push(del);
+                }
+            });
+
+            // Update stats
+            let totalDiesel = 0, totalDEF = 0, totalHours = 0;
+            Object.values(grouped).forEach(group => {
+                group.deliveries.forEach(d => {
+                    totalDiesel += d.gallons || 0;
+                    totalDEF += d.def_gallons || 0;
+                    totalHours += d.unit_hours || 0;
+                });
+            });
+
+            document.getElementById('statDeliveries').textContent = dayDeliveries.length;
+            document.getElementById('statDiesel').textContent = totalDiesel.toFixed(1);
+            document.getElementById('statDEF').textContent = totalDEF.toFixed(1);
+            document.getElementById('statHours').textContent = totalHours.toFixed(1);
+
+            // Render job groups
+            const container = document.getElementById('jobGroupsContainer');
+            if (Object.keys(grouped).length === 0) {
+                container.innerHTML = '<div class="empty-state"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><h3>No deliveries</h3><p>No deliveries recorded for this date.</p></div>';
+            } else {
+                let html = '';
+                Object.values(grouped).forEach(group => {
+                    const job = group.job;
+                    let groupDiesel = 0, groupDEF = 0, groupHours = 0;
+                    group.deliveries.forEach(d => {
+                        groupDiesel += d.gallons || 0;
+                        groupDEF += d.def_gallons || 0;
+                        groupHours += d.unit_hours || 0;
+                    });
+
+                    html += `
+                        <div class="job-group-card">
+                            <div class="job-group-header">
+                                <div class="job-site-name">${job.job_site_name || 'Unnamed Site'}</div>
+                                <div class="job-site-address">${(job.address_street || '') + ' ' + (job.address_city || '')} ${job.address_state || ''}</div>
+                            </div>
+                            <div class="job-group-table">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Invoice #</th>
+                                            <th>Diesel (GAL)</th>
+                                            <th>DEF (GAL)</th>
+                                            <th>Hours</th>
+                                            <th>Time</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                    `;
+                    group.deliveries.forEach((d, idx) => {
+                        html += `
+                            <tr>
+                                <td>INV-${String(idx + 1).padStart(3, '0')}</td>
+                                <td>${(d.gallons || 0).toFixed(1)}</td>
+                                <td>${(d.def_gallons || 0).toFixed(1)}</td>
+                                <td>${(d.unit_hours || 0).toFixed(1)}</td>
+                                <td>${formatTime(d.timestamp)}</td>
+                            </tr>
+                        `;
+                    });
+                    html += `
+                                        <tr class="group-subtotal">
+                                            <td><strong>Subtotal</strong></td>
+                                            <td>${groupDiesel.toFixed(1)}</td>
+                                            <td>${groupDEF.toFixed(1)}</td>
+                                            <td>${groupHours.toFixed(1)}</td>
+                                            <td></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            }
+
+            // Update grand totals
+            document.getElementById('gtDeliveries').textContent = dayDeliveries.length;
+            document.getElementById('gtDiesel').textContent = totalDiesel.toFixed(1);
+            document.getElementById('gtDEF').textContent = totalDEF.toFixed(1);
+            document.getElementById('gtHours').textContent = totalHours.toFixed(1);
+        }
+
+        function renderWeekSummary() {
+            const weekData = {};
+            const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+            // Initialize week data
+            for (let i = 0; i < 7; i++) {
+                const date = new Date();
+                const day = date.getDay();
+                const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+                const monday = new Date(date.setDate(diff));
+                const dayDate = new Date(monday);
+                dayDate.setDate(monday.getDate() + i);
+                const key = getDateKey(dayDate);
+                weekData[key] = { date: dayDate, deliveries: 0, diesel: 0, label: days[i] };
+            }
+
+            // Count deliveries per day
+            allDeliveries.forEach(d => {
+                const dDate = new Date(d.timestamp);
+                const key = getDateKey(dDate);
+                if (weekData[key]) {
+                    weekData[key].deliveries += 1;
+                    weekData[key].diesel += d.gallons || 0;
+                }
+            });
+
+            const maxDiesel = Math.max(...Object.values(weekData).map(w => w.diesel)) || 1;
+            let html = '';
+            Object.values(weekData).forEach(w => {
+                const height = (w.diesel / maxDiesel) * 100;
+                html += `
+                    <div class="week-bar-container">
+                        <div class="week-bar" style="height: ${height || 10}%;"></div>
+                        <div class="week-bar-label">${w.label}</div>
+                        <div class="week-bar-count">${w.deliveries} deliveries</div>
+                    </div>
+                `;
+            });
+            document.getElementById('weekChart').innerHTML = html;
+        }
+
+        function exportToExcel() {
+            const dateKey = getDateKey(currentDate);
+            const dayDeliveries = allDeliveries.filter(d => {
+                const dDate = new Date(d.timestamp);
+                return getDateKey(dDate) === dateKey;
+            });
+
+            const grouped = {};
+            dayDeliveries.forEach(del => {
+                const job = allJobs.find(j => j.id === del.job_id);
+                if (job) {
+                    if (!grouped[job.id]) {
+                        grouped[job.id] = { job, deliveries: [] };
+                    }
+                    grouped[job.id].deliveries.push(del);
+                }
+            });
+
+            const rows = [];
+            rows.push(['JOB SITE / ADDRESS', 'INVOICE', 'DATE', 'DIESEL GAL', 'DEF', 'HOURS']);
+
+            Object.values(grouped).forEach(group => {
+                const jobLabel = `${group.job.job_site_name || ''} ${group.job.address_street || ''} ${group.job.address_city || ''}`;
+                group.deliveries.forEach((d, idx) => {
+                    rows.push([
+                        jobLabel,
+                        `INV-${String(idx + 1).padStart(3, '0')}`,
+                        formatDate(new Date(d.timestamp)),
+                        (d.gallons || 0).toFixed(1),
+                        (d.def_gallons || 0).toFixed(1),
+                        (d.unit_hours || 0).toFixed(1)
+                    ]);
+                });
+            });
+
+            rows.push(['GRAND TOTAL', '', '', '', '', '']);
+
+            const ws = XLSX.utils.aoa_to_sheet(rows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Daily Log');
+
+            const filename = `FleetConnect-DailyLog-${getDateKey(currentDate)}.xlsx`;
+            XLSX.writeFile(wb, filename);
+        }
+
+        function exportToPDF() {
+            const dateKey = getDateKey(currentDate);
+            const dayDeliveries = allDeliveries.filter(d => {
+                const dDate = new Date(d.timestamp);
+                return getDateKey(dDate) === dateKey;
+            });
+
+            const grouped = {};
+            dayDeliveries.forEach(del => {
+                const job = allJobs.find(j => j.id === del.job_id);
+                if (job) {
+                    if (!grouped[job.id]) {
+                        grouped[job.id] = { job, deliveries: [] };
+                    }
+                    grouped[job.id].deliveries.push(del);
+                }
+            });
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            doc.setFontSize(16);
+            doc.text(`FleetConnect Daily Log - ${formatDate(currentDate)}`, 14, 15);
+
+            const rows = [];
+            Object.values(grouped).forEach(group => {
+                const jobLabel = `${group.job.job_site_name || ''} ${group.job.address_street || ''} ${group.job.address_city || ''}`;
+                group.deliveries.forEach((d, idx) => {
+                    rows.push([
+                        jobLabel,
+                        `INV-${String(idx + 1).padStart(3, '0')}`,
+                        formatDate(new Date(d.timestamp)),
+                        (d.gallons || 0).toFixed(1),
+                        (d.def_gallons || 0).toFixed(1),
+                        (d.unit_hours || 0).toFixed(1)
+                    ]);
+                });
+            });
+
+            doc.autoTable({
+                head: [['JOB SITE / ADDRESS', 'INVOICE', 'DATE', 'DIESEL GAL', 'DEF', 'HOURS']],
+                body: rows,
+                startY: 25,
+                margin: 10,
+                didDrawPage: (data) => {
+                    doc.setFontSize(10);
+                    doc.text('Page ' + doc.internal.pages.length, doc.internal.pageSize.getWidth() / 2, doc.internal.pageSize.getHeight() - 10, { align: 'center' });
+                }
+            });
+
+            const filename = `FleetConnect-DailyLog-${dateKey}.pdf`;
+            doc.save(filename);
+        }
+
+        function showError(message) {
+            if (typeof showNotification !== 'undefined') {
+                showNotification(message, 'error');
+            } else {
+                console.error(message);
+            }
+        }
+
+        async function logout() {
+            if (typeof logoutUser !== 'undefined') {
+                await logoutUser();
+            } else {
+                window.location.href = 'login.html';
+            }
+        }
+    </script>
+</body>
+</html>
