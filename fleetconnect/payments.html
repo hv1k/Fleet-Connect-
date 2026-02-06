@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payments | FleetConnect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #1a1a1a; color: #f5f0e8; min-height: 100vh; }
+        .layout { display: flex; min-height: 100vh; }
+
+        /* Sidebar */
+        .sidebar { width: 240px; background: #242424; border-right: 1px solid #333; position: fixed; top: 0; left: 0; bottom: 0; display: flex; flex-direction: column; z-index: 50; }
+        .sidebar-header { padding: 20px 20px 12px; }
+        .sidebar-logo { font-size: 1.1rem; font-weight: 700; color: #60a5fa; }
+        nav { flex: 1; padding: 0 12px; overflow-y: auto; }
+        .nav-section { margin-bottom: 24px; }
+        .nav-section-title { font-size: 0.65rem; font-weight: 600; text-transform: uppercase; color: #666; padding: 8px 12px; letter-spacing: 0.5px; }
+        .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; color: #b8b0a8; font-size: 0.85rem; text-decoration: none; transition: all 0.15s; }
+        .nav-item:hover { background: #333; color: #f5f0e8; }
+        .nav-item.active { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
+        .nav-item svg { width: 20px; height: 20px; flex-shrink: 0; }
+        .sidebar-footer { padding: 12px; border-top: 1px solid #333; }
+        .user-menu { display: flex; align-items: center; gap: 10px; padding: 10px; background: #2a2a2a; border-radius: 10px; }
+        .user-avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #60a5fa, #3b82f6); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 0.85rem; flex-shrink: 0; }
+        .user-info { flex: 1; min-width: 0; }
+        .user-name { font-size: 0.85rem; font-weight: 600; color: #f5f0e8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .user-role { font-size: 0.7rem; color: #888; }
+        .logout-btn { background: none; border: none; color: #888; cursor: pointer; padding: 6px; border-radius: 6px; flex-shrink: 0; }
+        .logout-btn:hover { background: #333; color: #f87171; }
+
+        /* Main */
+        .main { margin-left: 240px; flex: 1; min-height: 100vh; }
+        .header { padding: 24px 32px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+        .header-left { display: flex; align-items: center; gap: 12px; }
+        .header h1 { font-size: 1.4rem; font-weight: 700; }
+        .header-subtitle { font-size: 0.85rem; color: #888; margin-top: 2px; }
+        .content { padding: 24px 32px; }
+
+        /* Stats row */
+        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: #242424; border: 1px solid #333; border-radius: 14px; padding: 18px 20px; }
+        .stat-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: #888; letter-spacing: 0.3px; display: flex; align-items: center; gap: 6px; }
+        .stat-value { font-size: 1.8rem; font-weight: 700; margin-top: 6px; }
+        .stat-value.red { color: #ef4444; }
+        .stat-value.green { color: #22c55e; }
+        .stat-value.yellow { color: #fbbf24; }
+        .stat-value.blue { color: #60a5fa; }
+
+        /* Payment Status Overview */
+        .status-overview { background: #242424; border: 1px solid #333; border-radius: 14px; padding: 20px; margin-bottom: 24px; }
+        .status-overview-title { font-size: 0.95rem; font-weight: 600; margin-bottom: 16px; }
+        .status-bar-container { margin-bottom: 12px; }
+        .status-bar { display: flex; height: 24px; border-radius: 8px; overflow: hidden; gap: 2px; }
+        .status-bar-segment { height: 100%; flex: 1; transition: all 0.2s; }
+        .status-bar-segment.paid { background: #22c55e; }
+        .status-bar-segment.pending { background: #fbbf24; }
+        .status-bar-segment.overdue { background: #ef4444; }
+        .status-legend { display: flex; gap: 16px; font-size: 0.8rem; }
+        .status-legend-item { display: flex; align-items: center; gap: 6px; }
+        .status-legend-dot { width: 12px; height: 12px; border-radius: 50%; }
+        .status-legend-dot.paid { background: #22c55e; }
+        .status-legend-dot.pending { background: #fbbf24; }
+        .status-legend-dot.overdue { background: #ef4444; }
+
+        /* Filters & Search */
+        .filters-card { background: #242424; border: 1px solid #333; border-radius: 14px; padding: 16px 20px; margin-bottom: 24px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+        .search-input { flex: 1; min-width: 220px; padding: 10px 14px 10px 38px; border: 1px solid #444; border-radius: 8px; font-size: 0.85rem; font-family: inherit; background: #2a2a2a url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23666'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'/%3E%3C/svg%3E") 12px center no-repeat; background-size: 16px; color: #f5f0e8; }
+        .search-input:focus { outline: none; border-color: #60a5fa; }
+        .search-input::placeholder { color: #666; }
+        .filter-select { padding: 10px 14px; border: 1px solid #444; border-radius: 8px; font-size: 0.85rem; font-family: inherit; background: #2a2a2a; color: #f5f0e8; cursor: pointer; }
+        .filter-select:focus { outline: none; border-color: #60a5fa; }
+        .results-count { font-size: 0.8rem; color: #888; margin-left: auto; white-space: nowrap; }
+
+        /* Invoice Table */
+        .table-card { background: #242424; border: 1px solid #333; border-radius: 14px; overflow: hidden; margin-bottom: 24px; }
+        .table-header-row { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid #333; }
+        .table-title { font-size: 1.1rem; font-weight: 600; }
+        .bulk-actions { display: flex; gap: 8px; align-items: center; }
+        .checkbox-all { width: 18px; height: 18px; cursor: pointer; accent-color: #60a5fa; }
+        .bulk-action-btn { padding: 8px 16px; background: #333; color: #f5f0e8; border: none; border-radius: 8px; font-size: 0.8rem; cursor: pointer; transition: all 0.15s; }
+        .bulk-action-btn:hover { background: #444; }
+        .bulk-action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .table-grid { display: grid; grid-template-columns: 1fr 1.2fr 1.2fr 1fr 1fr 0.8fr 120px; gap: 16px; padding: 14px 24px; font-size: 0.85rem; align-items: center; }
+        .table-grid.header { background: #2a2a2a; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: #888; font-weight: 600; }
+        .table-grid.row { border-bottom: 1px solid #333; transition: background 0.2s; }
+        .table-grid.row:hover { background: #282828; }
+
+        .invoice-number { font-weight: 600; color: #60a5fa; }
+        .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; text-transform: capitalize; }
+        .status-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+        .status-badge.paid { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+        .status-badge.pending { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
+        .status-badge.overdue { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+
+        .btn { padding: 8px 16px; border-radius: 8px; font-size: 0.8rem; font-weight: 500; font-family: inherit; cursor: pointer; border: none; transition: all 0.15s; }
+        .btn-primary { background: #60a5fa; color: #1a1a1a; }
+        .btn-primary:hover { background: #3b82f6; }
+        .btn-secondary { background: #333; color: #f5f0e8; }
+        .btn-secondary:hover { background: #444; }
+        .btn-danger { background: #dc2626; color: #fff; }
+        .btn-danger:hover { background: #b91c1c; }
+
+        .table-checkbox { width: 18px; height: 18px; cursor: pointer; accent-color: #60a5fa; }
+
+        /* Customer Summary */
+        .customer-summary { background: #242424; border: 1px solid #333; border-radius: 14px; padding: 20px; margin-bottom: 24px; }
+        .customer-summary-title { font-size: 1rem; font-weight: 600; margin-bottom: 16px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+        .customer-summary-title svg { width: 18px; height: 18px; transition: transform 0.2s; }
+        .customer-summary-title.collapsed svg { transform: rotate(-90deg); }
+        .customer-list { display: flex; flex-direction: column; gap: 8px; }
+        .customer-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: #2a2a2a; border-radius: 8px; }
+        .customer-item-name { font-weight: 500; }
+        .customer-item-amounts { display: flex; gap: 24px; }
+        .customer-item-amount { text-align: right; }
+        .customer-item-label { font-size: 0.7rem; color: #888; }
+        .customer-item-value { font-size: 0.9rem; font-weight: 600; }
+        .customer-item-value.owed { color: #ef4444; }
+        .customer-item-value.paid { color: #22c55e; }
+
+        /* Modal */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 200; align-items: flex-start; justify-content: center; padding: 40px 20px; overflow-y: auto; }
+        .modal-overlay.show { display: flex; }
+        .modal { background: #242424; border-radius: 16px; width: 100%; max-width: 600px; border: 1px solid #333; margin-top: 40px; }
+        .modal-header { padding: 20px 24px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { font-size: 1.1rem; font-weight: 600; }
+        .modal-close { width: 32px; height: 32px; border-radius: 8px; border: none; background: #333; color: #888; cursor: pointer; font-size: 1.1rem; }
+        .modal-close:hover { background: #444; color: #f5f0e8; }
+        .modal-body { padding: 24px; max-height: 70vh; overflow-y: auto; }
+        .modal-footer { padding: 16px 24px; border-top: 1px solid #333; display: flex; justify-content: flex-end; gap: 10px; background: #2a2a2a; border-radius: 0 0 16px 16px; }
+
+        .detail-section { margin-bottom: 20px; }
+        .detail-section-title { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: #60a5fa; margin-bottom: 10px; letter-spacing: 0.5px; }
+        .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .detail-item { padding: 12px 14px; background: #2a2a2a; border-radius: 8px; }
+        .detail-item.full { grid-column: span 2; }
+        .detail-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: #666; margin-bottom: 3px; letter-spacing: 0.3px; }
+        .detail-value { font-size: 0.9rem; color: #f5f0e8; }
+
+        .loading { text-align: center; padding: 40px; color: #666; }
+        .empty-state { text-align: center; padding: 40px; color: #666; }
+
+        /* Toast */
+        .toast { position: fixed; bottom: 24px; right: 24px; padding: 14px 20px; border-radius: 10px; font-size: 0.85rem; font-weight: 500; z-index: 400; transform: translateY(100px); opacity: 0; transition: all 0.3s; }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.success { background: #16a34a; color: #fff; }
+        .toast.error { background: #dc2626; color: #fff; }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+            .table-grid { grid-template-columns: 1fr 1fr 1fr 1fr 100px; }
+            .table-grid.header { grid-template-columns: 1fr 1fr 1fr 1fr 100px; }
+        }
+
+        @media (max-width: 900px) {
+            .sidebar { width: 200px; }
+            .main { margin-left: 200px; }
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+            .table-grid { grid-template-columns: 1fr 1fr 1fr 80px; font-size: 0.75rem; }
+            .table-grid.header { grid-template-columns: 1fr 1fr 1fr 80px; }
+            .customer-item-amounts { flex-direction: column; gap: 8px; }
+        }
+
+        @media (max-width: 600px) {
+            .sidebar { width: 0; transform: translateX(-240px); transition: transform 0.3s; }
+            .main { margin-left: 0; }
+            .stats-row { grid-template-columns: 1fr; }
+            .table-grid { grid-template-columns: 1fr; gap: 8px; }
+            .table-grid.header { display: none; }
+            .table-grid.row { display: grid; grid-template-columns: 1fr; gap: 8px; padding: 16px; margin-bottom: 12px; border: 1px solid #333; border-bottom: none; }
+            .filters-card { flex-direction: column; }
+            .search-input { min-width: 100%; }
+            .filter-select { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">FLEETCONNECT</div>
+            </div>
+            <nav id="mainNav">
+                <!-- Nav items will be generated by JavaScript -->
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-menu">
+                    <div class="user-avatar" id="userAvatar">A</div>
+                    <div class="user-info">
+                        <div class="user-name" id="userName">Admin</div>
+                        <div class="user-role" id="userRole">admin</div>
+                    </div>
+                    <button class="logout-btn" onclick="logout()" title="Logout">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="main">
+            <div class="header">
+                <div class="header-left">
+                    <h1>Payments & Invoices</h1>
+                </div>
+            </div>
+            <div class="content">
+                <!-- Stats Row -->
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="stat-label">Total Outstanding</div>
+                        <div class="stat-value red" id="statOutstanding">$0.00</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Paid This Month</div>
+                        <div class="stat-value green" id="statPaidMonth">$0.00</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Pending Review</div>
+                        <div class="stat-value yellow" id="statPending">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Avg Days to Pay</div>
+                        <div class="stat-value blue" id="statAvgDays">0</div>
+                    </div>
+                </div>
+
+                <!-- Payment Status Overview -->
+                <div class="status-overview">
+                    <div class="status-overview-title">Payment Status Overview</div>
+                    <div class="status-bar-container">
+                        <div class="status-bar" id="statusBar">
+                            <div class="status-bar-segment paid" style="flex: 0;"></div>
+                            <div class="status-bar-segment pending" style="flex: 0;"></div>
+                            <div class="status-bar-segment overdue" style="flex: 0;"></div>
+                        </div>
+                    </div>
+                    <div class="status-legend">
+                        <div class="status-legend-item">
+                            <div class="status-legend-dot paid"></div>
+                            <span>Paid: <strong id="legendPaid">0</strong></span>
+                        </div>
+                        <div class="status-legend-item">
+                            <div class="status-legend-dot pending"></div>
+                            <span>Pending: <strong id="legendPending">0</strong></span>
+                        </div>
+                        <div class="status-legend-item">
+                            <div class="status-legend-dot overdue"></div>
+                            <span>Overdue: <strong id="legendOverdue">0</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="filters-card">
+                    <input type="text" id="searchInput" class="search-input" placeholder="Search by job site or customer..." />
+                    <select id="statusFilter" class="filter-select">
+                        <option value="">All Status</option>
+                        <option value="paid">Paid</option>
+                        <option value="pending">Pending</option>
+                        <option value="overdue">Overdue</option>
+                    </select>
+                    <span class="results-count"><span id="resultCount">0</span> invoices</span>
+                </div>
+
+                <!-- Invoice Table -->
+                <div class="table-card">
+                    <div class="table-header-row">
+                        <span class="table-title">Invoice Payments</span>
+                        <div class="bulk-actions">
+                            <input type="checkbox" id="selectAllCheckbox" class="checkbox-all" title="Select all" />
+                            <button class="bulk-action-btn" id="markPaidBtn" disabled>Mark Selected as Paid</button>
+                        </div>
+                    </div>
+                    <div class="table-grid header">
+                        <div>Invoice #</div>
+                        <div>Job Site</div>
+                        <div>Customer</div>
+                        <div>Amount</div>
+                        <div>Date</div>
+                        <div>Status</div>
+                        <div>Actions</div>
+                    </div>
+                    <div id="invoicesTableBody">
+                        <div class="loading">Loading invoices...</div>
+                    </div>
+                </div>
+
+                <!-- Customer Summary -->
+                <div class="customer-summary">
+                    <div class="customer-summary-title" onclick="toggleCustomerSummary()">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+                        </svg>
+                        Payment Summary by Customer
+                    </div>
+                    <div class="customer-list" id="customerList">
+                        <div class="loading" style="padding: 16px;">Loading customer data...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Details Modal -->
+    <div class="modal-overlay" id="detailsModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Invoice Details</h3>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Details will be populated by JavaScript -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+                <button class="btn btn-primary" id="markPaidInModalBtn" onclick="markPaidFromModal()">Mark as Paid</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast"></div>
+
+    <script src="supabase-client.js"></script>
+    <script src="notifications.js"></script>
+    <script>
+        // Check authentication
+        const currentUser = checkAuth(['admin', 'vendor']);
+        if (!currentUser) {
+            window.location.href = 'login.html';
+        }
+
+        // Navigation config
+        const navConfig = {
+            admin: [
+                { label: 'Dashboard', href: 'admin-dashboard.html', icon: 'grid' },
+                { label: 'Create Work Order', href: 'create-job.html', icon: 'plus' },
+                { label: 'Work Orders', href: 'work-orders.html', icon: 'clipboard' },
+                { label: 'Reports', href: 'reports.html', icon: 'chart' },
+                { label: 'Payments', href: 'payments.html', icon: 'dollar', active: true },
+                { label: 'Settings', href: 'settings.html', icon: 'settings' }
+            ],
+            vendor: [
+                { label: 'Dashboard', href: 'vendor-dashboard.html', icon: 'grid' },
+                { label: 'Work Orders', href: 'work-orders.html', icon: 'clipboard' },
+                { label: 'Reports', href: 'reports.html', icon: 'chart' },
+                { label: 'Payments', href: 'payments.html', icon: 'dollar', active: true },
+                { label: 'Invoices', href: 'invoices.html', icon: 'invoice' },
+                { label: 'Settings', href: 'settings.html', icon: 'settings' }
+            ]
+        };
+
+        // SVG icons
+        const icons = {
+            grid: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/></svg>',
+            plus: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>',
+            clipboard: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>',
+            chart: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>',
+            dollar: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>',
+            settings: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>',
+            invoice: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
+        };
+
+        // Render navigation
+        function renderNav() {
+            const navElement = document.getElementById('mainNav');
+            const navItems = navConfig[currentUser.role] || [];
+
+            let html = '<div class="nav-section">';
+            navItems.forEach(item => {
+                const icon = icons[item.icon] || '';
+                const activeClass = item.active ? 'active' : '';
+                html += `<a href="${item.href}" class="nav-item ${activeClass}">${icon}<span>${item.label}</span></a>`;
+            });
+            html += '</div>';
+
+            navElement.innerHTML = html;
+        }
+
+        // Set user info
+        function setUserInfo() {
+            document.getElementById('userName').textContent = currentUser.name || 'User';
+            document.getElementById('userRole').textContent = currentUser.role;
+            const firstLetter = (currentUser.name || 'U').charAt(0).toUpperCase();
+            document.getElementById('userAvatar').textContent = firstLetter;
+        }
+
+        renderNav();
+        setUserInfo();
+
+        // Data
+        let allDeliveries = [];
+        let allJobs = [];
+        let selectedInvoices = new Set();
+        let currentDetailId = null;
+
+        // Constants
+        const DIESEL_RATE = 4.50;
+        const DEF_RATE = 3.80;
+        const OVERDUE_DAYS = 30;
+
+        // Load data
+        async function loadData() {
+            try {
+                // Load deliveries and jobs
+                if (currentUser.role === 'admin') {
+                    allDeliveries = await getAllDeliveries();
+                    allJobs = await getAllJobs();
+                } else {
+                    allDeliveries = await getDeliveriesForCurrentUser();
+                    allJobs = await getJobsForCurrentUser();
+                }
+
+                updateStats();
+                renderInvoices();
+                renderCustomerSummary();
+            } catch (error) {
+                console.error('Error loading data:', error);
+                showToast('Error loading payments', 'error');
+            }
+        }
+
+        // Calculate invoice amount
+        function calculateAmount(delivery) {
+            const dieselGallons = delivery.diesel_gallons || 0;
+            const defGallons = delivery.def_gallons || 0;
+            return (dieselGallons * DIESEL_RATE) + (defGallons * DEF_RATE);
+        }
+
+        // Get invoice status
+        function getInvoiceStatus(delivery) {
+            if (delivery.notes && delivery.notes.includes('PAID:')) {
+                return 'paid';
+            }
+
+            const createdDate = new Date(delivery.timestamp);
+            const daysSince = Math.floor((Date.now() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
+
+            if (daysSince > OVERDUE_DAYS) {
+                return 'overdue';
+            }
+            return 'pending';
+        }
+
+        // Get payment date from notes
+        function getPaymentDate(delivery) {
+            if (delivery.notes && delivery.notes.includes('PAID:')) {
+                const paidMatch = delivery.notes.match(/PAID:(\d{4}-\d{2}-\d{2}T[\d:\.Z]+)/);
+                if (paidMatch) {
+                    return new Date(paidMatch[1]).toLocaleDateString();
+                }
+            }
+            return null;
+        }
+
+        // Format currency
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+        }
+
+        // Format date
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        // Update stats
+        function updateStats() {
+            let totalOutstanding = 0;
+            let paidThisMonth = 0;
+            let pendingCount = 0;
+            let paidDates = [];
+
+            const now = new Date();
+            const monthAgo = new Date(now.getFullYear(), now.getMonth(), 1);
+
+            allDeliveries.forEach(delivery => {
+                const amount = calculateAmount(delivery);
+                const status = getInvoiceStatus(delivery);
+                const paymentDate = getPaymentDate(delivery);
+
+                if (status === 'paid') {
+                    if (paymentDate) {
+                        const pDate = new Date(paymentDate);
+                        if (pDate >= monthAgo) {
+                            paidThisMonth += amount;
+                        }
+                        paidDates.push(pDate);
+                    }
+                } else {
+                    totalOutstanding += amount;
+                    if (status === 'pending') {
+                        pendingCount += 1;
+                    }
+                }
+            });
+
+            // Calculate average days to pay
+            let avgDays = 0;
+            if (paidDates.length > 0) {
+                const totalDays = paidDates.reduce((sum, pDate) => {
+                    const deliveryDate = allDeliveries.find(d => getPaymentDate(d) === pDate.toLocaleDateString());
+                    if (deliveryDate) {
+                        const days = Math.floor((pDate - new Date(deliveryDate.timestamp)) / (1000 * 60 * 60 * 24));
+                        return sum + days;
+                    }
+                    return sum;
+                }, 0);
+                avgDays = Math.round(totalDays / paidDates.length);
+            }
+
+            document.getElementById('statOutstanding').textContent = formatCurrency(totalOutstanding);
+            document.getElementById('statPaidMonth').textContent = formatCurrency(paidThisMonth);
+            document.getElementById('statPending').textContent = pendingCount;
+            document.getElementById('statAvgDays').textContent = avgDays;
+
+            updateStatusOverview();
+        }
+
+        // Update status overview
+        function updateStatusOverview() {
+            const paidCount = allDeliveries.filter(d => getInvoiceStatus(d) === 'paid').length;
+            const pendingCount = allDeliveries.filter(d => getInvoiceStatus(d) === 'pending').length;
+            const overdueCount = allDeliveries.filter(d => getInvoiceStatus(d) === 'overdue').length;
+            const total = allDeliveries.length;
+
+            document.getElementById('legendPaid').textContent = paidCount;
+            document.getElementById('legendPending').textContent = pendingCount;
+            document.getElementById('legendOverdue').textContent = overdueCount;
+
+            const paidPercent = total > 0 ? (paidCount / total) * 100 : 0;
+            const pendingPercent = total > 0 ? (pendingCount / total) * 100 : 0;
+            const overduePercent = total > 0 ? (overdueCount / total) * 100 : 0;
+
+            const statusBar = document.getElementById('statusBar');
+            statusBar.innerHTML = `
+                <div class="status-bar-segment paid" style="flex: ${paidPercent};"></div>
+                <div class="status-bar-segment pending" style="flex: ${pendingPercent};"></div>
+                <div class="status-bar-segment overdue" style="flex: ${overduePercent};"></div>
+            `;
+        }
+
+        // Filter and search
+        function getFilteredInvoices() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+
+            return allDeliveries.filter(delivery => {
+                const job = allJobs.find(j => j.id === delivery.job_id);
+                const jobSite = job?.job_site_name || '';
+                const customer = job?.rental_company || '';
+                const status = getInvoiceStatus(delivery);
+
+                const matchesSearch = !searchTerm || jobSite.toLowerCase().includes(searchTerm) || customer.toLowerCase().includes(searchTerm);
+                const matchesStatus = !statusFilter || status === statusFilter;
+
+                return matchesSearch && matchesStatus;
+            });
+        }
+
+        // Render invoices
+        function renderInvoices() {
+            const filtered = getFilteredInvoices();
+            const tbody = document.getElementById('invoicesTableBody');
+
+            document.getElementById('resultCount').textContent = filtered.length;
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<div class="empty-state">No invoices found</div>';
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(delivery => {
+                const job = allJobs.find(j => j.id === delivery.job_id);
+                const amount = calculateAmount(delivery);
+                const status = getInvoiceStatus(delivery);
+                const invoiceNum = `INV-${delivery.id.substring(0, 8).toUpperCase()}`;
+                const isSelected = selectedInvoices.has(delivery.id);
+
+                return `
+                    <div class="table-grid row">
+                        <div><input type="checkbox" class="table-checkbox" data-id="${delivery.id}" ${isSelected ? 'checked' : ''} onchange="toggleInvoiceSelection(this)"></div>
+                        <div class="invoice-number">${invoiceNum}</div>
+                        <div>${job?.job_site_name || '-'}</div>
+                        <div>${job?.rental_company || '-'}</div>
+                        <div>${formatCurrency(amount)}</div>
+                        <div>${formatDate(delivery.timestamp)}</div>
+                        <div><span class="status-badge ${status}"><span class="dot"></span>${status}</span></div>
+                        <div>
+                            ${status !== 'paid' ? `<button class="btn btn-primary" onclick="markPaid('${delivery.id}')">Mark Paid</button>` : '-'}
+                            <button class="btn btn-secondary" onclick="viewDetails('${delivery.id}')">Details</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Toggle invoice selection
+        function toggleInvoiceSelection(checkbox) {
+            const id = checkbox.dataset.id;
+            if (checkbox.checked) {
+                selectedInvoices.add(id);
+            } else {
+                selectedInvoices.delete(id);
+            }
+            updateBulkActionsButton();
+        }
+
+        // Select all checkbox
+        document.getElementById('selectAllCheckbox').addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('.table-checkbox');
+            checkboxes.forEach(cb => {
+                cb.checked = this.checked;
+                const id = cb.dataset.id;
+                if (this.checked) {
+                    selectedInvoices.add(id);
+                } else {
+                    selectedInvoices.delete(id);
+                }
+            });
+            updateBulkActionsButton();
+        });
+
+        // Update bulk actions button
+        function updateBulkActionsButton() {
+            const btn = document.getElementById('markPaidBtn');
+            btn.disabled = selectedInvoices.size === 0;
+        }
+
+        // Mark selected as paid
+        document.getElementById('markPaidBtn').addEventListener('click', async function() {
+            if (selectedInvoices.size === 0) return;
+
+            const ids = Array.from(selectedInvoices);
+            try {
+                for (const id of ids) {
+                    await markPaid(id);
+                }
+                selectedInvoices.clear();
+                document.getElementById('selectAllCheckbox').checked = false;
+                updateBulkActionsButton();
+                await loadData();
+                showToast('Invoices marked as paid', 'success');
+            } catch (error) {
+                console.error('Error marking as paid:', error);
+                showToast('Error marking invoices as paid', 'error');
+            }
+        });
+
+        // Mark single invoice as paid
+        async function markPaid(deliveryId) {
+            const delivery = allDeliveries.find(d => d.id === deliveryId);
+            if (!delivery) return;
+
+            const now = new Date().toISOString();
+            const existingNotes = delivery.notes || '';
+            const newNotes = `PAID:${now} | ${existingNotes}`;
+
+            try {
+                const { error } = await db
+                    .from('deliveries')
+                    .update({ notes: newNotes })
+                    .eq('id', deliveryId);
+
+                if (error) {
+                    console.error('Error updating delivery:', error);
+                    showToast('Error updating payment status', 'error');
+                    return;
+                }
+
+                // Update local data
+                delivery.notes = newNotes;
+                updateStats();
+                renderInvoices();
+                showToast('Invoice marked as paid', 'success');
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Error updating payment', 'error');
+            }
+        }
+
+        // Mark paid from modal
+        async function markPaidFromModal() {
+            if (currentDetailId) {
+                await markPaid(currentDetailId);
+                closeModal();
+            }
+        }
+
+        // View details
+        function viewDetails(deliveryId) {
+            currentDetailId = deliveryId;
+            const delivery = allDeliveries.find(d => d.id === deliveryId);
+            const job = allJobs.find(j => j.id === delivery.job_id);
+            const amount = calculateAmount(delivery);
+            const status = getInvoiceStatus(delivery);
+            const invoiceNum = `INV-${delivery.id.substring(0, 8).toUpperCase()}`;
+
+            const modalBody = document.getElementById('modalBody');
+            modalBody.innerHTML = `
+                <div class="detail-section">
+                    <div class="detail-section-title">Invoice Information</div>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <div class="detail-label">Invoice #</div>
+                            <div class="detail-value">${invoiceNum}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Status</div>
+                            <div class="detail-value"><span class="status-badge ${status}"><span class="dot"></span>${status}</span></div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Job Site</div>
+                            <div class="detail-value">${job?.job_site_name || '-'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Customer</div>
+                            <div class="detail-value">${job?.rental_company || '-'}</div>
+                        </div>
+                        <div class="detail-item full">
+                            <div class="detail-label">Date Created</div>
+                            <div class="detail-value">${formatDate(delivery.timestamp)}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <div class="detail-section-title">Delivery Details</div>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <div class="detail-label">Diesel (Gallons)</div>
+                            <div class="detail-value">${delivery.diesel_gallons || 0} gal</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">DEF (Gallons)</div>
+                            <div class="detail-value">${delivery.def_gallons || 0} gal</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Diesel Rate</div>
+                            <div class="detail-value">$${DIESEL_RATE.toFixed(2)}/gal</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">DEF Rate</div>
+                            <div class="detail-value">$${DEF_RATE.toFixed(2)}/gal</div>
+                        </div>
+                        <div class="detail-item full">
+                            <div class="detail-label">Total Amount</div>
+                            <div class="detail-value" style="font-size: 1.2rem; font-weight: 700; color: #60a5fa;">${formatCurrency(amount)}</div>
+                        </div>
+                    </div>
+                </div>
+
+                ${status === 'paid' ? `
+                    <div class="detail-section">
+                        <div class="detail-section-title">Payment Information</div>
+                        <div class="detail-grid">
+                            <div class="detail-item full">
+                                <div class="detail-label">Payment Date</div>
+                                <div class="detail-value">${getPaymentDate(delivery) || '-'}</div>
+                            </div>
+                        </div>
+                    </div>
+                ` : ''}
+
+                ${delivery.notes && !delivery.notes.includes('PAID:') ? `
+                    <div class="detail-section">
+                        <div class="detail-section-title">Notes</div>
+                        <div class="detail-grid">
+                            <div class="detail-item full">
+                                <div class="detail-value">${delivery.notes}</div>
+                            </div>
+                        </div>
+                    </div>
+                ` : ''}
+            `;
+
+            const markPaidBtn = document.getElementById('markPaidInModalBtn');
+            if (status === 'paid') {
+                markPaidBtn.disabled = true;
+                markPaidBtn.textContent = 'Already Paid';
+            } else {
+                markPaidBtn.disabled = false;
+                markPaidBtn.textContent = 'Mark as Paid';
+            }
+
+            document.getElementById('detailsModal').classList.add('show');
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('detailsModal').classList.remove('show');
+            currentDetailId = null;
+        }
+
+        // Render customer summary
+        function renderCustomerSummary() {
+            const customerMap = {};
+
+            allDeliveries.forEach(delivery => {
+                const job = allJobs.find(j => j.id === delivery.job_id);
+                const customer = job?.rental_company || 'Unknown';
+                const amount = calculateAmount(delivery);
+                const status = getInvoiceStatus(delivery);
+
+                if (!customerMap[customer]) {
+                    customerMap[customer] = { paid: 0, owed: 0 };
+                }
+
+                if (status === 'paid') {
+                    customerMap[customer].paid += amount;
+                } else {
+                    customerMap[customer].owed += amount;
+                }
+            });
+
+            const customerList = document.getElementById('customerList');
+            const customers = Object.entries(customerMap).sort((a, b) => (b[1].owed + b[1].paid) - (a[1].owed + a[1].paid));
+
+            if (customers.length === 0) {
+                customerList.innerHTML = '<div class="empty-state">No customer data</div>';
+                return;
+            }
+
+            customerList.innerHTML = customers.map(([name, amounts]) => `
+                <div class="customer-item">
+                    <div class="customer-item-name">${name}</div>
+                    <div class="customer-item-amounts">
+                        <div class="customer-item-amount">
+                            <div class="customer-item-label">Amount Owed</div>
+                            <div class="customer-item-value owed">${formatCurrency(amounts.owed)}</div>
+                        </div>
+                        <div class="customer-item-amount">
+                            <div class="customer-item-label">Amount Paid</div>
+                            <div class="customer-item-value paid">${formatCurrency(amounts.paid)}</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Toggle customer summary
+        function toggleCustomerSummary() {
+            const title = document.querySelector('.customer-summary-title');
+            title.classList.toggle('collapsed');
+            const list = document.getElementById('customerList');
+            list.style.display = list.style.display === 'none' ? 'flex' : 'none';
+        }
+
+        // Search and filter event listeners
+        document.getElementById('searchInput').addEventListener('input', () => {
+            selectedInvoices.clear();
+            document.getElementById('selectAllCheckbox').checked = false;
+            renderInvoices();
+            updateBulkActionsButton();
+        });
+
+        document.getElementById('statusFilter').addEventListener('change', () => {
+            selectedInvoices.clear();
+            document.getElementById('selectAllCheckbox').checked = false;
+            renderInvoices();
+            updateBulkActionsButton();
+        });
+
+        // Show toast
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast show ${type}`;
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Load on page start
+        loadData();
+    </script>
+</body>
+</html>

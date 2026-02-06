@@ -178,6 +178,29 @@
         .history-incident-media { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
         .history-incident-media img, .history-incident-media video { width: 70px; height: 70px; object-fit: cover; border-radius: 6px; cursor: pointer; }
 
+        /* GPS Location Tracker */
+        .gps-section { background: #242424; border: 1px solid #333; border-radius: 12px; padding: 16px; margin-top: 20px; }
+        .gps-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+        .gps-title { font-size: 0.9rem; font-weight: 600; color: #f5f0e8; }
+        .gps-button { display: flex; align-items: center; gap: 8px; padding: 12px 16px; background: #333; border: 1px solid #444; border-radius: 8px; color: #888; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 500; transition: all 0.2s; flex: 1; }
+        .gps-button:hover:not(.gps-button.disabled) { background: #3d3d3d; border-color: #555; color: #f5f0e8; }
+        .gps-button.disabled { opacity: 0.6; cursor: not-allowed; }
+        .gps-button.capturing { background: rgba(96, 165, 250, 0.15); border-color: #60a5fa; color: #60a5fa; }
+        .gps-button.success { background: rgba(34, 197, 94, 0.15); border-color: #22c55e; color: #22c55e; }
+        .gps-button.error { background: rgba(239, 68, 68, 0.15); border-color: #ef4444; color: #ef4444; }
+        .gps-icon { width: 18px; height: 18px; flex-shrink: 0; }
+        .gps-status { padding: 12px; background: #1e1e1e; border-radius: 8px; border: 1px solid #333; margin-top: 12px; display: none; }
+        .gps-status.show { display: block; }
+        .gps-status.success { border-color: #22c55e; background: rgba(34, 197, 94, 0.05); }
+        .gps-status.error { border-color: #ef4444; background: rgba(239, 68, 68, 0.05); }
+        .gps-coords { font-size: 0.85rem; color: #f5f0e8; font-family: 'Courier New', monospace; margin-bottom: 6px; }
+        .gps-coords-label { font-size: 0.7rem; color: #666; text-transform: uppercase; margin-bottom: 4px; }
+        .gps-coords-value { display: flex; justify-content: space-between; align-items: center; }
+        .gps-map-link { display: inline-block; margin-top: 8px; padding: 6px 10px; background: #60a5fa; color: #1a1a1a; border-radius: 6px; text-decoration: none; font-size: 0.8rem; font-weight: 600; text-align: center; flex: 1; max-width: 100px; }
+        .gps-map-link:hover { background: #3b82f6; }
+        .gps-error-msg { font-size: 0.85rem; color: #ef4444; margin-bottom: 0; }
+        .gps-success-msg { font-size: 0.85rem; color: #22c55e; display: flex; align-items: center; gap: 6px; }
+
         /* Toast */
         .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); padding: 12px 24px; border-radius: 10px; font-size: 0.85rem; font-weight: 500; z-index: 2000; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
         .toast.show { opacity: 1; }
@@ -245,6 +268,7 @@
 
     <script src="supabase-client.js"></script>
     <script src="notifications.js"></script>
+    <script src="realtime.js"></script>
     <script>
         const currentUser = checkAuth(['fieldworker']);
         if (!currentUser) throw new Error('Not authenticated');
@@ -271,6 +295,7 @@
         let selectedPhotos = [];
         let selectedVideos = [];
         let activeUnits = {};
+        let capturedGPS = null;
 
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
@@ -466,7 +491,31 @@
                             <label>Notes (optional)</label>
                             <textarea id="invoiceNotes" placeholder="Gate codes, issues, etc..."></textarea>
                         </div>
+                    </div>
 
+                    <div class="gps-section">
+                        <div class="gps-header">
+                            <svg class="gps-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                            <span class="gps-title">Delivery Location</span>
+                        </div>
+                        <button type="button" class="gps-button" id="gpsButton" onclick="captureGPSLocation()">
+                            <svg class="gps-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                            </svg>
+                            Capture Location
+                        </button>
+                        <div class="gps-status" id="gpsStatus">
+                            <div class="gps-coords-label">📍 GPS Coordinates</div>
+                            <div class="gps-coords-value" id="gpsCoords"></div>
+                            <a class="gps-map-link" id="gpsMapLink" href="#" target="_blank">Open Map</a>
+                        </div>
+                    </div>
+
+                    <div class="invoice-details" style="margin-top: 20px;">
+                        <div class="section-title" style="margin-top:0;">Invoice Details</div>
                         <label class="incident-toggle" onclick="toggleIncident()">
                             <input type="checkbox" id="hasIncident">
                             <div class="toggle-switch"></div>
@@ -523,12 +572,79 @@
             document.body.style.overflow = 'hidden';
         }
 
+        function captureGPSLocation() {
+            const gpsButton = document.getElementById('gpsButton');
+            const gpsStatus = document.getElementById('gpsStatus');
+
+            if (!navigator.geolocation) {
+                gpsButton.className = 'gps-button error';
+                gpsStatus.className = 'gps-status show error';
+                gpsStatus.innerHTML = '<p class="gps-error-msg">Geolocation not supported by this browser</p>';
+                return;
+            }
+
+            gpsButton.className = 'gps-button capturing';
+            gpsButton.disabled = true;
+            gpsButton.innerHTML = '<svg class="gps-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/></svg> Capturing...';
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const { latitude, longitude, accuracy } = position.coords;
+                    capturedGPS = { latitude, longitude, accuracy };
+
+                    const lat = latitude.toFixed(6);
+                    const lng = longitude.toFixed(6);
+
+                    gpsButton.className = 'gps-button success';
+                    gpsButton.disabled = true;
+                    gpsButton.innerHTML = `<svg class="gps-icon" fill="currentColor" viewBox="0 0 24 24"><path d="M9 12a3 3 0 100-6 3 3 0 000 6z"/><path d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.244-4.243a8 8 0 1111.314 0z"/></svg> Location Captured ✓`;
+
+                    gpsStatus.className = 'gps-status show success';
+                    gpsStatus.innerHTML = `
+                        <div class="gps-coords-label">📍 GPS Coordinates</div>
+                        <div class="gps-coords">
+                            <div><strong>Latitude:</strong> ${lat}</div>
+                            <div><strong>Longitude:</strong> ${lng}</div>
+                            <div style="font-size:0.75rem;color:#666;margin-top:4px;">Accuracy: ±${Math.round(accuracy)}m</div>
+                        </div>
+                        <a class="gps-map-link" href="https://www.google.com/maps/?q=${lat},${lng}" target="_blank">Open in Google Maps</a>
+                    `;
+
+                    showToast(`Location captured: ${lat}, ${lng}`, 'success');
+                },
+                (error) => {
+                    let errorMsg = 'Unable to get location';
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMsg = 'Location permission denied. Enable in browser settings.';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMsg = 'Location information unavailable';
+                            break;
+                        case error.TIMEOUT:
+                            errorMsg = 'Location request timed out';
+                            break;
+                    }
+
+                    gpsButton.className = 'gps-button error';
+                    gpsButton.disabled = false;
+                    gpsButton.innerHTML = '<svg class="gps-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Capture Location';
+
+                    gpsStatus.className = 'gps-status show error';
+                    gpsStatus.innerHTML = `<p class="gps-error-msg">⚠️ ${errorMsg}</p>`;
+
+                    showToast(errorMsg, 'error');
+                }
+            );
+        }
+
         function closeInvoiceModal() {
             document.getElementById('invoiceModal')?.remove();
             document.body.style.overflow = '';
             selectedPhotos = [];
             selectedVideos = [];
             activeUnits = {};
+            capturedGPS = null;
         }
 
         function toggleUnit(unitId) {
@@ -645,20 +761,29 @@
             const date = document.getElementById('invoiceDate').value;
             const time = document.getElementById('invoiceTime').value;
 
+            let notes = document.getElementById('invoiceNotes').value;
+            if (capturedGPS) {
+                const gpsString = `GPS: ${capturedGPS.latitude.toFixed(6)}, ${capturedGPS.longitude.toFixed(6)} | `;
+                notes = gpsString + (notes || '');
+            }
+
             const { data, error } = await db.from('invoices').insert([{
                 job_id: jobId,
                 worker_id: currentUser.id,
                 worker_name: document.getElementById('workerName').value,
                 invoice_date: date,
                 invoice_time: time,
-                notes: document.getElementById('invoiceNotes').value,
+                notes: notes,
                 units_data: unitsData,
                 total_diesel: totalDiesel,
                 total_def: totalDef,
                 has_incident: hasIncident,
                 incident_description: hasIncident ? document.getElementById('incidentDescription').value : null,
                 incident_photos: uploadedPhotos,
-                incident_videos: uploadedVideos
+                incident_videos: uploadedVideos,
+                latitude: capturedGPS?.latitude || null,
+                longitude: capturedGPS?.longitude || null,
+                location_accuracy: capturedGPS?.accuracy || null
             }]).select().single();
 
             if (error) {

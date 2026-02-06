@@ -473,7 +473,10 @@ async function createDelivery(deliveryData) {
             fuel_type: deliveryData.fuelType,
             notes: sanitizeInput(deliveryData.notes),
             delivered_by: deliveryData.deliveredById || null,
-            delivered_by_name: sanitizeInput(deliveryData.deliveredByName)
+            delivered_by_name: sanitizeInput(deliveryData.deliveredByName),
+            latitude: deliveryData.latitude || null,
+            longitude: deliveryData.longitude || null,
+            location_accuracy: deliveryData.locationAccuracy || null
         }])
         .select()
         .single();
@@ -503,6 +506,9 @@ async function createDeliveryWithIncident(deliveryData) {
             unit_number: sanitizeInput(deliveryData.unitNumber) || null,
             unit_hours: deliveryData.unitHours || null,
             def_gallons: deliveryData.defGallons || null,
+            latitude: deliveryData.latitude || null,
+            longitude: deliveryData.longitude || null,
+            location_accuracy: deliveryData.locationAccuracy || null,
             timestamp: deliveryData.timestamp || new Date().toISOString()
         }])
         .select()
