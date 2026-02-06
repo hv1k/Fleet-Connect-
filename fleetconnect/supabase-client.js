@@ -251,10 +251,14 @@ async function getJobsForCurrentUser() {
             return merged;
         case 'rental':
             const allRentalJobs = await getAllJobs();
-            return allRentalJobs.filter(j =>
-                j.rental_company && user.company &&
-                j.rental_company.toLowerCase().includes(user.company.toLowerCase())
-            );
+            return allRentalJobs.filter(j => {
+                // Show jobs where rental_company matches user's company
+                const companyMatch = j.rental_company && user.company &&
+                    j.rental_company.toLowerCase().includes(user.company.toLowerCase());
+                // Also show jobs created by this user (e.g. Power Plus jobs they scanned)
+                const createdByMe = j.created_by && j.created_by === user.id;
+                return companyMatch || createdByMe;
+            });
         case 'fieldworker':
             return await getJobsByWorker(user.id);
         default:
@@ -601,7 +605,15 @@ function formatJobType(type) {
         'equipment-tow': 'Equipment Tow',
         'emergency-fuel': 'Emergency Fuel',
         'pickup': 'Pickup',
-        'delivery': 'Delivery'
+        'delivery': 'Delivery',
+        'swap': 'Swap',
+        'service': 'Service',
+        'mechanic-inspection': 'Mechanic Inspection',
+        'mechanic-repair': 'Mechanic Repair',
+        'hour-check': 'Hour Check',
+        'emergency-response': 'Emergency Response',
+        'unit-removal': 'Unit Removal',
+        'on-site-relocation': 'On-Site Relocation'
     };
     return types[type] || type || '-';
 }
