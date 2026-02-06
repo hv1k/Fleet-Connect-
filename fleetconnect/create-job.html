@@ -169,8 +169,8 @@
             <div class="content">
                 <!-- Scan Invoice -->
                 <div class="scan-card" id="scanSection">
-                    <h2>📄 Quick Entry — Scan Invoice</h2>
-                    <p>Take a photo of your rental invoice and AI will auto-fill the form</p>
+                    <h2>📄 Quick Entry — Scan Document</h2>
+                    <p>Take a photo of a Sunbelt invoice or Power Plus field ticket and AI will auto-fill the form</p>
                     <div class="scan-buttons">
                         <label class="scan-btn scan-btn-primary">
                             <span>📷</span> Take Photo
@@ -300,6 +300,14 @@
                                         <option value="emergency-fuel">Emergency Fuel</option>
                                         <option value="pickup">Pickup</option>
                                         <option value="delivery">Delivery</option>
+                                        <option value="swap">Swap</option>
+                                        <option value="service">Service</option>
+                                        <option value="mechanic-inspection">Mechanic Inspection</option>
+                                        <option value="mechanic-repair">Mechanic Repair</option>
+                                        <option value="hour-check">Hour Check</option>
+                                        <option value="emergency-response">Emergency Response</option>
+                                        <option value="unit-removal">Unit Removal</option>
+                                        <option value="on-site-relocation">On Site Relocation</option>
                                     </select>
                                 </div>
                                 <div class="form-group">
@@ -311,16 +319,97 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="form-group">
-                                <label>Assign Vendor</label>
-                                <select id="assignVendor">
-                                    <option value="">Unassigned — Available to all vendors</option>
-                                </select>
-                                <p style="color:#666;font-size:0.78rem;margin-top:4px;">Leave unassigned to let any vendor accept this job</p>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Assign Vendor</label>
+                                    <select id="assignVendor">
+                                        <option value="">Unassigned — Available to all vendors</option>
+                                    </select>
+                                    <p style="color:#666;font-size:0.78rem;margin-top:4px;">Leave unassigned to let any vendor accept this job</p>
+                                </div>
+                                <div class="form-group">
+                                    <label>Document Source</label>
+                                    <select id="documentSource">
+                                        <option value="">None</option>
+                                        <option value="sunbelt">Sunbelt Rental Invoice</option>
+                                        <option value="powerplus">Power Plus Field Ticket</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
                             </div>
                             <div class="form-group">
                                 <label>Special Instructions</label>
                                 <textarea id="instructions" placeholder="Gate codes, access instructions, safety notes..."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Power Plus / Field Ticket Info (hidden by default, shown when Power Plus scanned) -->
+                        <div class="form-section" id="ticketInfoSection" style="display:none;">
+                            <div class="section-label">Field Ticket Info <span style="font-weight:400;text-transform:none;font-size:0.75rem;color:#888;">(Power Plus)</span></div>
+                            <div class="form-row-4">
+                                <div class="form-group"><label>Field Ticket ID</label><input type="text" id="fieldTicketId" placeholder="e.g. 1409099"></div>
+                                <div class="form-group"><label>Ticket Type</label><input type="text" id="ticketType" placeholder="e.g. SWAP"></div>
+                                <div class="form-group"><label>Area</label><input type="text" id="area" placeholder="e.g. SAN"></div>
+                                <div class="form-group"><label>Ticket Status</label><input type="text" id="ticketStatus" placeholder="e.g. TENTATIVE"></div>
+                            </div>
+                            <div class="form-row-3">
+                                <div class="form-group"><label>Old Gen Hour</label><input type="text" id="oldGenHour" placeholder="Hour reading"></div>
+                                <div class="form-group"><label>New Gen ID</label><input type="text" id="newGenId" placeholder="New generator ID"></div>
+                                <div class="form-group"><label>New Gen Hour</label><input type="text" id="newGenHour" placeholder="Hour reading"></div>
+                            </div>
+                            <div class="form-group">
+                                <label>Work Performed</label>
+                                <input type="text" id="workPerformed" placeholder="e.g. Fuel Delivery, Swap, Hour Check">
+                                <p style="color:#666;font-size:0.78rem;margin-top:4px;">Comma-separated list of work types performed</p>
+                            </div>
+                            <div class="form-group">
+                                <label>Technician Name</label>
+                                <input type="text" id="technicianName" placeholder="Field technician name">
+                            </div>
+                        </div>
+
+                        <!-- Generator / Unit Info (hidden by default) -->
+                        <div class="form-section" id="generatorSection" style="display:none;">
+                            <div class="section-label">Generator / Unit Information</div>
+                            <div class="form-row">
+                                <div class="form-group"><label>Generator Type</label><input type="text" id="genType" placeholder="e.g. 400 KVA GENERATOR"></div>
+                                <div class="form-group"><label>Tank Capacity</label><input type="text" id="tankCapacity" placeholder="e.g. 491"></div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group"><label>Last Service Date</label><input type="date" id="lastServiceDate"></div>
+                                <div class="form-group"><label>Last Service Hour</label><input type="text" id="lastServiceHour" placeholder="e.g. 1003"></div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group"><label>Dimensions</label><input type="text" id="unitDimensions" placeholder="e.g. 270L x 92W x 127H"></div>
+                                <div class="form-group"><label>Unit Notes</label><input type="text" id="unitNotes" placeholder="e.g. Def Tank holds 14.87 Gallons"></div>
+                            </div>
+                            <div class="form-group">
+                                <label>Mechanical Notes</label>
+                                <textarea id="mechanicalNotes" placeholder="Tires, battery info, air filter part numbers, etc."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Billable Services (hidden by default) -->
+                        <div class="form-section" id="billableSection" style="display:none;">
+                            <div class="section-label">Billable Services</div>
+                            <div class="form-row-3">
+                                <div class="form-group"><label>Fuel (gallons)</label><input type="text" id="fuelGallons" placeholder="Gallons"></div>
+                                <div class="form-group"><label>DEF (gallons)</label><input type="text" id="defGallons" placeholder="Gallons"></div>
+                                <div class="form-group"><label>Oil</label><input type="text" id="oil" placeholder="Amount"></div>
+                            </div>
+                            <div class="form-row-3">
+                                <div class="form-group"><label>Fuel Filter</label><input type="text" id="fuelFilter" placeholder="Part # / info"></div>
+                                <div class="form-group"><label>Oil Filter</label><input type="text" id="oilFilter" placeholder="Part # / info"></div>
+                                <div class="form-group"><label>Racor Filter</label><input type="text" id="racorFilter" placeholder="Part # / info"></div>
+                            </div>
+                            <div class="form-row-3">
+                                <div class="form-group"><label>Coolant Filter</label><input type="text" id="coolantFilter" placeholder="Part # / info"></div>
+                                <div class="form-group"><label>Air Filter (outer)</label><input type="text" id="airFilterOuter" placeholder="Part # / info"></div>
+                                <div class="form-group"><label>Air Filter (inner)</label><input type="text" id="airFilterInner" placeholder="Part # / info"></div>
+                            </div>
+                            <div class="form-group">
+                                <label>Other Billable Services</label>
+                                <input type="text" id="otherBillableServices" placeholder="Additional services">
                             </div>
                         </div>
 
@@ -401,6 +490,14 @@
         // Default date
         document.getElementById('dateOut').value = new Date().toISOString().split('T')[0];
 
+        // Toggle Power Plus sections based on document source
+        document.getElementById('documentSource').addEventListener('change', function() {
+            const isPP = this.value === 'powerplus';
+            document.getElementById('ticketInfoSection').style.display = isPP ? '' : 'none';
+            document.getElementById('generatorSection').style.display = isPP ? '' : 'none';
+            document.getElementById('billableSection').style.display = isPP ? '' : 'none';
+        });
+
         // ===== INVOICE SCANNING =====
         let extractedData = {};
         let scannedInvoiceFile = null;
@@ -465,34 +562,62 @@
         function showExtractedData() {
             const preview = document.getElementById('extractedPreview');
             const items = document.getElementById('extractedItems');
+            const isPowerPlus = extractedData.documentType === 'powerplus';
+
+            // Show/hide Power Plus sections
+            if (isPowerPlus) {
+                document.getElementById('ticketInfoSection').style.display = '';
+                document.getElementById('generatorSection').style.display = '';
+                document.getElementById('billableSection').style.display = '';
+                document.getElementById('documentSource').value = 'powerplus';
+            }
+
+            // Common fields
             const fields = [
+                { key: 'documentType', label: 'Document Type', format: v => v === 'powerplus' ? '⚡ Power Plus Field Ticket' : v === 'sunbelt' ? '🔶 Sunbelt Rental Invoice' : '📄 ' + v },
+                { key: 'fieldTicketId', label: 'Field Ticket ID' },
+                { key: 'ticketType', label: 'Ticket Type' },
                 { key: 'contractNumber', label: 'Contract #' },
                 { key: 'poNumber', label: 'P.O. #' },
                 { key: 'jobSiteName', label: 'Job Site' },
                 { key: 'addressStreet', label: 'Address' },
                 { key: 'addressCity', label: 'City' },
                 { key: 'addressState', label: 'State' },
-                { key: 'addressZip', label: 'ZIP' },
-                { key: 'orderId', label: 'Order ID' },
-                { key: 'jobNumber', label: 'Job Number' },
                 { key: 'customerName', label: 'Customer' },
                 { key: 'customerNumber', label: 'Customer #' },
-                { key: 'vendorNumber', label: 'Vendor #' },
-                { key: 'cNumber', label: 'C#' },
-                { key: 'jNumber', label: 'J#' },
-                { key: 'contactName', label: 'Ordered By' },
+                { key: 'contactName', label: 'Contact' },
                 { key: 'contactPhone', label: 'Phone' },
+                { key: 'dateOut', label: 'Scheduled Date' },
+                { key: 'area', label: 'Area' },
+                { key: 'ticketStatus', label: 'Status' },
+                { key: 'orderId', label: 'Order ID' },
+                { key: 'jobNumber', label: 'Job Number' },
+                { key: 'vendorNumber', label: 'Vendor #' },
                 { key: 'rentalCompany', label: 'Rental Company' },
-                { key: 'salesman', label: 'Salesman' }
+                { key: 'salesman', label: 'Salesman' },
+                { key: 'genType', label: 'Generator Type' },
+                { key: 'tankCapacity', label: 'Tank Capacity' },
+                { key: 'lastServiceDate', label: 'Last Service Date' },
+                { key: 'lastServiceHour', label: 'Last Service Hour' },
+                { key: 'fuelGallons', label: 'Fuel (gal)' },
+                { key: 'defGallons', label: 'DEF (gal)' },
+                { key: 'technicianName', label: 'Technician' }
             ];
 
             let html = '';
             let found = false;
             for (const f of fields) {
-                if (extractedData[f.key]) {
+                const val = extractedData[f.key];
+                if (val && val !== '') {
                     found = true;
-                    html += `<div class="extracted-item"><span class="extracted-label">${f.label}</span><span class="extracted-value">${extractedData[f.key]}</span></div>`;
+                    const display = f.format ? f.format(val) : val;
+                    html += `<div class="extracted-item"><span class="extracted-label">${f.label}</span><span class="extracted-value">${display}</span></div>`;
                 }
+            }
+            if (extractedData.workPerformed && extractedData.workPerformed.length > 0) {
+                found = true;
+                const wp = Array.isArray(extractedData.workPerformed) ? extractedData.workPerformed.join(', ') : extractedData.workPerformed;
+                html += `<div class="extracted-item"><span class="extracted-label">Work Performed</span><span class="extracted-value">${wp}</span></div>`;
             }
             if (extractedData.equipment && extractedData.equipment.length > 0) {
                 found = true;
@@ -506,23 +631,79 @@
         function cancelScan() { document.getElementById('scanModal').classList.remove('show'); }
 
         function applyExtracted() {
-            const allFields = [
+            // Common fields (Sunbelt + Power Plus)
+            const commonFields = [
                 'contractNumber', 'poNumber', 'jobSiteName', 'addressStreet', 'addressCity',
                 'addressState', 'addressZip', 'contactName', 'contactPhone', 'orderId',
                 'jobNumber', 'customerName', 'customerNumber', 'vendorNumber',
                 'rentalCompany', 'salesman', 'cNumber', 'jNumber'
             ];
+            // Power Plus specific fields
+            const powerPlusFields = [
+                'fieldTicketId', 'ticketType', 'area', 'ticketStatus',
+                'oldGenHour', 'newGenId', 'newGenHour', 'technicianName',
+                'genType', 'tankCapacity', 'lastServiceHour', 'unitDimensions', 'unitNotes',
+                'fuelGallons', 'defGallons', 'oil', 'fuelFilter', 'oilFilter',
+                'racorFilter', 'coolantFilter', 'airFilterOuter', 'airFilterInner',
+                'otherBillableServices'
+            ];
+
+            const allFields = [...commonFields, ...powerPlusFields];
             for (const id of allFields) {
                 if (extractedData[id]) {
                     const el = document.getElementById(id);
                     if (el) { el.value = extractedData[id]; el.classList.add('auto-filled'); }
                 }
             }
+
+            // Date/time fields
             if (extractedData.dateOut) { document.getElementById('dateOut').value = extractedData.dateOut; }
             if (extractedData.estReturn) { document.getElementById('estReturn').value = extractedData.estReturn; }
             if (extractedData.timeOut) { document.getElementById('timeOut').value = extractedData.timeOut; }
             if (extractedData.timeReturn) { document.getElementById('timeReturn').value = extractedData.timeReturn; }
+            if (extractedData.lastServiceDate) { document.getElementById('lastServiceDate').value = extractedData.lastServiceDate; }
 
+            // Work performed → text field + auto-set job type
+            if (extractedData.workPerformed && extractedData.workPerformed.length > 0) {
+                const wp = Array.isArray(extractedData.workPerformed) ? extractedData.workPerformed : [extractedData.workPerformed];
+                const wpEl = document.getElementById('workPerformed');
+                if (wpEl) { wpEl.value = wp.join(', '); wpEl.classList.add('auto-filled'); }
+
+                // Try to set job type from first work performed item
+                const typeMap = {
+                    'fuel delivery': 'fuel-delivery', 'swap': 'swap', 'service': 'service',
+                    'mechanic inspection': 'mechanic-inspection', 'mechanic repair': 'mechanic-repair',
+                    'hour check': 'hour-check', 'delivery': 'delivery', 'pickup': 'pickup',
+                    'emergency response': 'emergency-response', 'unit removal': 'unit-removal',
+                    'on site relocation': 'on-site-relocation'
+                };
+                for (const w of wp) {
+                    const mapped = typeMap[w.toLowerCase().trim()];
+                    if (mapped) { document.getElementById('jobType').value = mapped; break; }
+                }
+            }
+
+            // Mechanical notes → textarea
+            if (extractedData.mechanicalNotes) {
+                const mn = document.getElementById('mechanicalNotes');
+                if (mn) {
+                    let notes = extractedData.mechanicalNotes;
+                    // Append part numbers if available
+                    const parts = [];
+                    if (extractedData.fuelFilterParts) parts.push('Fuel Filter: ' + extractedData.fuelFilterParts);
+                    if (extractedData.oilFilterParts) parts.push('Oil Filter: ' + extractedData.oilFilterParts);
+                    if (extractedData.airFilterParts) parts.push('Air Filter: ' + extractedData.airFilterParts);
+                    if (extractedData.racorFilterParts) parts.push('Racor Filter: ' + extractedData.racorFilterParts);
+                    if (extractedData.coolantFilterParts) parts.push('Coolant Filter: ' + extractedData.coolantFilterParts);
+                    if (extractedData.beltPart) parts.push('Belt: ' + extractedData.beltPart);
+                    if (extractedData.otherPart) parts.push('Other: ' + extractedData.otherPart);
+                    if (parts.length > 0) notes += '\n\nPart Numbers:\n' + parts.join('\n');
+                    mn.value = notes;
+                    mn.classList.add('auto-filled');
+                }
+            }
+
+            // Equipment
             if (extractedData.equipment && extractedData.equipment.length > 0) {
                 equipmentItems = extractedData.equipment.map(eq => ({
                     id: Date.now() + Math.random(),
@@ -532,6 +713,16 @@
                     autoFilled: true
                 }));
                 renderEquipment();
+            }
+
+            // Show Power Plus sections if applicable
+            if (extractedData.documentType === 'powerplus') {
+                document.getElementById('ticketInfoSection').style.display = '';
+                document.getElementById('generatorSection').style.display = '';
+                document.getElementById('billableSection').style.display = '';
+                document.getElementById('documentSource').value = 'powerplus';
+            } else if (extractedData.documentType === 'sunbelt') {
+                document.getElementById('documentSource').value = 'sunbelt';
             }
 
             document.getElementById('extractedPreview').classList.remove('show');
@@ -647,7 +838,41 @@
                 assignedVendor: document.getElementById('assignVendor').value || null,
                 status: document.getElementById('assignVendor').value ? 'assigned' : 'pending',
                 createdBy: currentUser?.id,
-                invoiceImage: invoiceImageUrl
+                invoiceImage: invoiceImageUrl,
+                documentSource: document.getElementById('documentSource').value || null,
+                // Power Plus / Field Ticket fields
+                fieldTicketId: document.getElementById('fieldTicketId').value || null,
+                ticketType: document.getElementById('ticketType').value || null,
+                area: document.getElementById('area').value || null,
+                ticketStatus: document.getElementById('ticketStatus').value || null,
+                oldGenHour: document.getElementById('oldGenHour').value || null,
+                newGenId: document.getElementById('newGenId').value || null,
+                newGenHour: document.getElementById('newGenHour').value || null,
+                workPerformed: document.getElementById('workPerformed').value || null,
+                technicianName: document.getElementById('technicianName').value || null,
+                // Generator info
+                generatorInfo: {
+                    genType: document.getElementById('genType').value || null,
+                    tankCapacity: document.getElementById('tankCapacity').value || null,
+                    lastServiceDate: document.getElementById('lastServiceDate').value || null,
+                    lastServiceHour: document.getElementById('lastServiceHour').value || null,
+                    dimensions: document.getElementById('unitDimensions').value || null,
+                    unitNotes: document.getElementById('unitNotes').value || null,
+                    mechanicalNotes: document.getElementById('mechanicalNotes').value || null
+                },
+                // Billable services
+                billableServices: {
+                    fuelGallons: document.getElementById('fuelGallons').value || null,
+                    defGallons: document.getElementById('defGallons').value || null,
+                    oil: document.getElementById('oil').value || null,
+                    fuelFilter: document.getElementById('fuelFilter').value || null,
+                    oilFilter: document.getElementById('oilFilter').value || null,
+                    racorFilter: document.getElementById('racorFilter').value || null,
+                    coolantFilter: document.getElementById('coolantFilter').value || null,
+                    airFilterOuter: document.getElementById('airFilterOuter').value || null,
+                    airFilterInner: document.getElementById('airFilterInner').value || null,
+                    otherBillableServices: document.getElementById('otherBillableServices').value || null
+                }
             };
 
             const equipmentList = validEquipment.map(e => ({
