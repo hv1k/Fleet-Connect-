@@ -6,33 +6,32 @@
     <title>Admin Dashboard | FleetConnect</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
-            --bg-dark: #0a0a0f;
-            --bg-card: #12121a;
-            --bg-input: #1a1a24;
-            --bg-hover: #1e1e2a;
-            --border: #2a2a3a;
-            --text-primary: #ffffff;
-            --text-secondary: #8a8a9a;
-            --text-muted: #5a5a6a;
-            --accent: #00d4aa;
-            --accent-glow: rgba(0, 212, 170, 0.3);
-            --accent-blue: #00a8ff;
-            --warning: #ffaa00;
-            --error: #ff6b6b;
-            --success: #00d4aa;
-            --admin: #a855f7;
+            --bg-dark: #1a1a1a;
+            --bg-card: #242424;
+            --bg-input: #2a2a2a;
+            --bg-hover: #333;
+            --border: #333;
+            --text-primary: #f5f0e8;
+            --text-secondary: #888;
+            --text-muted: #666;
+            --accent: #60a5fa;
+            --accent-glow: rgba(96, 165, 250, 0.3);
+            --accent-blue: #60a5fa;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --success: #22c55e;
+            --admin: #60a5fa;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'DM Sans', sans-serif; background: var(--bg-dark); color: var(--text-primary); min-height: 100vh; line-height: 1.6; }
-        body::before { content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-image: linear-gradient(rgba(168, 85, 247, 0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(168, 85, 247, 0.02) 1px, transparent 1px); background-size: 50px 50px; pointer-events: none; z-index: 0; }
-        .container { position: relative; z-index: 1; max-width: 1400px; margin: 0 auto; padding: 40px 20px; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-dark); color: var(--text-primary); min-height: 100vh; line-height: 1.6; }
+        .container { position: relative; z-index: 1; max-width: 1400px; margin: 0 auto; padding: 24px 32px; }
         
         .nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
-        .logo { font-family: 'Space Mono', monospace; font-size: 1.5rem; color: var(--accent); letter-spacing: -1px; text-decoration: none; }
+        .logo { font-family: 'Inter', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--accent); letter-spacing: -0.5px; text-decoration: none; }
         .nav-right { display: flex; align-items: center; gap: 24px; }
         .nav-links { display: flex; gap: 24px; }
         .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: color 0.2s; }
@@ -40,18 +39,18 @@
         .admin-badge { background: var(--admin); color: white; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; }
         .user-info { display: flex; align-items: center; gap: 12px; }
         .user-name { font-size: 0.9rem; color: var(--text-secondary); }
-        .logout-btn { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); padding: 8px 16px; border-radius: 6px; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
+        .logout-btn { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); padding: 8px 16px; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
         .logout-btn:hover { border-color: var(--error); color: var(--error); }
         
         .header { margin-bottom: 32px; }
-        .header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 8px; }
+        .header h1 { font-size: 1.4rem; font-weight: 700; margin-bottom: 8px; }
         .header p { color: var(--text-secondary); }
         
         .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
         @media (max-width: 800px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
-        .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 20px; }
+        .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
         .stat-label { font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
-        .stat-value { font-size: 1.75rem; font-weight: 700; font-family: 'Space Mono', monospace; }
+        .stat-value { font-size: 1.6rem; font-weight: 700; font-family: 'Inter', sans-serif; }
         .stat-value.admin { color: var(--admin); }
         .stat-value.accent { color: var(--accent); }
         .stat-value.warning { color: var(--warning); }
@@ -71,7 +70,7 @@
         .role-badge.vendor { background: rgba(0, 212, 170, 0.15); color: var(--accent); }
         .role-badge.fieldworker { background: rgba(255, 170, 0, 0.15); color: var(--warning); }
         
-        .btn { padding: 8px 16px; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 500; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+        .btn { padding: 8px 16px; font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 500; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
         .btn-primary { background: var(--admin); color: white; border: none; }
         .btn-primary:hover { box-shadow: 0 4px 16px rgba(168, 85, 247, 0.3); }
         .btn-small { padding: 6px 12px; font-size: 0.8rem; }
@@ -91,7 +90,7 @@
         
         .form-group { margin-bottom: 20px; }
         .form-group label { display: block; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px; }
-        .form-group input, .form-group select { width: 100%; padding: 12px 14px; font-family: 'DM Sans', sans-serif; font-size: 0.95rem; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); }
+        .form-group input, .form-group select { width: 100%; padding: 12px 14px; font-family: 'Inter', sans-serif; font-size: 0.95rem; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); }
         .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--admin); }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 
@@ -112,8 +111,6 @@
                     <a href="index.html">Home</a>
                     <a href="admin-dashboard.html" class="active">Users</a>
                     <a href="work-orders.html">Work Orders</a>
-                    <a href="reports.html">Reports</a>
-                    <a href="payments.html">Payments</a>
                     <a href="settings.html">Settings</a>
                 </div>
                 <div class="admin-badge">ADMIN</div>

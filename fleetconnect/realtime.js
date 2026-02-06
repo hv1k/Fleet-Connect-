@@ -30,8 +30,8 @@
             /* Live Indicator Container */
             #fc-live-indicator-container {
                 position: fixed;
-                top: 16px;
-                right: 80px;
+                bottom: 16px;
+                left: 256px;
                 z-index: 999;
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
                 display: flex;
