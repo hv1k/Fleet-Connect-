@@ -465,9 +465,9 @@
             try {
                 const { data: deliveries, error: deliveryError } = await db
                     .from('deliveries')
-                    .select('id, gallons, job_id, created_at, jobs(job_site_name)')
-                    .gte('created_at', sevenDaysAgo.toISOString())
-                    .order('created_at', { ascending: false })
+                    .select('id, gallons, job_id, timestamp, jobs(job_site_name)')
+                    .gte('timestamp', sevenDaysAgo.toISOString())
+                    .order('timestamp', { ascending: false })
                     .limit(10);
 
                 if (deliveryError) {
@@ -481,7 +481,7 @@
                             icon: '🚚',
                             title: 'New Delivery',
                             description: `${delivery.gallons} gallons at ${jobName}`,
-                            timestamp: delivery.created_at
+                            timestamp: delivery.timestamp
                         });
                     });
                 }
@@ -493,9 +493,9 @@
             try {
                 const { data: jobs, error: jobError } = await db
                     .from('jobs')
-                    .select('id, job_site_name, status, updated_at')
-                    .gte('updated_at', sevenDaysAgo.toISOString())
-                    .order('updated_at', { ascending: false })
+                    .select('id, job_site_name, status, created_at')
+                    .gte('created_at', sevenDaysAgo.toISOString())
+                    .order('created_at', { ascending: false })
                     .limit(10);
 
                 if (jobError) {
@@ -509,7 +509,7 @@
                             icon: '📋',
                             title: 'Job Status Changed',
                             description: `${job.job_site_name || 'Unknown Job'} - Status: ${statusText}`,
-                            timestamp: job.updated_at
+                            timestamp: job.created_at
                         });
                     });
                 }
