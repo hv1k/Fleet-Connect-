@@ -621,7 +621,8 @@
             if (search) filtered = filtered.filter(j => (j.job_site_name||'').toLowerCase().includes(search) || (j.contract_number||'').toLowerCase().includes(search));
             const container = document.getElementById('jobsTable');
             if (!filtered.length) { container.innerHTML = '<div class="empty-state">No jobs found</div>'; document.getElementById('tableFooter').style.display='none'; return; }
-            const vendorId = currentUser.vendor_id;
+            const user = getCurrentUser();
+            const vendorId = user ? user.vendor_id : null;
             container.innerHTML = '<table><thead><tr><th>Job Site</th><th>Contract #</th><th>Date</th><th>Worker</th><th>Status</th><th>Actions</th></tr></thead><tbody>' + filtered.slice(0,10).map(j => {
                 const isAvailable = !j.assigned_vendor && ['pending','open'].includes(j.status);
                 const statusHtml = isAvailable
@@ -635,23 +636,23 @@
         
         async function acceptJob(id) {
             // Set this vendor as the assigned vendor when accepting
-            const vendorId = currentUser.vendor_id || null;
+            const user = getCurrentUser();
+            let vendorId = user ? user.vendor_id : null;
             if (!vendorId) {
                 // Try to find vendor record by matching user
                 const { data: found } = await db.from('vendors').select('id')
-                    .or(`user_id.eq.${currentUser.id},email.eq.${currentUser.email}`)
+                    .or(`user_id.eq.${user.id},email.eq.${user.email}`)
                     .limit(1);
                 if (found && found.length > 0) {
-                    currentUser.vendor_id = found[0].id;
-                    sessionStorage.setItem('fc_user', JSON.stringify(currentUser));
-                    await updateJobStatus(id, 'accepted', { assigned_vendor: found[0].id });
+                    user.vendor_id = found[0].id;
+                    sessionStorage.setItem('fc_user', JSON.stringify(user));
+                    vendorId = found[0].id;
                 } else {
                     alert('No vendor profile linked. Contact admin.');
                     return;
                 }
-            } else {
-                await updateJobStatus(id, 'accepted', { assigned_vendor: vendorId });
             }
+            await updateJobStatus(id, 'accepted', { assigned_vendor: vendorId });
             await loadData();
         }
         
