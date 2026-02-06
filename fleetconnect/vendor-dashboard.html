@@ -61,7 +61,6 @@
         body.dark tr:hover { background: #f0ebe3; }
         body.dark .job-name { color: #1a1a1a; }
         body.dark .job-location { color: #8c8c8c; }
-        body.dark .no-worker { color: #8c8c8c; }
         body.dark .action-btn.secondary { background: #f0ebe3; color: #1a1a1a; }
         body.dark .action-btn.secondary:hover { background: #e8e4dc; }
         body.dark .table-footer { background: #f0ebe3; border-color: #e8e4dc; color: #5c5c5c; }
@@ -71,11 +70,6 @@
         body.dark .modal-close { background: #f0ebe3; color: #5c5c5c; }
         body.dark .modal-footer { background: #f0ebe3; border-color: #e8e4dc; }
         body.dark .btn-secondary { background: #ffffff; border-color: #e8e4dc; color: #5c5c5c; }
-        body.dark .worker-option { border-color: #e8e4dc; }
-        body.dark .worker-option:hover { background: #f0ebe3; }
-        body.dark .worker-option-name { color: #1a1a1a; }
-        body.dark .worker-option-email { color: #5c5c5c; }
-        body.dark .worker-option-check { border-color: #e8e4dc; }
         body.dark .empty-state { color: #5c5c5c; }
         body.dark .sidebar-footer { border-color: #e8e4dc; }
         body.dark .toggle-switch { background: #e8e4dc; }
@@ -223,9 +217,6 @@
         tr:hover { background: #2a2a2a; }
         .job-name { font-weight: 600; color: #f5f0e8; }
         .job-location { font-size: 0.75rem; color: #666; }
-        .worker-cell { display: flex; align-items: center; gap: 10px; }
-        .worker-avatar { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, #60a5fa, #3b82f6); display: flex; align-items: center; justify-content: center; color: #1a1a1a; font-size: 0.7rem; font-weight: 600; }
-        .no-worker { color: #666; font-style: italic; }
         .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
         .status-badge.pending { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
         .status-badge.accepted { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
@@ -256,16 +247,6 @@
         .btn-primary:hover { background: #3b82f6; }
         .btn-secondary { background: #333; color: #b8b0a8; border: 1px solid #444; }
         .btn-secondary:hover { background: #444; }
-        .worker-option { display: flex; align-items: center; gap: 12px; padding: 12px; border: 2px solid #333; border-radius: 10px; cursor: pointer; margin-bottom: 8px; }
-        .worker-option:hover { border-color: #60a5fa; background: #2a2a2a; }
-        .worker-option.selected { border-color: #60a5fa; background: rgba(96, 165, 250, 0.1); }
-        .worker-option-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #60a5fa, #3b82f6); display: flex; align-items: center; justify-content: center; color: #1a1a1a; font-weight: 600; }
-        .worker-option-info { flex: 1; }
-        .worker-option-name { font-weight: 600; color: #f5f0e8; }
-        .worker-option-email { font-size: 0.8rem; color: #888; }
-        .worker-option-check { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #444; }
-        .worker-option.selected .worker-option-check { background: #60a5fa; border-color: #60a5fa; }
-        
         .empty-state { text-align: center; padding: 50px; color: #888; }
         .loading { text-align: center; padding: 40px; color: #888; }
         .spinner { width: 36px; height: 36px; border: 3px solid #333; border-top-color: #60a5fa; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
@@ -340,8 +321,8 @@
                         <div class="stat-value-row"><span class="stat-value" id="statDEF">0</span><span class="stat-unit">gal</span></div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-header"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Field Workers</div>
-                        <div class="stat-value-row"><span class="stat-value" id="statWorkers">0</span></div>
+                        <div class="stat-header"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Pending</div>
+                        <div class="stat-value-row"><span class="stat-value" id="statWorkers" style="color:#fbbf24;">0</span></div>
                     </div>
                 </div>
                 
@@ -401,14 +382,6 @@
         </main>
     </div>
     
-    <div class="modal-overlay" id="assignModal">
-        <div class="modal">
-            <div class="modal-header"><h3>Assign Field Worker</h3><button class="modal-close" onclick="closeAssignModal()">×</button></div>
-            <div class="modal-body" id="workerList"></div>
-            <div class="modal-footer"><button class="btn btn-secondary" onclick="closeAssignModal()">Cancel</button><button class="btn btn-primary" id="assignBtn" onclick="confirmAssign()" disabled>Assign</button></div>
-        </div>
-    </div>
-
     <script src="supabase-client.js"></script>
     <script src="notifications.js"></script>
     <script src="realtime.js"></script>
@@ -452,15 +425,12 @@
             loadData();
         }
         
-        let allJobs = [], allInvoices = [], fieldWorkers = [];
-        let selectedWorkerId = null, selectedJobId = null;
+        let allJobs = [], allInvoices = [];
         
         async function loadData() {
             allJobs = await getJobsForCurrentUser();
             const { data: invoices } = await db.from('invoices').select('*').order('created_at', { ascending: false });
             allInvoices = invoices || [];
-            const users = await getAllUsers();
-            fieldWorkers = users.filter(u => u.role === 'fieldworker');
             updateStats(); renderChart(); renderDonut(); renderJobs(); renderActivityFeed();
         }
         
@@ -468,7 +438,7 @@
             document.getElementById('statActiveJobs').textContent = allJobs.filter(j => ['accepted','in-progress'].includes(j.status)).length;
             document.getElementById('statDiesel').textContent = allInvoices.reduce((s,i) => s + (parseFloat(i.total_diesel)||0), 0).toFixed(0);
             document.getElementById('statDEF').textContent = allInvoices.reduce((s,i) => s + (parseFloat(i.total_def)||0), 0).toFixed(0);
-            document.getElementById('statWorkers').textContent = fieldWorkers.length;
+            document.getElementById('statWorkers').textContent = allJobs.filter(j => ['pending','assigned','open'].includes(j.status)).length;
             const pendingCount = allJobs.filter(j => ['pending','assigned'].includes(j.status)).length;
             const badge = document.getElementById('pendingBadge');
             badge.textContent = pendingCount;
@@ -537,10 +507,9 @@
                         isNew: false
                     });
                 } else if (job.assigned_worker) {
-                    const workerName = getWorkerName(job.assigned_worker) || 'Worker';
                     activities.push({
                         type: 'worker',
-                        text: '<strong>' + workerName + '</strong> assigned to <strong>' + (job.job_site_name || 'job') + '</strong>',
+                        text: 'Worker assigned to <strong>' + (job.job_site_name || 'job') + '</strong>',
                         time: job.updated_at || job.created_at,
                         isNew: false
                     });
@@ -614,8 +583,6 @@
             return formatDate(dateStr);
         }
         
-        function getWorkerName(id) { const w = fieldWorkers.find(w => w.id === id); return w ? w.name : null; }
-        
         function renderJobs() {
             const search = document.getElementById('searchInput').value.toLowerCase();
             let filtered = allJobs.filter(j => ['pending','assigned','accepted','in-progress','open'].includes(j.status));
@@ -624,12 +591,12 @@
             if (!filtered.length) { container.innerHTML = '<div class="empty-state">No jobs found</div>'; document.getElementById('tableFooter').style.display='none'; return; }
             const user = getCurrentUser();
             const vendorId = user ? user.vendor_id : null;
-            container.innerHTML = '<table><thead><tr><th>Job Site</th><th>Contract #</th><th>Date</th><th>Worker</th><th>Status</th><th>Actions</th></tr></thead><tbody>' + filtered.slice(0,10).map(j => {
+            container.innerHTML = '<table><thead><tr><th>Job Site</th><th>Contract #</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>' + filtered.slice(0,10).map(j => {
                 const isAvailable = !j.assigned_vendor && ['pending','open'].includes(j.status);
                 const statusHtml = isAvailable
                     ? '<span class="status-badge available" style="background:rgba(249,115,22,0.15);color:#f97316;"><span class="status-dot" style="background:#f97316;"></span>Available</span>'
                     : '<span class="status-badge '+j.status+'"><span class="status-dot"></span>'+j.status+'</span>';
-                return '<tr'+(isAvailable ? ' style="border-left:3px solid #f97316;"' : '')+'><td><div class="job-name">'+(j.job_site_name||'Untitled')+'</div><div class="job-location">'+(j.address_city||'')+', '+(j.address_state||'')+'</div></td><td>'+(j.contract_number||'-')+'</td><td>'+formatDate(j.date_out)+'</td><td>'+(j.assigned_worker ? '<div class="worker-cell"><div class="worker-avatar">'+(getWorkerName(j.assigned_worker)||'?').charAt(0)+'</div><span>'+(getWorkerName(j.assigned_worker)||'Unknown')+'</span></div>' : '<span class="no-worker">Unassigned</span>')+'</td><td>'+statusHtml+'</td><td><div class="actions-cell">'+(isAvailable || ['pending','assigned'].includes(j.status)?'<button class="action-btn primary" onclick="acceptJob(\''+j.id+'\')">Accept</button>':'')+(!j.assigned_worker && j.status!=='completed'?'<button class="action-btn secondary" onclick="openAssignModal(\''+j.id+'\')">Assign</button>':'')+(j.assigned_worker && j.status!=='completed'?'<button class="action-btn secondary" onclick="openAssignModal(\''+j.id+'\')">Reassign</button>':'')+'</div></td></tr>';
+                return '<tr'+(isAvailable ? ' style="border-left:3px solid #f97316;"' : '')+'><td><div class="job-name">'+(j.job_site_name||'Untitled')+'</div><div class="job-location">'+(j.address_city||'')+', '+(j.address_state||'')+'</div></td><td>'+(j.contract_number||'-')+'</td><td>'+formatDate(j.date_out)+'</td><td>'+statusHtml+'</td><td><div class="actions-cell">'+(isAvailable || ['pending','assigned'].includes(j.status)?'<button class="action-btn primary" onclick="acceptJob(\''+j.id+'\')">Accept</button>':'')+'</div></td></tr>';
             }).join('') + '</tbody></table>';
             document.getElementById('tableFooter').style.display = filtered.length > 10 ? 'flex' : 'none';
             document.getElementById('paginationInfo').textContent = 'Showing 1-'+Math.min(10,filtered.length)+' of '+filtered.length;
@@ -657,16 +624,7 @@
             await loadData();
         }
         
-        function openAssignModal(jobId) {
-            selectedJobId = jobId; selectedWorkerId = null;
-            document.getElementById('workerList').innerHTML = fieldWorkers.length ? fieldWorkers.map(w => '<div class="worker-option" onclick="selectWorker(\''+w.id+'\',this)"><div class="worker-option-avatar">'+w.name.charAt(0)+'</div><div class="worker-option-info"><div class="worker-option-name">'+w.name+'</div><div class="worker-option-email">'+w.email+'</div></div><div class="worker-option-check"></div></div>').join('') : '<div class="empty-state">No workers available</div>';
-            document.getElementById('assignBtn').disabled = true;
-            document.getElementById('assignModal').classList.add('show');
-        }
-        function selectWorker(id, el) { selectedWorkerId = id; document.querySelectorAll('.worker-option').forEach(e => e.classList.remove('selected')); el.classList.add('selected'); document.getElementById('assignBtn').disabled = false; }
-        function closeAssignModal() { document.getElementById('assignModal').classList.remove('show'); }
-        async function confirmAssign() { if (!selectedJobId || !selectedWorkerId) return; await assignWorkerToJob(selectedJobId, selectedWorkerId); closeAssignModal(); await loadData(); }
-        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAssignModal(); });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') {} });
     </script>
 </body>
 </html>

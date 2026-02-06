@@ -165,6 +165,19 @@
         .image-viewer-close { position: absolute; top: 20px; right: 20px; background: #333; border: none; color: #fff; width: 40px; height: 40px; border-radius: 50%; font-size: 1.3rem; cursor: pointer; }
         .image-viewer-close:hover { background: #444; }
 
+        /* Assign Worker Modal */
+        .worker-option { display: flex; align-items: center; gap: 12px; padding: 12px; border: 2px solid #333; border-radius: 10px; cursor: pointer; margin-bottom: 8px; }
+        .worker-option:hover { border-color: #60a5fa; background: #2a2a2a; }
+        .worker-option.selected { border-color: #60a5fa; background: rgba(96, 165, 250, 0.1); }
+        .worker-option-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #60a5fa, #3b82f6); display: flex; align-items: center; justify-content: center; color: #1a1a1a; font-weight: 600; }
+        .worker-option-info { flex: 1; }
+        .worker-option-name { font-weight: 600; color: #f5f0e8; }
+        .worker-option-email { font-size: 0.8rem; color: #888; }
+        .worker-option-check { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #444; }
+        .worker-option.selected .worker-option-check { background: #60a5fa; border-color: #60a5fa; }
+        .btn-assign { background: rgba(139, 92, 246, 0.15); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.3); }
+        .btn-assign:hover { background: rgba(139, 92, 246, 0.25); }
+
         .empty-state { text-align: center; padding: 60px 20px; color: #666; }
         .empty-state svg { width: 48px; height: 48px; margin-bottom: 16px; color: #444; }
         .empty-state h3 { color: #888; font-size: 1rem; margin-bottom: 8px; }
@@ -310,6 +323,15 @@
         </div>
     </div>
 
+    <!-- Assign Field Worker Modal -->
+    <div class="modal-overlay" id="assignWorkerModal">
+        <div class="modal" style="max-width:500px;">
+            <div class="modal-header"><h3>Assign Field Worker</h3><button class="modal-close" onclick="closeAssignWorkerModal()">&times;</button></div>
+            <div class="modal-body" id="workerList"></div>
+            <div class="modal-footer"><button class="btn btn-secondary" onclick="closeAssignWorkerModal()">Cancel</button><button class="btn btn-primary" id="assignWorkerBtn" onclick="confirmAssignWorker()" disabled>Assign</button></div>
+        </div>
+    </div>
+
     <!-- Toast -->
     <div class="toast" id="toast"></div>
 
@@ -382,20 +404,22 @@
         `;
 
         // ===== DATA =====
-        let allJobs = [], allEquipment = [], allDeliveries = [], allVendors = [];
+        let allJobs = [], allEquipment = [], allDeliveries = [], allVendors = [], fieldWorkers = [];
 
         async function loadData() {
             try {
-                const [jobs, deliveries, vendors, eqRes] = await Promise.all([
+                const [jobs, deliveries, vendors, eqRes, usersRes] = await Promise.all([
                     getJobsForCurrentUser(),
                     getDeliveriesForCurrentUser(),
                     getAllVendors(),
-                    db.from('equipment').select('*')
+                    db.from('equipment').select('*'),
+                    db.from('users').select('*')
                 ]);
                 allJobs = jobs;
                 allDeliveries = deliveries;
                 allVendors = vendors;
                 allEquipment = eqRes.data || [];
+                fieldWorkers = (usersRes.data || []).filter(u => u.role === 'fieldworker');
 
                 updateStats();
                 renderJobs();
@@ -474,6 +498,7 @@
                             ${deliveries.length > 0 ? '<button class="btn btn-secondary" onclick="openDeliveries(\'' + job.id + '\')">Deliveries (' + deliveries.length + ')</button>' : ''}
                             ${job.invoice_image ? '<button class="btn btn-invoice" onclick="viewImage(\'' + job.invoice_image + '\')">📄 Invoice</button>' : ''}
                             ${canRespondToJob(job) ? '<button class="btn btn-accept" onclick="acceptJob(\'' + job.id + '\')">✓ Accept</button><button class="btn btn-decline" onclick="declineJob(\'' + job.id + '\')">✗ Decline</button>' : ''}
+                            ${currentUser.role === 'vendor' && job.status !== 'completed' ? '<button class="btn btn-assign" onclick="openAssignWorkerModal(\'' + job.id + '\')">' + (job.assigned_worker ? '↻ Reassign Worker' : '👷 Assign Worker') + '</button>' : ''}
                         </div>
                     </div>
                 `;
@@ -513,6 +538,7 @@
                         <div class="detail-item"><div class="detail-label">Customer</div><div class="detail-value">${job.customer_name || '—'}</div></div>
                         <div class="detail-item"><div class="detail-label">Contact</div><div class="detail-value">${job.contact_name || '—'}${job.contact_phone ? ' · <a href="tel:' + job.contact_phone + '" style="color:#60a5fa;">' + job.contact_phone + '</a>' : ''}</div></div>
                         <div class="detail-item"><div class="detail-label">Vendor</div><div class="detail-value">${vendorName}${(!job.assigned_vendor && ['admin','rental'].includes(currentUser.role) && job.status !== 'completed') ? ' <button class="btn btn-small" onclick="showAssignVendor(\'' + jobId + '\')" style="margin-left:8px;padding:2px 10px;font-size:0.75rem;background:#60a5fa;color:#fff;border:none;border-radius:6px;cursor:pointer;">Assign</button>' : ''}</div></div>
+                        <div class="detail-item"><div class="detail-label">Field Worker</div><div class="detail-value">${job.assigned_worker ? (getWorkerName(job.assigned_worker) || 'Assigned') : '<span style="color:#555;">Unassigned</span>'}${(currentUser.role === 'vendor' && job.status !== 'completed') ? ' <button onclick="closeModal(); openAssignWorkerModal(\'' + jobId + '\')" style="margin-left:8px;padding:2px 10px;font-size:0.75rem;background:rgba(139,92,246,0.15);color:#a78bfa;border:1px solid rgba(139,92,246,0.3);border-radius:6px;cursor:pointer;">' + (job.assigned_worker ? 'Reassign' : 'Assign') + '</button>' : ''}</div></div>
                         <div class="detail-item"><div class="detail-label">Rental Company</div><div class="detail-value">${job.rental_company || '—'}</div></div>
                     </div>
                 </div>
@@ -630,7 +656,7 @@
 
         // ===== MODAL =====
         function closeModal() { document.getElementById('jobModal').classList.remove('show'); }
-        document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeImageViewer(); closeModal(); closeConfirmDecline(); } });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeImageViewer(); closeModal(); closeConfirmDecline(); closeAssignWorkerModal(); } });
 
         // ===== FILTER LISTENERS =====
         document.getElementById('searchInput').addEventListener('input', renderJobs);
@@ -921,6 +947,52 @@
                 showToast('Failed to save: ' + err.message, 'error');
                 saveBtn.textContent = 'Save Changes';
                 saveBtn.disabled = false;
+            }
+        }
+
+        // ===== ASSIGN FIELD WORKER =====
+        let selectedAssignJobId = null, selectedAssignWorkerId = null;
+
+        function getWorkerName(id) {
+            const w = fieldWorkers.find(w => w.id === id);
+            return w ? w.name : null;
+        }
+
+        function openAssignWorkerModal(jobId) {
+            selectedAssignJobId = jobId;
+            selectedAssignWorkerId = null;
+            document.getElementById('workerList').innerHTML = fieldWorkers.length
+                ? fieldWorkers.map(w => `<div class="worker-option" onclick="selectAssignWorker('${w.id}',this)"><div class="worker-option-avatar">${w.name.charAt(0)}</div><div class="worker-option-info"><div class="worker-option-name">${w.name}</div><div class="worker-option-email">${w.email}</div></div><div class="worker-option-check"></div></div>`).join('')
+                : '<div class="empty-state" style="padding:30px;">No field workers available</div>';
+            document.getElementById('assignWorkerBtn').disabled = true;
+            document.getElementById('assignWorkerModal').classList.add('show');
+        }
+
+        function selectAssignWorker(id, el) {
+            selectedAssignWorkerId = id;
+            document.querySelectorAll('.worker-option').forEach(e => e.classList.remove('selected'));
+            el.classList.add('selected');
+            document.getElementById('assignWorkerBtn').disabled = false;
+        }
+
+        function closeAssignWorkerModal() {
+            document.getElementById('assignWorkerModal').classList.remove('show');
+        }
+
+        async function confirmAssignWorker() {
+            if (!selectedAssignJobId || !selectedAssignWorkerId) return;
+            try {
+                await assignWorkerToJob(selectedAssignJobId, selectedAssignWorkerId);
+                const job = allJobs.find(j => j.id === selectedAssignJobId);
+                if (job) { job.assigned_worker = selectedAssignWorkerId; job.status = 'in-progress'; }
+                closeAssignWorkerModal();
+                updateStats();
+                renderJobs();
+                const worker = fieldWorkers.find(w => w.id === selectedAssignWorkerId);
+                showToast('Field worker ' + (worker?.name || '') + ' assigned!', 'success');
+            } catch (err) {
+                console.error('Assign worker error:', err);
+                showToast('Failed to assign worker: ' + err.message, 'error');
             }
         }
 
