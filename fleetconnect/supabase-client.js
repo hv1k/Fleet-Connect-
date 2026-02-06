@@ -336,7 +336,19 @@ async function createJob(jobData, equipmentList) {
             assigned_vendor: jobData.assignedVendor || null,
             allow_open_if_declined: jobData.allowOpenIfDeclined,
             created_by: jobData.createdBy || null,
-            invoice_image: jobData.invoiceImage || null
+            invoice_image: jobData.invoiceImage || null,
+            document_source: jobData.documentSource || null,
+            field_ticket_id: jobData.fieldTicketId || null,
+            ticket_type: jobData.ticketType || null,
+            area: jobData.area || null,
+            ticket_status: jobData.ticketStatus || null,
+            work_performed: jobData.workPerformed || null,
+            technician_name: jobData.technicianName || null,
+            old_gen_hour: jobData.oldGenHour || null,
+            new_gen_id: jobData.newGenId || null,
+            new_gen_hour: jobData.newGenHour || null,
+            generator_info: jobData.generatorInfo || null,
+            billable_services: jobData.billableServices || null
         }])
         .select()
         .single();
