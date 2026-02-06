@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 
 const supabase = createClient(
     process.env.SUPABASE_URL || 'https://ojqoxdsibiutpfhtvyyo.supabase.co',
@@ -56,11 +57,14 @@ export default async function handler(req, res) {
             });
         }
 
-        // Look up user by reset token
+        // Hash token before lookup
+        const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+        // Look up user by reset token hash
         const { data: user, error: fetchError } = await supabase
             .from('users')
             .select('id, reset_token, reset_token_expires')
-            .eq('reset_token', token)
+            .eq('reset_token', tokenHash)
             .single();
 
         if (fetchError || !user) {

@@ -7,7 +7,7 @@ const supabase = createClient(
     process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY
 );
 
-const JWT_SECRET = process.env.JWT_SECRET || 'fleetconnect-dev-secret-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET;
 const ALLOWED_ORIGINS = [
     'https://fleet-connect-three.vercel.app',
     'http://localhost:3000',
@@ -22,6 +22,37 @@ const DEMO_ACCOUNTS = {
     vendor: 'owner@yourfleet.com',
     fieldworker: 'driver@yourfleet.com'
 };
+
+// Basic in-memory rate limiting (best-effort)
+const RATE_WINDOW_MS = 15 * 60 * 1000;
+const MAX_ATTEMPTS = 8;
+const attempts = new Map();
+
+function getRateKey(req, email) {
+    const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.socket?.remoteAddress || 'unknown';
+    return `${ip}:${(email || '').toLowerCase()}`;
+}
+
+function isRateLimited(key) {
+    const now = Date.now();
+    const entry = attempts.get(key);
+    if (!entry) return false;
+    if (now - entry.first > RATE_WINDOW_MS) {
+        attempts.delete(key);
+        return false;
+    }
+    return entry.count >= MAX_ATTEMPTS;
+}
+
+function recordAttempt(key) {
+    const now = Date.now();
+    const entry = attempts.get(key);
+    if (!entry || now - entry.first > RATE_WINDOW_MS) {
+        attempts.set(key, { count: 1, first: now });
+        return;
+    }
+    entry.count += 1;
+}
 
 function getCorsOrigin(req) {
     const origin = req.headers?.origin || '';
@@ -42,10 +73,17 @@ export default async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
     try {
+        if (!JWT_SECRET) {
+            return res.status(500).json({ error: 'Server misconfiguration: JWT secret not set' });
+        }
+
         const { email, password, demo, demoRole } = req.body;
 
         // Handle demo login — no credentials exposed to client
         if (demo && demoRole) {
+            if (process.env.ENABLE_DEMO_LOGIN !== 'true') {
+                return res.status(403).json({ error: 'Demo login disabled' });
+            }
             const demoEmail = DEMO_ACCOUNTS[demoRole];
             if (!demoEmail) {
                 return res.status(400).json({ error: 'Invalid demo role' });
@@ -75,6 +113,11 @@ export default async function handler(req, res) {
             return res.status(400).json({ error: 'Email and password are required' });
         }
 
+        const rateKey = getRateKey(req, email);
+        if (isRateLimited(rateKey)) {
+            return res.status(429).json({ error: 'Too many login attempts. Please try again later.' });
+        }
+
         // Fetch user by email only (never send password in query)
         const { data: user, error } = await supabase
             .from('users')
@@ -83,6 +126,7 @@ export default async function handler(req, res) {
             .single();
 
         if (error || !user) {
+            recordAttempt(rateKey);
             return res.status(401).json({ error: 'Invalid email or password' });
         }
 
@@ -106,6 +150,7 @@ export default async function handler(req, res) {
         }
 
         if (!passwordValid) {
+            recordAttempt(rateKey);
             return res.status(401).json({ error: 'Invalid email or password' });
         }
 

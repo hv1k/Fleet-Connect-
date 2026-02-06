@@ -21,6 +21,14 @@ function getCorsOrigin(req) {
     return ALLOWED_ORIGINS[0];
 }
 
+function verifyToken(token) {
+    try {
+        return jwt.verify(token, JWT_SECRET);
+    } catch {
+        return null;
+    }
+}
+
 export default async function handler(req, res) {
     const origin = getCorsOrigin(req);
     res.setHeader('Access-Control-Allow-Origin', origin);
@@ -33,38 +41,37 @@ export default async function handler(req, res) {
 
     try {
         if (!JWT_SECRET) {
-            return res.status(500).json({ valid: false, error: 'Server misconfiguration: JWT secret not set' });
+            return res.status(500).json({ error: 'Server misconfiguration: JWT secret not set' });
         }
+
         const authHeader = req.headers.authorization;
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return res.status(401).json({ valid: false, error: 'No token provided' });
+            return res.status(401).json({ error: 'Authentication required' });
         }
 
-        const token = authHeader.split(' ')[1];
-        let decoded;
-        try {
-            decoded = jwt.verify(token, JWT_SECRET);
-        } catch (jwtError) {
-            if (jwtError.name === 'TokenExpiredError') {
-                return res.status(401).json({ valid: false, error: 'Token expired' });
-            }
-            return res.status(401).json({ valid: false, error: 'Invalid token' });
+        const decoded = verifyToken(authHeader.split(' ')[1]);
+        if (!decoded || decoded.role !== 'admin') {
+            return res.status(403).json({ error: 'Admin access required' });
         }
 
-        // Fetch fresh user data from database
-        const { data: user, error } = await supabase
+        const { userId } = req.body;
+        if (!userId) {
+            return res.status(400).json({ error: 'User ID is required' });
+        }
+
+        const { error } = await supabase
             .from('users')
-            .select('id, email, name, role, company, vendor_id, created_at')
-            .eq('id', decoded.userId)
-            .single();
+            .delete()
+            .eq('id', userId);
 
-        if (error || !user) {
-            return res.status(401).json({ valid: false, error: 'User not found' });
+        if (error) {
+            console.error('Error deleting user:', error);
+            return res.status(500).json({ error: 'Failed to delete user' });
         }
 
-        return res.status(200).json({ valid: true, user });
+        return res.status(200).json({ success: true });
     } catch (err) {
-        console.error('Token verification error:', err);
-        return res.status(500).json({ valid: false, error: 'Internal server error' });
+        console.error('Delete user error:', err);
+        return res.status(500).json({ error: 'Internal server error' });
     }
 }

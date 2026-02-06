@@ -7,7 +7,7 @@ const supabase = createClient(
     process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY
 );
 
-const JWT_SECRET = process.env.JWT_SECRET || 'fleetconnect-dev-secret-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET;
 const ALLOWED_ORIGINS = [
     'https://fleet-connect-three.vercel.app',
     'http://localhost:3000',
@@ -24,6 +24,9 @@ function getCorsOrigin(req) {
 
 function verifyToken(token) {
     try {
+        if (!JWT_SECRET) {
+            return res.status(500).json({ error: 'Server misconfiguration: JWT secret not set' });
+        }
         return jwt.verify(token, JWT_SECRET);
     } catch {
         return null;

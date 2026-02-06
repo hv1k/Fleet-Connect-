@@ -13,6 +13,37 @@ const ALLOWED_ORIGINS = [
     'http://127.0.0.1:5500'
 ];
 
+// Basic in-memory rate limiting (best-effort)
+const RATE_WINDOW_MS = 15 * 60 * 1000;
+const MAX_ATTEMPTS = 5;
+const attempts = new Map();
+
+function getRateKey(req, email) {
+    const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.socket?.remoteAddress || 'unknown';
+    return `${ip}:${(email || '').toLowerCase()}`;
+}
+
+function isRateLimited(key) {
+    const now = Date.now();
+    const entry = attempts.get(key);
+    if (!entry) return false;
+    if (now - entry.first > RATE_WINDOW_MS) {
+        attempts.delete(key);
+        return false;
+    }
+    return entry.count >= MAX_ATTEMPTS;
+}
+
+function recordAttempt(key) {
+    const now = Date.now();
+    const entry = attempts.get(key);
+    if (!entry || now - entry.first > RATE_WINDOW_MS) {
+        attempts.set(key, { count: 1, first: now });
+        return;
+    }
+    entry.count += 1;
+}
+
 function getCorsOrigin(req) {
     const origin = req.headers?.origin || '';
     if (ALLOWED_ORIGINS.includes(origin)) return origin;
@@ -39,6 +70,11 @@ export default async function handler(req, res) {
             return res.status(400).json({ error: 'Email is required' });
         }
 
+        const rateKey = getRateKey(req, email);
+        if (isRateLimited(rateKey)) {
+            return res.status(429).json({ success: true });
+        }
+
         // Look up user by email
         const { data: user, error: fetchError } = await supabase
             .from('users')
@@ -55,63 +91,40 @@ export default async function handler(req, res) {
         }
 
         // Always return success message even if email not found (security best practice)
-        // But internally track if account exists
         if (userExists) {
             try {
-                // Generate random reset token
+                // Generate random reset token (store hash only)
                 const resetToken = crypto.randomBytes(32).toString('hex');
+                const resetTokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
                 const expiresAt = new Date();
                 expiresAt.setHours(expiresAt.getHours() + 1); // Expires in 1 hour
 
-                // Store token and expiry on user record
+                // Store token hash and expiry on user record
                 const { error: updateError } = await supabase
                     .from('users')
                     .update({
-                        reset_token: resetToken,
+                        reset_token: resetTokenHash,
                         reset_token_expires: expiresAt.toISOString()
                     })
                     .eq('id', userId);
 
                 if (updateError) {
                     console.error('Error storing reset token:', updateError);
-                    // Still return success to user (don't reveal internal errors)
-                    return res.status(200).json({
-                        success: true,
-                        resetUrl: '/reset-password.html?token=invalid',
-                        exists: false
-                    });
+                } else {
+                    // TODO: Send reset email containing the plain token link.
+                    // Example: https://your-domain/reset-password.html?token=${resetToken}
                 }
-
-                // Return reset URL (temporary: showing token directly until email is integrated)
-                const resetUrl = `/reset-password.html?token=${resetToken}`;
-
-                return res.status(200).json({
-                    success: true,
-                    resetUrl: resetUrl,
-                    exists: true // Admin-only info
-                });
             } catch (err) {
                 console.error('Error generating reset token:', err);
-                return res.status(200).json({
-                    success: true,
-                    resetUrl: '/reset-password.html?token=invalid',
-                    exists: false
-                });
             }
         }
 
-        // Email not found - still return success for security
-        return res.status(200).json({
-            success: true,
-            resetUrl: '/reset-password.html?token=invalid',
-            exists: false
-        });
+        recordAttempt(rateKey);
+
+        // Always return generic success response
+        return res.status(200).json({ success: true });
     } catch (err) {
         console.error('Password reset request error:', err);
-        return res.status(200).json({
-            success: true,
-            resetUrl: '/reset-password.html?token=invalid',
-            exists: false
-        });
+        return res.status(200).json({ success: true });
     }
 }
