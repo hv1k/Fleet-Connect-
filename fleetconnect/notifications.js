@@ -29,11 +29,16 @@
         const styles = `
             /* Notification Bell Container */
             #fc-notification-bell-container {
-                position: fixed;
-                top: 16px;
-                right: 24px;
+                position: relative;
+                margin-left: auto;
                 z-index: 1000;
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            }
+
+            /* When sidebar header exists, make it flex */
+            .sidebar-header {
+                display: flex !important;
+                align-items: center !important;
             }
 
             /* Bell Icon Button */
@@ -41,53 +46,57 @@
                 background: none;
                 border: none;
                 cursor: pointer;
-                padding: 8px;
+                padding: 6px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 position: relative;
                 border-radius: 50%;
                 transition: background-color 0.2s ease;
-                width: 44px;
-                height: 44px;
+                width: 36px;
+                height: 36px;
             }
 
             #fc-notification-bell:hover {
-                background-color: rgba(0, 0, 0, 0.1);
+                background-color: rgba(255, 255, 255, 0.1);
             }
 
             #fc-notification-bell:active {
-                background-color: rgba(0, 0, 0, 0.15);
+                background-color: rgba(255, 255, 255, 0.15);
             }
 
             /* Bell SVG */
             #fc-notification-bell svg {
-                width: 24px;
-                height: 24px;
-                stroke: #333;
+                width: 20px;
+                height: 20px;
+                stroke: #b8b0a8;
                 stroke-width: 2;
                 fill: none;
                 stroke-linecap: round;
                 stroke-linejoin: round;
             }
 
+            #fc-notification-bell:hover svg {
+                stroke: #f5f0e8;
+            }
+
             /* Unread Badge */
             .fc-notification-badge {
                 position: absolute;
-                top: 0;
-                right: 0;
+                top: -2px;
+                right: -2px;
                 background-color: #ef4444;
                 color: white;
                 border-radius: 50%;
-                width: 24px;
-                height: 24px;
+                width: 18px;
+                height: 18px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                font-size: 12px;
+                font-size: 10px;
                 font-weight: bold;
-                border: 2px solid white;
-                min-width: 24px;
+                border: 2px solid #242424;
+                min-width: 18px;
             }
 
             .fc-notification-badge.hidden {
@@ -97,8 +106,8 @@
             /* Dropdown Panel Container */
             #fc-notifications-dropdown {
                 position: absolute;
-                top: 60px;
-                right: 0;
+                top: 44px;
+                left: 0;
                 background-color: #1e1e1e;
                 border-radius: 8px;
                 box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
@@ -331,9 +340,21 @@
         container.appendChild(bellButton);
         container.appendChild(dropdown);
 
-        // Add to document
+        // Add to sidebar header if it exists, otherwise fall back to nav-right or body
+        const sidebarHeader = document.querySelector('.sidebar-header');
+        const navRight = document.querySelector('.nav-right');
+
+        if (sidebarHeader) {
+            sidebarHeader.appendChild(container);
+        } else if (navRight) {
+            navRight.insertBefore(container, navRight.firstChild);
+        } else {
+            container.style.position = 'fixed';
+            container.style.top = '16px';
+            container.style.right = '24px';
+            document.body.appendChild(container);
+        }
         document.body.appendChild(overlay);
-        document.body.appendChild(container);
 
         // Attach event listeners
         bellButton.addEventListener('click', toggleDropdown);
