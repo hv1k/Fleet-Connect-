@@ -329,26 +329,7 @@
             document.querySelector('.sidebar').classList.toggle('open');
         }
 
-        // Auth check
-        if (typeof checkAuth === 'undefined') {
-            document.querySelector('.content').innerHTML = '<div style="padding:40px;text-align:center;color:#dc2626;"><h2>Error: supabase-client.js not found</h2><p>Make sure supabase-client.js is in the same folder as this file.</p></div>';
-        } else {
-            const currentUser = checkAuth();
-            const safe = (v) => sanitizeInput(v == null ? '' : String(v));
-            if (currentUser) {
-                document.getElementById('userName').textContent = currentUser.name;
-                document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
-
-                // Set up navigation based on role
-                setupNavigation(currentUser.role);
-                loadData();
-            }
-        }
-
-        let allJobs = [], allDeliveries = [], currentDateRange = 'week';
-        let sortColumn = null, sortAscending = true;
-
-        // Navigation config per role
+        // Navigation config per role (must be declared before setupNavigation is called)
         const navConfig = {
             admin: [
                 { label: 'Dashboard', href: 'admin-dashboard.html', icon: 'grid' },
@@ -375,6 +356,24 @@
                 { label: 'Settings', href: 'settings.html', icon: 'settings' }
             ]
         };
+
+        // Auth check
+        if (typeof checkAuth === 'undefined') {
+            document.querySelector('.content').innerHTML = '<div style="padding:40px;text-align:center;color:#dc2626;"><h2>Error: supabase-client.js not found</h2><p>Make sure supabase-client.js is in the same folder as this file.</p></div>';
+        } else {
+            const currentUser = checkAuth();
+            if (currentUser) {
+                document.getElementById('userName').textContent = currentUser.name;
+                document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+
+                // Set up navigation based on role
+                setupNavigation(currentUser.role);
+                loadData();
+            }
+        }
+
+        let allJobs = [], allDeliveries = [], currentDateRange = 'week';
+        let sortColumn = null, sortAscending = true;
 
         const icons = {
             grid: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>',

@@ -377,7 +377,6 @@
         document.addEventListener('DOMContentLoaded', async () => {
             if (typeof checkAuth !== 'undefined') {
                 const user = checkAuth(['rental', 'admin']);
-                const safe = (v) => sanitizeInput(v == null ? '' : String(v));
                 if (user) {
                     document.getElementById('userName').textContent = user.name;
                     document.getElementById('userAvatar').textContent = user.name.charAt(0).toUpperCase();

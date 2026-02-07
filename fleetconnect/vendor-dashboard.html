@@ -412,7 +412,6 @@
             document.querySelector('.content').innerHTML = '<div style="padding:40px;text-align:center;color:#dc2626;"><h2>Error: supabase-client.js not found</h2><p>Make sure supabase-client.js is in the same folder as this file.</p></div>';
         } else {
             const currentUser = checkAuth(['vendor']);
-            const safe = (v) => sanitizeInput(v == null ? '' : String(v));
             if (currentUser) {
                 document.getElementById('userName').textContent = currentUser.name;
                 document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();

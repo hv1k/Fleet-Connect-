@@ -434,7 +434,7 @@
     <script src="realtime.js"></script>
     <script>
         // ===== AUTH & NAV =====
-        const currentUser = checkAuth(['admin', 'rental']);
+        const currentUser = checkAuth(['admin', 'rental', 'vendor']);
         if (!currentUser) throw new Error('Not authenticated');
         document.getElementById('userName').textContent = currentUser.name;
         document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
@@ -885,16 +885,23 @@
                 description: e.description
             }));
 
-            const result = await createJob(jobData, equipmentList);
+            try {
+                const result = await createJob(jobData, equipmentList);
 
-            if (result.success) {
-                document.getElementById('formCard').style.display = 'none';
-                document.getElementById('scanSection').style.display = 'none';
-                document.querySelector('.or-divider').style.display = 'none';
-                document.getElementById('extractedPreview').style.display = 'none';
-                document.getElementById('successMessage').classList.add('show');
-            } else {
-                alert('Error: ' + result.error);
+                if (result.success) {
+                    document.getElementById('formCard').style.display = 'none';
+                    document.getElementById('scanSection').style.display = 'none';
+                    document.querySelector('.or-divider').style.display = 'none';
+                    document.getElementById('extractedPreview').style.display = 'none';
+                    document.getElementById('successMessage').classList.add('show');
+                } else {
+                    alert('Error creating work order: ' + (result.error || 'Unknown error. Please try again.'));
+                    btn.disabled = false;
+                    btn.textContent = 'Create Work Order';
+                }
+            } catch (err) {
+                console.error('Work order creation failed:', err);
+                alert('Error creating work order: ' + (err.message || 'Network error. Please check your connection and try again.'));
                 btn.disabled = false;
                 btn.textContent = 'Create Work Order';
             }

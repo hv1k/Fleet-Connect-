@@ -66,6 +66,12 @@ function sanitizeInput(str) {
     return div.innerHTML;
 }
 
+// Global safe() helper — sanitizes any value for safe HTML display
+// This is defined globally so all pages can use it without scoping issues
+function safe(v) {
+    return sanitizeInput(v == null ? '' : String(v));
+}
+
 function validateEmail(email) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }

@@ -390,8 +390,9 @@
                     console.log('[Realtime] Subscribed to deliveries');
                     updateConnectionStatus(true);
                 } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
-                    console.warn('[Realtime] Deliveries subscription error:', status);
+                    console.warn('[Realtime] Subscription status:', status);
                     updateConnectionStatus(false);
+                    attemptReconnect();
                 }
             });
 
@@ -449,8 +450,9 @@
                     console.log('[Realtime] Subscribed to jobs');
                     updateConnectionStatus(true);
                 } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
-                    console.warn('[Realtime] Jobs subscription error:', status);
+                    console.warn('[Realtime] Jobs subscription status:', status);
                     updateConnectionStatus(false);
+                    attemptReconnect();
                 }
             });
 
@@ -505,8 +507,9 @@
                     console.log('[Realtime] Subscribed to invoices');
                     updateConnectionStatus(true);
                 } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
-                    console.warn('[Realtime] Invoices subscription error:', status);
+                    console.warn('[Realtime] Invoices subscription status:', status);
                     updateConnectionStatus(false);
+                    attemptReconnect();
                 }
             });
 
@@ -539,6 +542,40 @@
         if (window._realtimeRefreshTimer) {
             clearTimeout(window._realtimeRefreshTimer);
         }
+    }
+
+    // ============================================================================
+    // RECONNECTION LOGIC
+    // ============================================================================
+
+    let reconnectAttempts = 0;
+    const MAX_RECONNECT_ATTEMPTS = 5;
+    let reconnectTimer = null;
+
+    function attemptReconnect() {
+        if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+            console.warn('[Realtime] Max reconnect attempts reached. Giving up.');
+            updateConnectionStatus(false);
+            return;
+        }
+
+        reconnectAttempts++;
+        const delay = RECONNECT_DELAY * Math.min(reconnectAttempts, 3); // Exponential backoff up to 3x
+        console.log('[Realtime] Reconnecting in ' + (delay / 1000) + 's (attempt ' + reconnectAttempts + '/' + MAX_RECONNECT_ATTEMPTS + ')');
+
+        clearTimeout(reconnectTimer);
+        reconnectTimer = setTimeout(() => {
+            cleanup();
+            try {
+                subscribeDeliveries();
+                subscribeJobs();
+                subscribeInvoices();
+                console.log('[Realtime] Reconnection attempt ' + reconnectAttempts + ' initiated');
+            } catch (err) {
+                console.error('[Realtime] Reconnection failed:', err.message);
+                attemptReconnect();
+            }
+        }, delay);
     }
 
     function init() {
