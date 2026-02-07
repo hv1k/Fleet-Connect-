@@ -272,7 +272,6 @@
     <script src="realtime.js"></script>
     <script>
         const currentUser = checkAuth(['fieldworker']);
-        const safe = (v) => sanitizeInput(v == null ? '' : String(v));
         if (!currentUser) throw new Error('Not authenticated');
 
         // Setup user info

@@ -342,7 +342,6 @@
     <script>
         // ===== AUTH & NAV =====
         const currentUser = checkAuth();
-        const safe = (v) => sanitizeInput(v == null ? '' : String(v));
         if (!currentUser) throw new Error('Not authenticated');
 
         // Set user info
