@@ -29,7 +29,7 @@ function verifyToken(req) {
     } catch { return null; }
 }
 
-// Default feature flags — used to seed the table if empty
+// Default feature flags â used to seed the table if empty
 const DEFAULT_FLAGS = [
     // Vendor flags
     { role: 'vendor', feature_key: 'page.invoices', label: 'Invoices Page', description: 'Access to the Invoices page for viewing fuel history and QB invoice matching', category: 'pages', enabled: true },
@@ -67,7 +67,7 @@ async function ensureTable() {
         .limit(1);
 
     if (error) {
-        // Table might not exist — try to create it via raw insert
+        // Table might not exist â try to create it via raw insert
         // If this also fails, the table doesn't exist and we need to create it
         console.warn('[FeatureFlags] Table check failed:', error.message);
         return false;
@@ -105,12 +105,11 @@ export default async function handler(req, res) {
     }
 
     // Ensure table exists and is seeded
-    await ensureTable();
+    const tableReady = await ensureTable();
 
     // ==================== GET ====================
     if (req.method === 'GET') {
         const { role, admin } = req.query;
-        const tableReady = await ensureTable();
 
         // Admin mode: return ALL flags for all roles
         if (admin === 'true') {
@@ -178,15 +177,15 @@ export default async function handler(req, res) {
             return res.status(400).json({ success: false, error: 'Missing required fields: role, feature_key, enabled' });
         }
 
-        // Upsert the flag
+        // Update existing flag (use update, not upsert, to avoid NOT NULL constraint on label)
         const { data, error } = await supabase
             .from('feature_flags')
-            .upsert({
-                role,
-                feature_key,
+            .update({
                 enabled,
                 updated_at: new Date().toISOString()
-            }, { onConflict: 'role,feature_key' })
+            })
+            .eq('role', role)
+            .eq('feature_key', feature_key)
             .select()
             .single();
 
