@@ -340,6 +340,92 @@
     }
 
     // ============================================================================
+    // EMAIL NOTIFICATION SYSTEM
+    // ============================================================================
+
+    async function sendEmailNotification(type, data) {
+        try {
+            // Get current user info for notifications
+            const currentUser = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
+            if (!currentUser) {
+                console.warn('[Realtime] Could not send email notification: user not authenticated');
+                return;
+            }
+
+            // Build notification payload based on type
+            let payload = {
+                type,
+                jobId: data.jobId || data.job_id || 'unknown',
+                recipientEmail: data.recipientEmail || data.recipient_email || currentUser.email,
+                recipientName: data.recipientName || data.recipient_name || currentUser.name || 'Team Member',
+                details: {
+                    jobSiteName: data.jobSiteName || data.job_site_name || 'Job'
+                }
+            };
+
+            // Add type-specific details
+            if (type === 'job_assigned') {
+                payload.details = {
+                    ...payload.details,
+                    jobId: data.jobId || data.job_id,
+                    assignedAt: data.assignedAt || data.assigned_at || new Date().toISOString(),
+                    estimatedHours: data.estimatedHours || data.estimated_hours,
+                    location: data.location || data.job_location
+                };
+            } else if (type === 'status_changed') {
+                payload.details = {
+                    ...payload.details,
+                    jobId: data.jobId || data.job_id,
+                    oldStatus: data.oldStatus || data.old_status,
+                    newStatus: data.newStatus || data.new_status,
+                    changedAt: data.changedAt || data.changed_at || new Date().toISOString(),
+                    reason: data.reason || data.change_reason
+                };
+            } else if (type === 'invoice_submitted') {
+                payload.details = {
+                    ...payload.details,
+                    invoiceId: data.invoiceId || data.invoice_id || 'unknown',
+                    jobId: data.jobId || data.job_id,
+                    amount: data.amount || data.invoice_amount,
+                    submittedAt: data.submittedAt || data.submitted_at || new Date().toISOString(),
+                    workerName: data.workerName || data.worker_name
+                };
+            }
+
+            // Get auth token from localStorage
+            const token = localStorage.getItem('auth_token');
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+
+            // Send notification to API endpoint
+            const response = await fetch('/api/send-notification', {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                console.warn('[Realtime] Error sending email notification:', error.message || error.error);
+                return;
+            }
+
+            const result = await response.json();
+            console.log('[Realtime] Email notification sent:', result.type, 'to', result.recipientEmail);
+            return result;
+        } catch (err) {
+            console.warn('[Realtime] Error sending email notification:', err.message);
+        }
+    }
+
+    // Make function globally available for other scripts
+    window.sendEmailNotification = sendEmailNotification;
+
+    // ============================================================================
     // SUPABASE CHANNEL SUBSCRIPTIONS
     // ============================================================================
 
@@ -412,6 +498,20 @@
                         const j = payload.new;
                         const siteName = j.job_site_name || 'Unknown Site';
                         showToast(`New work order: ${siteName}`, 'status');
+
+                        // Send email notification for job assignment
+                        if (j.assigned_to_email) {
+                            sendEmailNotification('job_assigned', {
+                                jobId: j.id,
+                                jobSiteName: siteName,
+                                recipientEmail: j.assigned_to_email,
+                                recipientName: j.assigned_to_name,
+                                assignedAt: j.created_at,
+                                estimatedHours: j.estimated_hours,
+                                location: j.job_location
+                            });
+                        }
+
                         triggerPageRefresh();
                     } catch (err) {
                         console.warn('[Realtime] Error processing job INSERT:', err.message);
@@ -423,9 +523,25 @@
                 (payload) => {
                     try {
                         const j = payload.new;
+                        const oldJob = payload.old;
                         const siteName = j.job_site_name || 'Unknown Site';
                         const status = j.status ? j.status.charAt(0).toUpperCase() + j.status.slice(1) : 'Updated';
                         showToast(`Work order updated: ${siteName} → ${status}`, 'status');
+
+                        // Send email notification for status change
+                        if (oldJob && oldJob.status !== j.status && j.assigned_to_email) {
+                            sendEmailNotification('status_changed', {
+                                jobId: j.id,
+                                jobSiteName: siteName,
+                                recipientEmail: j.assigned_to_email,
+                                recipientName: j.assigned_to_name,
+                                oldStatus: oldJob.status,
+                                newStatus: j.status,
+                                changedAt: new Date().toISOString(),
+                                reason: j.status_reason
+                            });
+                        }
+
                         triggerPageRefresh();
                     } catch (err) {
                         console.warn('[Realtime] Error processing job UPDATE:', err.message);
@@ -472,6 +588,21 @@
                         const inv = payload.new;
                         const workerName = inv.worker_name || 'a field worker';
                         showToast(`New invoice submitted by ${workerName}`, 'delivery');
+
+                        // Send email notification for invoice submission
+                        if (inv.job_id && inv.recipient_email) {
+                            sendEmailNotification('invoice_submitted', {
+                                invoiceId: inv.id,
+                                jobId: inv.job_id,
+                                jobSiteName: inv.job_site_name || 'Job',
+                                recipientEmail: inv.recipient_email,
+                                recipientName: inv.recipient_name || 'Manager',
+                                amount: inv.total_amount || inv.amount,
+                                submittedAt: inv.created_at,
+                                workerName: workerName
+                            });
+                        }
+
                         triggerPageRefresh();
                     } catch (err) {
                         console.warn('[Realtime] Error processing invoice INSERT:', err.message);

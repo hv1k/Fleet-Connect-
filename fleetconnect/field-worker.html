@@ -21,6 +21,22 @@
         .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; color: #b8b0a8; font-size: 0.85rem; text-decoration: none; transition: all 0.2s; font-weight: 500; }
         .nav-item:hover { background: #333; color: #f5f0e8; }
         .nav-item.active { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
+
+        /* Navigate Button */
+        .btn-navigate { background: rgba(34,197,94,0.15) !important; color: #22c55e !important; border: 1px solid rgba(34,197,94,0.3) !important; width: 100%; margin-top: 8px; }
+        .btn-navigate:hover { background: rgba(34,197,94,0.25) !important; }
+
+        /* Digital Signature */
+        .signature-section { margin-top: 20px; background: #242424; border-radius: 12px; padding: 16px; border: 1px solid #333; }
+        .signature-section .section-title { margin-top: 0; margin-bottom: 8px; }
+        .signature-canvas-wrap { position: relative; background: #fff; border-radius: 8px; overflow: hidden; margin-bottom: 8px; }
+        .signature-canvas-wrap canvas { display: block; width: 100%; touch-action: none; cursor: crosshair; }
+        .signature-placeholder { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); color: #ccc; font-size: 0.85rem; pointer-events: none; }
+        .signature-actions { display: flex; gap: 8px; }
+        .signature-actions button { flex: 1; padding: 8px; border-radius: 8px; border: 1px solid #444; background: #333; color: #f5f0e8; font-size: 0.8rem; cursor: pointer; }
+        .signature-actions button:hover { background: #444; }
+        .signature-status { text-align: center; margin-top: 8px; font-size: 0.8rem; color: #22c55e; display: none; }
+        .signature-status.show { display: block; }
         .nav-item svg { width: 20px; height: 20px; flex-shrink: 0; }
         .sidebar-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid #333; }
         .user-menu { display: flex; align-items: center; gap: 12px; padding: 12px; background: #333; border-radius: 10px; }
@@ -270,6 +286,7 @@
     <script src="demo-switcher.js"></script>
     <script src="notifications.js"></script>
     <script src="realtime.js"></script>
+    <script src="onboarding.js"></script>
     <script>
         const currentUser = checkAuth(['fieldworker']);
         if (!currentUser) throw new Error('Not authenticated');
@@ -396,6 +413,7 @@
                         <div class="job-actions">
                             ${job.status !== 'completed' ? `<button class="btn btn-primary" onclick="openInvoiceModal('${job.id}')">Create Invoice</button>` : ''}
                             <button class="btn btn-outline" onclick="viewHistory('${job.id}')">History</button>
+                            ${(job.address_street || job.address_city) ? `<button class="btn btn-navigate" onclick="navigateToJob('${encodeURIComponent((job.address_street||'')+', '+(job.address_city||'')+', '+(job.address_state||'')+' '+(job.address_zip||''))}')">📍 Navigate</button>` : ''}
                         </div>
                     </div>
                 `;
@@ -564,6 +582,21 @@
                         </div>
                     </div>
 
+                    <div class="signature-section">
+                        <div class="section-title">Site Contact Signature</div>
+                        <p style="font-size:0.8rem;color:#888;margin-bottom:10px;">Have the site contact sign below to confirm delivery</p>
+                        <div class="signature-canvas-wrap">
+                            <canvas id="signatureCanvas" width="600" height="150"></canvas>
+                            <div class="signature-placeholder" id="sigPlaceholder">Sign here</div>
+                        </div>
+                        <div class="signature-actions">
+                            <button type="button" onclick="clearSignature()">Clear</button>
+                            <button type="button" id="sigNameBtn" onclick="document.getElementById('signerName').focus()">Add Name</button>
+                        </div>
+                        <input type="text" id="signerName" placeholder="Signer's name (optional)" style="width:100%;margin-top:8px;padding:10px;border-radius:8px;border:1px solid #444;background:#333;color:#f5f0e8;font-size:0.85rem;">
+                        <div class="signature-status" id="sigStatus">✓ Signature captured</div>
+                    </div>
+
                     <button class="submit-invoice" id="submitBtn" onclick="submitInvoice('${jobId}')">
                         Create Invoice
                     </button>
@@ -571,6 +604,7 @@
             `;
             document.body.appendChild(modal);
             document.body.style.overflow = 'hidden';
+            setTimeout(initSignature, 100);
         }
 
         function captureGPSLocation() {
@@ -646,6 +680,67 @@
             selectedVideos = [];
             activeUnits = {};
             capturedGPS = null;
+        }
+
+        // ===== NAVIGATE TO JOB =====
+        function navigateToJob(encodedAddress) {
+            const address = decodeURIComponent(encodedAddress).replace(/,\s*,/g, ',').replace(/^\s*,|,\s*$/g, '').trim();
+            if (!address) { showToast('No address available for this job', 'error'); return; }
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            const url = isIOS
+                ? `maps://maps.apple.com/?daddr=${encodeURIComponent(address)}`
+                : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`;
+            window.open(url, '_blank');
+            showToast('Opening navigation...', 'success');
+        }
+
+        // ===== DIGITAL SIGNATURE =====
+        let signatureData = null;
+        let sigCanvas, sigCtx, sigDrawing = false;
+
+        function initSignature() {
+            sigCanvas = document.getElementById('signatureCanvas');
+            if (!sigCanvas) return;
+            sigCtx = sigCanvas.getContext('2d');
+            const rect = sigCanvas.parentElement.getBoundingClientRect();
+            sigCanvas.width = rect.width;
+            sigCanvas.height = 150;
+            sigCtx.strokeStyle = '#333';
+            sigCtx.lineWidth = 2;
+            sigCtx.lineCap = 'round';
+            sigCtx.lineJoin = 'round';
+
+            sigCanvas.addEventListener('pointerdown', sigStart);
+            sigCanvas.addEventListener('pointermove', sigMove);
+            sigCanvas.addEventListener('pointerup', sigEnd);
+            sigCanvas.addEventListener('pointerleave', sigEnd);
+        }
+        function sigStart(e) {
+            sigDrawing = true;
+            const r = sigCanvas.getBoundingClientRect();
+            sigCtx.beginPath();
+            sigCtx.moveTo(e.clientX - r.left, e.clientY - r.top);
+            document.getElementById('sigPlaceholder').style.display = 'none';
+        }
+        function sigMove(e) {
+            if (!sigDrawing) return;
+            const r = sigCanvas.getBoundingClientRect();
+            sigCtx.lineTo(e.clientX - r.left, e.clientY - r.top);
+            sigCtx.stroke();
+        }
+        function sigEnd() {
+            if (sigDrawing) {
+                sigDrawing = false;
+                signatureData = sigCanvas.toDataURL('image/png');
+                document.getElementById('sigStatus').classList.add('show');
+            }
+        }
+        function clearSignature() {
+            if (!sigCanvas) return;
+            sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+            signatureData = null;
+            document.getElementById('sigPlaceholder').style.display = 'block';
+            document.getElementById('sigStatus').classList.remove('show');
         }
 
         function toggleUnit(unitId) {
@@ -763,9 +858,13 @@
             const time = document.getElementById('invoiceTime').value;
 
             let notes = document.getElementById('invoiceNotes').value;
+            const signerName = document.getElementById('signerName')?.value || '';
             if (capturedGPS) {
                 const gpsString = `GPS: ${capturedGPS.latitude.toFixed(6)}, ${capturedGPS.longitude.toFixed(6)} | `;
                 notes = gpsString + (notes || '');
+            }
+            if (signerName) {
+                notes = (notes || '') + ` | Signed by: ${signerName}`;
             }
 
             const { data, error } = await db.from('invoices').insert([{
