@@ -387,16 +387,19 @@
 
         async function loadData() {
             try {
-                const [jobRes, delRes, invRes, vendorRes] = await Promise.all([
+                const [jobRes, delRes, invRes, vendorRes, fwInvRes] = await Promise.all([
                     db.from('jobs').select('*').order('completed_at', { ascending: false }),
                     db.from('deliveries').select('*').order('timestamp', { ascending: false }),
                     db.from('qb_invoices').select('*').order('created_at', { ascending: false }),
-                    db.from('vendors').select('*')
+                    db.from('vendors').select('*'),
+                    db.from('invoices').select('*').order('created_at', { ascending: false })
                 ]);
                 allJobs = jobRes.data || [];
                 allDeliveries = delRes.data || [];
                 allInvoices = invRes.data || [];
                 allVendors = vendorRes.data || [];
+                // Field worker invoices as fallback for fuel data
+                window.fwInvoices = fwInvRes.data || [];
                 completedJobs = allJobs.filter(j => j.status === 'completed');
 
                 updateStats();
@@ -408,7 +411,11 @@
         }
 
         function updateStats() {
-            const totalGal = allDeliveries.reduce((s, d) => s + (parseFloat(d.gallons) || 0), 0);
+            let totalGal = allDeliveries.reduce((s, d) => s + (parseFloat(d.gallons) || 0), 0);
+            // Fallback to field worker invoices if deliveries table is empty
+            if (totalGal === 0 && (window.fwInvoices || []).length > 0) {
+                totalGal = window.fwInvoices.reduce((s, i) => s + (parseFloat(i.total_diesel) || 0) + (parseFloat(i.total_def) || 0), 0);
+            }
             const invoiced = completedJobs.filter(j => allInvoices.some(i => i.matched_job_id === j.id && i.match_status === 'matched')).length;
             const awaiting = completedJobs.length - invoiced;
 
@@ -456,7 +463,11 @@
             let totalDiesel = 0;
             container.innerHTML = filtered.map(job => {
                 const jobDel = allDeliveries.filter(d => d.job_id === job.id);
-                const diesel = jobDel.reduce((s, d) => s + (parseFloat(d.gallons) || 0), 0);
+                // Use field worker invoices as fallback when deliveries table has no data
+                const fwInv = (window.fwInvoices || []).filter(i => i.job_id === job.id);
+                const diesel = jobDel.length > 0
+                    ? jobDel.reduce((s, d) => s + (parseFloat(d.gallons) || 0), 0)
+                    : fwInv.reduce((s, i) => s + (parseFloat(i.total_diesel) || 0), 0);
                 totalDiesel += diesel;
 
                 // Find matched invoice
@@ -519,8 +530,13 @@
             if (!job) return;
 
             const jobDel = allDeliveries.filter(d => d.job_id === jobId);
-            const totalGal = jobDel.reduce((s, d) => s + (parseFloat(d.gallons) || 0), 0);
-            const totalDef = jobDel.reduce((s, d) => s + (parseFloat(d.def_gallons) || 0), 0);
+            const fwInv = (window.fwInvoices || []).filter(i => i.job_id === jobId);
+            const totalGal = jobDel.length > 0
+                ? jobDel.reduce((s, d) => s + (parseFloat(d.gallons) || 0), 0)
+                : fwInv.reduce((s, i) => s + (parseFloat(i.total_diesel) || 0), 0);
+            const totalDef = jobDel.length > 0
+                ? jobDel.reduce((s, d) => s + (parseFloat(d.def_gallons) || 0), 0)
+                : fwInv.reduce((s, i) => s + (parseFloat(i.total_def) || 0), 0);
             const vendor = job.assigned_vendor ? allVendors.find(v => v.id === job.assigned_vendor) : null;
             const vendorName = vendor ? vendor.company_name || vendor.name : '—';
             const matchedInv = allInvoices.find(i => i.matched_job_id === jobId && i.match_status === 'matched');
