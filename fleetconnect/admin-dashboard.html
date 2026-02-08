@@ -36,6 +36,8 @@
         .nav-links { display: flex; gap: 24px; }
         .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: color 0.2s; }
         .nav-links a:hover, .nav-links a.active { color: var(--admin); }
+        .notification-bell { background: transparent; border: none; color: var(--text-secondary); font-size: 1.4rem; cursor: pointer; transition: color 0.2s; padding: 0; line-height: 1; }
+        .notification-bell:hover { color: var(--admin); }
         .admin-badge { background: var(--admin); color: white; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; }
         .user-info { display: flex; align-items: center; gap: 12px; }
         .user-name { font-size: 0.9rem; color: var(--text-secondary); }
@@ -55,6 +57,37 @@
         .stat-value.accent { color: var(--accent); }
         .stat-value.warning { color: var(--warning); }
         .stat-value.blue { color: var(--accent-blue); }
+
+        .analytics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 32px; }
+        @media (max-width: 1000px) { .analytics-grid { grid-template-columns: 1fr; } }
+
+        .analytics-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+        .analytics-header { padding: 20px 24px; border-bottom: 1px solid var(--border); }
+        .analytics-title { font-size: 1rem; font-weight: 600; margin-bottom: 2px; }
+        .analytics-subtitle { font-size: 0.75rem; color: var(--text-secondary); }
+
+        .jobs-overview { padding: 20px 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .job-stat { padding: 16px; background: var(--bg-input); border-radius: 8px; border: 1px solid var(--border); }
+        .job-stat-label { font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+        .job-stat-value { font-size: 1.4rem; font-weight: 700; }
+        .job-stat-value.blue { color: var(--accent-blue); }
+        .job-stat-value.green { color: var(--success); }
+        .job-stat-value.warning { color: var(--warning); }
+        .job-stat-value.accent { color: var(--accent); }
+
+        .activity-feed { padding: 20px 24px; }
+        .activity-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+        .activity-item:last-child { border-bottom: none; }
+        .activity-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-top: 4px; flex-shrink: 0; }
+        .activity-content { flex: 1; }
+        .activity-text { color: var(--text-primary); margin-bottom: 3px; }
+        .activity-time { font-size: 0.75rem; color: var(--text-secondary); }
+
+        .filters-row { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+        .search-input { flex: 1; min-width: 200px; padding: 10px 14px; font-family: 'Inter', sans-serif; font-size: 0.9rem; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); transition: border-color 0.2s; }
+        .search-input:focus { outline: none; border-color: var(--admin); }
+        .filter-select { padding: 10px 14px; font-family: 'Inter', sans-serif; font-size: 0.9rem; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); cursor: pointer; transition: border-color 0.2s; }
+        .filter-select:focus { outline: none; border-color: var(--admin); }
         
         .table-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
         .table-header-row { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid var(--border); }
@@ -99,6 +132,9 @@
         @media (max-width: 800px) {
             .table-grid { grid-template-columns: 1fr; gap: 8px; }
             .table-grid.header { display: none; }
+            .filters-row { flex-direction: column; }
+            .search-input { min-width: auto; }
+            .jobs-overview { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -114,6 +150,7 @@
                     <a href="admin-feature-flags.html">Feature Flags</a>
                     <a href="settings.html">Settings</a>
                 </div>
+                <button class="notification-bell" title="Notifications">🔔</button>
                 <div class="admin-badge">ADMIN</div>
                 <div class="user-info">
                     <span class="user-name" id="userName">Admin</span>
@@ -146,10 +183,71 @@
             </div>
         </div>
         
+        <!-- Analytics Section -->
+        <div class="analytics-grid">
+            <!-- Jobs Overview Card -->
+            <div class="analytics-card">
+                <div class="analytics-header">
+                    <div class="analytics-title">Jobs Overview</div>
+                    <div class="analytics-subtitle">Platform job statistics</div>
+                </div>
+                <div class="jobs-overview">
+                    <div class="job-stat">
+                        <div class="job-stat-label">Total Jobs</div>
+                        <div class="job-stat-value blue" id="jobsTotal">-</div>
+                    </div>
+                    <div class="job-stat">
+                        <div class="job-stat-label">Active Jobs</div>
+                        <div class="job-stat-value green" id="jobsActive">-</div>
+                    </div>
+                    <div class="job-stat">
+                        <div class="job-stat-label">Completed Jobs</div>
+                        <div class="job-stat-value accent" id="jobsCompleted">-</div>
+                    </div>
+                    <div class="job-stat">
+                        <div class="job-stat-label">Pending Jobs</div>
+                        <div class="job-stat-value warning" id="jobsPending">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity Card -->
+            <div class="analytics-card">
+                <div class="analytics-header">
+                    <div class="analytics-title">Recent Platform Activity</div>
+                    <div class="analytics-subtitle">Last 10 activities</div>
+                </div>
+                <div class="activity-feed" id="activityFeed">
+                    <div class="loading">Loading activity...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Users Table with Filters -->
         <div class="table-card">
             <div class="table-header-row">
                 <span class="table-title">All Users</span>
                 <button class="btn btn-primary" onclick="openAddUserModal()">+ Add User</button>
+            </div>
+
+            <!-- Search and Filter Controls -->
+            <div style="padding: 20px 24px; border-bottom: 1px solid var(--border);">
+                <div class="filters-row">
+                    <input
+                        type="text"
+                        id="searchInput"
+                        class="search-input"
+                        placeholder="Search by name, email, or company..."
+                        onkeyup="filterTable()"
+                    >
+                    <select id="roleFilter" class="filter-select" onchange="filterTable()">
+                        <option value="">All Roles</option>
+                        <option value="admin">Admin</option>
+                        <option value="rental">Rental Company</option>
+                        <option value="vendor">Vendor</option>
+                        <option value="fieldworker">Field Worker</option>
+                    </select>
+                </div>
             </div>
             <div class="table-grid header">
                 <div>Name</div>
@@ -223,6 +321,8 @@
         }
         
         let allUsers = [];
+        let allJobs = [];
+        let allActivities = [];
         let editingUserId = null;
 
         async function loadUsers() {
@@ -237,16 +337,114 @@
             document.getElementById('statVendors').textContent = allUsers.filter(u => u.role === 'vendor').length;
             document.getElementById('statWorkers').textContent = allUsers.filter(u => u.role === 'fieldworker').length;
         }
+
+        async function loadJobsData() {
+            try {
+                const { data, error } = await supabase.from('jobs').select('*');
+                if (error) throw error;
+
+                allJobs = data || [];
+                updateJobsStats();
+            } catch (err) {
+                console.error('Error loading jobs:', err);
+            }
+        }
+
+        async function loadActivityData() {
+            try {
+                const { data, error } = await supabase
+                    .from('activity_log')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(10);
+
+                if (!error && data && data.length > 0) {
+                    allActivities = data;
+                } else {
+                    allActivities = (allJobs || [])
+                        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+                        .slice(0, 10)
+                        .map(job => ({
+                            id: job.id,
+                            type: 'job_created',
+                            description: `Job created: ${job.site_name}`,
+                            created_at: job.created_at
+                        }));
+                }
+
+                renderActivityFeed();
+            } catch (err) {
+                console.error('Error loading activity:', err);
+                renderActivityFeed();
+            }
+        }
+
+        function updateJobsStats() {
+            const total = allJobs.length;
+            const active = allJobs.filter(j => j.status === 'active' || j.status === 'in-progress').length;
+            const completed = allJobs.filter(j => j.status === 'completed').length;
+            const pending = allJobs.filter(j => j.status === 'pending').length;
+
+            document.getElementById('jobsTotal').textContent = total;
+            document.getElementById('jobsActive').textContent = active;
+            document.getElementById('jobsCompleted').textContent = completed;
+            document.getElementById('jobsPending').textContent = pending;
+        }
+
+        function renderActivityFeed() {
+            const feedContainer = document.getElementById('activityFeed');
+
+            if (allActivities.length === 0) {
+                feedContainer.innerHTML = '<div class="loading">No recent activity</div>';
+                return;
+            }
+
+            feedContainer.innerHTML = allActivities.map(activity => {
+                const date = new Date(activity.created_at);
+                const timeStr = formatTimeAgo(date);
+                const description = activity.description ||
+                                  `${activity.type}: ${activity.customer_name || 'Update'}`;
+
+                return `
+                    <div class="activity-item">
+                        <div class="activity-dot"></div>
+                        <div class="activity-content">
+                            <div class="activity-text">${safe(description)}</div>
+                            <div class="activity-time">${timeStr}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function formatTimeAgo(date) {
+            const now = new Date();
+            const seconds = Math.floor((now - date) / 1000);
+
+            if (seconds < 60) return 'Just now';
+            const minutes = Math.floor(seconds / 60);
+            if (minutes < 60) return `${minutes}m ago`;
+            const hours = Math.floor(minutes / 60);
+            if (hours < 24) return `${hours}h ago`;
+            const days = Math.floor(hours / 24);
+            return `${days}d ago`;
+        }
+
         
-        function renderTable() {
+        function renderTable(filtered = false) {
             const tbody = document.getElementById('usersTableBody');
-            
-            if (allUsers.length === 0) {
+            let usersToDisplay = allUsers;
+
+            if (filtered) {
+                usersToDisplay = getFilteredUsers();
+            }
+
+            if (usersToDisplay.length === 0) {
                 tbody.innerHTML = '<div class="loading">No users found</div>';
                 return;
             }
             
-            tbody.innerHTML = allUsers.map(user => `
+            tbody.innerHTML = usersToDisplay.map(user => `
                 <div class="table-grid row">
                     <div>${safe(user.name)}</div>
                     <div>${safe(user.email)}</div>
@@ -260,6 +458,26 @@
             `).join('');
         }
         
+        function getFilteredUsers() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const roleFilter = document.getElementById('roleFilter').value;
+
+            return allUsers.filter(user => {
+                const matchesSearch = !searchTerm ||
+                    user.name.toLowerCase().includes(searchTerm) ||
+                    user.email.toLowerCase().includes(searchTerm) ||
+                    (user.company && user.company.toLowerCase().includes(searchTerm));
+
+                const matchesRole = !roleFilter || user.role === roleFilter;
+
+                return matchesSearch && matchesRole;
+            });
+        }
+
+        function filterTable() {
+            renderTable(true);
+        }
+
         function openAddUserModal() {
             editingUserId = null;
             document.getElementById('modalTitle').textContent = 'Add User';
@@ -328,7 +546,13 @@
         }
         
         // Load on start
-        loadUsers();
+        async function initializeDashboard() {
+            await loadUsers();
+            await loadJobsData();
+            await loadActivityData();
+        }
+
+        initializeDashboard();
     </script>
 </body>
 </html>
