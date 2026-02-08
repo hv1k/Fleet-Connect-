@@ -619,6 +619,7 @@
     </div>
 
     <script src="supabase-client.js"></script>
+    <script src="feature-flags.js"></script>
     <script src="demo-switcher.js"></script>
     <script src="notifications.js"></script>
     <script src="realtime.js"></script>
@@ -627,6 +628,15 @@
         const currentUser = checkAuth();
         if (!currentUser) {
             window.location.href = 'login.html';
+        }
+
+        // Initialize feature flags for current user's role
+        FC_FLAGS.init(currentUser.role || 'rental');
+        if (currentUser.role === 'vendor') {
+            FC_FLAGS.hideNav('page.invoices', 'invoices.html');
+            FC_FLAGS.hideNav('page.daily_log', 'daily-log.html');
+        } else if (currentUser.role === 'rental') {
+            FC_FLAGS.hideNav('page.invoices', 'rental-invoices.html');
         }
 
         // Icon definitions

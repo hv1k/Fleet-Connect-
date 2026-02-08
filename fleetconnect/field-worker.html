@@ -283,6 +283,7 @@
     <div class="toast" id="toast"></div>
 
     <script src="supabase-client.js"></script>
+    <script src="feature-flags.js"></script>
     <script src="demo-switcher.js"></script>
     <script src="notifications.js"></script>
     <script src="realtime.js"></script>
@@ -290,6 +291,9 @@
     <script>
         const currentUser = checkAuth(['fieldworker']);
         if (!currentUser) throw new Error('Not authenticated');
+
+        // Initialize feature flags for field worker role
+        FC_FLAGS.init('fieldworker');
 
         // Setup user info
         document.getElementById('userName').textContent = currentUser.name;
@@ -411,9 +415,9 @@
                         </div>
                         <div class="equipment-count">🔧 ${equipment.length} unit${equipment.length !== 1 ? 's' : ''} on site</div>
                         <div class="job-actions">
-                            ${job.status !== 'completed' ? `<button class="btn btn-primary" onclick="openInvoiceModal('${job.id}')">Create Invoice</button>` : ''}
+                            ${FC_FLAGS.isOn('invoice_creation') && job.status !== 'completed' ? `<button class="btn btn-primary" onclick="openInvoiceModal('${job.id}')">Create Invoice</button>` : ''}
                             <button class="btn btn-outline" onclick="viewHistory('${job.id}')">History</button>
-                            ${(job.address_street || job.address_city) ? `<button class="btn btn-navigate" onclick="navigateToJob('${encodeURIComponent((job.address_street||'')+', '+(job.address_city||'')+', '+(job.address_state||'')+' '+(job.address_zip||''))}')">📍 Navigate</button>` : ''}
+                            ${FC_FLAGS.isOn('navigation') && (job.address_street || job.address_city) ? `<button class="btn btn-navigate" onclick="navigateToJob('${encodeURIComponent((job.address_street||'')+', '+(job.address_city||'')+', '+(job.address_state||'')+' '+(job.address_zip||''))}')">📍 Navigate</button>` : ''}
                         </div>
                     </div>
                 `;
@@ -582,7 +586,7 @@
                         </div>
                     </div>
 
-                    <div class="signature-section">
+                    ${FC_FLAGS.isOn('signature') ? `<div class="signature-section">
                         <div class="section-title">Site Contact Signature</div>
                         <p style="font-size:0.8rem;color:#888;margin-bottom:10px;">Have the site contact sign below to confirm delivery</p>
                         <div class="signature-canvas-wrap">
@@ -595,7 +599,7 @@
                         </div>
                         <input type="text" id="signerName" placeholder="Signer's name (optional)" style="width:100%;margin-top:8px;padding:10px;border-radius:8px;border:1px solid #444;background:#333;color:#f5f0e8;font-size:0.85rem;">
                         <div class="signature-status" id="sigStatus">✓ Signature captured</div>
-                    </div>
+                    </div>` : ''}
 
                     <button class="submit-invoice" id="submitBtn" onclick="submitInvoice('${jobId}')">
                         Create Invoice

@@ -331,14 +331,14 @@
                     <div>
                         <!-- Charts Row -->
                         <div class="cards-row">
-                            <div class="card">
+                            <div class="card" id="fuelChartCard">
                                 <div class="card-header">
                                     <div class="card-title">Fuel Delivered</div>
                                     <div class="card-legend"><span><span class="legend-dot orange"></span>Diesel</span><span><span class="legend-dot green"></span>DEF</span></div>
                                 </div>
                                 <div class="chart-container" id="fuelChart"></div>
                             </div>
-                            <div class="card">
+                            <div class="card" id="donutChartCard">
                                 <div class="card-header"><div class="card-title">Jobs by Status</div></div>
                                 <div class="donut-container">
                                     <div class="donut-chart">
@@ -356,7 +356,7 @@
                     </div>
                     
                     <!-- Activity Feed -->
-                    <div class="activity-card">
+                    <div class="activity-card" id="activityFeed">
                         <div class="activity-header">
                             <span class="activity-title">Recent Activity</span>
                             <span class="activity-badge" id="activityBadge">0 new</span>
@@ -383,6 +383,7 @@
     </div>
     
     <script src="supabase-client.js"></script>
+    <script src="feature-flags.js"></script>
     <script src="demo-switcher.js"></script>
     <script src="notifications.js"></script>
     <script src="realtime.js"></script>
@@ -416,15 +417,25 @@
             if (currentUser) {
                 document.getElementById('userName').textContent = currentUser.name;
                 document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
-                
+
                 // Welcome message with time of day
                 const hour = new Date().getHours();
                 const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
                 document.getElementById('welcomeMsg').textContent = greeting + ', ' + currentUser.name + '!';
             }
-            
-            // Load data
-            loadData();
+
+            // Initialize feature flags
+            (async () => {
+                await FC_FLAGS.init('vendor');
+                FC_FLAGS.hideNav('page.invoices', 'invoices.html');
+                FC_FLAGS.hideNav('page.daily_log', 'daily-log.html');
+                FC_FLAGS.hide('charts.fuel', '#fuelChartCard');
+                FC_FLAGS.hide('charts.jobs', '#donutChartCard');
+                FC_FLAGS.hide('activity_feed', '#activityFeed');
+
+                // Load data
+                loadData();
+            })();
         }
         
         let allJobs = [], allInvoices = [];

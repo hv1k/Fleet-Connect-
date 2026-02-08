@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feature Flags | FleetConnect</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg-dark: #1a1a1a;
+            --bg-card: #242424;
+            --bg-input: #2a2a2a;
+            --bg-hover: #333;
+            --border: #333;
+            --text-primary: #f5f0e8;
+            --text-secondary: #888;
+            --text-muted: #666;
+            --accent: #60a5fa;
+            --accent-glow: rgba(96, 165, 250, 0.3);
+            --accent-blue: #60a5fa;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --success: #22c55e;
+            --admin: #60a5fa;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-dark); color: var(--text-primary); min-height: 100vh; line-height: 1.6; }
+        .container { position: relative; z-index: 1; max-width: 1400px; margin: 0 auto; padding: 24px 32px; }
+
+        .nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+        .logo { font-family: 'Inter', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--accent); letter-spacing: -0.5px; text-decoration: none; }
+        .nav-right { display: flex; align-items: center; gap: 24px; }
+        .nav-links { display: flex; gap: 24px; }
+        .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: color 0.2s; }
+        .nav-links a:hover, .nav-links a.active { color: var(--admin); }
+        .admin-badge { background: var(--admin); color: white; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; }
+        .user-info { display: flex; align-items: center; gap: 12px; }
+        .user-name { font-size: 0.9rem; color: var(--text-secondary); }
+        .logout-btn { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); padding: 8px 16px; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
+        .logout-btn:hover { border-color: var(--error); color: var(--error); }
+
+        .header { margin-bottom: 32px; }
+        .header h1 { font-size: 1.4rem; font-weight: 700; margin-bottom: 8px; }
+        .header p { color: var(--text-secondary); }
+
+        /* Role Tabs */
+        .role-tabs { display: flex; gap: 8px; margin-bottom: 24px; }
+        .role-tab { padding: 10px 24px; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-secondary); transition: all 0.2s; }
+        .role-tab:hover { border-color: var(--text-secondary); color: var(--text-primary); }
+        .role-tab.active { border-color: var(--admin); color: var(--admin); background: rgba(96, 165, 250, 0.1); }
+        .role-tab .count { font-size: 0.75rem; margin-left: 6px; opacity: 0.7; }
+
+        /* Stats */
+        .stats-row { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+        .mini-stat { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 14px 20px; display: flex; align-items: center; gap: 12px; }
+        .mini-stat .stat-icon { font-size: 1.2rem; }
+        .mini-stat .stat-info { }
+        .mini-stat .stat-num { font-size: 1.1rem; font-weight: 700; }
+        .mini-stat .stat-label { font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+        .mini-stat .stat-num.green { color: var(--success); }
+        .mini-stat .stat-num.yellow { color: var(--warning); }
+        .mini-stat .stat-num.blue { color: var(--accent-blue); }
+
+        /* Category Section */
+        .category-section { margin-bottom: 28px; }
+        .category-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .category-title { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-secondary); }
+        .category-badge { font-size: 0.7rem; padding: 3px 10px; border-radius: 4px; font-weight: 600; }
+        .category-badge.pages { background: rgba(96, 165, 250, 0.15); color: var(--accent-blue); }
+        .category-badge.analytics { background: rgba(168, 85, 247, 0.15); color: #a855f7; }
+        .category-badge.features { background: rgba(34, 197, 94, 0.15); color: var(--success); }
+        .bulk-btns { display: flex; gap: 8px; }
+        .bulk-btn { font-size: 0.7rem; padding: 4px 10px; border-radius: 4px; cursor: pointer; border: 1px solid var(--border); background: transparent; color: var(--text-secondary); font-family: 'Inter', sans-serif; transition: all 0.15s; }
+        .bulk-btn:hover { border-color: var(--text-secondary); color: var(--text-primary); }
+
+        /* Flag Card */
+        .flags-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 12px; }
+        @media (max-width: 600px) { .flags-grid { grid-template-columns: 1fr; } }
+        .flag-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; gap: 16px; transition: border-color 0.2s; }
+        .flag-card:hover { border-color: #444; }
+        .flag-card.disabled { opacity: 0.6; }
+        .flag-info { flex: 1; min-width: 0; }
+        .flag-label { font-size: 0.9rem; font-weight: 600; margin-bottom: 2px; }
+        .flag-desc { font-size: 0.78rem; color: var(--text-secondary); line-height: 1.4; }
+        .flag-key { font-size: 0.65rem; color: var(--text-muted); font-family: monospace; margin-top: 4px; }
+
+        /* Toggle Switch */
+        .toggle { position: relative; width: 48px; height: 26px; flex-shrink: 0; }
+        .toggle input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #444; border-radius: 26px; transition: 0.25s; }
+        .toggle-slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; border-radius: 50%; transition: 0.25s; }
+        .toggle input:checked + .toggle-slider { background-color: var(--success); }
+        .toggle input:checked + .toggle-slider:before { transform: translateX(22px); }
+        .toggle-slider:hover { background-color: #555; }
+        .toggle input:checked + .toggle-slider:hover { background-color: #1fa855; }
+
+        /* Toast */
+        .toast { position: fixed; bottom: 24px; right: 24px; padding: 14px 24px; border-radius: 10px; font-size: 0.85rem; font-weight: 500; z-index: 1000; transform: translateY(100px); opacity: 0; transition: all 0.3s; font-family: 'Inter', sans-serif; }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.success { background: var(--success); color: white; }
+        .toast.error { background: var(--error); color: white; }
+
+        .loading { text-align: center; padding: 60px; color: var(--text-secondary); font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav class="nav">
+            <a href="index.html" class="logo">FLEETCONNECT</a>
+            <div class="nav-right">
+                <div class="nav-links">
+                    <a href="admin-dashboard.html">Users</a>
+                    <a href="work-orders.html">Work Orders</a>
+                    <a href="create-job.html">Create Work Order</a>
+                    <a href="admin-feature-flags.html" class="active">Feature Flags</a>
+                    <a href="settings.html">Settings</a>
+                </div>
+                <div class="admin-badge">ADMIN</div>
+                <div class="user-info">
+                    <span class="user-name" id="userName">Admin</span>
+                    <button class="logout-btn" onclick="logout()">Logout</button>
+                </div>
+            </div>
+        </nav>
+
+        <header class="header">
+            <h1>Feature Flags</h1>
+            <p>Control which features are visible to each role. Toggle features on or off instantly.</p>
+        </header>
+
+        <!-- Role Tabs -->
+        <div class="role-tabs" id="roleTabs">
+            <button class="role-tab active" data-role="vendor" onclick="switchRole('vendor', this)">
+                Vendor <span class="count" id="countVendor"></span>
+            </button>
+            <button class="role-tab" data-role="rental" onclick="switchRole('rental', this)">
+                Rental <span class="count" id="countRental"></span>
+            </button>
+            <button class="role-tab" data-role="fieldworker" onclick="switchRole('fieldworker', this)">
+                Field Worker <span class="count" id="countFieldworker"></span>
+            </button>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="stats-row" id="statsRow">
+            <div class="mini-stat">
+                <div class="stat-icon">🟢</div>
+                <div class="stat-info">
+                    <div class="stat-num green" id="statEnabled">-</div>
+                    <div class="stat-label">Enabled</div>
+                </div>
+            </div>
+            <div class="mini-stat">
+                <div class="stat-icon">⭕</div>
+                <div class="stat-info">
+                    <div class="stat-num yellow" id="statDisabled">-</div>
+                    <div class="stat-label">Disabled</div>
+                </div>
+            </div>
+            <div class="mini-stat">
+                <div class="stat-icon">📦</div>
+                <div class="stat-info">
+                    <div class="stat-num blue" id="statTotal">-</div>
+                    <div class="stat-label">Total</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Flags Container -->
+        <div id="flagsContainer">
+            <div class="loading">Loading feature flags...</div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script src="supabase-client.js"></script>
+    <script src="feature-flags.js"></script>
+    <script>
+        let allFlags = [];
+        let currentRole = 'vendor';
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = checkAuth(['admin']);
+            if (!user) return;
+
+            document.getElementById('userName').textContent = user.name || 'Admin';
+
+            await loadFlags();
+        });
+
+        async function loadFlags() {
+            try {
+                allFlags = await FC_FLAGS.getAllFlags();
+                updateRoleCounts();
+                renderFlags(currentRole);
+            } catch (err) {
+                console.error('Failed to load flags:', err);
+                document.getElementById('flagsContainer').innerHTML = '<div class="loading">Failed to load feature flags. Please refresh.</div>';
+            }
+        }
+
+        function switchRole(role, btn) {
+            currentRole = role;
+            document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            renderFlags(role);
+        }
+
+        function updateRoleCounts() {
+            const roles = ['vendor', 'rental', 'fieldworker'];
+            roles.forEach(role => {
+                const count = allFlags.filter(f => f.role === role).length;
+                const el = document.getElementById('count' + role.charAt(0).toUpperCase() + role.slice(1));
+                if (el) el.textContent = '(' + count + ')';
+            });
+        }
+
+        function renderFlags(role) {
+            const roleFlags = allFlags.filter(f => f.role === role);
+            const enabled = roleFlags.filter(f => f.enabled).length;
+            const disabled = roleFlags.filter(f => !f.enabled).length;
+
+            document.getElementById('statEnabled').textContent = enabled;
+            document.getElementById('statDisabled').textContent = disabled;
+            document.getElementById('statTotal').textContent = roleFlags.length;
+
+            // Group by category
+            const categories = {};
+            roleFlags.forEach(f => {
+                const cat = f.category || 'other';
+                if (!categories[cat]) categories[cat] = [];
+                categories[cat].push(f);
+            });
+
+            // Category display order
+            const catOrder = ['pages', 'analytics', 'features', 'other'];
+            const catLabels = { pages: 'Pages', analytics: 'Analytics & Dashboards', features: 'Features', other: 'Other' };
+
+            let html = '';
+            catOrder.forEach(cat => {
+                if (!categories[cat] || categories[cat].length === 0) return;
+
+                const flags = categories[cat];
+                const enabledCount = flags.filter(f => f.enabled).length;
+
+                html += `
+                <div class="category-section">
+                    <div class="category-header">
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <span class="category-title">${safe(catLabels[cat] || cat)}</span>
+                            <span class="category-badge ${cat}">${enabledCount}/${flags.length} on</span>
+                        </div>
+                        <div class="bulk-btns">
+                            <button class="bulk-btn" onclick="bulkToggle('${role}', '${cat}', true)">Enable All</button>
+                            <button class="bulk-btn" onclick="bulkToggle('${role}', '${cat}', false)">Disable All</button>
+                        </div>
+                    </div>
+                    <div class="flags-grid">
+                `;
+
+                flags.forEach(f => {
+                    html += `
+                    <div class="flag-card ${f.enabled ? '' : 'disabled'}" id="card-${f.role}-${f.feature_key.replace(/\./g, '-')}">
+                        <div class="flag-info">
+                            <div class="flag-label">${safe(f.label)}</div>
+                            <div class="flag-desc">${safe(f.description || '')}</div>
+                            <div class="flag-key">${safe(f.role)}.${safe(f.feature_key)}</div>
+                        </div>
+                        <label class="toggle">
+                            <input type="checkbox" ${f.enabled ? 'checked' : ''} onchange="toggleFlag('${f.role}', '${f.feature_key}', this.checked, this)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    `;
+                });
+
+                html += '</div></div>';
+            });
+
+            document.getElementById('flagsContainer').innerHTML = html || '<div class="loading">No flags configured for this role.</div>';
+        }
+
+        async function toggleFlag(role, featureKey, enabled, checkbox) {
+            const cardId = 'card-' + role + '-' + featureKey.replace(/\./g, '-');
+            const card = document.getElementById(cardId);
+
+            try {
+                const success = await FC_FLAGS.updateFlag(role, featureKey, enabled);
+                if (success) {
+                    // Update local data
+                    const flag = allFlags.find(f => f.role === role && f.feature_key === featureKey);
+                    if (flag) flag.enabled = enabled;
+
+                    // Update card appearance
+                    if (card) card.classList.toggle('disabled', !enabled);
+
+                    // Update stats
+                    const roleFlags = allFlags.filter(f => f.role === role);
+                    document.getElementById('statEnabled').textContent = roleFlags.filter(f => f.enabled).length;
+                    document.getElementById('statDisabled').textContent = roleFlags.filter(f => !f.enabled).length;
+
+                    // Update category badge
+                    renderFlags(currentRole);
+
+                    showToast(enabled ? 'Feature enabled' : 'Feature disabled', 'success');
+                } else {
+                    checkbox.checked = !enabled; // Revert
+                    showToast('Failed to update flag', 'error');
+                }
+            } catch (err) {
+                checkbox.checked = !enabled; // Revert
+                showToast('Error: ' + err.message, 'error');
+            }
+        }
+
+        async function bulkToggle(role, category, enabled) {
+            const flags = allFlags.filter(f => f.role === role && f.category === category);
+            let successCount = 0;
+
+            for (const flag of flags) {
+                if (flag.enabled === enabled) continue; // Skip already matching
+                const ok = await FC_FLAGS.updateFlag(role, flag.feature_key, enabled);
+                if (ok) {
+                    flag.enabled = enabled;
+                    successCount++;
+                }
+            }
+
+            renderFlags(currentRole);
+            showToast(successCount + ' flag(s) ' + (enabled ? 'enabled' : 'disabled'), 'success');
+        }
+
+        function showToast(message, type) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast ' + type + ' show';
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+    </script>
+</body>
+</html>

@@ -373,7 +373,7 @@
                 
                 <!-- Main Grid: Charts + Activity -->
                 <div class="main-grid">
-                    <div>
+                    <div id="chartsSection">
                         <div class="cards-row">
                             <div class="card">
                                 <div class="card-header">
@@ -403,9 +403,9 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <!-- Activity Feed -->
-                    <div class="activity-card">
+                    <div class="activity-card" id="activitySection">
                         <div class="activity-header">
                             <span class="activity-title">Recent Activity</span>
                             <span class="activity-badge" id="activityBadge">0 new</span>
@@ -451,6 +451,7 @@
     </div>
 
     <script src="supabase-client.js"></script>
+    <script src="feature-flags.js"></script>
     <script src="demo-switcher.js"></script>
     <script src="notifications.js"></script>
     <script src="realtime.js"></script>
@@ -484,6 +485,11 @@
                 const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
                 document.getElementById('welcomeMsg').textContent = greeting + ', ' + currentUser.name + '!';
             }
+            // Initialize feature flags for rental role
+            FC_FLAGS.init('rental');
+            FC_FLAGS.hideNav('page.invoices', 'rental-invoices.html');
+            FC_FLAGS.hide('charts.overview', '#chartsSection');
+            FC_FLAGS.hide('activity_feed', '#activitySection');
             loadData();
         }
         

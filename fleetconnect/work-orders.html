@@ -336,6 +336,7 @@
     <div class="toast" id="toast"></div>
 
     <script src="supabase-client.js"></script>
+    <script src="feature-flags.js"></script>
     <script src="demo-switcher.js"></script>
     <script src="notifications.js"></script>
     <script src="realtime.js"></script>
@@ -344,6 +345,15 @@
         // ===== AUTH & NAV =====
         const currentUser = checkAuth();
         if (!currentUser) throw new Error('Not authenticated');
+
+        // Initialize feature flags for vendor
+        (async () => {
+            if (currentUser.role === 'vendor') {
+                await FC_FLAGS.init('vendor');
+                FC_FLAGS.hideNav('page.invoices', 'invoices.html');
+                FC_FLAGS.hideNav('page.daily_log', 'daily-log.html');
+            }
+        })();
 
         // Set user info
         document.getElementById('userName').textContent = currentUser.name;

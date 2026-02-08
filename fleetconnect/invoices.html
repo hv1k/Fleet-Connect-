@@ -206,7 +206,7 @@
                     <h1>Invoices & Fuel History</h1>
                     <div class="header-subtitle">Complete fuel delivery records and QuickBooks invoice matching</div>
                 </div>
-                <button class="btn btn-primary" onclick="openExportModal()" style="display:flex;align-items:center;gap:8px;white-space:nowrap;">
+                <button class="btn btn-primary" id="exportBtn" onclick="openExportModal()" style="display:flex;align-items:center;gap:8px;white-space:nowrap;">
                     <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                     Export Report
                 </button>
@@ -239,7 +239,7 @@
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                         Fuel History <span class="tab-badge" id="fuelHistoryBadge">0</span>
                     </button>
-                    <button class="page-tab" onclick="switchPageTab('qb-invoices', this)">
+                    <button class="page-tab" id="qbTab" onclick="switchPageTab('qb-invoices', this)">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                         QB Invoices <span class="tab-badge" id="qbInvoicesBadge">0</span>
                     </button>
@@ -268,7 +268,7 @@
                 </div>
 
                 <!-- QB INVOICES TAB -->
-                <div class="tab-content" id="tab-qb-invoices">
+                <div class="tab-content" id="qbSection">
                     <div class="bcc-banner">
                         <div class="bcc-banner-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></div>
                         <div class="bcc-banner-text">
@@ -355,6 +355,7 @@
     </div>
 
     <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="supabase-client.js"></script>
+    <script src="feature-flags.js"></script>
     <script src="demo-switcher.js"></script>
     <script src="notifications.js"></script>
     <script src="realtime.js"></script>
@@ -368,6 +369,17 @@
                 if (user) {
                     document.getElementById('userName').textContent = user.name;
                     document.getElementById('userAvatar').textContent = user.name.charAt(0).toUpperCase();
+
+                    // Initialize feature flags
+                    await FC_FLAGS.init(user.role);
+                    if (user.role === 'vendor' && !FC_FLAGS.gatePage('page.invoices', 'vendor-dashboard.html')) return;
+
+                    // Hide QB tab and section if flag is off
+                    if (user.role === 'vendor') {
+                        FC_FLAGS.hide('invoices.qb', '#qbTab');
+                        FC_FLAGS.hide('invoices.qb', '#qbSection');
+                        FC_FLAGS.hide('invoices.export', '#exportBtn');
+                    }
                 }
             }
             await loadData();
