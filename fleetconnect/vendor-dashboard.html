@@ -455,8 +455,14 @@
         
         function updateStats() {
             document.getElementById('statActiveJobs').textContent = allJobs.filter(j => ['accepted','in-progress'].includes(j.status)).length;
-            document.getElementById('statDiesel').textContent = allInvoices.reduce((s,i) => s + (parseFloat(i.total_diesel)||0), 0).toFixed(0);
-            document.getElementById('statDEF').textContent = allInvoices.reduce((s,i) => s + (parseFloat(i.total_def)||0), 0).toFixed(0);
+            // Filter to this month for realistic totals
+            const now = new Date();
+            const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+            const monthInvoices = allInvoices.filter(i => new Date(i.created_at) >= monthStart);
+            const totalDiesel = monthInvoices.reduce((s,i) => s + (parseFloat(i.total_diesel)||0), 0);
+            const totalDef = monthInvoices.reduce((s,i) => s + (parseFloat(i.total_def)||0), 0);
+            document.getElementById('statDiesel').textContent = Math.round(totalDiesel).toLocaleString();
+            document.getElementById('statDEF').textContent = Math.round(totalDef).toLocaleString();
             document.getElementById('statWorkers').textContent = allJobs.filter(j => ['pending','assigned','open'].includes(j.status)).length;
             const pendingCount = allJobs.filter(j => ['pending','assigned'].includes(j.status)).length;
             const badge = document.getElementById('pendingBadge');
@@ -466,9 +472,15 @@
         
         function renderChart() {
             const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-            // Build real data from invoices by day of week
+            // Filter to current week only for accurate daily breakdown
+            const now = new Date();
+            const dayOfWeek = (now.getDay() + 6) % 7; // Mon=0
+            const weekStart = new Date(now);
+            weekStart.setDate(now.getDate() - dayOfWeek);
+            weekStart.setHours(0,0,0,0);
+            const weekInvoices = allInvoices.filter(inv => inv.created_at && new Date(inv.created_at) >= weekStart);
             const diesel = [0,0,0,0,0,0,0], def = [0,0,0,0,0,0,0];
-            allInvoices.forEach(inv => {
+            weekInvoices.forEach(inv => {
                 if (inv.created_at) {
                     const dayIdx = (new Date(inv.created_at).getDay() + 6) % 7; // Mon=0
                     diesel[dayIdx] += parseFloat(inv.total_diesel) || 0;
@@ -615,7 +627,7 @@
                 const statusHtml = isAvailable
                     ? '<span class="status-badge available" style="background:rgba(249,115,22,0.15);color:#f97316;"><span class="status-dot" style="background:#f97316;"></span>Available</span>'
                     : '<span class="status-badge '+j.status+'"><span class="status-dot"></span>'+j.status+'</span>';
-                return '<tr'+(isAvailable ? ' style="border-left:3px solid #f97316;"' : '')+'><td><div class="job-name">'+safe(j.job_site_name||'Untitled')+'</div><div class="job-location">'+safe(j.address_city||'')+', '+safe(j.address_state||'')+'</div></td><td>'+safe(j.contract_number||'-')+'</td><td>'+formatDate(j.date_out)+'</td><td>'+statusHtml+'</td><td><div class="actions-cell">'+(isAvailable || ['pending','assigned'].includes(j.status)?'<button class="action-btn primary" onclick="acceptJob(\''+j.id+'\')">Accept</button>':'')+'</div></td></tr>';
+                return '<tr'+(isAvailable ? ' style="border-left:3px solid #f97316;"' : '')+'><td><div class="job-name">'+safe(j.job_site_name||'Untitled')+'</div><div class="job-location">'+((j.address_city||j.address_state) ? safe(j.address_city||'')+', '+safe(j.address_state||'') : '<span style="color:#666;font-style:italic">No address on file</span>')+'</div></td><td>'+safe(j.contract_number||'-')+'</td><td>'+formatDate(j.date_out)+'</td><td>'+statusHtml+'</td><td><div class="actions-cell">'+(isAvailable || ['pending','assigned'].includes(j.status)?'<button class="action-btn primary" onclick="acceptJob(\''+j.id+'\')">Accept</button>':'')+'</div></td></tr>';
             }).join('') + '</tbody></table>';
             document.getElementById('tableFooter').style.display = filtered.length > 10 ? 'flex' : 'none';
             document.getElementById('paginationInfo').textContent = 'Showing 1-'+Math.min(10,filtered.length)+' of '+filtered.length;
