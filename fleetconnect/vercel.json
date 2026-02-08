@@ -1,0 +1,8 @@
+{
+    "rewrites": [
+        {
+            "source": "/api/request-reset",
+            "destination": "/api/reset-password"
+        }
+    ]
+}
