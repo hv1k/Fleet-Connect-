@@ -158,6 +158,18 @@
         .btn-save { background: #22c55e; color: #fff; }
         .btn-save:hover { background: #16a34a; }
 
+        /* Status Timeline */
+        .status-timeline { display: flex; align-items: center; justify-content: space-between; margin: 20px 0; position: relative; padding: 20px 0; }
+        .status-timeline::before { content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 2px; background: #333; z-index: 0; }
+        .timeline-step { flex: 1; display: flex; flex-direction: column; align-items: center; position: relative; z-index: 1; }
+        .timeline-step:not(:last-child) { margin-right: 0; }
+        .timeline-circle { width: 40px; height: 40px; border-radius: 50%; background: #2a2a2a; border: 2px solid #444; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; font-weight: 700; color: #888; font-size: 0.9rem; }
+        .timeline-circle.completed { background: #22c55e; border-color: #22c55e; color: #fff; }
+        .timeline-circle.active { background: #60a5fa; border-color: #60a5fa; color: #fff; }
+        .timeline-label { font-size: 0.75rem; text-align: center; color: #888; max-width: 80px; line-height: 1.3; white-space: normal; }
+        .timeline-label.completed { color: #22c55e; font-weight: 600; }
+        .timeline-label.active { color: #60a5fa; font-weight: 600; }
+
         /* Image viewer */
         .image-viewer { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 300; align-items: center; justify-content: center; padding: 20px; }
         .image-viewer.show { display: flex; }
@@ -566,6 +578,32 @@
                         <div class="detail-item"><div class="detail-label">Date Out</div><div class="detail-value">${formatDate(job.date_out)}${job.time_out ? ' ' + formatTime(job.time_out) : ''}</div></div>
                         <div class="detail-item"><div class="detail-label">Est. Return</div><div class="detail-value">${formatDate(job.est_return)}${job.time_return ? ' ' + formatTime(job.time_return) : ''}</div></div>
                         ${job.completed_at ? '<div class="detail-item"><div class="detail-label">Completed</div><div class="detail-value" style="color:#60a5fa;">' + formatDate(job.completed_at) + '</div></div>' : ''}
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <div class="detail-section-title">Status Timeline</div>
+                    <div class="status-timeline">
+                        <div class="timeline-step">
+                            <div class="timeline-circle completed">✓</div>
+                            <div class="timeline-label completed">Created</div>
+                        </div>
+                        <div class="timeline-step">
+                            <div class="timeline-circle ${['accepted', 'assigned', 'in-progress', 'completed'].includes(job.status) ? 'completed' : 'active'}">✓</div>
+                            <div class="timeline-label ${['accepted', 'assigned', 'in-progress', 'completed'].includes(job.status) ? 'completed' : 'active'}">Accepted</div>
+                        </div>
+                        <div class="timeline-step">
+                            <div class="timeline-circle ${['assigned', 'in-progress', 'completed'].includes(job.status) ? 'completed' : job.status === 'accepted' ? 'active' : ''}">✓</div>
+                            <div class="timeline-label ${['assigned', 'in-progress', 'completed'].includes(job.status) ? 'completed' : job.status === 'accepted' ? 'active' : ''}">Assigned</div>
+                        </div>
+                        <div class="timeline-step">
+                            <div class="timeline-circle ${['in-progress', 'completed'].includes(job.status) ? 'completed' : job.status === 'assigned' ? 'active' : ''}">✓</div>
+                            <div class="timeline-label ${['in-progress', 'completed'].includes(job.status) ? 'completed' : job.status === 'assigned' ? 'active' : ''}">In Progress</div>
+                        </div>
+                        <div class="timeline-step">
+                            <div class="timeline-circle ${job.status === 'completed' ? 'completed' : job.status === 'in-progress' ? 'active' : ''}">✓</div>
+                            <div class="timeline-label ${job.status === 'completed' ? 'completed' : job.status === 'in-progress' ? 'active' : ''}">Completed</div>
+                        </div>
                     </div>
                 </div>
 

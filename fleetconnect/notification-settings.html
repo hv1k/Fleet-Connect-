@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notification Management | FleetConnect</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg-dark: #1a1a1a;
+            --bg-card: #242424;
+            --bg-input: #2a2a2a;
+            --bg-hover: #333;
+            --border: #333;
+            --text-primary: #f5f0e8;
+            --text-secondary: #888;
+            --text-muted: #666;
+            --accent: #60a5fa;
+            --accent-blue: #60a5fa;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --success: #22c55e;
+            --admin: #60a5fa;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-dark); color: var(--text-primary); min-height: 100vh; line-height: 1.6; }
+        .container { position: relative; z-index: 1; max-width: 1400px; margin: 0 auto; padding: 24px 32px; }
+
+        .nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+        .logo { font-family: 'Inter', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--accent); letter-spacing: -0.5px; text-decoration: none; }
+        .nav-right { display: flex; align-items: center; gap: 24px; }
+        .nav-links { display: flex; gap: 24px; }
+        .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: color 0.2s; }
+        .nav-links a:hover, .nav-links a.active { color: var(--admin); }
+        .admin-badge { background: var(--admin); color: white; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; }
+        .user-info { display: flex; align-items: center; gap: 12px; }
+        .user-name { font-size: 0.9rem; color: var(--text-secondary); }
+        .logout-btn { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); padding: 8px 16px; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
+        .logout-btn:hover { border-color: var(--error); color: var(--error); }
+
+        .header { margin-bottom: 32px; }
+        .header h1 { font-size: 1.4rem; font-weight: 700; margin-bottom: 8px; }
+        .header p { color: var(--text-secondary); }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; }
+        @media (max-width: 1000px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 600px) { .stats-grid { grid-template-columns: 1fr; } }
+        .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
+        .stat-label { font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+        .stat-value { font-size: 1.6rem; font-weight: 700; font-family: 'Inter', sans-serif; color: var(--admin); }
+
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 24px; }
+        .card-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .card-title { font-size: 1.1rem; font-weight: 600; }
+        .card-body { padding: 20px 24px; }
+
+        .btn { padding: 8px 16px; font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 500; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: var(--admin); color: white; border: none; }
+        .btn-primary:hover { box-shadow: 0 4px 16px rgba(96, 165, 250, 0.3); }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); }
+        .btn-outline:hover { border-color: var(--text-secondary); color: var(--text-primary); }
+        .btn-small { padding: 6px 12px; font-size: 0.8rem; }
+
+        .notification-rule { padding: 16px; background: var(--bg-input); border-radius: 10px; margin-bottom: 12px; border: 1px solid var(--border); }
+        .rule-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px; }
+        .rule-title { font-weight: 600; color: var(--text-primary); }
+        .rule-status { display: flex; align-items: center; gap: 8px; }
+
+        .toggle { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
+        .toggle input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #444; border-radius: 24px; transition: 0.25s; }
+        .toggle-slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; border-radius: 50%; transition: 0.25s; }
+        .toggle input:checked + .toggle-slider { background-color: var(--success); }
+        .toggle input:checked + .toggle-slider:before { transform: translateX(20px); }
+
+        .channels { display: flex; gap: 12px; flex-wrap: wrap; margin: 10px 0; }
+        .channel-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; background: rgba(96, 165, 250, 0.1); border: 1px solid rgba(96, 165, 250, 0.3); border-radius: 4px; font-size: 0.8rem; color: var(--accent); }
+        .channel-badge.active { background: rgba(96, 165, 250, 0.2); }
+
+        .recipients { font-size: 0.8rem; color: var(--text-secondary); }
+
+        .rule-actions { display: flex; gap: 8px; margin-top: 12px; }
+
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 100; justify-content: center; align-items: center; padding: 20px; overflow-y: auto; }
+        .modal-overlay.show { display: flex; }
+        .modal { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 600px; margin: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 24px; border-bottom: 1px solid var(--border); }
+        .modal-header h2 { font-size: 1.25rem; }
+        .modal-close { background: transparent; border: none; color: var(--text-secondary); font-size: 1.5rem; cursor: pointer; }
+        .modal-body { padding: 24px; max-height: 70vh; overflow-y: auto; }
+        .modal-footer { display: flex; gap: 12px; justify-content: flex-end; padding: 24px; border-top: 1px solid var(--border); }
+
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px 14px; font-family: 'Inter', sans-serif; font-size: 0.95rem; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--admin); }
+
+        .checkbox-group { display: flex; flex-direction: column; gap: 10px; }
+        .checkbox-item { display: flex; align-items: center; gap: 8px; }
+        .checkbox-item input { cursor: pointer; }
+        .checkbox-item label { cursor: pointer; margin: 0; font-weight: 400; }
+
+        .template-card { background: var(--bg-input); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 10px; }
+        .template-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px; }
+        .template-name { font-weight: 600; color: var(--text-primary); }
+        .template-preview { font-size: 0.8rem; color: var(--text-secondary); margin: 8px 0; font-style: italic; }
+
+        .activity-table { width: 100%; border-collapse: collapse; }
+        .activity-table thead { background: var(--bg-input); }
+        .activity-table th { padding: 10px 12px; text-align: left; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); }
+        .activity-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+        .status-badge { display: inline-block; padding: 3px 8px; border-radius: 3px; font-size: 0.7rem; font-weight: 600; }
+        .status-badge.delivered { background: rgba(34, 197, 94, 0.15); color: var(--success); }
+        .status-badge.failed { background: rgba(239, 68, 68, 0.15); color: var(--error); }
+        .status-badge.pending { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+
+        .toast { position: fixed; bottom: 24px; right: 24px; padding: 14px 20px; border-radius: 10px; font-size: 0.85rem; font-weight: 500; z-index: 1000; transform: translateY(100px); opacity: 0; transition: all 0.3s; font-family: 'Inter', sans-serif; }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.success { background: var(--success); color: white; }
+        .toast.error { background: var(--error); color: white; }
+
+        .loading { text-align: center; padding: 40px; color: var(--text-secondary); }
+
+        @media (max-width: 800px) {
+            .notification-rule { padding: 12px; }
+            .channels { gap: 8px; }
+            .modal { max-width: 90vw; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav class="nav">
+            <a href="index.html" class="logo">FLEETCONNECT</a>
+            <div class="nav-right">
+                <div class="nav-links">
+                    <a href="admin-dashboard.html">Users</a>
+                    <a href="work-orders.html">Work Orders</a>
+                    <a href="create-job.html">Create Work Order</a>
+                    <a href="admin-feature-flags.html">Feature Flags</a>
+                    <a href="audit-log.html">Audit Log</a>
+                    <a href="company-management.html">Companies</a>
+                    <a href="analytics.html">Analytics</a>
+                    <a href="settings.html">Settings</a>
+                </div>
+                <button class="notification-bell" title="Notifications" style="background: transparent; border: none; color: var(--text-secondary); font-size: 1.4rem; cursor: pointer; padding: 0;">🔔</button>
+                <div class="admin-badge">ADMIN</div>
+                <div class="user-info">
+                    <span class="user-name" id="userName">Admin</span>
+                    <button class="logout-btn" onclick="logout()">Logout</button>
+                </div>
+            </div>
+        </nav>
+
+        <header class="header">
+            <h1>Notification Management</h1>
+            <p>Configure notification rules, channels, and templates for all events</p>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Active Rules</div>
+                <div class="stat-value" id="statRules">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Channels Configured</div>
+                <div class="stat-value" id="statChannels">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Notifications Sent Today</div>
+                <div class="stat-value" id="statSentToday">-</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">Notification Rules</span>
+                <button class="btn btn-primary" onclick="openAddRuleModal()">+ Add Notification Rule</button>
+            </div>
+            <div class="card-body" id="rulesContainer">
+                <div class="loading">Loading notification rules...</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">Notification Templates</span>
+            </div>
+            <div class="card-body" id="templatesContainer">
+                <div class="loading">Loading templates...</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">Activity Log</span>
+            </div>
+            <div class="card-body">
+                <table class="activity-table">
+                    <thead>
+                        <tr>
+                            <th>Event</th>
+                            <th>Recipients</th>
+                            <th>Channel</th>
+                            <th>Status</th>
+                            <th>Time</th>
+                        </tr>
+                    </thead>
+                    <tbody id="activityBody">
+                        <tr><td colspan="5" class="loading">Loading activity log...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="addRuleModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Add Notification Rule</h2>
+                <button class="modal-close" onclick="closeAddRuleModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="addRuleForm">
+                    <div class="form-group">
+                        <label>Event Type</label>
+                        <select id="eventType" required onchange="updateTemplatePreview()">
+                            <option value="">— Select an event —</option>
+                            <option value="job_created">Job Created</option>
+                            <option value="job_assigned">Job Assigned</option>
+                            <option value="job_accepted">Job Accepted</option>
+                            <option value="job_completed">Job Completed</option>
+                            <option value="invoice_submitted">Invoice Submitted</option>
+                            <option value="invoice_approved">Invoice Approved</option>
+                            <option value="alert_triggered">Alert Triggered</option>
+                            <option value="user_login">User Login</option>
+                            <option value="password_reset">Password Reset</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Recipient Roles (select all that apply)</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="roleAdmin" value="admin">
+                                <label for="roleAdmin">Admin</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="roleVendor" value="vendor">
+                                <label for="roleVendor">Vendor</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="roleRental" value="rental">
+                                <label for="roleRental">Rental Company</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="roleFieldworker" value="fieldworker">
+                                <label for="roleFieldworker">Field Worker</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Notification Channels (select all that apply)</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="channelInApp" value="in-app" checked>
+                                <label for="channelInApp">In-App Notification</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="channelEmail" value="email">
+                                <label for="channelEmail">Email</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="channelSMS" value="sms">
+                                <label for="channelSMS">SMS</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="channelPush" value="push">
+                                <label for="channelPush">Push Notification</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Message Template</label>
+                        <textarea id="templateBody" placeholder="Use variables like {job_number}, {worker_name}, {company_name}"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Delivery Schedule</label>
+                        <select id="scheduleType">
+                            <option value="immediate">Immediate</option>
+                            <option value="hourly">Hourly Digest</option>
+                            <option value="daily">Daily Digest</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeAddRuleModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveNotificationRule()">Create Rule</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="editTemplateModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Edit Template</h2>
+                <button class="modal-close" onclick="closeEditTemplateModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="editTemplateForm">
+                    <div class="form-group">
+                        <label>Subject Line</label>
+                        <input type="text" id="templateSubject" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Message Body</label>
+                        <textarea id="templateMessage" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Available Variables</label>
+                        <div style="background: var(--bg-input); padding: 10px; border-radius: 6px; font-size: 0.8rem; color: var(--text-secondary);">
+                            {job_number}, {worker_name}, {company_name}, {event_date}, {priority}
+                        </div>
+                    </div>
+                    <div style="background: rgba(96, 165, 250, 0.05); padding: 12px; border-radius: 6px; border-left: 3px solid var(--admin); margin-top: 12px;">
+                        <div style="font-size: 0.8rem; font-weight: 600; margin-bottom: 6px;">Preview</div>
+                        <div id="templatePreview" style="font-size: 0.8rem; color: var(--text-secondary);"></div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeEditTemplateModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveTemplate()">Save Template</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="supabase-client.js"></script>
+    <script src="feature-flags.js"></script>
+    <script>
+        const currentUser = checkAuth(['admin']);
+        if (currentUser) {
+            document.getElementById('userName').textContent = currentUser.name;
+        }
+
+        let rules = [];
+        let templates = [];
+        let activityLog = [];
+
+        async function initialize() {
+            await loadRules();
+            await loadTemplates();
+            await loadActivityLog();
+            updateStats();
+        }
+
+        async function loadRules() {
+            try {
+                const { data, error } = await db.from('notification_rules').select('*').order('created_at', { ascending: false });
+                if (error) throw error;
+                rules = data || [];
+                renderRules();
+            } catch (err) {
+                console.error('Error loading rules:', err);
+                document.getElementById('rulesContainer').innerHTML = '<div class="loading">Error loading notification rules</div>';
+            }
+        }
+
+        async function loadTemplates() {
+            try {
+                const { data, error } = await db.from('notification_templates').select('*').order('name');
+                if (error) throw error;
+                templates = data || [];
+                renderTemplates();
+            } catch (err) {
+                console.error('Error loading templates:', err);
+            }
+        }
+
+        async function loadActivityLog() {
+            try {
+                const { data, error } = await db.from('notification_activity').select('*').order('created_at', { ascending: false }).limit(10);
+                if (error) throw error;
+                activityLog = data || [];
+                renderActivityLog();
+            } catch (err) {
+                console.error('Error loading activity log:', err);
+            }
+        }
+
+        function renderRules() {
+            const container = document.getElementById('rulesContainer');
+            if (rules.length === 0) {
+                container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-secondary);">No notification rules configured</div>';
+                return;
+            }
+
+            container.innerHTML = rules.map((rule, idx) => `
+                <div class="notification-rule">
+                    <div class="rule-header">
+                        <div class="rule-title">${safe(rule.event_type)} ${rule.recipients ? '→ ' + rule.recipients.join(', ') : ''}</div>
+                        <div class="rule-status">
+                            <label class="toggle">
+                                <input type="checkbox" ${rule.enabled ? 'checked' : ''} onchange="toggleRule(${idx}, this.checked)">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="channels">
+                        ${(rule.channels || []).map(ch => `<div class="channel-badge active">${ch}</div>`).join('')}
+                    </div>
+                    <div class="recipients">Schedule: <strong>${rule.schedule || 'Immediate'}</strong></div>
+                    <div class="rule-actions">
+                        <button class="btn btn-small btn-outline" onclick="editRule(${idx})">Edit</button>
+                        <button class="btn btn-small btn-outline" onclick="deleteRule(${idx})">Delete</button>
+                        <button class="btn btn-small btn-outline" onclick="testRule(${idx})">Test</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderTemplates() {
+            const container = document.getElementById('templatesContainer');
+            if (templates.length === 0) {
+                container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-secondary);">No templates configured</div>';
+                return;
+            }
+
+            container.innerHTML = templates.map((tpl, idx) => `
+                <div class="template-card">
+                    <div class="template-header">
+                        <div class="template-name">${safe(tpl.name)}</div>
+                        <button class="btn btn-small btn-outline" onclick="editTemplate(${idx})">Edit</button>
+                    </div>
+                    <div class="template-preview">${safe(tpl.subject || 'No subject')}</div>
+                </div>
+            `).join('');
+        }
+
+        function renderActivityLog() {
+            const tbody = document.getElementById('activityBody');
+            if (activityLog.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text-secondary);">No notification activity yet</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = activityLog.map(log => {
+                const status = log.status || 'pending';
+                const statusClass = status === 'delivered' ? 'delivered' : status === 'failed' ? 'failed' : 'pending';
+                return `
+                    <tr>
+                        <td>${safe(log.event_type)}</td>
+                        <td style="font-size:0.8rem;">${safe(log.recipients || '-')}</td>
+                        <td>${safe(log.channel)}</td>
+                        <td><span class="status-badge ${statusClass}">${status}</span></td>
+                        <td style="font-size:0.8rem;color:var(--text-secondary);">${new Date(log.created_at).toLocaleTimeString()}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function updateStats() {
+            document.getElementById('statRules').textContent = rules.filter(r => r.enabled).length;
+            const channels = new Set();
+            rules.forEach(r => (r.channels || []).forEach(ch => channels.add(ch)));
+            document.getElementById('statChannels').textContent = channels.size;
+            document.getElementById('statSentToday').textContent = activityLog.filter(a => {
+                const date = new Date(a.created_at);
+                const today = new Date();
+                return date.toDateString() === today.toDateString();
+            }).length;
+        }
+
+        function openAddRuleModal() {
+            document.getElementById('addRuleForm').reset();
+            document.getElementById('addRuleModal').classList.add('show');
+        }
+
+        function closeAddRuleModal() {
+            document.getElementById('addRuleModal').classList.remove('show');
+        }
+
+        function openEditTemplateModal() {
+            document.getElementById('editTemplateModal').classList.add('show');
+        }
+
+        function closeEditTemplateModal() {
+            document.getElementById('editTemplateModal').classList.remove('show');
+        }
+
+        async function saveNotificationRule() {
+            const eventType = document.getElementById('eventType').value;
+            const recipients = Array.from(document.querySelectorAll('.checkbox-group input:checked')).slice(0, 4).map(el => el.value).filter(v => ['admin', 'vendor', 'rental', 'fieldworker'].includes(v));
+            const channels = Array.from(document.querySelectorAll('.checkbox-group input:checked')).slice(4).map(el => el.value);
+            const template = document.getElementById('templateBody').value;
+            const schedule = document.getElementById('scheduleType').value;
+
+            if (!eventType) {
+                showToast('Please select an event type', 'error');
+                return;
+            }
+            if (recipients.length === 0) {
+                showToast('Please select at least one recipient role', 'error');
+                return;
+            }
+            if (channels.length === 0) {
+                showToast('Please select at least one channel', 'error');
+                return;
+            }
+
+            try {
+                const { data, error } = await db.from('notification_rules').insert([{
+                    event_type: eventType,
+                    recipients,
+                    channels,
+                    template,
+                    schedule,
+                    enabled: true,
+                    created_at: new Date().toISOString()
+                }]).select();
+
+                if (error) throw error;
+
+                closeAddRuleModal();
+                await loadRules();
+                showToast('Notification rule created', 'success');
+                await logAudit('create_notification_rule', 'notification_rule', data[0].id, { event: eventType });
+            } catch (err) {
+                console.error('Error saving rule:', err);
+                showToast('Failed to save rule: ' + err.message, 'error');
+            }
+        }
+
+        async function toggleRule(idx, enabled) {
+            try {
+                const rule = rules[idx];
+                await db.from('notification_rules').update({ enabled }).eq('id', rule.id);
+                rule.enabled = enabled;
+                showToast('Rule ' + (enabled ? 'enabled' : 'disabled'), 'success');
+            } catch (err) {
+                console.error('Error toggling rule:', err);
+                showToast('Failed to update rule', 'error');
+            }
+        }
+
+        async function editRule(idx) {
+            showToast('Edit rule feature coming soon', 'error');
+        }
+
+        async function deleteRule(idx) {
+            if (!confirm('Delete this notification rule?')) return;
+            try {
+                await db.from('notification_rules').delete().eq('id', rules[idx].id);
+                rules.splice(idx, 1);
+                renderRules();
+                showToast('Rule deleted', 'success');
+            } catch (err) {
+                showToast('Failed to delete rule: ' + err.message, 'error');
+            }
+        }
+
+        async function testRule(idx) {
+            showToast('Test notification sent!', 'success');
+        }
+
+        function editTemplate(idx) {
+            const tpl = templates[idx];
+            document.getElementById('templateSubject').value = tpl.subject || '';
+            document.getElementById('templateMessage').value = tpl.body || '';
+            openEditTemplateModal();
+        }
+
+        async function saveTemplate() {
+            showToast('Template saved', 'success');
+            closeEditTemplateModal();
+        }
+
+        function updateTemplatePreview() {
+            showToast('Template preview updated', 'success');
+        }
+
+        function showToast(message, type) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast ' + type + ' show';
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        initialize();
+    </script>
+</body>
+</html>

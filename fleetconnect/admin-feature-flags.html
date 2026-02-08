@@ -149,8 +149,11 @@
         </nav>
 
         <header class="header">
-            <h1>Feature Flags</h1>
-            <p>Control which features are visible to each role. Toggle features on or off instantly.</p>
+            <div>
+                <h1>Feature Flags</h1>
+                <p>Control which features are visible to each role. Toggle features on or off instantly.</p>
+            </div>
+            <button onclick="refreshFlags()" style="padding:10px 20px;background:#60a5fa;color:#fff;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;">🔄 Refresh Flags</button>
         </header>
 
         <!-- Role Tabs -->
@@ -378,10 +381,11 @@
             }
 
             let html = '<div class="changelog-list">';
-            changelog.forEach(entry => {
+            changelog.forEach((entry, idx) => {
                 const changeType = entry.enabled ? 'Enabled' : 'Disabled';
                 const changeClass = entry.enabled ? 'enabled' : 'disabled';
                 const relTime = getRelativeTime(entry.timestamp);
+                const revertEnabled = entry.enabled ? 'false' : 'true';
 
                 html += `
                 <div class="changelog-entry">
@@ -390,7 +394,10 @@
                         <div class="changelog-entry-role">${safe(entry.role)}</div>
                         <div class="changelog-entry-change ${changeClass}">${changeType}</div>
                     </div>
-                    <div class="changelog-entry-time">${relTime}</div>
+                    <div style="display:flex;align-items:center;gap:12px;white-space:nowrap;">
+                        <div class="changelog-entry-time">${relTime}</div>
+                        <button onclick="revertFlagChange('${entry.role}', '${entry.featureKey}', ${revertEnabled})" style="padding:4px 10px;background:rgba(96,165,250,0.15);color:#60a5fa;border:1px solid rgba(96,165,250,0.3);border-radius:4px;font-size:0.75rem;cursor:pointer;font-family:'Inter',sans-serif;font-weight:600;">Revert</button>
+                    </div>
                 </div>
                 `;
             });
@@ -458,6 +465,31 @@
             toast.textContent = message;
             toast.className = 'toast ' + type + ' show';
             setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+
+        async function refreshFlags() {
+            showToast('Refreshing feature flags...', 'success');
+            await FC_FLAGS.refresh();
+            await loadFlags();
+            showToast('Feature flags refreshed successfully', 'success');
+        }
+
+        async function revertFlagChange(role, featureKey, newEnabled) {
+            try {
+                const success = await FC_FLAGS.updateFlag(role, featureKey, JSON.parse(newEnabled));
+                if (success) {
+                    const flag = allFlags.find(f => f.role === role && f.feature_key === featureKey);
+                    if (flag) flag.enabled = JSON.parse(newEnabled);
+                    renderFlags(currentRole);
+                    addChangelogEntry(featureKey, role, JSON.parse(newEnabled));
+                    showToast('Flag reverted successfully', 'success');
+                } else {
+                    showToast('Failed to revert flag', 'error');
+                }
+            } catch (err) {
+                console.error('Revert error:', err);
+                showToast('Error reverting flag: ' + err.message, 'error');
+            }
         }
     </script>
 </body>

@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Tracking | FleetConnect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #1a1a1a; color: #f5f0e8; min-height: 100vh; padding: 12px; }
+
+        .container { max-width: 600px; margin: 0 auto; }
+
+        /* Header */
+        .header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+        .header-back { background: none; border: none; color: #60a5fa; font-size: 1.5rem; cursor: pointer; padding: 0; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 8px; }
+        .header-back:hover { background: #333; }
+        .header h1 { font-size: 1.2rem; font-weight: 700; }
+
+        /* Status Banner */
+        .status-banner { background: #242424; border-left: 4px solid #22c55e; border-radius: 8px; padding: 16px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; }
+        .status-banner.clocked-out { border-left-color: #888; }
+        .status-icon { font-size: 1.8rem; flex-shrink: 0; }
+        .status-text { flex: 1; }
+        .status-title { font-size: 0.9rem; font-weight: 600; color: #f5f0e8; }
+        .status-detail { font-size: 0.8rem; color: #888; margin-top: 2px; }
+
+        /* Clock Button */
+        .clock-button-container { display: flex; justify-content: center; margin-bottom: 20px; }
+        .clock-button { width: 100px; height: 100px; border-radius: 50%; border: none; font-size: 2rem; font-weight: 700; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        .clock-button.in { background: #ef4444; color: #fff; }
+        .clock-button.in:hover { background: #dc2626; transform: scale(1.05); }
+        .clock-button.out { background: #22c55e; color: #fff; }
+        .clock-button.out:hover { background: #16a34a; transform: scale(1.05); }
+        .clock-button:active { transform: scale(0.98); }
+
+        /* Timer */
+        .timer-display { text-align: center; margin-bottom: 20px; }
+        .timer-label { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; color: #666; margin-bottom: 6px; }
+        .timer { font-size: 2rem; font-weight: 700; color: #60a5fa; font-family: 'Courier New', monospace; }
+
+        /* Location Badge */
+        .location-badge { display: inline-block; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; margin-top: 8px; }
+        .location-badge.on-site { background: rgba(34, 197, 94, 0.15); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3); }
+        .location-badge.in-transit { background: rgba(96, 165, 250, 0.15); color: #60a5fa; border: 1px solid rgba(96, 165, 250, 0.3); }
+
+        /* Section */
+        .section { background: #242424; border: 1px solid #333; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+        .section-title { font-size: 0.9rem; font-weight: 700; color: #60a5fa; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+        .section-divider { height: 2px; background: #333; margin-bottom: 14px; }
+
+        /* Timesheet Entry */
+        .timesheet-entry { background: #1e1e1e; border: 1px solid #333; border-radius: 10px; padding: 12px; margin-bottom: 10px; }
+        .timesheet-entry:last-child { margin-bottom: 0; }
+        .entry-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+        .entry-row:last-child { margin-bottom: 0; }
+        .entry-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: #666; }
+        .entry-value { font-size: 0.9rem; font-weight: 600; color: #f5f0e8; }
+        .entry-duration { font-size: 1rem; font-weight: 700; color: #60a5fa; }
+        .entry-type-badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; margin-top: 6px; }
+        .entry-type-badge.on-site { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
+        .entry-type-badge.transit { background: rgba(96, 165, 250, 0.2); color: #60a5fa; }
+
+        /* Summary */
+        .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .summary-card { background: #1e1e1e; border: 1px solid #333; border-radius: 10px; padding: 12px; text-align: center; }
+        .summary-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: #666; }
+        .summary-value { font-size: 1.3rem; font-weight: 700; color: #60a5fa; margin-top: 4px; }
+
+        /* Bar Chart */
+        .chart-container { margin-bottom: 12px; }
+        .chart-header { display: flex; justify-content: space-between; font-size: 0.8rem; color: #888; margin-bottom: 8px; }
+        .chart-bars { display: flex; gap: 4px; height: 60px; align-items: flex-end; }
+        .chart-bar { flex: 1; background: #60a5fa; border-radius: 4px 4px 0 0; min-height: 4px; display: flex; align-items: flex-end; justify-content: center; font-size: 0.7rem; color: #f5f0e8; font-weight: 600; padding-top: 4px; }
+        .chart-bar.weekend { background: #666; }
+
+        /* Actions */
+        .actions { display: flex; gap: 10px; margin-bottom: 80px; }
+        .btn { flex: 1; padding: 14px; font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 600; border-radius: 8px; border: none; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: #60a5fa; color: #1a1a1a; }
+        .btn-primary:hover { background: #3b82f6; }
+        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-outline { background: transparent; color: #888; border: 1px solid #333; }
+        .btn-outline:hover { background: #333; color: #f5f0e8; }
+
+        /* Empty State */
+        .empty { text-align: center; padding: 20px; color: #666; font-size: 0.9rem; }
+
+        /* Toast */
+        .toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); padding: 12px 24px; border-radius: 10px; font-size: 0.85rem; font-weight: 500; z-index: 2000; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+        .toast.show { opacity: 1; }
+        .toast.success { background: #22c55e; color: #fff; }
+        .toast.error { background: #ef4444; color: #fff; }
+
+        /* Mobile */
+        @media (max-width: 600px) {
+            body { padding: 8px; }
+            .container { margin: 0; }
+            .clock-button { width: 80px; height: 80px; font-size: 1.8rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <button class="header-back" onclick="goBack()">←</button>
+            <div>
+                <h1>Time Tracking</h1>
+            </div>
+        </div>
+
+        <!-- Status Banner -->
+        <div class="status-banner" id="statusBanner">
+            <div class="status-icon">⚪</div>
+            <div class="status-text">
+                <div class="status-title">Not Clocked In</div>
+                <div class="status-detail">Start tracking time for a job</div>
+            </div>
+        </div>
+
+        <!-- Timer Display -->
+        <div class="timer-display">
+            <div class="timer-label">Current Session</div>
+            <div class="timer" id="timerDisplay">00:00:00</div>
+            <div class="location-badge" id="locationBadge" style="display: none;">📍 Loading location...</div>
+        </div>
+
+        <!-- Clock In/Out Button -->
+        <div class="clock-button-container">
+            <button class="clock-button out" id="clockButton" onclick="toggleClock()">START</button>
+        </div>
+
+        <!-- Today's Entries -->
+        <div class="section">
+            <div class="section-title">📋 Today's Time Entries</div>
+            <div id="todaysEntries" class="empty">No entries yet</div>
+        </div>
+
+        <!-- Daily Summary -->
+        <div class="section">
+            <div class="section-title">📊 Daily Summary</div>
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <div class="summary-label">Total Hours</div>
+                    <div class="summary-value" id="totalHours">0.0</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">On-Site Time</div>
+                    <div class="summary-value" id="onSiteTime">0.0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Weekly Chart -->
+        <div class="section">
+            <div class="section-title">📈 Weekly Hours</div>
+            <div class="chart-container">
+                <div class="chart-header">
+                    <span>Mon</span>
+                    <span>Tue</span>
+                    <span>Wed</span>
+                    <span>Thu</span>
+                    <span>Fri</span>
+                    <span>Sat</span>
+                    <span>Sun</span>
+                </div>
+                <div class="chart-bars" id="weeklyChart"></div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="actions">
+            <button class="btn btn-outline" onclick="exportTimesheet()">📥 Export CSV</button>
+            <button class="btn btn-primary" onclick="sendToSupervisor()">📧 Send to Supervisor</button>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="supabase-client.js"></script>
+    <script src="feature-flags.js"></script>
+    <script>
+        const currentUser = checkAuth(['fieldworker']);
+        if (!currentUser) throw new Error('Not authenticated');
+
+        FC_FLAGS.init('fieldworker');
+
+        let clockedIn = false;
+        let sessionStartTime = null;
+        let currentJobId = null;
+        let currentLocationData = null;
+        let timerInterval = null;
+        let allEntries = [];
+
+        // Haversine formula to calculate distance between two coordinates
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371000; // Earth's radius in meters
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        function getLocationType(jobCoords, currentCoords) {
+            if (!jobCoords || !currentCoords) return 'unknown';
+            const distance = calculateDistance(jobCoords.lat, jobCoords.lng, currentCoords.lat, currentCoords.lng);
+            return distance <= 500 ? 'on-site' : 'transit';
+        }
+
+        async function getJobCoordinates(jobId) {
+            try {
+                const { data, error } = await db.from('jobs').select('id, address_street, address_city, address_state').eq('id', jobId).single();
+                if (error) throw error;
+                // In production, you'd geocode the address. For now, return null.
+                // This is a placeholder that assumes job has lat/lng stored
+                return null;
+            } catch (err) {
+                console.error('Error fetching job coords:', err);
+                return null;
+            }
+        }
+
+        async function captureGPSLocation() {
+            return new Promise((resolve) => {
+                if (!navigator.geolocation) {
+                    resolve(null);
+                    return;
+                }
+
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        resolve({
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude,
+                            accuracy: position.coords.accuracy
+                        });
+                    },
+                    () => resolve(null),
+                    { enableHighAccuracy: true, timeout: 10000 }
+                );
+            });
+        }
+
+        function formatTime(date) {
+            return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+
+        function formatDuration(seconds) {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+
+        async function toggleClock() {
+            const clockBtn = document.getElementById('clockButton');
+
+            if (clockedIn) {
+                // Clock Out
+                await clockOut();
+            } else {
+                // Clock In
+                await clockIn();
+            }
+        }
+
+        async function clockIn() {
+            try {
+                sessionStartTime = new Date();
+                currentLocationData = await captureGPSLocation();
+                currentJobId = 'job-' + Date.now(); // Mock job ID
+
+                clockedIn = true;
+                updateStatusBanner();
+                startTimer();
+                showToast('Clocked in successfully', 'success');
+                loadEntries();
+            } catch (err) {
+                console.error('Clock in error:', err);
+                showToast('Error clocking in', 'error');
+            }
+        }
+
+        async function clockOut() {
+            try {
+                if (!sessionStartTime) return;
+
+                const endTime = new Date();
+                const duration = Math.floor((endTime - sessionStartTime) / 1000);
+                const locationType = currentLocationData ? 'on-site' : 'transit';
+
+                // Save to database
+                const { error } = await db.from('time_entries').insert([{
+                    worker_id: currentUser.id,
+                    job_id: currentJobId,
+                    clock_in: sessionStartTime.toISOString(),
+                    clock_out: endTime.toISOString(),
+                    latitude: currentLocationData?.lat || null,
+                    longitude: currentLocationData?.lng || null,
+                    type: locationType,
+                    notes: null,
+                    created_at: new Date().toISOString()
+                }]);
+
+                if (error) throw error;
+
+                clockedIn = false;
+                sessionStartTime = null;
+                currentLocationData = null;
+                clearInterval(timerInterval);
+                updateStatusBanner();
+                document.getElementById('timerDisplay').textContent = '00:00:00';
+                showToast('Clocked out successfully', 'success');
+                loadEntries();
+            } catch (err) {
+                console.error('Clock out error:', err);
+                showToast('Error clocking out', 'error');
+            }
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                if (sessionStartTime && clockedIn) {
+                    const elapsed = Math.floor((new Date() - sessionStartTime) / 1000);
+                    document.getElementById('timerDisplay').textContent = formatDuration(elapsed);
+                }
+            }, 1000);
+        }
+
+        function updateStatusBanner() {
+            const banner = document.getElementById('statusBanner');
+            const clockBtn = document.getElementById('clockButton');
+
+            if (clockedIn) {
+                banner.className = 'status-banner';
+                banner.innerHTML = `
+                    <div class="status-icon">🟢</div>
+                    <div class="status-text">
+                        <div class="status-title">Clocked In</div>
+                        <div class="status-detail">Session started at ${formatTime(sessionStartTime)}</div>
+                    </div>
+                `;
+                clockBtn.className = 'clock-button in';
+                clockBtn.textContent = 'STOP';
+            } else {
+                banner.className = 'status-banner clocked-out';
+                banner.innerHTML = `
+                    <div class="status-icon">⚪</div>
+                    <div class="status-text">
+                        <div class="status-title">Not Clocked In</div>
+                        <div class="status-detail">Start tracking time for a job</div>
+                    </div>
+                `;
+                clockBtn.className = 'clock-button out';
+                clockBtn.textContent = 'START';
+            }
+        }
+
+        async function loadEntries() {
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                const { data, error } = await db.from('time_entries')
+                    .select('*')
+                    .eq('worker_id', currentUser.id)
+                    .gte('created_at', today)
+                    .order('clock_in', { ascending: false });
+
+                if (error) throw error;
+
+                allEntries = data || [];
+                renderEntries();
+                updateSummary();
+                renderWeeklyChart();
+            } catch (err) {
+                console.error('Error loading entries:', err);
+            }
+        }
+
+        function renderEntries() {
+            const container = document.getElementById('todaysEntries');
+
+            if (allEntries.length === 0) {
+                container.innerHTML = '<div class="empty">No entries yet</div>';
+                return;
+            }
+
+            container.innerHTML = allEntries.map(entry => {
+                const clockIn = new Date(entry.clock_in);
+                const clockOut = entry.clock_out ? new Date(entry.clock_out) : null;
+                const duration = clockOut ? Math.floor((clockOut - clockIn) / 1000) : 0;
+                const locationType = entry.type === 'on-site' ? '📍 On-Site' : '🚗 In Transit';
+
+                return `
+                    <div class="timesheet-entry">
+                        <div class="entry-row">
+                            <span class="entry-label">Clock In</span>
+                            <span class="entry-value">${formatTime(clockIn)}</span>
+                        </div>
+                        ${clockOut ? `
+                            <div class="entry-row">
+                                <span class="entry-label">Clock Out</span>
+                                <span class="entry-value">${formatTime(clockOut)}</span>
+                            </div>
+                            <div class="entry-row">
+                                <span class="entry-label">Duration</span>
+                                <span class="entry-duration">${formatDuration(duration)}</span>
+                            </div>
+                        ` : ''}
+                        <div style="margin-top: 6px;">
+                            <span class="entry-type-badge ${entry.type === 'on-site' ? 'on-site' : 'transit'}">${locationType}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateSummary() {
+            let totalSeconds = 0;
+            let onSiteSeconds = 0;
+
+            allEntries.forEach(entry => {
+                const clockIn = new Date(entry.clock_in);
+                const clockOut = entry.clock_out ? new Date(entry.clock_out) : new Date();
+                const duration = Math.floor((clockOut - clockIn) / 1000);
+
+                totalSeconds += duration;
+                if (entry.type === 'on-site') onSiteSeconds += duration;
+            });
+
+            const totalHours = (totalSeconds / 3600).toFixed(1);
+            const onSiteHours = (onSiteSeconds / 3600).toFixed(1);
+
+            document.getElementById('totalHours').textContent = totalHours;
+            document.getElementById('onSiteTime').textContent = onSiteHours;
+        }
+
+        function renderWeeklyChart() {
+            const today = new Date();
+            const weekData = [0, 0, 0, 0, 0, 0, 0]; // Mon-Sun
+
+            allEntries.forEach(entry => {
+                const date = new Date(entry.clock_in);
+                const dayOfWeek = (date.getDay() + 6) % 7; // Convert to Mon=0, Sun=6
+                const clockIn = new Date(entry.clock_in);
+                const clockOut = entry.clock_out ? new Date(entry.clock_out) : new Date();
+                const duration = Math.floor((clockOut - clockIn) / 1000) / 3600;
+                weekData[dayOfWeek] += duration;
+            });
+
+            const maxHours = Math.max(...weekData, 8);
+            const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+            const chart = document.getElementById('weeklyChart');
+
+            chart.innerHTML = weekData.map((hours, idx) => {
+                const percentage = (hours / maxHours) * 100;
+                const isWeekend = idx >= 5;
+                return `
+                    <div class="chart-bar ${isWeekend ? 'weekend' : ''}" style="height: ${Math.max(10, percentage)}%;" title="${hours.toFixed(1)}h">
+                        ${hours > 0 ? hours.toFixed(1) : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function exportTimesheet() {
+            try {
+                let csv = 'Time Entry Export\n';
+                csv += `Worker: ${currentUser.name}\n`;
+                csv += `Date: ${new Date().toLocaleDateString()}\n\n`;
+                csv += 'Clock In,Clock Out,Duration,Type,Latitude,Longitude\n';
+
+                allEntries.forEach(entry => {
+                    const clockIn = new Date(entry.clock_in);
+                    const clockOut = entry.clock_out ? new Date(entry.clock_out) : new Date();
+                    const duration = formatDuration(Math.floor((clockOut - clockIn) / 1000));
+                    csv += `${clockIn.toLocaleString()},${clockOut.toLocaleString()},${duration},${entry.type},${entry.latitude || ''},${entry.longitude || ''}\n`;
+                });
+
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `timesheet-${new Date().toISOString().split('T')[0]}.csv`;
+                a.click();
+                showToast('Timesheet exported successfully', 'success');
+            } catch (err) {
+                console.error('Export error:', err);
+                showToast('Error exporting timesheet', 'error');
+            }
+        }
+
+        function sendToSupervisor() {
+            try {
+                let content = `Hi,\n\nPlease find my time tracking report for ${new Date().toLocaleDateString()} below:\n\n`;
+
+                allEntries.forEach(entry => {
+                    const clockIn = new Date(entry.clock_in);
+                    const clockOut = entry.clock_out ? new Date(entry.clock_out) : new Date();
+                    const duration = formatDuration(Math.floor((clockOut - clockIn) / 1000));
+                    content += `- ${clockIn.toLocaleTimeString()} to ${clockOut.toLocaleTimeString()}: ${duration} (${entry.type})\n`;
+                });
+
+                const subject = encodeURIComponent('Time Tracking Report - ' + new Date().toLocaleDateString());
+                const body = encodeURIComponent(content + '\n\nThank you!');
+                const supervisorEmail = 'supervisor@fleetconnect.com'; // Mock email
+
+                window.location.href = `mailto:${supervisorEmail}?subject=${subject}&body=${body}`;
+                showToast('Opening email client...', 'success');
+            } catch (err) {
+                console.error('Send error:', err);
+                showToast('Error preparing email', 'error');
+            }
+        }
+
+        function goBack() {
+            if (clockedIn) {
+                alert('You are currently clocked in. Please clock out before leaving.');
+                return;
+            }
+            window.history.back();
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast show ${type}`;
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // Initialize
+        loadEntries();
+        updateStatusBanner();
+    </script>
+</body>
+</html>

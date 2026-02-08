@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Generator | FleetConnect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #1a1a1a; color: #f5f0e8; min-height: 100vh; transition: background 0.3s, color 0.3s; }
+
+        /* Light Mode */
+        body.dark { background: #f5f0e8; color: #1a1a1a; }
+        body.dark .sidebar { background: #ffffff; border-color: #e8e4dc; }
+        body.dark .sidebar-logo { color: #60a5fa; }
+        body.dark .nav-item { color: #5c5c5c; }
+        body.dark .nav-item:hover { background: #f0ebe3; color: #1a1a1a; }
+        body.dark .nav-item.active { background: #dbeafe; color: #3b82f6; }
+        body.dark .nav-section-title { color: #8c8c8c; }
+        body.dark .header { background: #ffffff; border-color: #e8e4dc; }
+        body.dark .header h1 { color: #1a1a1a; }
+        body.dark .header-subtitle { color: #5c5c5c; }
+        body.dark .stat-card { background: #ffffff; border-color: #e8e4dc; }
+        body.dark .stat-header { color: #8c8c8c; }
+        body.dark .stat-value { color: #1a1a1a; }
+        body.dark .quick-action-btn { background: #ffffff; border-color: #e8e4dc; color: #1a1a1a; }
+        body.dark .quick-action-btn:hover { background: #f0ebe3; border-color: #60a5fa; }
+        body.dark .quick-action-btn.primary { background: #60a5fa; color: #fff; }
+        body.dark .table-card { background: #ffffff; border-color: #e8e4dc; }
+        body.dark .table-header { border-color: #e8e4dc; }
+        body.dark .table-title { color: #1a1a1a; }
+        body.dark .search-input { background-color: #ffffff; border-color: #e8e4dc; color: #1a1a1a; }
+        body.dark th { background: #f0ebe3; color: #8c8c8c; border-color: #e8e4dc; }
+        body.dark td { border-color: #e8e4dc; color: #5c5c5c; }
+        body.dark tr:hover { background: #f0ebe3; }
+        body.dark .action-btn.secondary { background: #f0ebe3; color: #1a1a1a; }
+        body.dark .action-btn.secondary:hover { background: #e8e4dc; }
+        body.dark .modal { background: #ffffff; }
+        body.dark .modal-header { border-color: #e8e4dc; }
+        body.dark .modal-header h3 { color: #1a1a1a; }
+        body.dark .modal-close { background: #f0ebe3; color: #5c5c5c; }
+        body.dark .modal-footer { background: #f0ebe3; border-color: #e8e4dc; }
+        body.dark .btn-secondary { background: #ffffff; border-color: #e8e4dc; color: #5c5c5c; }
+        body.dark .modal-body { color: #1a1a1a; }
+        body.dark .invoice-preview { background: #f0ebe3; }
+
+        .layout { display: flex; min-height: 100vh; }
+
+        /* Sidebar */
+        .sidebar { width: 240px; background: #242424; border-right: 1px solid #333; padding: 24px 16px; position: fixed; left: 0; height: 100vh; z-index: 100; display: flex; flex-direction: column; }
+        .sidebar-header { display: flex; align-items: center; gap: 10px; margin-bottom: 32px; padding: 20px 20px 12px; }
+        .sidebar-logo { font-size: 1.2rem; font-weight: 700; color: #60a5fa; }
+        .nav-section { margin-bottom: 24px; }
+        .nav-section-title { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: #666; padding: 0 12px; margin-bottom: 8px; letter-spacing: 0.5px; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; color: #b8b0a8; text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: all 0.2s; cursor: pointer; }
+        .nav-item:hover { background: #333; color: #f5f0e8; }
+        .nav-item.active { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
+        .nav-item svg { width: 20px; height: 20px; }
+        .sidebar-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid #333; }
+        .user-menu { display: flex; align-items: center; gap: 12px; padding: 12px; background: #333; border-radius: 10px; }
+        .user-avatar-lg { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #60a5fa, #3b82f6); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 600; font-size: 0.85rem; }
+        .user-info { flex: 1; }
+        .user-name { font-size: 0.85rem; font-weight: 600; color: #f5f0e8; }
+        .user-role { font-size: 0.7rem; color: #888; }
+        .logout-btn { color: #888; cursor: pointer; padding: 6px; border-radius: 6px; background: none; border: none; }
+        .logout-btn:hover { background: #444; color: #f5f0e8; }
+
+        /* Main */
+        .main { flex: 1; margin-left: 240px; min-height: 100vh; }
+        .header { background: #242424; padding: 20px 32px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50; }
+        .header-left { display: flex; align-items: center; gap: 16px; }
+        .header h1 { font-size: 1.4rem; font-weight: 700; color: #f5f0e8; }
+        .header-subtitle { font-size: 0.85rem; color: #888; }
+        .content { padding: 32px; }
+
+        /* Stats */
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 28px; }
+        @media (max-width: 1200px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 600px) { .stats-grid { grid-template-columns: 1fr; } }
+        .stat-card { background: #242424; border-radius: 16px; padding: 24px; border: 1px solid #333; }
+        .stat-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; color: #888; font-size: 0.85rem; }
+        .stat-header svg { width: 18px; height: 18px; }
+        .stat-value-row { display: flex; align-items: baseline; gap: 12px; }
+        .stat-value { font-size: 1.8rem; font-weight: 700; color: #f5f0e8; }
+
+        /* Table */
+        .table-card { background: #242424; border-radius: 16px; border: 1px solid #333; overflow: hidden; margin-bottom: 28px; }
+        .table-header { padding: 20px 24px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+        .table-title { font-size: 1rem; font-weight: 600; color: #f5f0e8; }
+        .table-actions { display: flex; gap: 12px; }
+        .search-input { padding: 8px 12px 8px 36px; border: 1px solid #444; border-radius: 8px; font-size: 0.85rem; width: 220px; background: #2a2a2a url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23666'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'/%3E%3C/svg%3E") 10px center no-repeat; background-size: 16px; color: #f5f0e8; }
+        .search-input:focus { outline: none; border-color: #60a5fa; }
+        .search-input::placeholder { color: #666; }
+
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 12px 24px; font-size: 0.7rem; font-weight: 600; color: #888; text-transform: uppercase; background: #2a2a2a; border-bottom: 1px solid #333; }
+        td { padding: 14px 24px; border-bottom: 1px solid #333; font-size: 0.85rem; color: #b8b0a8; }
+        tr:hover { background: #2a2a2a; }
+        .invoice-num { font-weight: 600; color: #f5f0e8; }
+        .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
+        .status-badge.generated { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+        .status-badge.pending { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
+        .action-btn { padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 500; cursor: pointer; border: none; transition: all 0.2s; }
+        .action-btn.primary { background: #60a5fa; color: #fff; }
+        .action-btn.primary:hover { background: #3b82f6; }
+        .action-btn.secondary { background: #333; color: #f5f0e8; }
+        .action-btn.secondary:hover { background: #444; }
+        .actions-cell { display: flex; gap: 6px; }
+
+        /* Modal */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 200; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
+        .modal-overlay.show { display: flex; }
+        .modal { background: #242424; border-radius: 16px; width: 100%; max-width: 900px; overflow: hidden; border: 1px solid #333; }
+        .modal-header { padding: 20px 24px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { font-size: 1rem; font-weight: 600; color: #f5f0e8; }
+        .modal-close { width: 28px; height: 28px; border-radius: 6px; border: none; background: #333; color: #888; cursor: pointer; }
+        .modal-close:hover { background: #444; color: #f5f0e8; }
+        .modal-body { padding: 20px 24px; max-height: 70vh; overflow-y: auto; }
+        .modal-footer { padding: 16px 24px; border-top: 1px solid #333; display: flex; justify-content: flex-end; gap: 12px; background: #2a2a2a; }
+        .btn { padding: 10px 18px; border-radius: 8px; font-size: 0.85rem; font-weight: 500; cursor: pointer; }
+        .btn-primary { background: #60a5fa; color: #fff; border: none; }
+        .btn-primary:hover { background: #3b82f6; }
+        .btn-secondary { background: #333; color: #b8b0a8; border: 1px solid #444; }
+        .btn-secondary:hover { background: #444; }
+
+        /* Invoice Preview */
+        .invoice-preview { background: #f5f5f5; padding: 40px; border-radius: 8px; margin-top: 16px; }
+        .invoice-header { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #333; }
+        .invoice-title { font-size: 24px; font-weight: 700; color: #1a1a1a; margin-bottom: 4px; }
+        .invoice-subtitle { font-size: 12px; color: #666; }
+        .invoice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px; }
+        .invoice-section-label { font-size: 11px; font-weight: 600; color: #999; text-transform: uppercase; margin-bottom: 8px; }
+        .invoice-text { font-size: 13px; color: #333; line-height: 1.6; }
+        .invoice-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        .invoice-table thead tr { background: #e8e8e8; }
+        .invoice-table th { padding: 10px; text-align: left; font-size: 12px; font-weight: 600; color: #333; }
+        .invoice-table td { padding: 10px; border-bottom: 1px solid #ddd; font-size: 13px; color: #333; }
+        .invoice-totals { display: flex; justify-content: flex-end; margin: 20px 0; }
+        .invoice-totals-box { width: 300px; }
+        .invoice-total-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; }
+        .invoice-total-row.bold { font-weight: 600; border-top: 2px solid #333; padding-top: 10px; margin-top: 10px; }
+
+        .empty-state { text-align: center; padding: 50px; color: #888; }
+        .loading { text-align: center; padding: 40px; color: #888; }
+        .spinner { width: 36px; height: 36px; border: 3px solid #333; border-top-color: #60a5fa; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Mobile */
+        .mobile-toggle { display: none; width: 40px; height: 40px; border: 1px solid #444; border-radius: 8px; background: #2a2a2a; color: #f5f0e8; align-items: center; justify-content: center; cursor: pointer; }
+        @media (max-width: 900px) {
+            .sidebar { display: none; left: 0; }
+            .sidebar.open { display: flex; position: fixed; z-index: 100; }
+            .main { margin-left: 0; }
+            .mobile-toggle { display: flex; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .invoice-grid { grid-template-columns: 1fr; }
+            .search-input { width: 100%; }
+            .header { padding: 12px 16px; gap: 12px; }
+            .content { padding: 16px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="layout">
+
+        <aside class="sidebar">
+            <div class="sidebar-header"><span class="sidebar-logo">FleetConnect</span></div>
+            <nav>
+                <div class="nav-section">
+                    <div class="nav-section-title">Rental Management</div>
+                    <a class="nav-item" href="rental-dashboard.html">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                        Dashboard
+                    </a>
+                    <a class="nav-item" href="contract-management.html">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        Contracts
+                    </a>
+                    <a class="nav-item active" href="invoice-pdf.html">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        Invoice Generator
+                    </a>
+                    <a class="nav-item" href="maintenance-log.html">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+                        Maintenance
+                    </a>
+                    <a class="nav-item" href="rental-invoices.html">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        Fuel History
+                    </a>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-menu">
+                    <div class="user-avatar-lg" id="userAvatar">R</div>
+                    <div class="user-info"><div class="user-name" id="userName">Rental Co.</div><div class="user-role">Rental Account</div></div>
+                    <button class="logout-btn" onclick="logout()"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg></button>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main">
+            <header class="header">
+                <div class="header-left">
+                    <button class="mobile-toggle" onclick="toggleMobileSidebar()"><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+                    <div>
+                        <h1>Invoice Generator</h1>
+                        <p class="header-subtitle">Create branded PDF invoices from deliveries</p>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content">
+                <!-- Stats Grid -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-header"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>This Month</div>
+                        <div class="stat-value-row"><span class="stat-value" id="statMonth">0</span></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Total Billed</div>
+                        <div class="stat-value-row"><span class="stat-value" id="statTotal">$0</span></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Pending</div>
+                        <div class="stat-value-row"><span class="stat-value" id="statPending">0</span></div>
+                    </div>
+                </div>
+
+                <!-- Invoices Table -->
+                <div class="table-card">
+                    <div class="table-header">
+                        <div class="table-title">Invoices & Deliveries</div>
+                        <div class="table-actions">
+                            <input type="text" class="search-input" id="searchInput" placeholder="Search invoices..." oninput="renderInvoices()">
+                        </div>
+                    </div>
+                    <div style="overflow-x:auto;">
+                        <table>
+                            <thead><tr><th>Invoice #</th><th>Job #</th><th>Date</th><th>Customer</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead>
+                            <tbody id="invoiceTable"><tr><td colspan="7" class="loading"><div class="spinner"></div>Loading invoices...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Invoice Preview Modal -->
+    <div class="modal-overlay" id="previewModal">
+        <div class="modal">
+            <div class="modal-header"><h3>Invoice Preview & Download</h3><button class="modal-close" onclick="closePreviewModal()">×</button></div>
+            <div class="modal-body" id="previewBody"></div>
+            <div class="modal-footer" id="previewFooter">
+                <button class="btn btn-secondary" onclick="closePreviewModal()">Close</button>
+                <button class="btn btn-primary" onclick="downloadInvoicePDF()">Download PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="supabase-client.js"></script>
+    <script src="feature-flags.js"></script>
+    <script src="demo-switcher.js"></script>
+    <script>
+        let allDeliveries = [], allJobs = [], allInvoices = [];
+        let selectedInvoiceData = null;
+
+        // Mock invoice data
+        const mockInvoices = [
+            { id: '1', invoice_number: 'INV-001', job_id: 'j1', customer_name: 'ABC Corp', amount: 1250, date: new Date().toISOString(), status: 'generated' },
+            { id: '2', invoice_number: 'INV-002', job_id: 'j2', customer_name: 'XYZ Industries', amount: 3400, date: new Date(Date.now() - 86400000).toISOString(), status: 'generated' },
+            { id: '3', invoice_number: 'INV-003', job_id: 'j3', customer_name: 'Tech Solutions', amount: 2100, date: new Date(Date.now() - 2*86400000).toISOString(), status: 'pending' }
+        ];
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = checkAuth(['rental']);
+            if (user) {
+                document.getElementById('userName').textContent = user.name;
+                document.getElementById('userAvatar').textContent = user.name.charAt(0).toUpperCase();
+            }
+            FC_FLAGS.init('rental');
+            FC_FLAGS.hideNav('invoice_pdf', 'invoice-pdf.html');
+            await loadData();
+        });
+
+        async function loadData() {
+            try {
+                allDeliveries = await getDeliveriesForCurrentUser();
+                allJobs = await getJobsForCurrentUser();
+            } catch (err) {
+                console.log('Load error:', err);
+            }
+
+            // Create invoices from deliveries
+            allInvoices = mockInvoices.map(inv => {
+                const job = allJobs.find(j => j.id === inv.job_id);
+                const delivery = allDeliveries.find(d => d.job_id === inv.job_id);
+                return {
+                    ...inv,
+                    job_site_name: job ? job.job_site_name : '',
+                    gallons: delivery ? delivery.gallons : 0,
+                    fuel_type: delivery ? delivery.fuel_type : 'Diesel'
+                };
+            });
+
+            updateStats();
+            renderInvoices();
+        }
+
+        function updateStats() {
+            const now = new Date();
+            const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+            const thisMonth = allInvoices.filter(i => new Date(i.date) >= monthStart).length;
+            const totalAmount = allInvoices.reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
+            const pending = allInvoices.filter(i => i.status === 'pending').length;
+
+            document.getElementById('statMonth').textContent = thisMonth;
+            document.getElementById('statTotal').textContent = '$' + totalAmount.toLocaleString('en-US', { maximumFractionDigits: 0 });
+            document.getElementById('statPending').textContent = pending;
+        }
+
+        function renderInvoices() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+
+            let filtered = allInvoices;
+            if (search) {
+                filtered = filtered.filter(i =>
+                    (i.invoice_number || '').toLowerCase().includes(search) ||
+                    (i.customer_name || '').toLowerCase().includes(search) ||
+                    (i.job_site_name || '').toLowerCase().includes(search)
+                );
+            }
+
+            const tbody = document.getElementById('invoiceTable');
+            if (!filtered.length) {
+                tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No invoices found</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(inv => `
+                <tr>
+                    <td><span class="invoice-num">${safe(inv.invoice_number)}</span></td>
+                    <td>${safe(inv.job_id)}</td>
+                    <td>${formatDate(inv.date)}</td>
+                    <td>${safe(inv.customer_name)}</td>
+                    <td style="font-weight:600;color:#60a5fa;">$${parseFloat(inv.amount).toLocaleString('en-US', {minimumFractionDigits:2})}</td>
+                    <td><span class="status-badge ${inv.status}"><span style="width:6px;height:6px;border-radius:50%;background:currentColor;"></span>${inv.status}</span></td>
+                    <td>
+                        <div class="actions-cell">
+                            <button class="action-btn secondary" onclick="previewInvoice('${inv.id}')">Preview</button>
+                            <button class="action-btn primary" onclick="generatePDF('${inv.id}')">Generate</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function previewInvoice(id) {
+            const invoice = allInvoices.find(i => i.id === id);
+            if (!invoice) return;
+
+            selectedInvoiceData = invoice;
+            const invoiceHTML = generateInvoiceHTML(invoice);
+
+            document.getElementById('previewBody').innerHTML = `<div class="invoice-preview">${invoiceHTML}</div>`;
+            document.getElementById('previewModal').classList.add('show');
+        }
+
+        function generateInvoiceHTML(invoice) {
+            const invoiceDate = new Date(invoice.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            const dueDate = new Date(new Date(invoice.date).getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+            return `
+                <div class="invoice-header">
+                    <div class="invoice-title">INVOICE</div>
+                    <div class="invoice-subtitle">FleetConnect Rental Services</div>
+                </div>
+
+                <div class="invoice-grid">
+                    <div>
+                        <div class="invoice-section-label">From</div>
+                        <div class="invoice-text">
+                            <strong>FleetConnect Inc.</strong><br>
+                            123 Business Avenue<br>
+                            Your City, ST 12345<br>
+                            contact@fleetconnect.com
+                        </div>
+                    </div>
+                    <div>
+                        <div class="invoice-section-label">Invoice Details</div>
+                        <div class="invoice-text">
+                            <strong>Invoice #:</strong> ${safe(invoice.invoice_number)}<br>
+                            <strong>Date:</strong> ${invoiceDate}<br>
+                            <strong>Due Date:</strong> ${dueDate}<br>
+                            <strong>Job #:</strong> ${safe(invoice.job_id)}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="invoice-grid">
+                    <div>
+                        <div class="invoice-section-label">Bill To</div>
+                        <div class="invoice-text">
+                            <strong>${safe(invoice.customer_name)}</strong><br>
+                            ${safe(invoice.job_site_name)}<br>
+                            Contact for address details
+                        </div>
+                    </div>
+                    <div>
+                        <div class="invoice-section-label">Shipping Address</div>
+                        <div class="invoice-text">
+                            <strong>${safe(invoice.customer_name)}</strong><br>
+                            ${safe(invoice.job_site_name)}<br>
+                            Same as billing
+                        </div>
+                    </div>
+                </div>
+
+                <table class="invoice-table">
+                    <thead>
+                        <tr>
+                            <th style="width:50%;">Description</th>
+                            <th style="width:15%;text-align:right;">Qty</th>
+                            <th style="width:15%;text-align:right;">Unit Price</th>
+                            <th style="width:20%;text-align:right;">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Fuel Delivery - ${safe(invoice.fuel_type)}</td>
+                            <td style="text-align:right;">${invoice.gallons} gal</td>
+                            <td style="text-align:right;">$${(parseFloat(invoice.amount) / invoice.gallons).toFixed(2)}</td>
+                            <td style="text-align:right;">$${parseFloat(invoice.amount).toFixed(2)}</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="invoice-totals">
+                    <div class="invoice-totals-box">
+                        <div class="invoice-total-row">
+                            <span>Subtotal:</span>
+                            <span style="text-align:right;">$${parseFloat(invoice.amount).toFixed(2)}</span>
+                        </div>
+                        <div class="invoice-total-row">
+                            <span>Tax (0%):</span>
+                            <span style="text-align:right;">$0.00</span>
+                        </div>
+                        <div class="invoice-total-row bold">
+                            <span>Total:</span>
+                            <span style="text-align:right;">$${parseFloat(invoice.amount).toFixed(2)}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top:30px;padding-top:20px;border-top:1px solid #ddd;font-size:12px;color:#666;">
+                    <strong>Payment Terms:</strong> Net 30<br>
+                    <strong>Thank you for your business!</strong> If you have any questions, please contact us at contact@fleetconnect.com or call (555) 123-4567.
+                </div>
+            `;
+        }
+
+        function generatePDF(id) {
+            const invoice = allInvoices.find(i => i.id === id);
+            if (!invoice) return;
+
+            const element = document.createElement('div');
+            element.innerHTML = generateInvoiceHTML(invoice);
+            element.style.padding = '40px';
+            element.style.backgroundColor = '#fff';
+            element.style.color = '#000';
+
+            const opt = {
+                margin: 10,
+                filename: 'invoice-' + invoice.invoice_number + '.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+            };
+
+            html2pdf().set(opt).from(element).save();
+        }
+
+        function downloadInvoicePDF() {
+            if (selectedInvoiceData) {
+                generatePDF(selectedInvoiceData.id);
+                closePreviewModal();
+            }
+        }
+
+        function closePreviewModal() {
+            document.getElementById('previewModal').classList.remove('show');
+            selectedInvoiceData = null;
+        }
+
+        function toggleMobileSidebar() {
+            document.querySelector('.sidebar').classList.toggle('open');
+        }
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') closePreviewModal();
+        });
+    </script>
+</body>
+</html>

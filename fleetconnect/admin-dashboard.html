@@ -240,7 +240,7 @@
                         type="text"
                         id="searchInput"
                         class="search-input"
-                        placeholder="Search by name, email, or company..."
+                        placeholder="Search by name or email..."
                         onkeyup="filterTable()"
                     >
                     <select id="roleFilter" class="filter-select" onchange="filterTable()">
@@ -249,6 +249,9 @@
                         <option value="rental">Rental Company</option>
                         <option value="vendor">Vendor</option>
                         <option value="fieldworker">Field Worker</option>
+                    </select>
+                    <select id="companyFilter" class="filter-select" onchange="filterTable()">
+                        <option value="">All Companies</option>
                     </select>
                 </div>
             </div>
@@ -331,7 +334,24 @@
         async function loadUsers() {
             allUsers = await getAllUsers();
             updateStats();
+            populateCompanyFilter();
             renderTable();
+        }
+
+        function populateCompanyFilter() {
+            const companies = [...new Set(allUsers.map(u => u.company).filter(c => c))].sort();
+            const companySelect = document.getElementById('companyFilter');
+            const currentValue = companySelect.value;
+
+            companySelect.innerHTML = '<option value="">All Companies</option>';
+            companies.forEach(company => {
+                const option = document.createElement('option');
+                option.value = company;
+                option.textContent = company;
+                companySelect.appendChild(option);
+            });
+
+            companySelect.value = currentValue;
         }
         
         function updateStats() {
@@ -464,16 +484,17 @@
         function getFilteredUsers() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
             const roleFilter = document.getElementById('roleFilter').value;
+            const companyFilter = document.getElementById('companyFilter').value;
 
             return allUsers.filter(user => {
                 const matchesSearch = !searchTerm ||
                     user.name.toLowerCase().includes(searchTerm) ||
-                    user.email.toLowerCase().includes(searchTerm) ||
-                    (user.company && user.company.toLowerCase().includes(searchTerm));
+                    user.email.toLowerCase().includes(searchTerm);
 
                 const matchesRole = !roleFilter || user.role === roleFilter;
+                const matchesCompany = !companyFilter || (user.company && user.company === companyFilter);
 
-                return matchesSearch && matchesRole;
+                return matchesSearch && matchesRole && matchesCompany;
             });
         }
 

@@ -12,7 +12,7 @@ window.FC_FLAGS = {
     _role: null,
     _loaded: false,
     _cacheKey: 'fc_feature_flags',
-    _cacheTTL: 10 * 60 * 1000, // 10 minutes
+    _cacheTTL: 2 * 60 * 1000, // 2 minutes
 
     /**
      * Initialize feature flags for a role.
@@ -188,6 +188,16 @@ window.FC_FLAGS = {
      */
     clearCache() {
         try { sessionStorage.removeItem(this._cacheKey); } catch (e) {}
+    },
+
+    /**
+     * Refresh flags: clear cache and re-fetch from API.
+     */
+    async refresh() {
+        this.clearCache();
+        if (this._role && this._role !== 'admin') {
+            await this.init(this._role);
+        }
     },
 
     // ---- Internal ----

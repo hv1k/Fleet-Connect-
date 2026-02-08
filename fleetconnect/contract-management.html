@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contract Management | FleetConnect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #1a1a1a; color: #f5f0e8; min-height: 100vh; transition: background 0.3s, color 0.3s; }
+
+        /* Light Mode */
+        body.dark { background: #f5f0e8; color: #1a1a1a; }
+        body.dark .sidebar { background: #ffffff; border-color: #e8e4dc; }
+        body.dark .sidebar-logo { color: #60a5fa; }
+        body.dark .nav-item { color: #5c5c5c; }
+        body.dark .nav-item:hover { background: #f0ebe3; color: #1a1a1a; }
+        body.dark .nav-item.active { background: #dbeafe; color: #3b82f6; }
+        body.dark .nav-section-title { color: #8c8c8c; }
+        body.dark .header { background: #ffffff; border-color: #e8e4dc; }
+        body.dark .header h1 { color: #1a1a1a; }
+        body.dark .header-subtitle { color: #5c5c5c; }
+        body.dark .stat-card { background: #ffffff; border-color: #e8e4dc; }
+        body.dark .stat-header { color: #8c8c8c; }
+        body.dark .stat-value { color: #1a1a1a; }
+        body.dark .quick-action-btn { background: #ffffff; border-color: #e8e4dc; color: #1a1a1a; }
+        body.dark .quick-action-btn:hover { background: #f0ebe3; border-color: #60a5fa; }
+        body.dark .quick-action-btn.primary { background: #60a5fa; color: #fff; }
+        body.dark .table-card { background: #ffffff; border-color: #e8e4dc; }
+        body.dark .table-header { border-color: #e8e4dc; }
+        body.dark .table-title { color: #1a1a1a; }
+        body.dark .search-input { background-color: #ffffff; border-color: #e8e4dc; color: #1a1a1a; }
+        body.dark .filter-select { background: #ffffff; border-color: #e8e4dc; color: #5c5c5c; }
+        body.dark th { background: #f0ebe3; color: #8c8c8c; border-color: #e8e4dc; }
+        body.dark td { border-color: #e8e4dc; color: #5c5c5c; }
+        body.dark tr:hover { background: #f0ebe3; }
+        body.dark .action-btn.secondary { background: #f0ebe3; color: #1a1a1a; }
+        body.dark .action-btn.secondary:hover { background: #e8e4dc; }
+        body.dark .modal { background: #ffffff; }
+        body.dark .modal-header { border-color: #e8e4dc; }
+        body.dark .modal-header h3 { color: #1a1a1a; }
+        body.dark .modal-close { background: #f0ebe3; color: #5c5c5c; }
+        body.dark .modal-footer { background: #f0ebe3; border-color: #e8e4dc; }
+        body.dark .btn-secondary { background: #ffffff; border-color: #e8e4dc; color: #5c5c5c; }
+        body.dark .modal-body { color: #1a1a1a; }
+        body.dark .detail-label { color: #8c8c8c; }
+        body.dark .detail-value { color: #1a1a1a; }
+        body.dark .detail-item { background: #f0ebe3; }
+        body.dark .toggle-switch { background: #e8e4dc; }
+        body.dark .toggle-switch.active { background: #60a5fa; }
+        body.dark .form-input { background: #ffffff; border-color: #e8e4dc; color: #1a1a1a; }
+        body.dark .form-input::placeholder { color: #8c8c8c; }
+        body.dark .form-select { background: #ffffff; border-color: #e8e4dc; color: #1a1a1a; }
+
+        .layout { display: flex; min-height: 100vh; }
+
+        /* Sidebar */
+        .sidebar { width: 240px; background: #242424; border-right: 1px solid #333; padding: 24px 16px; position: fixed; left: 0; height: 100vh; z-index: 100; display: flex; flex-direction: column; }
+        .sidebar-header { display: flex; align-items: center; gap: 10px; margin-bottom: 32px; padding: 20px 20px 12px; }
+        .sidebar-logo { font-size: 1.2rem; font-weight: 700; color: #60a5fa; }
+        .nav-section { margin-bottom: 24px; }
+        .nav-section-title { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: #666; padding: 0 12px; margin-bottom: 8px; letter-spacing: 0.5px; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; color: #b8b0a8; text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: all 0.2s; cursor: pointer; }
+        .nav-item:hover { background: #333; color: #f5f0e8; }
+        .nav-item.active { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
+        .nav-item svg { width: 20px; height: 20px; }
+        .sidebar-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid #333; }
+        .user-menu { display: flex; align-items: center; gap: 12px; padding: 12px; background: #333; border-radius: 10px; }
+        .user-avatar-lg { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #60a5fa, #3b82f6); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 600; font-size: 0.85rem; }
+        .user-info { flex: 1; }
+        .user-name { font-size: 0.85rem; font-weight: 600; color: #f5f0e8; }
+        .user-role { font-size: 0.7rem; color: #888; }
+        .logout-btn { color: #888; cursor: pointer; padding: 6px; border-radius: 6px; background: none; border: none; }
+        .logout-btn:hover { background: #444; color: #f5f0e8; }
+
+        /* Main */
+        .main { flex: 1; margin-left: 240px; min-height: 100vh; }
+        .header { background: #242424; padding: 20px 32px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50; }
+        .header-left { display: flex; align-items: center; gap: 16px; }
+        .header h1 { font-size: 1.4rem; font-weight: 700; color: #f5f0e8; }
+        .header-subtitle { font-size: 0.85rem; color: #888; }
+        .content { padding: 32px; }
+
+        /* Quick Actions */
+        .quick-actions { display: flex; gap: 12px; margin-bottom: 28px; flex-wrap: wrap; }
+        .quick-action-btn { display: flex; align-items: center; gap: 8px; padding: 12px 20px; background: #2a2a2a; border: 1px solid #444; border-radius: 10px; font-size: 0.85rem; font-weight: 500; color: #f5f0e8; cursor: pointer; transition: all 0.2s; text-decoration: none; }
+        .quick-action-btn:hover { border-color: #60a5fa; background: #333; }
+        .quick-action-btn svg { width: 18px; height: 18px; color: #60a5fa; }
+        .quick-action-btn.primary { background: #60a5fa; color: #fff; border-color: #60a5fa; }
+        .quick-action-btn.primary:hover { background: #3b82f6; }
+        .quick-action-btn.primary svg { color: #fff; }
+
+        /* Stats */
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 28px; }
+        @media (max-width: 1200px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 600px) { .stats-grid { grid-template-columns: 1fr; } }
+        .stat-card { background: #242424; border-radius: 16px; padding: 24px; border: 1px solid #333; }
+        .stat-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; color: #888; font-size: 0.85rem; }
+        .stat-header svg { width: 18px; height: 18px; }
+        .stat-value-row { display: flex; align-items: baseline; gap: 12px; }
+        .stat-value { font-size: 1.8rem; font-weight: 700; color: #f5f0e8; }
+        .stat-unit { font-size: 0.85rem; color: #888; }
+
+        /* Table */
+        .table-card { background: #242424; border-radius: 16px; border: 1px solid #333; overflow: hidden; margin-bottom: 28px; }
+        .table-header { padding: 20px 24px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+        .table-title { font-size: 1rem; font-weight: 600; color: #f5f0e8; }
+        .table-actions { display: flex; gap: 12px; }
+        .search-input { padding: 8px 12px 8px 36px; border: 1px solid #444; border-radius: 8px; font-size: 0.85rem; width: 220px; background: #2a2a2a url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23666'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'/%3E%3C/svg%3E") 10px center no-repeat; background-size: 16px; color: #f5f0e8; }
+        .search-input:focus { outline: none; border-color: #60a5fa; }
+        .search-input::placeholder { color: #666; }
+        .filter-select { padding: 8px 12px; border: 1px solid #444; border-radius: 8px; font-size: 0.85rem; background: #2a2a2a; color: #b8b0a8; }
+
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 12px 24px; font-size: 0.7rem; font-weight: 600; color: #888; text-transform: uppercase; background: #2a2a2a; border-bottom: 1px solid #333; }
+        td { padding: 14px 24px; border-bottom: 1px solid #333; font-size: 0.85rem; color: #b8b0a8; }
+        tr:hover { background: #2a2a2a; }
+        .contract-num { font-weight: 600; color: #f5f0e8; }
+        .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
+        .status-badge.active { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+        .status-badge.expiring { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
+        .status-badge.expired { background: rgba(248, 113, 113, 0.15); color: #f87171; }
+        .status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+        .action-btn { padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 500; cursor: pointer; border: none; transition: all 0.2s; }
+        .action-btn.primary { background: #60a5fa; color: #fff; }
+        .action-btn.primary:hover { background: #3b82f6; }
+        .action-btn.secondary { background: #333; color: #f5f0e8; }
+        .action-btn.secondary:hover { background: #444; }
+        .actions-cell { display: flex; gap: 6px; }
+
+        .table-footer { padding: 14px 24px; border-top: 1px solid #333; display: flex; justify-content: space-between; align-items: center; background: #2a2a2a; font-size: 0.85rem; color: #888; }
+
+        /* Modal */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 200; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
+        .modal-overlay.show { display: flex; }
+        .modal { background: #242424; border-radius: 16px; width: 100%; max-width: 600px; overflow: hidden; border: 1px solid #333; }
+        .modal-header { padding: 20px 24px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { font-size: 1rem; font-weight: 600; color: #f5f0e8; }
+        .modal-close { width: 28px; height: 28px; border-radius: 6px; border: none; background: #333; color: #888; cursor: pointer; }
+        .modal-close:hover { background: #444; color: #f5f0e8; }
+        .modal-body { padding: 20px 24px; max-height: 60vh; overflow-y: auto; }
+        .modal-footer { padding: 16px 24px; border-top: 1px solid #333; display: flex; justify-content: flex-end; gap: 12px; background: #2a2a2a; }
+        .btn { padding: 10px 18px; border-radius: 8px; font-size: 0.85rem; font-weight: 500; cursor: pointer; }
+        .btn-primary { background: #60a5fa; color: #fff; border: none; }
+        .btn-primary:hover { background: #3b82f6; }
+        .btn-secondary { background: #333; color: #b8b0a8; border: 1px solid #444; }
+        .btn-secondary:hover { background: #444; }
+
+        /* Forms */
+        .form-group { margin-bottom: 16px; }
+        .form-label { display: block; font-size: 0.75rem; text-transform: uppercase; color: #888; margin-bottom: 6px; font-weight: 600; }
+        .form-input { width: 100%; padding: 10px 12px; border: 1px solid #444; border-radius: 8px; font-size: 0.85rem; background: #2a2a2a; color: #f5f0e8; }
+        .form-input:focus { outline: none; border-color: #60a5fa; }
+        .form-input::placeholder { color: #666; }
+        .form-select { width: 100%; padding: 10px 12px; border: 1px solid #444; border-radius: 8px; font-size: 0.85rem; background: #2a2a2a; color: #b8b0a8; }
+        .form-select:focus { outline: none; border-color: #60a5fa; }
+        .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+        @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+
+        .detail-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .detail-item { padding: 12px; background: #2a2a2a; border-radius: 8px; }
+        .detail-label { font-size: 0.7rem; text-transform: uppercase; color: #666; margin-bottom: 4px; }
+        .detail-value { font-size: 0.9rem; color: #f5f0e8; }
+
+        .toggle-wrapper { display: flex; align-items: center; gap: 12px; margin-top: 8px; }
+        .toggle-switch { width: 40px; height: 22px; background: #444; border-radius: 11px; position: relative; cursor: pointer; }
+        .toggle-switch::after { content: ''; position: absolute; width: 16px; height: 16px; background: #f5f0e8; border-radius: 50%; top: 3px; left: 3px; transition: 0.2s; }
+        .toggle-switch.active { background: #60a5fa; }
+        .toggle-switch.active::after { left: 21px; }
+
+        .empty-state { text-align: center; padding: 50px; color: #888; }
+        .loading { text-align: center; padding: 40px; color: #888; }
+        .spinner { width: 36px; height: 36px; border: 3px solid #333; border-top-color: #60a5fa; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Mobile */
+        .mobile-toggle { display: none; width: 40px; height: 40px; border: 1px solid #444; border-radius: 8px; background: #2a2a2a; color: #f5f0e8; align-items: center; justify-content: center; cursor: pointer; }
+        @media (max-width: 900px) {
+            .sidebar { display: none; left: 0; }
+            .sidebar.open { display: flex; position: fixed; z-index: 100; }
+            .main { margin-left: 0; }
+            .mobile-toggle { display: flex; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .detail-grid { grid-template-columns: 1fr; }
+            .form-grid { grid-template-columns: 1fr; }
+            .search-input { width: 100%; }
+            .header { padding: 12px 16px; gap: 12px; }
+            .content { padding: 16px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="layout">
+
+        <aside class="sidebar">
+            <div class="sidebar-header"><span class="sidebar-logo">FleetConnect</span></div>
+            <nav>
+                <div class="nav-section">
+                    <div class="nav-section-title">Rental Management</div>
+                    <a class="nav-item" href="rental-dashboard.html">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                        Dashboard
+                    </a>
+                    <a class="nav-item active" href="contract-management.html">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        Contracts
+                    </a>
+                    <a class="nav-item" href="invoice-pdf.html">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        Invoice Generator
+                    </a>
+                    <a class="nav-item" href="maintenance-log.html">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+                        Maintenance
+                    </a>
+                    <a class="nav-item" href="rental-invoices.html">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        Fuel History
+                    </a>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-menu">
+                    <div class="user-avatar-lg" id="userAvatar">R</div>
+                    <div class="user-info"><div class="user-name" id="userName">Rental Co.</div><div class="user-role">Rental Account</div></div>
+                    <button class="logout-btn" onclick="logout()"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg></button>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main">
+            <header class="header">
+                <div class="header-left">
+                    <button class="mobile-toggle" onclick="toggleMobileSidebar()"><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+                    <div>
+                        <h1>Contract Management</h1>
+                        <p class="header-subtitle">Track contracts, renewals, and billing schedules</p>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content">
+                <!-- Stats Grid -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-header"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Active Contracts</div>
+                        <div class="stat-value-row"><span class="stat-value" id="statActive">0</span></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Expiring Soon</div>
+                        <div class="stat-value-row"><span class="stat-value" id="statExpiring">0</span></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Total Value</div>
+                        <div class="stat-value-row"><span class="stat-value" id="statValue">$0</span></div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="quick-actions">
+                    <button class="quick-action-btn primary" onclick="openAddContractModal()">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        Add Contract
+                    </button>
+                </div>
+
+                <!-- Contracts Table -->
+                <div class="table-card">
+                    <div class="table-header">
+                        <div class="table-title">All Contracts</div>
+                        <div class="table-actions">
+                            <input type="text" class="search-input" id="searchInput" placeholder="Search contracts..." oninput="renderContracts()">
+                            <select class="filter-select" id="statusFilter" onchange="renderContracts()">
+                                <option value="all">All Status</option>
+                                <option value="active">Active</option>
+                                <option value="expiring">Expiring Soon</option>
+                                <option value="expired">Expired</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="contractsTable"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+                    <div class="table-footer" id="tableFooter" style="display:none;"><span id="paginationInfo">Showing 1-10</span></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add/Edit Contract Modal -->
+    <div class="modal-overlay" id="contractModal">
+        <div class="modal">
+            <div class="modal-header"><h3 id="modalTitle">Add Contract</h3><button class="modal-close" onclick="closeContractModal()">×</button></div>
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-footer" id="modalFooter">
+                <button class="btn btn-secondary" onclick="closeContractModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveContract()">Save Contract</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contract Detail Modal -->
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal">
+            <div class="modal-header"><h3 id="detailTitle">Contract Details</h3><button class="modal-close" onclick="closeDetailModal()">×</button></div>
+            <div class="modal-body" id="detailBody"></div>
+            <div class="modal-footer" id="detailFooter">
+                <button class="btn btn-secondary" onclick="closeDetailModal()">Close</button>
+                <button class="btn btn-primary" onclick="editSelectedContract()">Edit</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="supabase-client.js"></script>
+    <script src="feature-flags.js"></script>
+    <script src="demo-switcher.js"></script>
+    <script>
+        let allContracts = [], allJobs = [];
+        let selectedContractId = null;
+
+        // Mock contracts data
+        const mockContracts = [
+            { id: '1', contract_number: 'CNT-001', customer_name: 'ABC Corp', start_date: '2024-01-15', end_date: '2025-01-15', status: 'active', monthly_value: 5000, pricing_tier: 'Premium', auto_renew: true, billing_cycle: 'Monthly', notes: 'Standard rental agreement' },
+            { id: '2', contract_number: 'CNT-002', customer_name: 'XYZ Industries', start_date: '2023-06-01', end_date: '2025-06-01', status: 'active', monthly_value: 8500, pricing_tier: 'Enterprise', auto_renew: true, billing_cycle: 'Quarterly', notes: 'Large fleet contract' },
+            { id: '3', contract_number: 'CNT-003', customer_name: 'Tech Solutions', start_date: '2024-11-01', end_date: '2025-02-01', status: 'expiring', monthly_value: 3200, pricing_tier: 'Standard', auto_renew: false, billing_cycle: 'Monthly', notes: 'Expires in 30 days' },
+            { id: '4', contract_number: 'CNT-004', customer_name: 'Global Logistics', start_date: '2023-03-01', end_date: '2024-03-01', status: 'expired', monthly_value: 6500, pricing_tier: 'Premium', auto_renew: false, billing_cycle: 'Annual', notes: 'Renewal pending' }
+        ];
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = checkAuth(['rental']);
+            if (user) {
+                document.getElementById('userName').textContent = user.name;
+                document.getElementById('userAvatar').textContent = user.name.charAt(0).toUpperCase();
+            }
+            FC_FLAGS.init('rental');
+            FC_FLAGS.hideNav('contract_management', 'contract-management.html');
+            await loadData();
+        });
+
+        async function loadData() {
+            try {
+                // Try to load from Supabase
+                const { data } = await db.from('contracts').select('*').order('created_at', { ascending: false });
+                allContracts = data && data.length > 0 ? data : mockContracts;
+            } catch (err) {
+                console.log('Using mock contracts:', err);
+                allContracts = mockContracts;
+            }
+
+            try {
+                allJobs = await getJobsForCurrentUser();
+            } catch (err) {
+                console.log('Jobs load error:', err);
+            }
+
+            updateStats();
+            renderContracts();
+        }
+
+        function updateStats() {
+            const now = new Date();
+            const thirtyDaysLater = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+            const active = allContracts.filter(c => {
+                const endDate = new Date(c.end_date);
+                return endDate > now;
+            }).length;
+
+            const expiring = allContracts.filter(c => {
+                const endDate = new Date(c.end_date);
+                return endDate > now && endDate <= thirtyDaysLater;
+            }).length;
+
+            const totalValue = allContracts
+                .filter(c => new Date(c.end_date) > now)
+                .reduce((sum, c) => sum + (parseFloat(c.monthly_value) || 0), 0);
+
+            document.getElementById('statActive').textContent = active;
+            document.getElementById('statExpiring').textContent = expiring;
+            document.getElementById('statValue').textContent = '$' + totalValue.toLocaleString('en-US', { maximumFractionDigits: 0 });
+        }
+
+        function getContractStatus(contract) {
+            const now = new Date();
+            const endDate = new Date(contract.end_date);
+            const thirtyDaysLater = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+            if (endDate < now) return 'expired';
+            if (endDate <= thirtyDaysLater) return 'expiring';
+            return 'active';
+        }
+
+        function renderContracts() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const filter = document.getElementById('statusFilter').value;
+
+            let filtered = allContracts;
+
+            if (filter !== 'all') {
+                filtered = filtered.filter(c => getContractStatus(c) === filter);
+            }
+
+            if (search) {
+                filtered = filtered.filter(c =>
+                    (c.contract_number || '').toLowerCase().includes(search) ||
+                    (c.customer_name || '').toLowerCase().includes(search)
+                );
+            }
+
+            const container = document.getElementById('contractsTable');
+            if (!filtered.length) {
+                container.innerHTML = '<div class="empty-state">No contracts found</div>';
+                document.getElementById('tableFooter').style.display = 'none';
+                return;
+            }
+
+            container.innerHTML = '<table><thead><tr><th>Contract #</th><th>Customer</th><th>Start Date</th><th>End Date</th><th>Status</th><th>Monthly Value</th><th>Auto-Renew</th><th>Actions</th></tr></thead><tbody>' +
+                filtered.slice(0, 15).map(c => {
+                    const status = getContractStatus(c);
+                    const statusClass = status === 'active' ? 'active' : status === 'expiring' ? 'expiring' : 'expired';
+                    return '<tr>' +
+                        '<td><span class="contract-num">' + safe(c.contract_number) + '</span></td>' +
+                        '<td>' + safe(c.customer_name) + '</td>' +
+                        '<td>' + formatDate(c.start_date) + '</td>' +
+                        '<td>' + formatDate(c.end_date) + '</td>' +
+                        '<td><span class="status-badge ' + statusClass + '"><span class="status-dot"></span>' + status + '</span></td>' +
+                        '<td style="font-weight:600;color:#60a5fa;">$' + parseFloat(c.monthly_value).toLocaleString('en-US', {minimumFractionDigits:0}) + '</td>' +
+                        '<td>' + (c.auto_renew ? '<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:#22c55e;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>' : '—') + '</td>' +
+                        '<td><div class="actions-cell">' +
+                            '<button class="action-btn secondary" onclick="viewContractDetail(\'' + c.id + '\')">View</button>' +
+                            '<button class="action-btn secondary" onclick="editContract(\'' + c.id + '\')">Edit</button>' +
+                        '</div></td>' +
+                    '</tr>';
+                }).join('') + '</tbody></table>';
+
+            document.getElementById('tableFooter').style.display = filtered.length > 15 ? 'flex' : 'none';
+            document.getElementById('paginationInfo').textContent = 'Showing 1-' + Math.min(15, filtered.length) + ' of ' + filtered.length;
+        }
+
+        function openAddContractModal() {
+            selectedContractId = null;
+            document.getElementById('modalTitle').textContent = 'Add Contract';
+            const customersOptions = [...new Set(allJobs.map(j => j.customer_name).filter(Boolean))];
+
+            document.getElementById('modalBody').innerHTML = `
+                <div class="form-group">
+                    <label class="form-label">Contract Number</label>
+                    <input type="text" id="contractNumber" class="form-input" placeholder="e.g., CNT-001">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Customer</label>
+                    <select id="customerId" class="form-select">
+                        <option value="">Select customer...</option>
+                        ${customersOptions.map(c => '<option value="' + c + '">' + safe(c) + '</option>').join('')}
+                    </select>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Start Date</label>
+                        <input type="date" id="startDate" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">End Date</label>
+                        <input type="date" id="endDate" class="form-input">
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Pricing Tier</label>
+                        <select id="pricingTier" class="form-select">
+                            <option value="Standard">Standard</option>
+                            <option value="Premium">Premium</option>
+                            <option value="Enterprise">Enterprise</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Monthly Rate ($)</label>
+                        <input type="number" id="monthlyValue" class="form-input" placeholder="5000">
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Billing Cycle</label>
+                        <select id="billingCycle" class="form-select">
+                            <option value="Monthly">Monthly</option>
+                            <option value="Quarterly">Quarterly</option>
+                            <option value="Annual">Annual</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Notes</label>
+                    <input type="text" id="notes" class="form-input" placeholder="Additional notes...">
+                </div>
+                <div class="toggle-wrapper">
+                    <label class="form-label" style="margin:0;">Auto-Renew</label>
+                    <div id="autoRenewToggle" class="toggle-switch" onclick="this.classList.toggle('active')"></div>
+                </div>
+            `;
+
+            document.getElementById('contractModal').classList.add('show');
+        }
+
+        function editContract(id) {
+            const contract = allContracts.find(c => c.id === id);
+            if (!contract) return;
+
+            selectedContractId = id;
+            document.getElementById('modalTitle').textContent = 'Edit Contract';
+            const customersOptions = [...new Set(allJobs.map(j => j.customer_name).filter(Boolean))];
+
+            document.getElementById('modalBody').innerHTML = `
+                <div class="form-group">
+                    <label class="form-label">Contract Number</label>
+                    <input type="text" id="contractNumber" class="form-input" value="${safe(contract.contract_number)}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Customer</label>
+                    <select id="customerId" class="form-select">
+                        <option value="">Select customer...</option>
+                        ${customersOptions.map(c => '<option value="' + c + '" ' + (c === contract.customer_name ? 'selected' : '') + '>' + safe(c) + '</option>').join('')}
+                    </select>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Start Date</label>
+                        <input type="date" id="startDate" class="form-input" value="${contract.start_date}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">End Date</label>
+                        <input type="date" id="endDate" class="form-input" value="${contract.end_date}">
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Pricing Tier</label>
+                        <select id="pricingTier" class="form-select">
+                            <option value="Standard" ${contract.pricing_tier === 'Standard' ? 'selected' : ''}>Standard</option>
+                            <option value="Premium" ${contract.pricing_tier === 'Premium' ? 'selected' : ''}>Premium</option>
+                            <option value="Enterprise" ${contract.pricing_tier === 'Enterprise' ? 'selected' : ''}>Enterprise</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Monthly Rate ($)</label>
+                        <input type="number" id="monthlyValue" class="form-input" value="${contract.monthly_value}">
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Billing Cycle</label>
+                        <select id="billingCycle" class="form-select">
+                            <option value="Monthly" ${contract.billing_cycle === 'Monthly' ? 'selected' : ''}>Monthly</option>
+                            <option value="Quarterly" ${contract.billing_cycle === 'Quarterly' ? 'selected' : ''}>Quarterly</option>
+                            <option value="Annual" ${contract.billing_cycle === 'Annual' ? 'selected' : ''}>Annual</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Notes</label>
+                    <input type="text" id="notes" class="form-input" value="${safe(contract.notes)}">
+                </div>
+                <div class="toggle-wrapper">
+                    <label class="form-label" style="margin:0;">Auto-Renew</label>
+                    <div id="autoRenewToggle" class="toggle-switch ${contract.auto_renew ? 'active' : ''}" onclick="this.classList.toggle('active')"></div>
+                </div>
+            `;
+
+            document.getElementById('contractModal').classList.add('show');
+        }
+
+        async function saveContract() {
+            const contractNumber = document.getElementById('contractNumber').value;
+            const customerId = document.getElementById('customerId').value;
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const pricingTier = document.getElementById('pricingTier').value;
+            const monthlyValue = document.getElementById('monthlyValue').value;
+            const billingCycle = document.getElementById('billingCycle').value;
+            const notes = document.getElementById('notes').value;
+            const autoRenew = document.getElementById('autoRenewToggle').classList.contains('active');
+
+            if (!contractNumber || !customerId || !startDate || !endDate) {
+                alert('Please fill in all required fields');
+                return;
+            }
+
+            const contractData = {
+                contract_number: contractNumber,
+                customer_name: customerId,
+                start_date: startDate,
+                end_date: endDate,
+                pricing_tier: pricingTier,
+                monthly_value: parseFloat(monthlyValue),
+                billing_cycle: billingCycle,
+                notes: notes,
+                auto_renew: autoRenew
+            };
+
+            if (selectedContractId) {
+                const idx = allContracts.findIndex(c => c.id === selectedContractId);
+                if (idx >= 0) {
+                    allContracts[idx] = { ...allContracts[idx], ...contractData, updated_at: new Date().toISOString() };
+                }
+            } else {
+                allContracts.push({
+                    id: Math.random().toString(36).substr(2, 9),
+                    ...contractData,
+                    created_at: new Date().toISOString()
+                });
+            }
+
+            closeContractModal();
+            updateStats();
+            renderContracts();
+        }
+
+        function viewContractDetail(id) {
+            const contract = allContracts.find(c => c.id === id);
+            if (!contract) return;
+
+            selectedContractId = id;
+            const status = getContractStatus(contract);
+            const daysLeft = Math.ceil((new Date(contract.end_date) - new Date()) / (1000 * 60 * 60 * 24));
+
+            document.getElementById('detailTitle').textContent = 'Contract ' + safe(contract.contract_number);
+            document.getElementById('detailBody').innerHTML = `
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <div class="detail-label">Contract #</div>
+                        <div class="detail-value">${safe(contract.contract_number)}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Customer</div>
+                        <div class="detail-value">${safe(contract.customer_name)}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Status</div>
+                        <div class="detail-value"><span class="status-badge ${status}"><span class="status-dot"></span>${status}</span></div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Days Remaining</div>
+                        <div class="detail-value" style="color:${daysLeft < 30 ? '#f87171' : '#22c55e'}">${daysLeft} days</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Start Date</div>
+                        <div class="detail-value">${formatDate(contract.start_date)}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">End Date</div>
+                        <div class="detail-value">${formatDate(contract.end_date)}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Pricing Tier</div>
+                        <div class="detail-value">${safe(contract.pricing_tier)}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Monthly Rate</div>
+                        <div class="detail-value" style="color:#60a5fa;font-weight:700;">$${parseFloat(contract.monthly_value).toLocaleString('en-US', {minimumFractionDigits:0})}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Billing Cycle</div>
+                        <div class="detail-value">${safe(contract.billing_cycle)}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Auto-Renew</div>
+                        <div class="detail-value">${contract.auto_renew ? 'Yes' : 'No'}</div>
+                    </div>
+                    <div class="detail-item" style="grid-column:1/-1;">
+                        <div class="detail-label">Notes</div>
+                        <div class="detail-value">${safe(contract.notes) || '—'}</div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('detailModal').classList.add('show');
+        }
+
+        function editSelectedContract() {
+            closeDetailModal();
+            editContract(selectedContractId);
+        }
+
+        function closeContractModal() {
+            document.getElementById('contractModal').classList.remove('show');
+            selectedContractId = null;
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detailModal').classList.remove('show');
+        }
+
+        function toggleMobileSidebar() {
+            document.querySelector('.sidebar').classList.toggle('open');
+        }
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') {
+                closeContractModal();
+                closeDetailModal();
+            }
+        });
+    </script>
+</body>
+</html>

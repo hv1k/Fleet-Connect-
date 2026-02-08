@@ -537,7 +537,8 @@
             document.getElementById('statPending').textContent = pending;
             document.getElementById('statGallons').textContent = totalGallons.toFixed(0);
             document.getElementById('statCompleted').textContent = completed;
-            document.getElementById('totalBadge').textContent = active + pending;
+            const activeOnlyCount = allJobs.filter(j => ['pending', 'open', 'assigned', 'accepted', 'in-progress'].includes(j.status)).length;
+            document.getElementById('totalBadge').textContent = activeOnlyCount;
         }
         
         function renderChart() {

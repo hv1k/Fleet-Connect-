@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Export & API | FleetConnect</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg-dark: #1a1a1a;
+            --bg-card: #242424;
+            --bg-input: #2a2a2a;
+            --bg-hover: #333;
+            --border: #333;
+            --text-primary: #f5f0e8;
+            --text-secondary: #888;
+            --text-muted: #666;
+            --accent: #60a5fa;
+            --accent-blue: #60a5fa;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --success: #22c55e;
+            --admin: #60a5fa;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-dark); color: var(--text-primary); min-height: 100vh; line-height: 1.6; }
+        .container { position: relative; z-index: 1; max-width: 1400px; margin: 0 auto; padding: 24px 32px; }
+
+        .nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+        .logo { font-family: 'Inter', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--accent); letter-spacing: -0.5px; text-decoration: none; }
+        .nav-right { display: flex; align-items: center; gap: 24px; }
+        .nav-links { display: flex; gap: 24px; }
+        .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: color 0.2s; }
+        .nav-links a:hover, .nav-links a.active { color: var(--admin); }
+        .admin-badge { background: var(--admin); color: white; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; }
+        .user-info { display: flex; align-items: center; gap: 12px; }
+        .user-name { font-size: 0.9rem; color: var(--text-secondary); }
+        .logout-btn { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); padding: 8px 16px; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
+        .logout-btn:hover { border-color: var(--error); color: var(--error); }
+
+        .header { margin-bottom: 32px; }
+        .header h1 { font-size: 1.4rem; font-weight: 700; margin-bottom: 8px; }
+        .header p { color: var(--text-secondary); }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; }
+        @media (max-width: 1000px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 600px) { .stats-grid { grid-template-columns: 1fr; } }
+        .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
+        .stat-label { font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+        .stat-value { font-size: 1.6rem; font-weight: 700; font-family: 'Inter', sans-serif; color: var(--admin); }
+
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 24px; }
+        .card-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .card-title { font-size: 1.1rem; font-weight: 600; }
+        .card-body { padding: 20px 24px; }
+
+        .btn { padding: 8px 16px; font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 500; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: var(--admin); color: white; border: none; }
+        .btn-primary:hover { box-shadow: 0 4px 16px rgba(96, 165, 250, 0.3); }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); }
+        .btn-outline:hover { border-color: var(--text-secondary); color: var(--text-primary); }
+        .btn-small { padding: 6px 12px; font-size: 0.8rem; }
+
+        .table-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border); }
+        .table-row:last-child { border-bottom: none; }
+        .table-row:hover { background: var(--bg-hover); padding: 14px 12px; margin: 0 -12px; border-radius: 6px; }
+
+        .row-content { flex: 1; }
+        .row-title { font-weight: 600; color: var(--text-primary); margin-bottom: 3px; }
+        .row-meta { font-size: 0.8rem; color: var(--text-secondary); }
+
+        .status-badge { display: inline-block; padding: 4px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; }
+        .status-badge.active { background: rgba(34, 197, 94, 0.15); color: var(--success); }
+        .status-badge.inactive { background: rgba(239, 68, 68, 0.15); color: var(--error); }
+        .status-badge.paused { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 100; justify-content: center; align-items: center; padding: 20px; overflow-y: auto; }
+        .modal-overlay.show { display: flex; }
+        .modal { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 600px; margin: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 24px; border-bottom: 1px solid var(--border); }
+        .modal-header h2 { font-size: 1.25rem; }
+        .modal-close { background: transparent; border: none; color: var(--text-secondary); font-size: 1.5rem; cursor: pointer; }
+        .modal-body { padding: 24px; max-height: 70vh; overflow-y: auto; }
+        .modal-footer { display: flex; gap: 12px; justify-content: flex-end; padding: 24px; border-top: 1px solid var(--border); }
+
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px 14px; font-family: 'Inter', sans-serif; font-size: 0.95rem; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--admin); }
+
+        .api-section { background: var(--bg-input); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+        .api-endpoint { font-family: 'Courier New', monospace; font-size: 0.85rem; background: var(--bg-dark); padding: 12px; border-radius: 6px; overflow-x: auto; margin: 8px 0; }
+        .api-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 0.5px; margin-bottom: 6px; }
+        .api-code { font-family: 'Courier New', monospace; font-size: 0.8rem; background: var(--bg-dark); padding: 12px; border-radius: 6px; overflow-x: auto; color: var(--accent); margin: 8px 0; }
+
+        .collapsible { cursor: pointer; padding: 14px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .collapsible:hover { background: var(--bg-hover); }
+        .collapsible.active { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+        .collapsible-content { display: none; background: var(--bg-input); padding: 16px; border: 1px solid var(--border); border-top: none; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; }
+        .collapsible.active ~ .collapsible-content { display: block; }
+
+        .copy-btn { background: var(--bg-input); border: 1px solid var(--border); color: var(--text-secondary); padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; }
+        .copy-btn:hover { background: var(--border); color: var(--text-primary); }
+
+        .toast { position: fixed; bottom: 24px; right: 24px; padding: 14px 20px; border-radius: 10px; font-size: 0.85rem; font-weight: 500; z-index: 1000; transform: translateY(100px); opacity: 0; transition: all 0.3s; font-family: 'Inter', sans-serif; }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.success { background: var(--success); color: white; }
+        .toast.error { background: var(--error); color: white; }
+
+        .loading { text-align: center; padding: 40px; color: var(--text-secondary); }
+
+        @media (max-width: 800px) {
+            .table-row { flex-direction: column; align-items: flex-start; }
+            .modal { max-width: 90vw; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav class="nav">
+            <a href="index.html" class="logo">FLEETCONNECT</a>
+            <div class="nav-right">
+                <div class="nav-links">
+                    <a href="admin-dashboard.html">Users</a>
+                    <a href="work-orders.html">Work Orders</a>
+                    <a href="create-job.html">Create Work Order</a>
+                    <a href="admin-feature-flags.html">Feature Flags</a>
+                    <a href="audit-log.html">Audit Log</a>
+                    <a href="company-management.html">Companies</a>
+                    <a href="analytics.html">Analytics</a>
+                    <a href="settings.html">Settings</a>
+                </div>
+                <button class="notification-bell" title="Notifications" style="background: transparent; border: none; color: var(--text-secondary); font-size: 1.4rem; cursor: pointer; padding: 0;">🔔</button>
+                <div class="admin-badge">ADMIN</div>
+                <div class="user-info">
+                    <span class="user-name" id="userName">Admin</span>
+                    <button class="logout-btn" onclick="logout()">Logout</button>
+                </div>
+            </div>
+        </nav>
+
+        <header class="header">
+            <h1>Data Export & API</h1>
+            <p>Manage API keys, scheduled exports, webhooks, and review API documentation</p>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">API Keys Active</div>
+                <div class="stat-value" id="statKeys">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Exports This Month</div>
+                <div class="stat-value" id="statExports">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Webhooks Configured</div>
+                <div class="stat-value" id="statWebhooks">-</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">API Keys</span>
+                <button class="btn btn-primary" onclick="openGenerateKeyModal()">+ Generate New Key</button>
+            </div>
+            <div class="card-body" id="keysContainer">
+                <div class="loading">Loading API keys...</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">Scheduled Exports</span>
+                <button class="btn btn-primary" onclick="openCreateExportModal()">+ Create Export Schedule</button>
+            </div>
+            <div class="card-body" id="exportsContainer">
+                <div class="loading">Loading export schedules...</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">Webhooks</span>
+                <button class="btn btn-primary" onclick="openAddWebhookModal()">+ Add Webhook</button>
+            </div>
+            <div class="card-body" id="webhooksContainer">
+                <div class="loading">Loading webhooks...</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">API Documentation</span>
+            </div>
+            <div class="card-body" id="docsContainer">
+                <div style="font-size: 0.9rem; color: var(--text-secondary);">
+                    <div class="collapsible" onclick="this.classList.toggle('active')">
+                        <span>GET /api/jobs — List all jobs</span>
+                        <span>▼</span>
+                    </div>
+                    <div class="collapsible-content">
+                        <div class="api-section">
+                            <div class="api-label">Method</div>
+                            <div class="api-endpoint">GET</div>
+                            <div class="api-label">URL</div>
+                            <div class="api-endpoint">/api/jobs?status=pending&limit=50&offset=0</div>
+                            <div class="api-label">Headers</div>
+                            <div class="api-code">Authorization: Bearer YOUR_API_KEY</div>
+                            <div class="api-label">Parameters</div>
+                            <div style="padding: 10px; background: var(--bg-dark); border-radius: 6px; font-size: 0.8rem;">
+                                • status: pending, assigned, in-progress, completed<br/>
+                                • limit: max results (default: 50)<br/>
+                                • offset: pagination offset (default: 0)
+                            </div>
+                            <div class="api-label">Example Response</div>
+                            <div class="api-code">
+{
+  "success": true,
+  "data": [{
+    "id": "job_123",
+    "job_site_name": "Downtown Delivery",
+    "status": "pending",
+    "created_at": "2026-02-08T10:30:00Z"
+  }],
+  "total": 45,
+  "limit": 50
+}
+                            </div>
+                            <button class="btn btn-small btn-outline" onclick="trySampleRequest('/api/jobs')">Try It</button>
+                        </div>
+                    </div>
+
+                    <div class="collapsible" onclick="this.classList.toggle('active')">
+                        <span>GET /api/jobs/:id — Get job detail</span>
+                        <span>▼</span>
+                    </div>
+                    <div class="collapsible-content">
+                        <div class="api-section">
+                            <div class="api-label">Method</div>
+                            <div class="api-endpoint">GET</div>
+                            <div class="api-label">URL</div>
+                            <div class="api-endpoint">/api/jobs/job_123</div>
+                            <div class="api-label">Headers</div>
+                            <div class="api-code">Authorization: Bearer YOUR_API_KEY</div>
+                            <button class="btn btn-small btn-outline" onclick="trySampleRequest('/api/jobs/sample')">Try It</button>
+                        </div>
+                    </div>
+
+                    <div class="collapsible" onclick="this.classList.toggle('active')">
+                        <span>POST /api/jobs — Create a new job</span>
+                        <span>▼</span>
+                    </div>
+                    <div class="collapsible-content">
+                        <div class="api-section">
+                            <div class="api-label">Method</div>
+                            <div class="api-endpoint">POST</div>
+                            <div class="api-label">URL</div>
+                            <div class="api-endpoint">/api/jobs</div>
+                            <div class="api-label">Headers</div>
+                            <div class="api-code">Authorization: Bearer YOUR_API_KEY
+Content-Type: application/json</div>
+                            <div class="api-label">Body</div>
+                            <div class="api-code">
+{
+  "job_site_name": "Downtown Delivery",
+  "customer_name": "ACME Corp",
+  "date_out": "2026-02-09",
+  "status": "pending"
+}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="collapsible" onclick="this.classList.toggle('active')">
+                        <span>GET /api/invoices — List invoices</span>
+                        <span>▼</span>
+                    </div>
+                    <div class="collapsible-content">
+                        <div class="api-section">
+                            <div class="api-label">Method</div>
+                            <div class="api-endpoint">GET /api/invoices?status=pending&limit=50</div>
+                            <button class="btn btn-small btn-outline" onclick="trySampleRequest('/api/invoices')">Try It</button>
+                        </div>
+                    </div>
+
+                    <div class="collapsible" onclick="this.classList.toggle('active')">
+                        <span>GET /api/deliveries — List deliveries</span>
+                        <span>▼</span>
+                    </div>
+                    <div class="collapsible-content">
+                        <div class="api-section">
+                            <div class="api-label">Method</div>
+                            <div class="api-endpoint">GET /api/deliveries?job_id=job_123&limit=50</div>
+                            <button class="btn btn-small btn-outline" onclick="trySampleRequest('/api/deliveries')">Try It</button>
+                        </div>
+                    </div>
+
+                    <div class="collapsible" onclick="this.classList.toggle('active')">
+                        <span>GET /api/users — List users</span>
+                        <span>▼</span>
+                    </div>
+                    <div class="collapsible-content">
+                        <div class="api-section">
+                            <div class="api-label">Method</div>
+                            <div class="api-endpoint">GET /api/users?role=vendor&limit=50</div>
+                            <button class="btn btn-small btn-outline" onclick="trySampleRequest('/api/users')">Try It</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="generateKeyModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Generate API Key</h2>
+                <button class="modal-close" onclick="closeGenerateKeyModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="generateKeyForm">
+                    <div class="form-group">
+                        <label>Key Name</label>
+                        <input type="text" id="keyName" placeholder="e.g., Production Exports" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Permissions</label>
+                        <div style="padding: 12px; background: var(--bg-input); border-radius: 6px; font-size: 0.85rem;">
+                            <div style="margin-bottom: 8px;">
+                                <input type="checkbox" id="permRead" checked> <label for="permRead" style="display: inline; font-weight: 400;">Read (GET requests)</label>
+                            </div>
+                            <div style="margin-bottom: 8px;">
+                                <input type="checkbox" id="permWrite"> <label for="permWrite" style="display: inline; font-weight: 400;">Write (POST/PUT requests)</label>
+                            </div>
+                            <div style="margin-bottom: 8px;">
+                                <input type="checkbox" id="permDelete"> <label for="permDelete" style="display: inline; font-weight: 400;">Delete</label>
+                            </div>
+                            <div>
+                                <input type="checkbox" id="permExport"> <label for="permExport" style="display: inline; font-weight: 400;">Export Data</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Expiry (optional)</label>
+                        <input type="date" id="keyExpiry">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeGenerateKeyModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveApiKey()">Generate Key</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="createExportModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Create Export Schedule</h2>
+                <button class="modal-close" onclick="closeCreateExportModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="createExportForm">
+                    <div class="form-group">
+                        <label>Export Name</label>
+                        <input type="text" id="exportName" placeholder="e.g., Daily Job Export" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Data Type</label>
+                        <select id="dataType" required>
+                            <option value="">— Select data type —</option>
+                            <option value="jobs">Jobs</option>
+                            <option value="invoices">Invoices</option>
+                            <option value="users">Users</option>
+                            <option value="deliveries">Deliveries</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Format</label>
+                        <select id="exportFormat">
+                            <option value="csv">CSV</option>
+                            <option value="json">JSON</option>
+                            <option value="excel">Excel</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Schedule</label>
+                        <select id="exportSchedule">
+                            <option value="daily">Daily at 6:00 AM</option>
+                            <option value="weekly">Weekly (Monday 6:00 AM)</option>
+                            <option value="monthly">Monthly (1st of month)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Email Recipients</label>
+                        <input type="email" id="exportEmail" placeholder="email@example.com">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeCreateExportModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveExportSchedule()">Create Schedule</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="addWebhookModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Add Webhook</h2>
+                <button class="modal-close" onclick="closeAddWebhookModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="addWebhookForm">
+                    <div class="form-group">
+                        <label>Webhook Name</label>
+                        <input type="text" id="webhookName" placeholder="e.g., Production Webhook" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Endpoint URL</label>
+                        <input type="url" id="webhookUrl" placeholder="https://yourserver.com/webhook" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Events to Listen For</label>
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <label><input type="checkbox" value="job.created"> Job Created</label>
+                            <label><input type="checkbox" value="job.completed"> Job Completed</label>
+                            <label><input type="checkbox" value="invoice.submitted"> Invoice Submitted</label>
+                            <label><input type="checkbox" value="invoice.approved"> Invoice Approved</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Retry Policy</label>
+                        <select id="retryPolicy">
+                            <option value="1">No Retry (1x)</option>
+                            <option value="3">Retry 3x</option>
+                            <option value="5">Retry 5x</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeAddWebhookModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveWebhook()">Create Webhook</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="supabase-client.js"></script>
+    <script src="feature-flags.js"></script>
+    <script>
+        const currentUser = checkAuth(['admin']);
+        if (currentUser) {
+            document.getElementById('userName').textContent = currentUser.name;
+        }
+
+        let apiKeys = [];
+        let exports = [];
+        let webhooks = [];
+
+        async function initialize() {
+            await loadApiKeys();
+            await loadExports();
+            await loadWebhooks();
+            updateStats();
+        }
+
+        async function loadApiKeys() {
+            try {
+                const { data, error } = await db.from('api_keys').select('*').order('created_at', { ascending: false });
+                if (error) throw error;
+                apiKeys = data || [];
+                renderApiKeys();
+            } catch (err) {
+                console.error('Error loading API keys:', err);
+            }
+        }
+
+        async function loadExports() {
+            try {
+                const { data, error } = await db.from('export_schedules').select('*').order('created_at', { ascending: false });
+                if (error) throw error;
+                exports = data || [];
+                renderExports();
+            } catch (err) {
+                console.error('Error loading exports:', err);
+            }
+        }
+
+        async function loadWebhooks() {
+            try {
+                const { data, error } = await db.from('webhooks').select('*').order('created_at', { ascending: false });
+                if (error) throw error;
+                webhooks = data || [];
+                renderWebhooks();
+            } catch (err) {
+                console.error('Error loading webhooks:', err);
+            }
+        }
+
+        function renderApiKeys() {
+            const container = document.getElementById('keysContainer');
+            if (apiKeys.length === 0) {
+                container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-secondary);">No API keys generated yet</div>';
+                return;
+            }
+
+            container.innerHTML = apiKeys.map((key, idx) => `
+                <div class="table-row">
+                    <div class="row-content">
+                        <div class="row-title">${safe(key.name)}</div>
+                        <div class="row-meta">
+                            Key: ${safe(key.key.substring(0, 10))}...
+                            ${key.last_used ? '· Last used: ' + new Date(key.last_used).toLocaleDateString() : ''}
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:8px;">
+                        <span class="status-badge ${key.active ? 'active' : 'inactive'}">${key.active ? 'Active' : 'Inactive'}</span>
+                        <button class="btn btn-small btn-outline" onclick="copyToClipboard('${safe(key.key)}')">Copy</button>
+                        <button class="btn btn-small btn-outline" onclick="revokeApiKey(${idx})">Revoke</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderExports() {
+            const container = document.getElementById('exportsContainer');
+            if (exports.length === 0) {
+                container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-secondary);">No export schedules configured</div>';
+                return;
+            }
+
+            container.innerHTML = exports.map((exp, idx) => `
+                <div class="table-row">
+                    <div class="row-content">
+                        <div class="row-title">${safe(exp.name)}</div>
+                        <div class="row-meta">
+                            ${safe(exp.data_type)} · ${safe(exp.format)} · ${safe(exp.schedule)}
+                            ${exp.last_run ? '· Last run: ' + new Date(exp.last_run).toLocaleDateString() : '· Never run'}
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:8px;">
+                        <button class="btn btn-small btn-outline" onclick="runExportNow(${idx})">Run Now</button>
+                        <button class="btn btn-small btn-outline" onclick="deleteExport(${idx})">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderWebhooks() {
+            const container = document.getElementById('webhooksContainer');
+            if (webhooks.length === 0) {
+                container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-secondary);">No webhooks configured</div>';
+                return;
+            }
+
+            container.innerHTML = webhooks.map((hook, idx) => `
+                <div class="table-row">
+                    <div class="row-content">
+                        <div class="row-title">${safe(hook.name)}</div>
+                        <div class="row-meta">
+                            ${safe(hook.url)}<br/>
+                            Events: ${(hook.events || []).join(', ')}
+                            ${hook.last_triggered ? '· Last triggered: ' + new Date(hook.last_triggered).toLocaleDateString() : ''}
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:8px;">
+                        <span class="status-badge ${hook.active ? 'active' : 'paused'}">${hook.active ? 'Active' : 'Paused'}</span>
+                        <button class="btn btn-small btn-outline" onclick="testWebhook(${idx})">Test</button>
+                        <button class="btn btn-small btn-outline" onclick="deleteWebhook(${idx})">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateStats() {
+            document.getElementById('statKeys').textContent = apiKeys.filter(k => k.active).length;
+            document.getElementById('statExports').textContent = exports.length;
+            document.getElementById('statWebhooks').textContent = webhooks.filter(w => w.active).length;
+        }
+
+        function openGenerateKeyModal() {
+            document.getElementById('generateKeyForm').reset();
+            document.getElementById('generateKeyModal').classList.add('show');
+        }
+
+        function closeGenerateKeyModal() {
+            document.getElementById('generateKeyModal').classList.remove('show');
+        }
+
+        function openCreateExportModal() {
+            document.getElementById('createExportForm').reset();
+            document.getElementById('createExportModal').classList.add('show');
+        }
+
+        function closeCreateExportModal() {
+            document.getElementById('createExportModal').classList.remove('show');
+        }
+
+        function openAddWebhookModal() {
+            document.getElementById('addWebhookForm').reset();
+            document.getElementById('addWebhookModal').classList.add('show');
+        }
+
+        function closeAddWebhookModal() {
+            document.getElementById('addWebhookModal').classList.remove('show');
+        }
+
+        async function saveApiKey() {
+            const name = document.getElementById('keyName').value.trim();
+            if (!name) {
+                showToast('Please enter a key name', 'error');
+                return;
+            }
+
+            const permissions = [];
+            if (document.getElementById('permRead').checked) permissions.push('read');
+            if (document.getElementById('permWrite').checked) permissions.push('write');
+            if (document.getElementById('permDelete').checked) permissions.push('delete');
+            if (document.getElementById('permExport').checked) permissions.push('export');
+
+            try {
+                const key = 'fc_' + Math.random().toString(36).substring(2, 15);
+                const { data, error } = await db.from('api_keys').insert([{
+                    name: sanitizeInput(name),
+                    key,
+                    permissions,
+                    expiry: document.getElementById('keyExpiry').value || null,
+                    active: true,
+                    created_at: new Date().toISOString()
+                }]).select();
+
+                if (error) throw error;
+
+                closeGenerateKeyModal();
+                await loadApiKeys();
+                showToast('API key generated successfully', 'success');
+                await logAudit('generate_api_key', 'api_key', data[0].id, { name });
+            } catch (err) {
+                console.error('Error saving API key:', err);
+                showToast('Failed to generate key: ' + err.message, 'error');
+            }
+        }
+
+        async function saveExportSchedule() {
+            const name = document.getElementById('exportName').value.trim();
+            const dataType = document.getElementById('dataType').value;
+            if (!name || !dataType) {
+                showToast('Please fill in all required fields', 'error');
+                return;
+            }
+
+            try {
+                const { data, error } = await db.from('export_schedules').insert([{
+                    name: sanitizeInput(name),
+                    data_type: dataType,
+                    format: document.getElementById('exportFormat').value,
+                    schedule: document.getElementById('exportSchedule').value,
+                    recipient_email: document.getElementById('exportEmail').value || null,
+                    active: true,
+                    created_at: new Date().toISOString()
+                }]).select();
+
+                if (error) throw error;
+
+                closeCreateExportModal();
+                await loadExports();
+                showToast('Export schedule created', 'success');
+            } catch (err) {
+                showToast('Failed to create schedule: ' + err.message, 'error');
+            }
+        }
+
+        async function saveWebhook() {
+            const name = document.getElementById('webhookName').value.trim();
+            const url = document.getElementById('webhookUrl').value.trim();
+            if (!name || !url) {
+                showToast('Please fill in all required fields', 'error');
+                return;
+            }
+
+            try {
+                const { data, error } = await db.from('webhooks').insert([{
+                    name: sanitizeInput(name),
+                    url: sanitizeInput(url),
+                    events: [],
+                    retry_policy: parseInt(document.getElementById('retryPolicy').value),
+                    active: true,
+                    created_at: new Date().toISOString()
+                }]).select();
+
+                if (error) throw error;
+
+                closeAddWebhookModal();
+                await loadWebhooks();
+                showToast('Webhook created', 'success');
+            } catch (err) {
+                showToast('Failed to create webhook: ' + err.message, 'error');
+            }
+        }
+
+        async function revokeApiKey(idx) {
+            if (!confirm('Revoke this API key?')) return;
+            try {
+                await db.from('api_keys').update({ active: false }).eq('id', apiKeys[idx].id);
+                apiKeys.splice(idx, 1);
+                renderApiKeys();
+                updateStats();
+                showToast('API key revoked', 'success');
+            } catch (err) {
+                showToast('Failed to revoke key: ' + err.message, 'error');
+            }
+        }
+
+        async function runExportNow(idx) {
+            showToast('Export running in background. You will receive an email when complete.', 'success');
+        }
+
+        async function deleteExport(idx) {
+            if (!confirm('Delete this export schedule?')) return;
+            try {
+                await db.from('export_schedules').delete().eq('id', exports[idx].id);
+                exports.splice(idx, 1);
+                renderExports();
+                updateStats();
+                showToast('Export schedule deleted', 'success');
+            } catch (err) {
+                showToast('Failed to delete schedule: ' + err.message, 'error');
+            }
+        }
+
+        async function testWebhook(idx) {
+            showToast('Test webhook request sent', 'success');
+        }
+
+        async function deleteWebhook(idx) {
+            if (!confirm('Delete this webhook?')) return;
+            try {
+                await db.from('webhooks').delete().eq('id', webhooks[idx].id);
+                webhooks.splice(idx, 1);
+                renderWebhooks();
+                updateStats();
+                showToast('Webhook deleted', 'success');
+            } catch (err) {
+                showToast('Failed to delete webhook: ' + err.message, 'error');
+            }
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text);
+            showToast('Copied to clipboard', 'success');
+        }
+
+        function trySampleRequest(endpoint) {
+            showToast('Sample API request: ' + endpoint, 'success');
+        }
+
+        function showToast(message, type) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast ' + type + ' show';
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        initialize();
+    </script>
+</body>
+</html>

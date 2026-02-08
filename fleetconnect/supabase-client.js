@@ -617,7 +617,7 @@ function getCurrentUser() {
 
 function getDashboardUrl(role) {
     const dashboards = {
-        admin: 'work-orders.html',
+        admin: 'admin-dashboard.html',
         vendor: 'vendor-dashboard.html',
         rental: 'rental-dashboard.html',
         fieldworker: 'field-worker.html'
