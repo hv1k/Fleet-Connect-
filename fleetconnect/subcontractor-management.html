@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subcontractor Management | FleetConnect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #1a1a1a; color: #f5f0e8; min-height: 100vh; transition: background 0.3s, color 0.3s; }
+
+        body.dark { background: #f5f0e8; color: #1a1a1a; }
+        body.dark .sidebar { background: #ffffff; border-color: #e8e4dc; }
+        body.dark .sidebar-logo { color: #3b82f6; }
+        body.dark .nav-item { color: #5c5c5c; }
+        body.dark .nav-item:hover { background: #f0ebe3; color: #1a1a1a; }
+        body.dark .nav-item.active { background: #dbeafe; color: #2563eb; }
+        body.dark .header { background: #ffffff; border-color: #e8e4dc; }
+        body.dark .header h1 { color: #1a1a1a; }
+        body.dark .subcontractor-card { background: #ffffff; border-color: #e8e4dc; }
+        body.dark .subcontractor-header { border-color: #e8e4dc; }
+        body.dark .subcontractor-name { color: #1a1a1a; }
+        body.dark .subcontractor-detail { color: #8c8c8c; }
+        body.dark .modal { background: #ffffff; }
+        body.dark .modal-header { border-color: #e8e4dc; }
+        body.dark .modal-header h3 { color: #1a1a1a; }
+        body.dark input, body.dark textarea, body.dark select { background: #ffffff; border-color: #e8e4dc; color: #1a1a1a; }
+        body.dark .btn-secondary { background: #f0ebe3; color: #1a1a1a; }
+        body.dark table { border-color: #e8e4dc; }
+        body.dark th { background: #f0ebe3; color: #8c8c8c; border-color: #e8e4dc; }
+        body.dark td { border-color: #e8e4dc; color: #5c5c5c; }
+        body.dark tr:hover { background: #f0ebe3; }
+
+        .layout { display: flex; min-height: 100vh; }
+
+        .sidebar { width: 240px; background: #242424; border-right: 1px solid #333; padding: 24px 16px; position: fixed; left: 0; height: 100vh; z-index: 100; display: flex; flex-direction: column; }
+        .sidebar-header { display: flex; align-items: center; gap: 10px; margin-bottom: 32px; padding: 20px 20px 12px; }
+        .sidebar-logo { font-size: 1.2rem; font-weight: 700; color: #60a5fa; }
+        .nav-section { margin-bottom: 24px; }
+        .nav-section-title { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: #666; padding: 0 12px; margin-bottom: 8px; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; color: #b8b0a8; text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: all 0.2s; cursor: pointer; }
+        .nav-item:hover { background: #333; color: #f5f0e8; }
+        .nav-item.active { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
+        .nav-item svg { width: 20px; height: 20px; }
+        .sidebar-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid #333; }
+        .user-menu { display: flex; align-items: center; gap: 12px; padding: 12px; margin-top: 12px; border-radius: 10px; background: #333; }
+        .user-avatar-lg { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #60a5fa, #3b82f6); display: flex; align-items: center; justify-content: center; color: #1a1a1a; font-weight: 600; font-size: 0.85rem; }
+        .user-info { flex: 1; }
+        .user-name { font-size: 0.85rem; font-weight: 600; color: #f5f0e8; }
+        .user-role { font-size: 0.7rem; color: #888; }
+        .logout-btn { color: #888; cursor: pointer; padding: 6px; border-radius: 6px; background: none; border: none; }
+        .logout-btn:hover { background: #444; color: #f5f0e8; }
+
+        .main { flex: 1; margin-left: 240px; min-height: 100vh; }
+        .header { background: #242424; padding: 20px 32px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+        .header-left { display: flex; align-items: center; gap: 16px; }
+        .header h1 { font-size: 1.4rem; font-weight: 700; color: #f5f0e8; }
+        .header-subtitle { font-size: 0.85rem; color: #888; }
+        .btn-add { display: flex; align-items: center; gap: 8px; padding: 10px 20px; background: #60a5fa; color: #1a1a1a; border: none; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-add:hover { background: #3b82f6; }
+        .content { padding: 32px; }
+
+        .tabs { display: flex; gap: 12px; margin-bottom: 24px; border-bottom: 2px solid #333; }
+        .tab-button { padding: 12px 24px; background: none; border: none; font-size: 0.95rem; font-weight: 600; color: #888; cursor: pointer; transition: all 0.2s; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+        .tab-button:hover { color: #f5f0e8; }
+        .tab-button.active { color: #60a5fa; border-bottom-color: #60a5fa; }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .subcontractor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; }
+        @media (max-width: 900px) { .subcontractor-grid { grid-template-columns: 1fr; } }
+
+        .subcontractor-card { background: #242424; border-radius: 16px; padding: 24px; border: 1px solid #333; transition: all 0.2s; }
+        .subcontractor-card:hover { border-color: #60a5fa; }
+        .subcontractor-header { display: flex; justify-content: space-between; align-items: start; padding-bottom: 16px; border-bottom: 1px solid #333; margin-bottom: 16px; }
+        .subcontractor-name { font-weight: 600; color: #f5f0e8; font-size: 1.05rem; }
+        .access-badge { display: inline-flex; align-items: center; gap: 4px; background: rgba(96, 165, 250, 0.15); color: #60a5fa; padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
+        .subcontractor-detail { font-size: 0.8rem; color: #888; margin: 8px 0; }
+        .subcontractor-row { display: flex; justify-content: space-between; margin: 10px 0; }
+        .row-label { color: #888; font-size: 0.75rem; }
+        .row-value { color: #f5f0e8; font-weight: 600; }
+        .compliance-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
+        .compliance-current { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
+        .compliance-expiring { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
+        .compliance-expired { background: rgba(248, 113, 113, 0.15); color: #f87171; }
+        .card-actions { display: flex; gap: 8px; margin-top: 16px; }
+
+        .doc-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        .doc-table th { text-align: left; padding: 12px; font-size: 0.7rem; font-weight: 600; color: #888; text-transform: uppercase; background: #2a2a2a; border-bottom: 1px solid #333; }
+        .doc-table td { padding: 12px; border-bottom: 1px solid #333; font-size: 0.85rem; color: #b8b0a8; }
+        .doc-table tr:hover { background: #2a2a2a; }
+        .doc-name { color: #f5f0e8; font-weight: 600; }
+        .doc-status { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 16px; font-size: 0.7rem; font-weight: 600; }
+        .doc-status.valid { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
+        .doc-status.expiring { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
+        .doc-status.expired { background: rgba(248, 113, 113, 0.15); color: #f87171; }
+
+        .invoice-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        .invoice-table th { text-align: left; padding: 12px; font-size: 0.7rem; font-weight: 600; color: #888; text-transform: uppercase; background: #2a2a2a; border-bottom: 1px solid #333; }
+        .invoice-table td { padding: 12px; border-bottom: 1px solid #333; font-size: 0.85rem; color: #b8b0a8; }
+        .invoice-table tr:hover { background: #2a2a2a; }
+
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 200; align-items: flex-start; justify-content: center; padding: 40px 20px; overflow-y: auto; }
+        .modal-overlay.show { display: flex; }
+        .modal { background: #242424; border-radius: 16px; width: 100%; max-width: 600px; border: 1px solid #333; margin-top: 20px; }
+        .modal-header { padding: 20px 24px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { font-size: 1.1rem; font-weight: 600; color: #f5f0e8; }
+        .modal-close { width: 28px; height: 28px; border-radius: 6px; border: none; background: #333; color: #888; cursor: pointer; }
+        .modal-close:hover { background: #444; color: #f5f0e8; }
+        .modal-body { padding: 20px 24px; max-height: 70vh; overflow-y: auto; }
+        .modal-footer { padding: 16px 24px; border-top: 1px solid #333; display: flex; justify-content: flex-end; gap: 12px; background: #2a2a2a; }
+
+        .form-group { margin-bottom: 16px; }
+        .form-label { display: block; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: #888; margin-bottom: 6px; }
+        .form-input { width: 100%; padding: 10px 12px; border: 1px solid #444; border-radius: 8px; background: #2a2a2a; color: #f5f0e8; font-size: 0.85rem; }
+        .form-input:focus { outline: none; border-color: #60a5fa; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .form-input::placeholder { color: #666; }
+        .permissions-group { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px; }
+        .permission-checkbox { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; }
+        .permission-checkbox input { cursor: pointer; }
+
+        .btn { padding: 10px 18px; border-radius: 8px; font-size: 0.85rem; font-weight: 500; cursor: pointer; border: none; transition: all 0.2s; }
+        .btn-primary { background: #60a5fa; color: #1a1a1a; }
+        .btn-primary:hover { background: #3b82f6; }
+        .btn-secondary { background: #333; color: #b8b0a8; border: 1px solid #444; }
+        .btn-secondary:hover { background: #444; }
+        .btn-small { padding: 6px 12px; font-size: 0.75rem; }
+        .btn-danger { background: rgba(248, 113, 113, 0.15); color: #f87171; border: 1px solid rgba(248, 113, 113, 0.3); }
+        .btn-danger:hover { background: rgba(248, 113, 113, 0.25); }
+
+        .empty-state { text-align: center; padding: 60px 20px; color: #666; }
+
+        @media (max-width: 900px) {
+            .sidebar { display: none; }
+            .sidebar.open { display: flex; position: fixed; z-index: 100; }
+            .main { margin-left: 0; }
+        }
+
+        .mobile-toggle { display: none; width: 40px; height: 40px; border: 1px solid #444; border-radius: 8px; background: #2a2a2a; color: #f5f0e8; align-items: center; justify-content: center; cursor: pointer; }
+        @media (max-width: 900px) {
+            .mobile-toggle { display: flex; }
+        }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar-header"><span class="sidebar-logo">FleetConnect</span></div>
+            <nav>
+                <div class="nav-section">
+                    <div class="nav-section-title">Main Menu</div>
+                    <a class="nav-item" href="vendor-dashboard.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>Dashboard</a>
+                    <a class="nav-item" href="job-bidding.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Job Bidding</a>
+                    <a class="nav-item" href="sla-management.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>SLA Management</a>
+                    <a class="nav-item active" href="subcontractor-management.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 8.048M7 10H3m14 0h4M9 20h6m-6 0a9 9 0 110-18 9 9 0 010 18z"/></svg>Subcontractors</a>
+                    <a class="nav-item" href="invoices.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Invoices</a>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-menu">
+                    <div class="user-avatar-lg" id="userAvatar">V</div>
+                    <div class="user-info"><div class="user-name" id="userName">Vendor</div><div class="user-role">Vendor Account</div></div>
+                    <button class="logout-btn" onclick="logout()"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg></button>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main">
+            <header class="header">
+                <div class="header-left">
+                    <button class="mobile-toggle" onclick="toggleMobileSidebar()"><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+                    <div>
+                        <h1>Subcontractor Management</h1>
+                        <p class="header-subtitle">Manage subcontractors, permissions, compliance, and billing</p>
+                    </div>
+                </div>
+                <button class="btn-add" onclick="openAddModal()"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>Add Subcontractor</button>
+            </header>
+
+            <div class="content">
+                <!-- Tabs -->
+                <div class="tabs">
+                    <button class="tab-button active" onclick="switchTab('subcontractors', this)">Subcontractors</button>
+                    <button class="tab-button" onclick="switchTab('billing', this)">Billing & Payments</button>
+                </div>
+
+                <!-- Subcontractors Tab -->
+                <div class="tab-content active" id="tab-subcontractors">
+                    <div class="subcontractor-grid" id="subcontractorGrid">
+                        <div class="empty-state"><p>Loading...</p></div>
+                    </div>
+                </div>
+
+                <!-- Billing Tab -->
+                <div class="tab-content" id="tab-billing">
+                    <div style="background: #242424; border-radius: 16px; padding: 24px; border: 1px solid #333; margin-bottom: 24px;">
+                        <h3 style="font-size: 1rem; font-weight: 600; color: #f5f0e8; margin-bottom: 16px;">Summary</h3>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+                            <div style="text-align: center;">
+                                <div style="font-size: 0.8rem; color: #888; margin-bottom: 8px;">Total Owed</div>
+                                <div style="font-size: 1.6rem; font-weight: 700; color: #f87171;" id="totalOwed">$12,450.00</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 0.8rem; color: #888; margin-bottom: 8px;">Pending Invoices</div>
+                                <div style="font-size: 1.6rem; font-weight: 700; color: #fbbf24;" id="pendingInvoices">8</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 0.8rem; color: #888; margin-bottom: 8px;">Active Subcontractors</div>
+                                <div style="font-size: 1.6rem; font-weight: 700; color: #60a5fa;" id="activeCount">0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="background: #242424; border-radius: 16px; overflow: hidden; border: 1px solid #333;">
+                        <div style="padding: 24px; border-bottom: 1px solid #333;">
+                            <h3 style="font-size: 1rem; font-weight: 600; color: #f5f0e8;">Subcontractor Invoices</h3>
+                        </div>
+                        <div style="overflow-x: auto;">
+                            <table class="invoice-table">
+                                <thead>
+                                    <tr>
+                                        <th>Subcontractor</th>
+                                        <th>Invoice #</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                        <th>Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="billingTable">
+                                    <tr><td colspan="6" style="text-align: center; color: #666;">Loading...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add/Edit Subcontractor Modal -->
+    <div class="modal-overlay" id="subcontractorModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Add Subcontractor</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <div class="form-label">Company Name</div>
+                    <input type="text" class="form-input" id="companyName" placeholder="e.g., ABC Fuel Services">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <div class="form-label">Contact Name</div>
+                        <input type="text" class="form-input" id="contactName" placeholder="John Doe">
+                    </div>
+                    <div class="form-group">
+                        <div class="form-label">Email</div>
+                        <input type="email" class="form-input" id="contactEmail" placeholder="john@example.com">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-label">Phone</div>
+                    <input type="tel" class="form-input" id="contactPhone" placeholder="(555) 123-4567">
+                </div>
+                <div class="form-group">
+                    <div class="form-label">Service Areas (comma-separated)</div>
+                    <input type="text" class="form-input" id="serviceAreas" placeholder="Houston, Dallas, Austin">
+                </div>
+                <div class="form-group">
+                    <div class="form-label">Access Permissions</div>
+                    <div class="permissions-group">
+                        <label class="permission-checkbox"><input type="checkbox" id="perm1"> View Jobs</label>
+                        <label class="permission-checkbox"><input type="checkbox" id="perm2"> Accept Jobs</label>
+                        <label class="permission-checkbox"><input type="checkbox" id="perm3"> Create Invoices</label>
+                        <label class="permission-checkbox"><input type="checkbox" id="perm4"> View Reports</label>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <div class="form-label">Rate Per Gallon ($)</div>
+                        <input type="number" class="form-input" id="ratePerGallon" placeholder="2.45" step="0.01" min="0">
+                    </div>
+                    <div class="form-group">
+                        <div class="form-label">Payment Terms</div>
+                        <select class="form-input" id="paymentTerms">
+                            <option value="net-15">Net 15</option>
+                            <option value="net-30" selected>Net 30</option>
+                            <option value="net-45">Net 45</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveSubcontractor()">Save Subcontractor</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Compliance Documents Modal -->
+    <div class="modal-overlay" id="complianceModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Compliance Documents</h3>
+                <button class="modal-close" onclick="closeComplianceModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="complianceContent"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeComplianceModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="supabase-client.js"></script>
+    <script src="feature-flags.js"></script>
+    <script>
+        let allSubcontractors = [];
+        let allInvoices = [];
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = checkAuth(['vendor']);
+            if (user) {
+                document.getElementById('userName').textContent = user.name;
+                document.getElementById('userAvatar').textContent = user.name.charAt(0).toUpperCase();
+
+                await FC_FLAGS.init('vendor');
+                loadData();
+            }
+        });
+
+        function toggleMobileSidebar() {
+            document.querySelector('.sidebar').classList.toggle('open');
+        }
+
+        function switchTab(tab, btn) {
+            document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('tab-' + tab).classList.add('active');
+            if (tab === 'billing') renderBillingTab();
+        }
+
+        async function loadData() {
+            // Mock subcontractors
+            allSubcontractors = [
+                { id: '1', company: 'ABC Fuel Services', contact: 'John Smith', email: 'john@abcfuel.com', phone: '(713) 555-0101', areas: 'Houston, The Woodlands', jobs: 12, compliance: 'current', rate: 2.35, active: true, docs: [
+                    { name: 'Insurance Certificate', date: '2024-11-15', expiry: '2025-11-15', status: 'valid' },
+                    { name: 'Business License', date: '2024-01-20', expiry: '2025-01-20', status: 'valid' }
+                ]},
+                { id: '2', company: 'Prime Logistics LLC', contact: 'Sarah Johnson', email: 'sarah@primelogistics.com', phone: '(214) 555-0202', areas: 'Dallas, Fort Worth', jobs: 8, compliance: 'expiring', rate: 2.40, active: true, docs: [
+                    { name: 'Insurance Certificate', date: '2024-08-10', expiry: '2025-02-10', status: 'expiring' },
+                    { name: 'DOT Number', date: '2023-06-01', expiry: '2025-06-01', status: 'valid' }
+                ]},
+                { id: '3', company: 'Southwest Fuel Corp', contact: 'Mike Davis', email: 'mike@swfuel.com', phone: '(512) 555-0303', areas: 'Austin, San Antonio', jobs: 15, compliance: 'current', rate: 2.32, active: true, docs: [
+                    { name: 'Insurance Certificate', date: '2024-05-01', expiry: '2026-05-01', status: 'valid' },
+                    { name: 'Business License', date: '2023-12-15', expiry: '2026-12-15', status: 'valid' },
+                    { name: 'Safety Certification', date: '2024-03-20', expiry: '2025-03-20', status: 'valid' }
+                ]},
+                { id: '4', company: 'Energy Transport Solutions', contact: 'Lisa Chen', email: 'lisa@energytransport.com', phone: '(832) 555-0404', areas: 'Houston, Galveston', jobs: 5, compliance: 'expired', rate: 2.50, active: false, docs: [
+                    { name: 'Insurance Certificate', date: '2023-09-01', expiry: '2024-09-01', status: 'expired' },
+                    { name: 'Business License', date: '2023-12-01', expiry: '2024-12-01', status: 'expired' }
+                ]}
+            ];
+
+            // Mock invoices
+            allInvoices = [
+                { id: 'inv1', subcontractor: 'ABC Fuel Services', amount: 2345.50, status: 'pending', date: new Date(Date.now() - 5 * 24 * 3600000) },
+                { id: 'inv2', subcontractor: 'Prime Logistics LLC', amount: 1890.00, status: 'pending', date: new Date(Date.now() - 3 * 24 * 3600000) },
+                { id: 'inv3', subcontractor: 'Southwest Fuel Corp', amount: 3200.75, status: 'paid', date: new Date(Date.now() - 15 * 24 * 3600000) },
+                { id: 'inv4', subcontractor: 'ABC Fuel Services', amount: 1560.25, status: 'pending', date: new Date(Date.now() - 2 * 24 * 3600000) },
+                { id: 'inv5', subcontractor: 'Prime Logistics LLC', amount: 2100.00, status: 'pending', date: new Date(Date.now() - 1 * 24 * 3600000) },
+                { id: 'inv6', subcontractor: 'Southwest Fuel Corp', amount: 2750.50, status: 'pending', date: new Date(Date.now() - 8 * 24 * 3600000) },
+                { id: 'inv7', subcontractor: 'ABC Fuel Services', amount: 1200.00, status: 'paid', date: new Date(Date.now() - 45 * 24 * 3600000) },
+                { id: 'inv8', subcontractor: 'Prime Logistics LLC', amount: 1450.25, status: 'pending', date: new Date(Date.now() - 4 * 24 * 3600000) }
+            ];
+
+            renderSubcontractors();
+            updateBillingSummary();
+        }
+
+        function renderSubcontractors() {
+            const grid = document.getElementById('subcontractorGrid');
+            grid.innerHTML = allSubcontractors.map(sc => {
+                const complianceClass = `compliance-${sc.compliance}`;
+                const complianceText = sc.compliance === 'current' ? '✅ Current' : sc.compliance === 'expiring' ? '⚠️ Expiring Soon' : '❌ Expired';
+                const perms = ['View Jobs', 'Accept Jobs', 'Create Invoices', 'View Reports'];
+
+                return `
+                    <div class="subcontractor-card">
+                        <div class="subcontractor-header">
+                            <div>
+                                <div class="subcontractor-name">${safe(sc.company)}</div>
+                                <div class="subcontractor-detail">${safe(sc.contact)}</div>
+                            </div>
+                            <span class="access-badge">Limited</span>
+                        </div>
+
+                        <div class="subcontractor-detail">${safe(sc.email)}</div>
+                        <div class="subcontractor-detail">${safe(sc.phone)}</div>
+                        <div class="subcontractor-detail">Service: ${safe(sc.areas)}</div>
+
+                        <div class="subcontractor-row" style="margin-top: 16px;">
+                            <span class="row-label">Assigned Jobs</span>
+                            <span class="row-value">${sc.jobs}</span>
+                        </div>
+
+                        <div class="subcontractor-row">
+                            <span class="row-label">Rate / Gallon</span>
+                            <span class="row-value">$${sc.rate.toFixed(2)}</span>
+                        </div>
+
+                        <div style="margin-top: 12px;">
+                            <span class="compliance-badge ${complianceClass}">${complianceText}</span>
+                        </div>
+
+                        <div class="card-actions">
+                            <button class="btn btn-secondary btn-small" onclick="viewCompliance('${sc.id}')">Documents</button>
+                            <button class="btn btn-secondary btn-small" onclick="editSubcontractor('${sc.id}')">Edit</button>
+                            ${!sc.active ? '<button class="btn btn-danger btn-small" onclick="toggleActive(\''+sc.id+'\')">Reactivate</button>' : '<button class="btn btn-danger btn-small" onclick="toggleActive(\''+sc.id+'\')">Deactivate</button>'}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function viewCompliance(id) {
+            const sc = allSubcontractors.find(s => s.id === id);
+            if (!sc) return;
+
+            let content = `<h3 style="font-size: 0.95rem; font-weight: 600; color: #f5f0e8; margin-bottom: 16px;">${safe(sc.company)} - Compliance Documents</h3>
+                <table class="doc-table">
+                    <thead>
+                        <tr>
+                            <th>Document</th>
+                            <th>Upload Date</th>
+                            <th>Expiry Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            sc.docs.forEach(doc => {
+                const statusClass = `doc-status ${doc.status}`;
+                const statusText = doc.status === 'valid' ? '✅ Valid' : doc.status === 'expiring' ? '⚠️ Expiring' : '❌ Expired';
+                content += `
+                    <tr>
+                        <td class="doc-name">${safe(doc.name)}</td>
+                        <td>${formatDate(doc.date)}</td>
+                        <td>${formatDate(doc.expiry)}</td>
+                        <td><span class="${statusClass}">${statusText}</span></td>
+                    </tr>
+                `;
+            });
+
+            content += '</tbody></table>';
+            document.getElementById('complianceContent').innerHTML = content;
+            document.getElementById('complianceModal').classList.add('show');
+        }
+
+        function updateBillingSummary() {
+            const pending = allInvoices.filter(i => i.status === 'pending');
+            const totalOwed = pending.reduce((sum, i) => sum + i.amount, 0);
+
+            document.getElementById('totalOwed').textContent = '$' + totalOwed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById('pendingInvoices').textContent = pending.length;
+            document.getElementById('activeCount').textContent = allSubcontractors.filter(s => s.active).length;
+        }
+
+        function renderBillingTab() {
+            const tbody = document.getElementById('billingTable');
+            tbody.innerHTML = allInvoices.map(inv => {
+                const statusColor = inv.status === 'pending' ? '#fbbf24' : '#60a5fa';
+                const statusText = inv.status === 'pending' ? 'Pending' : 'Paid';
+                return `
+                    <tr>
+                        <td>${safe(inv.subcontractor)}</td>
+                        <td>${inv.id}</td>
+                        <td>$${inv.amount.toFixed(2)}</td>
+                        <td><span style="color: ${statusColor}; font-weight: 600;">${statusText}</span></td>
+                        <td>${formatDate(inv.date)}</td>
+                        <td>${inv.status === 'pending' ? '<button class="btn btn-small btn-primary" onclick="payInvoice(\''+inv.id+'\')">Pay</button>' : '<span style="color: #888;">Completed</span>'}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function openAddModal() {
+            clearForm();
+            document.getElementById('subcontractorModal').classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('subcontractorModal').classList.remove('show');
+        }
+
+        function closeComplianceModal() {
+            document.getElementById('complianceModal').classList.remove('show');
+        }
+
+        function clearForm() {
+            document.getElementById('companyName').value = '';
+            document.getElementById('contactName').value = '';
+            document.getElementById('contactEmail').value = '';
+            document.getElementById('contactPhone').value = '';
+            document.getElementById('serviceAreas').value = '';
+            document.getElementById('ratePerGallon').value = '';
+            document.getElementById('paymentTerms').value = 'net-30';
+            document.querySelectorAll('[id^="perm"]').forEach(c => c.checked = false);
+        }
+
+        function saveSubcontractor() {
+            const company = document.getElementById('companyName').value.trim();
+            if (!company) {
+                alert('Please enter a company name');
+                return;
+            }
+
+            const newSC = {
+                id: 'sc' + Date.now(),
+                company: company,
+                contact: document.getElementById('contactName').value || 'N/A',
+                email: document.getElementById('contactEmail').value || '',
+                phone: document.getElementById('contactPhone').value || '',
+                areas: document.getElementById('serviceAreas').value || 'TBD',
+                jobs: 0,
+                compliance: 'current',
+                rate: parseFloat(document.getElementById('ratePerGallon').value) || 0,
+                active: true,
+                docs: []
+            };
+
+            allSubcontractors.push(newSC);
+            renderSubcontractors();
+            updateBillingSummary();
+            closeModal();
+        }
+
+        function editSubcontractor(id) {
+            const sc = allSubcontractors.find(s => s.id === id);
+            if (!sc) return;
+
+            document.getElementById('companyName').value = sc.company;
+            document.getElementById('contactName').value = sc.contact;
+            document.getElementById('contactEmail').value = sc.email;
+            document.getElementById('contactPhone').value = sc.phone;
+            document.getElementById('serviceAreas').value = sc.areas;
+            document.getElementById('ratePerGallon').value = sc.rate;
+            document.getElementById('subcontractorModal').classList.add('show');
+        }
+
+        function toggleActive(id) {
+            const sc = allSubcontractors.find(s => s.id === id);
+            if (sc) {
+                sc.active = !sc.active;
+                renderSubcontractors();
+            }
+        }
+
+        function payInvoice(id) {
+            const inv = allInvoices.find(i => i.id === id);
+            if (inv && confirm('Pay $' + inv.amount.toFixed(2) + ' to ' + inv.subcontractor + '?')) {
+                inv.status = 'paid';
+                renderBillingTab();
+                updateBillingSummary();
+            }
+        }
+
+        function formatDate(date) {
+            return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        function safe(v) {
+            return (v || '').toString().replace(/[<>]/g, '');
+        }
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') {
+                closeModal();
+                closeComplianceModal();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recurring Jobs | FleetConnect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #1a1a1a; color: #f5f0e8; min-height: 100vh; transition: background 0.3s, color 0.3s; }
+
+        /* Light Mode */
+        body.dark { background: #f5f0e8; color: #1a1a1a; }
+        body.dark .sidebar { background: #ffffff; border-color: #e8e4dc; }
+        body.dark .sidebar-logo { color: #60a5fa; }
+        body.dark .nav-item { color: #5c5c5c; }
+        body.dark .nav-item:hover { background: #f0ebe3; color: #1a1a1a; }
+        body.dark .nav-item.active { background: #dbeafe; color: #3b82f6; }
+        body.dark .nav-section-title { color: #8c8c8c; }
+        body.dark .user-menu { background: #f0ebe3; }
+        body.dark .user-name { color: #1a1a1a; }
+        body.dark .header { background: #ffffff; border-color: #e8e4dc; }
+        body.dark .header h1 { color: #1a1a1a; }
+        body.dark .header-subtitle { color: #5c5c5c; }
+        body.dark .quick-action-btn.primary { background: #60a5fa; color: #fff; border-color: #60a5fa; }
+        body.dark .quick-action-btn.primary:hover { background: #3b82f6; }
+        body.dark .schedule-card { background: #ffffff; border-color: #e8e4dc; }
+        body.dark .schedule-title { color: #1a1a1a; }
+        body.dark .schedule-detail-label { color: #8c8c8c; }
+        body.dark .schedule-detail-value { color: #1a1a1a; }
+        body.dark .btn-primary { background: #60a5fa; color: #fff; border: none; }
+        body.dark .btn-primary:hover { background: #3b82f6; }
+        body.dark .btn-secondary { background: #ffffff; border-color: #e8e4dc; color: #5c5c5c; }
+        body.dark .btn-secondary:hover { background: #f0ebe3; }
+        body.dark .modal { background: #ffffff; }
+        body.dark .modal-header { border-color: #e8e4dc; }
+        body.dark .modal-header h3 { color: #1a1a1a; }
+        body.dark .modal-close { background: #f0ebe3; color: #5c5c5c; }
+        body.dark .modal-footer { background: #f0ebe3; border-color: #e8e4dc; }
+        body.dark .modal-body { color: #1a1a1a; }
+        body.dark .form-group input, body.dark .form-group select, body.dark .form-group textarea { background-color: #ffffff; border-color: #e8e4dc; color: #1a1a1a; }
+        body.dark .form-group label { color: #8c8c8c; }
+        body.dark .day-selector { background-color: #ffffff; border-color: #e8e4dc; }
+        body.dark .day-btn { background: #ffffff; border-color: #e8e4dc; color: #5c5c5c; }
+        body.dark .day-btn.active { background: #60a5fa; border-color: #60a5fa; color: #fff; }
+        body.dark .calendar { background: #ffffff; border-color: #e8e4dc; }
+        body.dark .calendar-day { border-color: #e8e4dc; }
+        body.dark .calendar-day.other-month { color: #bbb; }
+        body.dark .calendar-day.has-schedule { background: rgba(96, 165, 250, 0.15); }
+        body.dark .tab-links a { color: #5c5c5c; }
+        body.dark .tab-links a.active { color: #1a1a1a; border-bottom-color: #60a5fa; }
+        body.dark .history-item { background: #f0ebe3; color: #1a1a1a; }
+
+        .layout { display: flex; min-height: 100vh; }
+
+        /* Sidebar */
+        .sidebar { width: 240px; background: #242424; border-right: 1px solid #333; padding: 24px 16px; position: fixed; left: 0; height: 100vh; z-index: 100; display: flex; flex-direction: column; }
+        .sidebar-header { display: flex; align-items: center; gap: 10px; margin-bottom: 32px; padding: 20px 20px 12px; }
+        .sidebar-logo { font-size: 1.2rem; font-weight: 700; color: #60a5fa; }
+        .nav-section { margin-bottom: 24px; }
+        .nav-section-title { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: #666; padding: 0 12px; margin-bottom: 8px; letter-spacing: 0.5px; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; color: #b8b0a8; text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: all 0.2s; cursor: pointer; }
+        .nav-item:hover { background: #333; color: #f5f0e8; }
+        .nav-item.active { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
+        .nav-item svg { width: 20px; height: 20px; }
+
+        .sidebar-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid #333; }
+        .user-menu { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 10px; background: #333; }
+        .user-avatar-lg { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #60a5fa, #3b82f6); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 600; font-size: 0.85rem; }
+        .user-info { flex: 1; }
+        .user-name { font-size: 0.85rem; font-weight: 600; color: #f5f0e8; }
+        .user-role { font-size: 0.7rem; color: #888; }
+        .logout-btn { color: #888; cursor: pointer; padding: 6px; border-radius: 6px; background: none; border: none; }
+        .logout-btn:hover { background: #444; color: #f5f0e8; }
+
+        /* Main */
+        .main { flex: 1; margin-left: 240px; min-height: 100vh; }
+        .header { background: #242424; padding: 20px 32px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50; }
+        .header-left { display: flex; align-items: center; gap: 16px; }
+        .header h1 { font-size: 1.4rem; font-weight: 700; color: #f5f0e8; }
+        .header-subtitle { font-size: 0.85rem; color: #888; }
+        .content { padding: 32px; }
+
+        /* Quick Actions */
+        .quick-actions { display: flex; gap: 12px; margin-bottom: 28px; flex-wrap: wrap; }
+        .quick-action-btn { display: flex; align-items: center; gap: 8px; padding: 12px 20px; background: #2a2a2a; border: 1px solid #444; border-radius: 10px; font-size: 0.85rem; font-weight: 500; color: #f5f0e8; cursor: pointer; transition: all 0.2s; text-decoration: none; }
+        .quick-action-btn:hover { border-color: #60a5fa; background: #333; }
+        .quick-action-btn.primary { background: #60a5fa; color: #fff; border-color: #60a5fa; }
+        .quick-action-btn.primary:hover { background: #3b82f6; }
+
+        /* Schedule Grid */
+        .schedule-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; margin-bottom: 28px; }
+        @media (max-width: 1000px) { .schedule-grid { grid-template-columns: 1fr; } }
+
+        .schedule-card { background: #242424; border-radius: 16px; padding: 24px; border: 1px solid #333; transition: all 0.2s; }
+        .schedule-card:hover { border-color: #60a5fa; }
+
+        .schedule-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px; }
+        .schedule-title { font-size: 1.1rem; font-weight: 700; color: #f5f0e8; margin-bottom: 4px; }
+        .schedule-subtitle { font-size: 0.85rem; color: #888; }
+        .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
+        .status-badge.active { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+        .status-badge.paused { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
+        .status-badge.completed { background: rgba(148, 163, 184, 0.15); color: #94a3b8; }
+
+        .schedule-details { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px; }
+        .schedule-detail { background: #2a2a2a; padding: 12px; border-radius: 8px; }
+        .schedule-detail-label { font-size: 0.7rem; color: #888; text-transform: uppercase; }
+        .schedule-detail-value { font-size: 0.95rem; font-weight: 600; color: #f5f0e8; margin-top: 4px; }
+
+        .schedule-actions { display: flex; gap: 8px; }
+        .btn { padding: 8px 14px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; border: none; }
+        .btn-primary { background: #60a5fa; color: #fff; }
+        .btn-primary:hover { background: #3b82f6; }
+        .btn-secondary { background: #333; color: #f5f0e8; border: 1px solid #444; }
+        .btn-secondary:hover { background: #444; }
+        .btn-danger { background: transparent; color: #f87171; border: 1px solid #444; }
+        .btn-danger:hover { background: rgba(248, 113, 113, 0.1); border-color: #f87171; }
+
+        /* Modal */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 200; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
+        .modal-overlay.show { display: flex; }
+        .modal { background: #242424; border-radius: 16px; width: 100%; max-width: 600px; overflow: hidden; border: 1px solid #333; margin: auto; }
+        .modal-header { padding: 20px 24px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { font-size: 1rem; font-weight: 600; color: #f5f0e8; }
+        .modal-close { width: 28px; height: 28px; border-radius: 6px; border: none; background: #333; color: #888; cursor: pointer; }
+        .modal-close:hover { background: #444; color: #f5f0e8; }
+        .modal-body { padding: 20px 24px; max-height: 65vh; overflow-y: auto; }
+        .modal-footer { padding: 16px 24px; border-top: 1px solid #333; display: flex; justify-content: flex-end; gap: 12px; background: #2a2a2a; }
+
+        /* Form */
+        .form-section { margin-bottom: 20px; }
+        .section-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #60a5fa; margin-bottom: 12px; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 0.8rem; font-weight: 500; color: #888; margin-bottom: 6px; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px 12px; font-family: inherit; font-size: 0.85rem; background: #2a2a2a; border: 1px solid #444; border-radius: 8px; color: #f5f0e8; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #60a5fa; }
+        .form-group textarea { min-height: 60px; resize: vertical; }
+
+        /* Day Selector */
+        .day-selector { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 16px; }
+        .day-btn { padding: 8px; background: #2a2a2a; border: 1px solid #444; border-radius: 6px; color: #888; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .day-btn:hover { border-color: #60a5fa; }
+        .day-btn.active { background: #60a5fa; border-color: #60a5fa; color: #fff; }
+
+        /* Calendar */
+        .calendar { background: #2a2a2a; border: 1px solid #444; border-radius: 10px; padding: 12px; margin-top: 12px; }
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-weight: 600; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+        .calendar-day { text-align: center; padding: 8px; font-size: 0.8rem; border: 1px solid #444; border-radius: 6px; color: #888; }
+        .calendar-day.other-month { color: #555; }
+        .calendar-day.has-schedule { background: rgba(96, 165, 250, 0.15); border-color: #60a5fa; color: #60a5fa; font-weight: 600; }
+
+        /* Tabs */
+        .tab-links { display: flex; gap: 24px; border-bottom: 1px solid #333; margin-bottom: 20px; }
+        .tab-links a { padding: 12px 0; color: #888; text-decoration: none; font-weight: 500; border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.2s; }
+        .tab-links a:hover { color: #f5f0e8; }
+        .tab-links a.active { color: #60a5fa; border-bottom-color: #60a5fa; }
+
+        .tab-content { display: none; }
+        .tab-content.show { display: block; }
+
+        /* History */
+        .history-item { background: #2a2a2a; padding: 12px; border-radius: 8px; margin-bottom: 8px; font-size: 0.85rem; }
+        .history-date { color: #888; }
+        .history-link { color: #60a5fa; text-decoration: none; cursor: pointer; }
+        .history-link:hover { text-decoration: underline; }
+
+        /* Empty State */
+        .empty-state { text-align: center; padding: 50px; color: #888; }
+
+        /* Mobile */
+        .mobile-toggle { display: none; width: 40px; height: 40px; border: 1px solid #444; border-radius: 8px; background: #2a2a2a; color: #f5f0e8; align-items: center; justify-content: center; cursor: pointer; }
+        @media (max-width: 900px) {
+            .sidebar { display: none; }
+            .sidebar.open { display: flex; position: fixed; z-index: 100; }
+            .main { margin-left: 0; }
+            .mobile-toggle { display: flex; }
+            .schedule-grid { grid-template-columns: 1fr; }
+            .schedule-details { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="layout">
+
+        <aside class="sidebar">
+            <div class="sidebar-header"><span class="sidebar-logo">FleetConnect</span></div>
+            <nav>
+                <div class="nav-section">
+                    <div class="nav-section-title">Main Menu</div>
+                    <a class="nav-item" href="rental-dashboard.html">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                        Dashboard
+                    </a>
+                    <a class="nav-item" href="create-job.html">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        Create Work Order
+                    </a>
+                    <a class="nav-item active" href="recurring-jobs.html">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        Recurring Jobs
+                    </a>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-menu">
+                    <div class="user-avatar-lg" id="userAvatar">R</div>
+                    <div class="user-info"><div class="user-name" id="userName">Rental Co.</div><div class="user-role">Rental Account</div></div>
+                    <button class="logout-btn" onclick="logout()"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg></button>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main">
+            <header class="header">
+                <div class="header-left">
+                    <button class="mobile-toggle" onclick="toggleMobileSidebar()"><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+                    <div>
+                        <h1>Recurring Jobs</h1>
+                        <p class="header-subtitle">Schedule automated fuel deliveries</p>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content">
+                <!-- Quick Actions -->
+                <div class="quick-actions">
+                    <button class="quick-action-btn primary" onclick="openCreateModal()">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        Create Recurring Schedule
+                    </button>
+                </div>
+
+                <!-- Schedule Grid -->
+                <div class="schedule-grid" id="scheduleGrid"></div>
+
+                <!-- Tabs for History and Calendar -->
+                <div style="margin-top: 40px;">
+                    <div class="tab-links">
+                        <a class="active" onclick="switchTab('calendar')">📅 Upcoming Calendar</a>
+                        <a onclick="switchTab('history')">📋 Job History</a>
+                    </div>
+
+                    <!-- Calendar Tab -->
+                    <div id="calendar-tab" class="tab-content show">
+                        <div class="calendar" id="calendarPreview"></div>
+                    </div>
+
+                    <!-- History Tab -->
+                    <div id="history-tab" class="tab-content">
+                        <div id="historyList"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Create/Edit Modal -->
+    <div class="modal-overlay" id="scheduleModal">
+        <div class="modal">
+            <div class="modal-header"><h3 id="modalTitle">Create Recurring Schedule</h3><button class="modal-close" onclick="closeModal()">×</button></div>
+            <div class="modal-body">
+                <!-- Job Template -->
+                <div class="form-section">
+                    <div class="section-label">Job Template</div>
+                    <div class="form-group">
+                        <label>Customer Name <span style="color:#f87171;">*</span></label>
+                        <input type="text" id="custName" placeholder="Customer name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Site Name <span style="color:#f87171;">*</span></label>
+                        <input type="text" id="siteName" placeholder="Site/location name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Site Address</label>
+                        <input type="text" id="siteAddress" placeholder="Street address">
+                    </div>
+                    <div class="form-group">
+                        <label>Equipment / Units <span style="color:#f87171;">*</span></label>
+                        <input type="text" id="equipment" placeholder="e.g., Generator #12, Compressor #5" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Fuel Type</label>
+                        <select id="fuelType">
+                            <option value="diesel">Diesel</option>
+                            <option value="gasoline">Gasoline</option>
+                            <option value="def">DEF</option>
+                            <option value="mixed">Mixed</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Est. Gallons per Delivery <span style="color:#f87171;">*</span></label>
+                        <input type="number" id="estGallons" placeholder="100" required>
+                    </div>
+                </div>
+
+                <!-- Frequency -->
+                <div class="form-section">
+                    <div class="section-label">Schedule</div>
+                    <div class="form-group">
+                        <label>Frequency <span style="color:#f87171;">*</span></label>
+                        <select id="frequency" onchange="updateDaySelector()">
+                            <option value="daily">Daily</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="biweekly">Bi-Weekly</option>
+                            <option value="monthly">Monthly</option>
+                        </select>
+                    </div>
+
+                    <!-- Day Selector (for Weekly) -->
+                    <div id="daySelector" style="display:none;">
+                        <label style="font-size: 0.8rem; font-weight: 500; color: #888; margin-bottom: 6px; display: block;">Days of Week</label>
+                        <div class="day-selector">
+                            <button type="button" class="day-btn" data-day="mon" onclick="toggleDay(this)">M</button>
+                            <button type="button" class="day-btn" data-day="tue" onclick="toggleDay(this)">T</button>
+                            <button type="button" class="day-btn" data-day="wed" onclick="toggleDay(this)">W</button>
+                            <button type="button" class="day-btn" data-day="thu" onclick="toggleDay(this)">T</button>
+                            <button type="button" class="day-btn" data-day="fri" onclick="toggleDay(this)">F</button>
+                            <button type="button" class="day-btn" data-day="sat" onclick="toggleDay(this)">S</button>
+                            <button type="button" class="day-btn" data-day="sun" onclick="toggleDay(this)">S</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 12px;">
+                        <label>Start Date <span style="color:#f87171;">*</span></label>
+                        <input type="date" id="startDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>End Date (optional)</label>
+                        <input type="date" id="endDate" placeholder="Leave blank for indefinite">
+                    </div>
+                </div>
+
+                <!-- Time Window -->
+                <div class="form-section">
+                    <div class="section-label">Time Window</div>
+                    <div class="form-group">
+                        <label>Preferred Delivery Time From</label>
+                        <input type="time" id="timeFrom" value="06:00">
+                    </div>
+                    <div class="form-group">
+                        <label>Preferred Delivery Time To</label>
+                        <input type="time" id="timeTo" value="18:00">
+                    </div>
+                </div>
+
+                <!-- Vendor -->
+                <div class="form-section">
+                    <div class="section-label">Vendor Assignment</div>
+                    <div class="form-group">
+                        <label>Assign Vendor <span style="color:#f87171;">*</span></label>
+                        <select id="assignedVendor">
+                            <option value="">Auto-assign best available</option>
+                            <option value="v1">FastFuel Inc</option>
+                            <option value="v2">QuickTank Services</option>
+                            <option value="v3">Reliable Delivery Co</option>
+                            <option value="v4">Regional Fuels LLC</option>
+                            <option value="v5">Premium Fuel Partners</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Notes</label>
+                        <textarea id="scheduleNotes" placeholder="Special instructions, gate codes, etc."></textarea>
+                    </div>
+                </div>
+
+                <!-- Cost Estimate -->
+                <div class="form-section" id="costSection" style="background: #2a2a2a; padding: 12px; border-radius: 8px;">
+                    <div style="font-size: 0.8rem; color: #888; margin-bottom: 8px;">Est. Cost Per Delivery</div>
+                    <div style="font-size: 1.2rem; font-weight: 700; color: #60a5fa;" id="costEstimate">$0.00</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveSchedule()">Save Schedule</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="supabase-client.js"></script>
+    <script src="feature-flags.js"></script>
+    <script>
+        const currentUser = checkAuth(['rental']);
+        if (currentUser) {
+            document.getElementById('userName').textContent = currentUser.name;
+            document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+        }
+
+        FC_FLAGS.init('rental');
+
+        let schedules = [];
+        let selectedDays = [];
+        let editingScheduleId = null;
+
+        // Mock data
+        const mockSchedules = [
+            { id: 's1', customer: 'Acme Construction', site: 'Downtown Site', equipment: 'Generator #12', frequency: 'weekly', daysOfWeek: ['mon', 'wed', 'fri'], timeFrom: '06:00', timeTo: '10:00', vendor: 'FastFuel Inc', nextDelivery: '2026-02-10', status: 'active', estGallons: 100, estCostPerDelivery: 350 },
+            { id: 's2', customer: 'BuildCo LLC', site: 'Airport Project', equipment: 'Compressor #5', frequency: 'daily', daysOfWeek: [], timeFrom: '08:00', timeTo: '16:00', vendor: 'Auto-assign', nextDelivery: '2026-02-09', status: 'active', estGallons: 75, estCostPerDelivery: 262.50 },
+            { id: 's3', customer: 'EventCorp', site: 'Temporary Office', equipment: 'Pump #3', frequency: 'weekly', daysOfWeek: ['tue', 'thu'], timeFrom: '07:00', timeTo: '09:00', vendor: 'QuickTank Services', nextDelivery: '2026-02-11', status: 'paused', estGallons: 50, estCostPerDelivery: 175 }
+        ];
+
+        function renderSchedules() {
+            const grid = document.getElementById('scheduleGrid');
+            if (schedules.length === 0) {
+                grid.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;">No recurring schedules yet. Create one to get started!</div>';
+                return;
+            }
+
+            grid.innerHTML = schedules.map(s => {
+                const upcomingDate = new Date(s.nextDelivery).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                return `
+                    <div class="schedule-card">
+                        <div class="schedule-header">
+                            <div>
+                                <div class="schedule-title">${safe(s.customer)}</div>
+                                <div class="schedule-subtitle">${safe(s.site)}</div>
+                            </div>
+                            <span class="status-badge ${s.status === 'active' ? 'active' : s.status === 'paused' ? 'paused' : 'completed'}">${s.status.toUpperCase()}</span>
+                        </div>
+                        <div class="schedule-details">
+                            <div class="schedule-detail">
+                                <div class="schedule-detail-label">Frequency</div>
+                                <div class="schedule-detail-value">${s.frequency.charAt(0).toUpperCase() + s.frequency.slice(1)}</div>
+                            </div>
+                            <div class="schedule-detail">
+                                <div class="schedule-detail-label">Next Delivery</div>
+                                <div class="schedule-detail-value">${upcomingDate}</div>
+                            </div>
+                            <div class="schedule-detail">
+                                <div class="schedule-detail-label">Est. Gallons</div>
+                                <div class="schedule-detail-value">${s.estGallons} gal</div>
+                            </div>
+                            <div class="schedule-detail">
+                                <div class="schedule-detail-label">Time Window</div>
+                                <div class="schedule-detail-value">${s.timeFrom} - ${s.timeTo}</div>
+                            </div>
+                            <div class="schedule-detail">
+                                <div class="schedule-detail-label">Vendor</div>
+                                <div class="schedule-detail-value">${safe(s.vendor)}</div>
+                            </div>
+                            <div class="schedule-detail">
+                                <div class="schedule-detail-label">Est. Cost/Delivery</div>
+                                <div class="schedule-detail-value" style="color:#60a5fa;">$${s.estCostPerDelivery.toFixed(2)}</div>
+                            </div>
+                        </div>
+                        <div class="schedule-actions">
+                            ${s.status === 'active' ? `<button class="btn btn-secondary" onclick="pauseSchedule('${s.id}')">Pause</button>` : `<button class="btn btn-secondary" onclick="resumeSchedule('${s.id}')">Resume</button>`}
+                            <button class="btn btn-secondary" onclick="editSchedule('${s.id}')">Edit</button>
+                            <button class="btn btn-danger" onclick="deleteSchedule('${s.id}')">Delete</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function openCreateModal() {
+            editingScheduleId = null;
+            document.getElementById('modalTitle').textContent = 'Create Recurring Schedule';
+            document.getElementById('custName').value = '';
+            document.getElementById('siteName').value = '';
+            document.getElementById('siteAddress').value = '';
+            document.getElementById('equipment').value = '';
+            document.getElementById('fuelType').value = 'diesel';
+            document.getElementById('estGallons').value = '100';
+            document.getElementById('frequency').value = 'weekly';
+            document.getElementById('startDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('endDate').value = '';
+            document.getElementById('timeFrom').value = '06:00';
+            document.getElementById('timeTo').value = '18:00';
+            document.getElementById('assignedVendor').value = '';
+            document.getElementById('scheduleNotes').value = '';
+            selectedDays = [];
+            updateDaySelector();
+            updateCostEstimate();
+            document.getElementById('scheduleModal').classList.add('show');
+        }
+
+        function editSchedule(scheduleId) {
+            const schedule = schedules.find(s => s.id === scheduleId);
+            if (!schedule) return;
+
+            editingScheduleId = scheduleId;
+            document.getElementById('modalTitle').textContent = 'Edit Recurring Schedule';
+            document.getElementById('custName').value = schedule.customer;
+            document.getElementById('siteName').value = schedule.site;
+            document.getElementById('equipment').value = schedule.equipment;
+            document.getElementById('estGallons').value = schedule.estGallons;
+            document.getElementById('frequency').value = schedule.frequency;
+            document.getElementById('timeFrom').value = schedule.timeFrom;
+            document.getElementById('timeTo').value = schedule.timeTo;
+            document.getElementById('assignedVendor').value = schedule.vendor.includes('Auto') ? '' : schedule.vendor;
+            selectedDays = schedule.daysOfWeek || [];
+            updateDaySelector();
+            updateCostEstimate();
+            document.getElementById('scheduleModal').classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('scheduleModal').classList.remove('show');
+        }
+
+        function updateDaySelector() {
+            const freq = document.getElementById('frequency').value;
+            const selector = document.getElementById('daySelector');
+            selector.style.display = freq === 'weekly' ? 'block' : 'none';
+            if (freq !== 'weekly') selectedDays = [];
+            updateCostEstimate();
+        }
+
+        function toggleDay(btn) {
+            const day = btn.dataset.day;
+            if (selectedDays.includes(day)) {
+                selectedDays = selectedDays.filter(d => d !== day);
+                btn.classList.remove('active');
+            } else {
+                selectedDays.push(day);
+                btn.classList.add('active');
+            }
+        }
+
+        function updateCostEstimate() {
+            const gallons = parseFloat(document.getElementById('estGallons').value) || 0;
+            const pricePerGal = 3.50; // Mock average price
+            const estimate = (gallons * pricePerGal).toFixed(2);
+            document.getElementById('costEstimate').textContent = '$' + estimate;
+        }
+
+        function saveSchedule() {
+            const custName = document.getElementById('custName').value.trim();
+            const siteName = document.getElementById('siteName').value.trim();
+            const equipment = document.getElementById('equipment').value.trim();
+            const estGallons = parseFloat(document.getElementById('estGallons').value);
+
+            if (!custName || !siteName || !equipment || !estGallons) {
+                alert('Please fill in all required fields');
+                return;
+            }
+
+            const schedule = {
+                id: editingScheduleId || 's' + Date.now(),
+                customer: custName,
+                site: siteName,
+                equipment: equipment,
+                frequency: document.getElementById('frequency').value,
+                daysOfWeek: selectedDays,
+                timeFrom: document.getElementById('timeFrom').value,
+                timeTo: document.getElementById('timeTo').value,
+                vendor: document.getElementById('assignedVendor').value || 'Auto-assign',
+                nextDelivery: document.getElementById('startDate').value,
+                status: 'active',
+                estGallons: estGallons,
+                estCostPerDelivery: (estGallons * 3.50).toFixed(2)
+            };
+
+            if (editingScheduleId) {
+                const idx = schedules.findIndex(s => s.id === editingScheduleId);
+                schedules[idx] = schedule;
+            } else {
+                schedules.push(schedule);
+            }
+
+            renderSchedules();
+            renderCalendar();
+            closeModal();
+            alert('Schedule saved successfully!');
+        }
+
+        function pauseSchedule(scheduleId) {
+            const schedule = schedules.find(s => s.id === scheduleId);
+            if (schedule) {
+                schedule.status = 'paused';
+                renderSchedules();
+            }
+        }
+
+        function resumeSchedule(scheduleId) {
+            const schedule = schedules.find(s => s.id === scheduleId);
+            if (schedule) {
+                schedule.status = 'active';
+                renderSchedules();
+            }
+        }
+
+        function deleteSchedule(scheduleId) {
+            if (!confirm('Delete this recurring schedule?')) return;
+            schedules = schedules.filter(s => s.id !== scheduleId);
+            renderSchedules();
+            renderCalendar();
+        }
+
+        function renderCalendar() {
+            const cal = document.getElementById('calendarPreview');
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth();
+
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startDate = new Date(firstDay);
+            startDate.setDate(startDate.getDate() - firstDay.getDay());
+
+            let html = `<div class="calendar-header"><strong>${firstDay.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</strong></div>`;
+            html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:12px;">';
+            ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].forEach(day => {
+                html += `<div style="text-align:center;font-weight:600;font-size:0.75rem;color:#888;padding:6px;">${day}</div>`;
+            });
+            html += '</div><div class="calendar-grid">';
+
+            for (let i = 0; i < 42; i++) {
+                const date = new Date(startDate);
+                date.setDate(date.getDate() + i);
+
+                const isOtherMonth = date.getMonth() !== month;
+                const dateStr = date.toISOString().split('T')[0];
+                const hasSchedule = schedules.some(s => s.nextDelivery === dateStr);
+                const dayName = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][date.getDay()];
+                const isScheduledDay = schedules.some(s => s.daysOfWeek.includes(dayName) && !isOtherMonth);
+
+                html += `<div class="calendar-day ${isOtherMonth ? 'other-month' : ''} ${hasSchedule || isScheduledDay ? 'has-schedule' : ''}">${date.getDate()}</div>`;
+            }
+            html += '</div>';
+            cal.innerHTML = html;
+        }
+
+        function renderHistory() {
+            const list = document.getElementById('historyList');
+            const mockHistory = [
+                { date: '2026-02-08', site: 'Downtown Site', gallons: 100, vendor: 'FastFuel Inc', status: 'completed' },
+                { date: '2026-02-06', site: 'Downtown Site', gallons: 100, vendor: 'FastFuel Inc', status: 'completed' },
+                { date: '2026-02-03', site: 'Downtown Site', gallons: 100, vendor: 'FastFuel Inc', status: 'completed' },
+                { date: '2026-02-05', site: 'Airport Project', gallons: 75, vendor: 'Auto-assigned', status: 'completed' },
+                { date: '2026-02-04', site: 'Airport Project', gallons: 75, vendor: 'QuickTank', status: 'completed' }
+            ];
+
+            if (mockHistory.length === 0) {
+                list.innerHTML = '<div class="empty-state">No deliveries yet</div>';
+                return;
+            }
+
+            list.innerHTML = mockHistory.map(h => `
+                <div class="history-item">
+                    <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                        <strong>${safe(h.site)}</strong>
+                        <span style="color:#60a5fa;font-weight:600;">${h.gallons} gal</span>
+                    </div>
+                    <div style="font-size:0.8rem;color:#888;">
+                        <span>${h.date}</span> · <span>${safe(h.vendor)}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('show'));
+            document.querySelectorAll('.tab-links a').forEach(a => a.classList.remove('active'));
+            if (tab === 'calendar') {
+                document.getElementById('calendar-tab').classList.add('show');
+                document.querySelectorAll('.tab-links a')[0].classList.add('active');
+            } else {
+                document.getElementById('history-tab').classList.add('show');
+                document.querySelectorAll('.tab-links a')[1].classList.add('active');
+            }
+        }
+
+        function toggleMobileSidebar() {
+            document.querySelector('.sidebar').classList.toggle('open');
+        }
+
+        // Initialize
+        schedules = JSON.parse(JSON.stringify(mockSchedules));
+        document.getElementById('startDate').value = new Date().toISOString().split('T')[0];
+        renderSchedules();
+        renderCalendar();
+        renderHistory();
+    </script>
+</body>
+</html>

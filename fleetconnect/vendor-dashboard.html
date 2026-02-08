@@ -343,6 +343,11 @@
                                     <div class="card-title">Fuel Delivered</div>
                                     <div class="card-legend"><span><span class="legend-dot orange"></span>Diesel</span><span><span class="legend-dot green"></span>DEF</span></div>
                                 </div>
+                                <div style="display: flex; gap: 8px; margin-bottom: 16px; padding: 0 16px;">
+                                    <button id="fuelToggleWeek" class="quick-action-btn" style="flex: 1; padding: 8px 12px; font-size: 0.8rem;" onclick="updateFuelChart('week')">This Week</button>
+                                    <button id="fuelToggleMonth" class="quick-action-btn" style="flex: 1; padding: 8px 12px; font-size: 0.8rem;" onclick="updateFuelChart('month')">This Month</button>
+                                    <button id="fuelToggle30Days" class="quick-action-btn" style="flex: 1; padding: 8px 12px; font-size: 0.8rem;" onclick="updateFuelChart('30days')">Last 30 Days</button>
+                                </div>
                                 <div class="chart-container" id="fuelChart"></div>
                             </div>
                             <div class="card" id="donutChartCard">
@@ -491,30 +496,55 @@
             badge.style.display = pendingCount > 0 ? 'inline' : 'none';
         }
         
+        let fuelChartRange = 'week';
+
+        async function updateFuelChart(range) {
+            fuelChartRange = range;
+            document.getElementById('fuelToggleWeek').style.background = range === 'week' ? '#60a5fa' : '#2a2a2a';
+            document.getElementById('fuelToggleWeek').style.color = range === 'week' ? '#1a1a1a' : '#f5f0e8';
+            document.getElementById('fuelToggleMonth').style.background = range === 'month' ? '#60a5fa' : '#2a2a2a';
+            document.getElementById('fuelToggleMonth').style.color = range === 'month' ? '#1a1a1a' : '#f5f0e8';
+            document.getElementById('fuelToggle30Days').style.background = range === '30days' ? '#60a5fa' : '#2a2a2a';
+            document.getElementById('fuelToggle30Days').style.color = range === '30days' ? '#1a1a1a' : '#f5f0e8';
+            renderChart();
+        }
+
         function renderChart() {
             const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-            // Filter to current week only for accurate daily breakdown
             const now = new Date();
-            const dayOfWeek = (now.getDay() + 6) % 7; // Mon=0
-            const weekStart = new Date(now);
-            weekStart.setDate(now.getDate() - dayOfWeek);
-            weekStart.setHours(0,0,0,0);
-            const weekInvoices = allInvoices.filter(inv => inv.created_at && new Date(inv.created_at) >= weekStart);
+            let startDate = new Date(now);
+
+            if (fuelChartRange === 'week') {
+                const dayOfWeek = (now.getDay() + 6) % 7;
+                startDate.setDate(now.getDate() - dayOfWeek);
+            } else if (fuelChartRange === 'month') {
+                startDate.setDate(1);
+            } else if (fuelChartRange === '30days') {
+                startDate.setDate(now.getDate() - 30);
+            }
+
+            startDate.setHours(0,0,0,0);
+
+            const invoices = allInvoices.filter(inv => inv.created_at && new Date(inv.created_at) >= startDate);
             const diesel = [0,0,0,0,0,0,0], def = [0,0,0,0,0,0,0];
-            weekInvoices.forEach(inv => {
+
+            invoices.forEach(inv => {
                 if (inv.created_at) {
-                    const dayIdx = (new Date(inv.created_at).getDay() + 6) % 7; // Mon=0
+                    const dayIdx = (new Date(inv.created_at).getDay() + 6) % 7;
                     diesel[dayIdx] += parseFloat(inv.total_diesel) || 0;
                     def[dayIdx] += parseFloat(inv.total_def) || 0;
                 }
             });
+
             const max = Math.max(...diesel, ...def, 1);
             const hasData = diesel.some(v => v > 0) || def.some(v => v > 0);
+
             if (!hasData) {
                 document.getElementById('fuelChart').innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;width:100%;color:#666;font-size:0.85rem;">No delivery data yet</div>';
                 return;
             }
-            document.getElementById('fuelChart').innerHTML = days.map((d,i) => 
+
+            document.getElementById('fuelChart').innerHTML = days.map((d,i) =>
                 '<div class="chart-bar-group"><div class="chart-bars"><div class="chart-bar orange" style="height:'+((diesel[i]/max)*130)+'px"></div><div class="chart-bar green" style="height:'+((def[i]/max)*130)+'px"></div></div><span class="chart-label">'+d+'</span></div>'
             ).join('');
         }

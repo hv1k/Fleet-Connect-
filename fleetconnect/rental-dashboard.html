@@ -401,6 +401,11 @@
                                     <div class="card-title">Orders This Week</div>
                                     <div class="card-legend"><span><span class="legend-dot orange"></span>Created</span><span><span class="legend-dot blue"></span>Completed</span></div>
                                 </div>
+                                <div style="display: flex; gap: 8px; margin-bottom: 16px; padding: 0 16px;">
+                                    <button id="ordersToggleWeek" class="quick-action-btn" style="flex: 1; padding: 8px 12px; font-size: 0.8rem;" onclick="updateOrdersChart('week')">This Week</button>
+                                    <button id="ordersToggleMonth" class="quick-action-btn" style="flex: 1; padding: 8px 12px; font-size: 0.8rem;" onclick="updateOrdersChart('month')">This Month</button>
+                                    <button id="ordersToggle30Days" class="quick-action-btn" style="flex: 1; padding: 8px 12px; font-size: 0.8rem;" onclick="updateOrdersChart('30days')">Last 30 Days</button>
+                                </div>
                                 <div class="chart-container" id="ordersChart"></div>
                             </div>
                             <div class="card">
@@ -541,27 +546,49 @@
             document.getElementById('totalBadge').textContent = activeOnlyCount;
         }
         
+        let ordersChartRange = 'week';
+
+        function updateOrdersChart(range) {
+            ordersChartRange = range;
+            document.getElementById('ordersToggleWeek').style.background = range === 'week' ? '#60a5fa' : '#2a2a2a';
+            document.getElementById('ordersToggleWeek').style.color = range === 'week' ? '#fff' : '#f5f0e8';
+            document.getElementById('ordersToggleMonth').style.background = range === 'month' ? '#60a5fa' : '#2a2a2a';
+            document.getElementById('ordersToggleMonth').style.color = range === 'month' ? '#fff' : '#f5f0e8';
+            document.getElementById('ordersToggle30Days').style.background = range === '30days' ? '#60a5fa' : '#2a2a2a';
+            document.getElementById('ordersToggle30Days').style.color = range === '30days' ? '#fff' : '#f5f0e8';
+            renderChart();
+        }
+
         function renderChart() {
             const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
             const now = new Date();
-            const dayOfWeek = now.getDay();
-            
-            // Count jobs created and completed per day this week
+            let startDate = new Date(now);
+
+            if (ordersChartRange === 'week') {
+                const dayOfWeek = (now.getDay() + 6) % 7;
+                startDate.setDate(now.getDate() - dayOfWeek);
+            } else if (ordersChartRange === 'month') {
+                startDate.setDate(1);
+            } else if (ordersChartRange === '30days') {
+                startDate.setDate(now.getDate() - 30);
+            }
+
+            startDate.setHours(0,0,0,0);
+
             const created = [0,0,0,0,0,0,0];
             const done = [0,0,0,0,0,0,0];
-            
+
             allJobs.forEach(j => {
                 const d = new Date(j.created_at);
-                const diff = Math.floor((now - d) / 86400000);
-                if (diff < 7) {
-                    const idx = (d.getDay() + 6) % 7; // Mon=0
+                if (d >= startDate) {
+                    const idx = (d.getDay() + 6) % 7;
                     created[idx]++;
                     if (j.status === 'completed') done[idx]++;
                 }
             });
-            
+
             const max = Math.max(...created, ...done, 1);
-            document.getElementById('ordersChart').innerHTML = days.map((d, i) => 
+            document.getElementById('ordersChart').innerHTML = days.map((d, i) =>
                 '<div class="chart-bar-group"><div class="chart-bars"><div class="chart-bar orange" style="height:' + ((created[i]/max)*130) + 'px" title="' + created[i] + ' created"></div><div class="chart-bar blue" style="height:' + ((done[i]/max)*130) + 'px" title="' + done[i] + ' completed"></div></div><span class="chart-label">' + d + '</span></div>'
             ).join('');
         }

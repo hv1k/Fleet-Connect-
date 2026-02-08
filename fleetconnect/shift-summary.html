@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shift Summary | FleetConnect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #1a1a1a; color: #f5f0e8; min-height: 100vh; }
+
+        /* Mobile-first container */
+        .container { max-width: 700px; margin: 0 auto; padding: 20px; }
+
+        /* Header */
+        .header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #333; }
+        .header h1 { font-size: 1.6rem; font-weight: 700; }
+        .header-back { background: none; border: none; color: #60a5fa; font-size: 1.4rem; cursor: pointer; padding: 8px; }
+        .header-back:hover { color: #3b82f6; }
+
+        /* Date selector */
+        .date-selector { display: flex; align-items: center; gap: 8px; padding: 10px; background: #242424; border: 1px solid #333; border-radius: 8px; margin-bottom: 20px; }
+        .date-selector input { flex: 1; background: #1e1e1e; border: none; color: #f5f0e8; padding: 8px; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 0.9rem; }
+        .date-selector input:focus { outline: none; }
+
+        /* Stats grid - 2x2 */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        .stat-card { background: #242424; border: 1px solid #333; border-radius: 12px; padding: 16px; text-align: center; }
+        .stat-card.primary { border-color: #60a5fa; }
+        .stat-icon { font-size: 2rem; margin-bottom: 8px; }
+        .stat-label { font-size: 0.7rem; color: #888; text-transform: uppercase; margin-bottom: 6px; font-weight: 600; }
+        .stat-value { font-size: 1.8rem; font-weight: 700; color: #60a5fa; }
+        .stat-subtext { font-size: 0.75rem; color: #666; margin-top: 4px; }
+
+        /* Card sections */
+        .card { background: #242424; border: 1px solid #333; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+        .card-title { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; color: #60a5fa; margin-bottom: 12px; letter-spacing: 0.5px; }
+
+        /* Job list */
+        .job-list { display: flex; flex-direction: column; gap: 10px; }
+        .job-entry { background: #1e1e1e; padding: 12px; border-radius: 8px; border-left: 3px solid #60a5fa; }
+        .job-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px; }
+        .job-number { font-weight: 600; color: #60a5fa; }
+        .job-status { font-size: 0.85rem; }
+        .job-status.completed { color: #22c55e; }
+        .job-status.issue { color: #fbbf24; }
+        .job-time { font-size: 0.8rem; color: #888; margin-bottom: 6px; }
+        .job-details { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; }
+        .job-gallons { color: #60a5fa; font-weight: 600; }
+        .job-location { color: #888; }
+
+        /* Fuel breakdown */
+        .breakdown-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #333; }
+        .breakdown-row:last-child { border-bottom: none; }
+        .breakdown-label { color: #888; }
+        .breakdown-value { font-weight: 600; color: #60a5fa; }
+
+        /* Timeline visualization */
+        .timeline-container { background: #1e1e1e; padding: 12px; border-radius: 8px; margin-bottom: 16px; }
+        .timeline-header { display: flex; justify-content: space-between; font-size: 0.7rem; color: #666; margin-bottom: 8px; }
+        .timeline-bar { display: flex; height: 30px; border-radius: 4px; gap: 2px; background: #333; padding: 2px; overflow: hidden; }
+        .timeline-block { flex: 1; border-radius: 2px; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; color: #1a1a1a; font-weight: 600; }
+        .timeline-block.job { background: #22c55e; }
+        .timeline-block.travel { background: #3b82f6; }
+        .timeline-block.gap { background: #666; opacity: 0.5; }
+        .timeline-legend { display: flex; gap: 12px; margin-top: 8px; font-size: 0.75rem; }
+        .legend-item { display: flex; align-items: center; gap: 4px; }
+        .legend-color { width: 12px; height: 12px; border-radius: 2px; }
+
+        /* Action buttons */
+        .button-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 20px; }
+        .btn { padding: 12px; border-radius: 8px; border: none; font-size: 0.85rem; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; }
+        .btn-primary { background: #60a5fa; color: #1a1a1a; }
+        .btn-primary:hover { background: #3b82f6; }
+        .btn-secondary { background: #333; color: #f5f0e8; border: 1px solid #444; }
+        .btn-secondary:hover { background: #3d3d3d; }
+
+        /* Loading state */
+        .loading { text-align: center; padding: 40px 20px; color: #888; }
+        .spinner { width: 24px; height: 24px; border: 3px solid #333; border-top-color: #60a5fa; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 12px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Empty state */
+        .empty { text-align: center; padding: 40px 20px; color: #888; }
+
+        /* Modal for comparison */
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 1000; overflow-y: auto; display: none; }
+        .modal.show { display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .modal-content { background: #1a1a1a; border: 1px solid #333; border-radius: 12px; padding: 20px; max-width: 600px; width: 100%; max-height: 80vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .modal-close { background: none; border: none; color: #888; font-size: 1.5rem; cursor: pointer; }
+
+        /* Print styles */
+        @media print {
+            body { background: #fff; }
+            .header-back, .button-group, .date-selector { display: none; }
+            .container { max-width: 100%; }
+            .modal { display: none; }
+        }
+
+        /* Mobile */
+        @media (max-width: 768px) {
+            .container { padding: 16px; }
+            .header h1 { font-size: 1.4rem; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .button-group { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button class="header-back" onclick="window.history.back()" title="Go back">←</button>
+            <h1>📋 Shift Summary</h1>
+        </div>
+
+        <div class="date-selector">
+            <input type="date" id="dateInput" onchange="loadShiftData()">
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card primary">
+                <div class="stat-icon">🚛</div>
+                <div class="stat-label">Jobs Completed</div>
+                <div class="stat-value" id="jobsCount">0</div>
+            </div>
+            <div class="stat-card primary">
+                <div class="stat-icon">⛽</div>
+                <div class="stat-label">Total Gallons</div>
+                <div class="stat-value" id="gallonsTotal">0</div>
+            </div>
+            <div class="stat-card primary">
+                <div class="stat-icon">🕐</div>
+                <div class="stat-label">Hours Worked</div>
+                <div class="stat-value" id="hoursWorked">0</div>
+                <div class="stat-subtext">hrs</div>
+            </div>
+            <div class="stat-card primary">
+                <div class="stat-icon">📍</div>
+                <div class="stat-label">Miles Driven</div>
+                <div class="stat-value" id="milesDriven">0</div>
+                <div class="stat-subtext">est.</div>
+            </div>
+        </div>
+
+        <!-- Timeline -->
+        <div class="card" id="timelineCard" style="display: none;">
+            <div class="card-title">Daily Timeline</div>
+            <div class="timeline-container">
+                <div class="timeline-header">
+                    <span>6 AM</span>
+                    <span>12 PM</span>
+                    <span>6 PM</span>
+                </div>
+                <div class="timeline-bar" id="timelineBar"></div>
+            </div>
+            <div class="timeline-legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #22c55e;"></div>
+                    <span>Job</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #3b82f6;"></div>
+                    <span>Travel</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #666;"></div>
+                    <span>Gap</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Job Breakdown -->
+        <div class="card" id="jobsCard" style="display: none;">
+            <div class="card-title">Jobs by Delivery</div>
+            <div class="job-list" id="jobList"></div>
+        </div>
+
+        <!-- Fuel Breakdown -->
+        <div class="card" id="fuelCard" style="display: none;">
+            <div class="card-title">Fuel Breakdown</div>
+            <div class="breakdown-row">
+                <span class="breakdown-label">Diesel</span>
+                <span class="breakdown-value" id="dieselTotal">0 gal</span>
+            </div>
+            <div class="breakdown-row">
+                <span class="breakdown-label">DEF</span>
+                <span class="breakdown-value" id="defTotal">0 gal</span>
+            </div>
+            <div class="breakdown-row">
+                <span class="breakdown-label">Gasoline</span>
+                <span class="breakdown-value" id="gasolineTotal">0 gal</span>
+            </div>
+            <div class="breakdown-row" style="border-bottom: 2px solid #60a5fa; padding-top: 10px; margin-top: 10px;">
+                <span class="breakdown-label" style="color: #f5f0e8; font-weight: 600;">Total</span>
+                <span class="breakdown-value" id="totalGallons">0 gal</span>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="button-group">
+            <button class="btn btn-secondary" onclick="emailSupervisor()">📧 Email</button>
+            <button class="btn btn-secondary" onclick="exportPDF()">📄 PDF</button>
+            <button class="btn btn-secondary" onclick="compareYesterday()">📊 Compare</button>
+        </div>
+    </div>
+
+    <!-- Comparison Modal -->
+    <div class="modal" id="comparisonModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Shift Comparison</h2>
+                <button class="modal-close" onclick="closeComparison()">×</button>
+            </div>
+            <div id="comparisonContent"></div>
+        </div>
+    </div>
+
+    <script src="supabase-client.js"></script>
+    <script src="feature-flags.js"></script>
+    <script>
+        // Initialize
+        (async () => {
+            const user = checkAuth(['fieldworker']);
+            if (!user) return;
+
+            await FC_FLAGS.init('fieldworker');
+            setTodayDate();
+            loadShiftData();
+        })();
+
+        function setTodayDate() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('dateInput').value = today;
+        }
+
+        async function loadShiftData() {
+            const user = getCurrentUser();
+            if (!user) return;
+
+            const dateStr = document.getElementById('dateInput').value;
+            const date = new Date(dateStr + 'T00:00:00');
+            const nextDate = new Date(date);
+            nextDate.setDate(nextDate.getDate() + 1);
+
+            try {
+                // Get deliveries for this user on this date
+                const { data: deliveries } = await db
+                    .from('deliveries')
+                    .select('*')
+                    .eq('delivered_by', user.id)
+                    .gte('timestamp', date.toISOString())
+                    .lt('timestamp', nextDate.toISOString())
+                    .order('timestamp', { ascending: true });
+
+                renderShiftData(deliveries || []);
+            } catch (err) {
+                console.error('Error loading shift data:', err);
+                renderShiftData([]);
+            }
+        }
+
+        function renderShiftData(deliveries) {
+            if (deliveries.length === 0) {
+                document.getElementById('jobsCard').style.display = 'none';
+                document.getElementById('fuelCard').style.display = 'none';
+                document.getElementById('timelineCard').style.display = 'none';
+                document.getElementById('jobsCount').textContent = '0';
+                document.getElementById('gallonsTotal').textContent = '0';
+                document.getElementById('hoursWorked').textContent = '0';
+                document.getElementById('milesDriven').textContent = '0';
+                return;
+            }
+
+            // Calculate stats
+            const jobsCount = deliveries.length;
+            const totalGallons = deliveries.reduce((sum, d) => sum + (d.gallons || 0), 0);
+            const defGallons = deliveries.reduce((sum, d) => sum + (d.def_gallons || 0), 0);
+            const dieselGallons = deliveries.reduce((sum, d) => d.fuel_type === 'diesel' ? sum + (d.gallons || 0) : sum, 0);
+            const gasolineGallons = deliveries.reduce((sum, d) => d.fuel_type === 'gasoline' ? sum + (d.gallons || 0) : sum, 0);
+
+            // Estimate hours from timestamps
+            const firstTime = new Date(deliveries[0].timestamp);
+            const lastTime = new Date(deliveries[deliveries.length - 1].timestamp);
+            const hoursWorked = ((lastTime - firstTime) / (1000 * 60 * 60)).toFixed(1);
+
+            // Estimate miles (rough: 1 mile per 5 min + 10 miles per stop)
+            const estimatedMiles = Math.round((deliveries.length * 10) + (hoursWorked * 12));
+
+            // Update stats
+            document.getElementById('jobsCount').textContent = jobsCount;
+            document.getElementById('gallonsTotal').textContent = totalGallons.toFixed(0);
+            document.getElementById('hoursWorked').textContent = hoursWorked;
+            document.getElementById('milesDriven').textContent = estimatedMiles;
+
+            // Fuel breakdown
+            document.getElementById('dieselTotal').textContent = dieselGallons.toFixed(0) + ' gal';
+            document.getElementById('defTotal').textContent = defGallons.toFixed(0) + ' gal';
+            document.getElementById('gasolineTotal').textContent = gasolineGallons.toFixed(0) + ' gal';
+            document.getElementById('totalGallons').textContent = totalGallons.toFixed(0) + ' gal';
+
+            // Job list
+            document.getElementById('jobsCard').style.display = 'block';
+            const jobList = document.getElementById('jobList');
+            jobList.innerHTML = deliveries.map((d, idx) => {
+                const time = new Date(d.timestamp).toLocaleTimeString();
+                const status = d.has_incident ? '⚠️ Issue' : '✅ Completed';
+                return `
+                    <div class="job-entry">
+                        <div class="job-header">
+                            <span class="job-number">#${idx + 1}</span>
+                            <span class="job-status ${d.has_incident ? 'issue' : 'completed'}">${status}</span>
+                        </div>
+                        <div class="job-time">${time}</div>
+                        <div class="job-details">
+                            <div class="job-gallons">${(d.gallons || 0).toFixed(0)} gal (${d.fuel_type || 'N/A'})</div>
+                            <div class="job-location">${d.unit_number || 'Location'}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Timeline
+            renderTimeline(deliveries);
+            document.getElementById('fuelCard').style.display = 'block';
+            document.getElementById('timelineCard').style.display = 'block';
+        }
+
+        function renderTimeline(deliveries) {
+            const timelineBar = document.getElementById('timelineBar');
+            timelineBar.innerHTML = '';
+
+            if (deliveries.length === 0) return;
+
+            const startOfDay = new Date();
+            startOfDay.setHours(6, 0, 0, 0);
+            const endOfDay = new Date();
+            endOfDay.setHours(18, 0, 0, 0);
+            const daySpan = endOfDay - startOfDay;
+
+            const blocks = [];
+            deliveries.forEach((d, idx) => {
+                const time = new Date(d.timestamp);
+                const offset = time - startOfDay;
+                const percent = (offset / daySpan) * 100;
+                const block = document.createElement('div');
+                block.className = 'timeline-block job';
+                block.style.left = percent + '%';
+                block.title = '#' + (idx + 1);
+                blocks.push(block);
+                timelineBar.appendChild(block);
+            });
+        }
+
+        function emailSupervisor() {
+            const dateStr = document.getElementById('dateInput').value;
+            const jobsCount = document.getElementById('jobsCount').textContent;
+            const gallonsTotal = document.getElementById('gallonsTotal').textContent;
+            const hoursWorked = document.getElementById('hoursWorked').textContent;
+            const milesDriven = document.getElementById('milesDriven').textContent;
+
+            const body = `Shift Summary for ${dateStr}:
+- Jobs Completed: ${jobsCount}
+- Total Gallons Delivered: ${gallonsTotal}
+- Hours Worked: ${hoursWorked}
+- Miles Driven (Est.): ${milesDriven}
+
+Please review this summary.`;
+
+            window.location.href = `mailto:supervisor@company.com?subject=Shift Summary ${dateStr}&body=${encodeURIComponent(body)}`;
+        }
+
+        function exportPDF() {
+            const dateStr = document.getElementById('dateInput').value;
+            window.print();
+        }
+
+        async function compareYesterday() {
+            const dateStr = document.getElementById('dateInput').value;
+            const currentDate = new Date(dateStr + 'T00:00:00');
+            const yesterday = new Date(currentDate);
+            yesterday.setDate(yesterday.getDate() - 1);
+
+            const user = getCurrentUser();
+            if (!user) return;
+
+            try {
+                const { data: yesterdayData } = await db
+                    .from('deliveries')
+                    .select('*')
+                    .eq('delivered_by', user.id)
+                    .gte('timestamp', yesterday.toISOString())
+                    .lt('timestamp', currentDate.toISOString());
+
+                const currentStats = {
+                    jobs: document.getElementById('jobsCount').textContent,
+                    gallons: document.getElementById('gallonsTotal').textContent,
+                    hours: document.getElementById('hoursWorked').textContent,
+                    miles: document.getElementById('milesDriven').textContent
+                };
+
+                const yesterdayStats = {
+                    jobs: (yesterdayData || []).length,
+                    gallons: (yesterdayData || []).reduce((sum, d) => sum + (d.gallons || 0), 0),
+                    hours: yesterdayData ? (((new Date(yesterdayData[yesterdayData.length - 1]?.timestamp) - new Date(yesterdayData[0]?.timestamp)) / (1000 * 60 * 60)) || 0).toFixed(1) : '0',
+                    miles: yesterdayData ? Math.round((yesterdayData.length * 10) + (((new Date(yesterdayData[yesterdayData.length - 1]?.timestamp) - new Date(yesterdayData[0]?.timestamp)) / (1000 * 60 * 60)) || 0) * 12) : '0'
+                };
+
+                const html = `
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div>
+                            <h3 style="color: #60a5fa; margin-bottom: 12px;">Today (${dateStr})</h3>
+                            <p>Jobs: ${currentStats.jobs}</p>
+                            <p>Gallons: ${currentStats.gallons}</p>
+                            <p>Hours: ${currentStats.hours}</p>
+                            <p>Miles: ${currentStats.miles}</p>
+                        </div>
+                        <div>
+                            <h3 style="color: #888; margin-bottom: 12px;">Yesterday (${yesterday.toISOString().split('T')[0]})</h3>
+                            <p>Jobs: ${yesterdayStats.jobs}</p>
+                            <p>Gallons: ${yesterdayStats.gallons.toFixed(0)}</p>
+                            <p>Hours: ${yesterdayStats.hours}</p>
+                            <p>Miles: ${yesterdayStats.miles}</p>
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('comparisonContent').innerHTML = html;
+                document.getElementById('comparisonModal').classList.add('show');
+            } catch (err) {
+                console.error('Comparison error:', err);
+            }
+        }
+
+        function closeComparison() {
+            document.getElementById('comparisonModal').classList.remove('show');
+        }
+    </script>
+</body>
+</html>

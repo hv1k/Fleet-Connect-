@@ -6,6 +6,7 @@
     <title>My Jobs | FleetConnect</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="voice-notes.js" defer></script>
     <!-- PWA Meta Tags -->
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#60a5fa">
@@ -437,8 +438,14 @@
         }
 
         function updateStats() {
+            // Count active jobs from rendered job cards
             const activeJobs = allJobs.filter(j => ['assigned','accepted','in-progress'].includes(j.status));
             const completedJobs = allJobs.filter(j => j.status === 'completed');
+
+            // Update stats to match the rendered count
+            const renderedActive = document.querySelectorAll('.job-card').length;
+            const displayActiveCount = currentTab === 'active' ? renderedActive : activeJobs.length;
+
             document.getElementById('statActive').textContent = activeJobs.length;
             document.getElementById('statCompleted').textContent = completedJobs.length;
 
@@ -514,7 +521,13 @@
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                     <p>No ${currentTab} jobs${currentTab === 'active' ? ' assigned to you' : ''}</p>
                 </div>`;
+                document.getElementById('statActive').textContent = 0;
                 return;
+            }
+
+            // Update active jobs count after rendering
+            if (currentTab === 'active') {
+                document.getElementById('statActive').textContent = filtered.length;
             }
 
             container.innerHTML = filtered.map(job => {
@@ -655,6 +668,7 @@
                         </div>
                         <div class="detail-group">
                             <label>Notes (optional)</label>
+                            <div id="voiceNotesContainer"></div>
                             <textarea id="invoiceNotes" placeholder="Gate codes, issues, etc..."></textarea>
                         </div>
                     </div>
@@ -772,6 +786,7 @@
             document.body.appendChild(modal);
             document.body.style.overflow = 'hidden';
             setTimeout(initSignature, 100);
+            setTimeout(initVoiceNotes, 150);
         }
 
         function captureGPSLocation() {
@@ -847,6 +862,28 @@
             selectedVideos = [];
             activeUnits = {};
             capturedGPS = null;
+        }
+
+        // ===== VOICE NOTES =====
+        let voiceNotesUI = null;
+
+        function initVoiceNotes() {
+            const container = document.getElementById('voiceNotesContainer');
+            if (!container) return;
+
+            if (voiceNotesUI) voiceNotesUI.destroy();
+
+            voiceNotesUI = new VoiceNotesUI({
+                container: container,
+                textareaId: 'invoiceNotes',
+                appendMode: true,
+                onStart: () => {
+                    console.log('Voice recording started');
+                },
+                onStop: (transcript) => {
+                    console.log('Voice recording stopped:', transcript);
+                }
+            });
         }
 
         // ===== NAVIGATE TO JOB =====

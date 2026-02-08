@@ -27,8 +27,30 @@
             --admin: #60a5fa;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg-dark); color: var(--text-primary); min-height: 100vh; line-height: 1.6; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-dark); color: var(--text-primary); min-height: 100vh; line-height: 1.6; display: flex; }
+
+        /* Sidebar */
+        .admin-sidebar { width: 260px; background: var(--bg-card); border-right: 1px solid var(--border); padding: 24px 16px; position: fixed; left: 0; top: 0; height: 100vh; overflow-y: auto; z-index: 99; }
+        .admin-sidebar-logo { font-size: 1.1rem; font-weight: 700; color: var(--admin); margin-bottom: 32px; }
+        .admin-nav-section { margin-bottom: 24px; }
+        .admin-nav-section-title { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); padding: 0 12px; margin-bottom: 8px; letter-spacing: 0.5px; }
+        .admin-nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; color: #b8b0a8; text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: all 0.2s; cursor: pointer; margin-bottom: 4px; }
+        .admin-nav-item:hover { background: var(--bg-hover); color: var(--text-primary); }
+        .admin-nav-item.active { background: rgba(96, 165, 250, 0.15); color: var(--admin); }
+        .admin-nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+        .admin-sidebar-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border); }
+
+        .main-content { flex: 1; margin-left: 260px; }
         .container { position: relative; z-index: 1; max-width: 1400px; margin: 0 auto; padding: 24px 32px; }
+
+        .hamburger-menu { display: none; position: fixed; top: 20px; left: 20px; z-index: 100; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 8px; cursor: pointer; width: 40px; height: 40px; }
+
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .admin-sidebar { width: 100%; height: auto; position: relative; left: auto; top: auto; border-right: none; border-bottom: 1px solid var(--border); padding: 12px; margin-bottom: 20px; }
+            .main-content { margin-left: 0; }
+            .container { padding: 16px 20px; }
+        }
         
         .nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
         .logo { font-family: 'Inter', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--accent); letter-spacing: -0.5px; text-decoration: none; }
@@ -129,6 +151,9 @@
 
         .loading { text-align: center; padding: 40px; color: var(--text-secondary); }
         
+        #dropZone:hover { border-color: var(--admin); background: rgba(168, 85, 247, 0.1); }
+        #dropZone.drag-over { border-color: var(--admin); background: rgba(168, 85, 247, 0.15); }
+
         @media (max-width: 800px) {
             .table-grid { grid-template-columns: 1fr; gap: 8px; }
             .table-grid.header { display: none; }
@@ -139,6 +164,49 @@
     </style>
 </head>
 <body>
+    <aside class="admin-sidebar" id="adminSidebar">
+        <div class="admin-sidebar-logo">FLEETCONNECT</div>
+        <nav>
+            <div class="admin-nav-section">
+                <div class="admin-nav-section-title">Main</div>
+                <a class="admin-nav-item active" href="admin-dashboard.html">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                    Dashboard
+                </a>
+                <a class="admin-nav-item" href="work-orders.html">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                    Work Orders
+                </a>
+            </div>
+            <div class="admin-nav-section">
+                <div class="admin-nav-section-title">Admin</div>
+                <a class="admin-nav-item" href="admin-feature-flags.html">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    Feature Flags
+                </a>
+                <a class="admin-nav-item" href="audit-log.html">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    Audit Log
+                </a>
+                <a class="admin-nav-item" href="analytics.html">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                    Analytics
+                </a>
+                <a class="admin-nav-item" href="settings.html">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                    Settings
+                </a>
+            </div>
+        </nav>
+        <div class="admin-sidebar-footer">
+            <div style="padding: 12px; background: var(--bg-hover); border-radius: 8px;">
+                <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary); margin-bottom: 4px;" id="adminUserName">Admin</div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary);">Administrator</div>
+            </div>
+        </div>
+    </aside>
+
+    <div class="main-content">
     <div class="container">
         <nav class="nav">
             <a href="index.html" class="logo">FLEETCONNECT</a>
@@ -230,7 +298,10 @@
         <div class="table-card">
             <div class="table-header-row">
                 <span class="table-title">All Users</span>
-                <button class="btn btn-primary" onclick="openAddUserModal()">+ Add User</button>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-primary" onclick="openImportUsersModal()">📥 Import Users</button>
+                    <button class="btn btn-primary" onclick="openAddUserModal()">+ Add User</button>
+                </div>
             </div>
 
             <!-- Search and Filter Controls -->
@@ -255,7 +326,13 @@
                     </select>
                 </div>
             </div>
+            <div style="padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px;">
+                <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()" style="width: 18px; height: 18px; cursor: pointer;">
+                <span style="font-size: 0.85rem; color: var(--text-secondary);" id="selectionCount">0 selected</span>
+                <button class="btn btn-small btn-danger" id="bulkDeleteBtn" style="display: none; margin-left: auto;" onclick="deleteBulkUsers()">Delete Selected</button>
+            </div>
             <div class="table-grid header">
+                <div style="width: 40px;"></div>
                 <div>Name</div>
                 <div>Email</div>
                 <div>Role</div>
@@ -267,7 +344,8 @@
             </div>
         </div>
     </div>
-    
+    </div>
+
     <div class="modal-overlay" id="userModal">
         <div class="modal">
             <div class="modal-header">
@@ -313,6 +391,35 @@
             </div>
         </div>
     </div>
+
+    <div class="modal-overlay" id="importUsersModal">
+        <div class="modal" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2>Import Users from CSV</h2>
+                <button class="modal-close" onclick="closeImportModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 20px; padding: 14px; background: var(--bg-input); border-radius: 8px; border: 2px dashed var(--border); text-align: center; cursor: pointer; transition: all 0.2s;" id="dropZone" onclick="document.getElementById('csvInput').click()">
+                    <div style="font-size: 1rem; margin-bottom: 6px;">📄 Drag & drop CSV or click to select</div>
+                    <div style="font-size: 0.85rem; color: var(--text-secondary);">Supported format: name, email, role, company</div>
+                    <input type="file" id="csvInput" accept=".csv" style="display: none;" onchange="handleCSVUpload(event)">
+                </div>
+                <div style="margin-bottom: 20px; padding: 12px; background: var(--bg-input); border-radius: 8px;">
+                    <div style="font-size: 0.85rem; font-weight: 600; margin-bottom: 8px;">CSV Format Example:</div>
+                    <code style="font-size: 0.8rem; color: var(--text-secondary); white-space: pre-wrap; word-break: break-word;">John Doe,john@example.com,vendor,ABC Company
+Jane Smith,jane@example.com,fieldworker,XYZ Rentals</code>
+                </div>
+                <div id="previewContainer" style="display: none;">
+                    <div style="font-size: 0.9rem; font-weight: 600; margin-bottom: 12px;">Preview: <span id="previewCount">0</span> users</div>
+                    <div id="previewTable" style="max-height: 300px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px;"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeImportModal()">Cancel</button>
+                <button class="btn btn-primary" id="importBtn" style="display: none;" onclick="importCSVUsers()">Import All</button>
+            </div>
+        </div>
+    </div>
     
     <script src="supabase-client.js"></script>
     <script src="demo-switcher.js"></script>
@@ -324,12 +431,15 @@
         const currentUser = checkAuth(['admin']);
         if (currentUser) {
             document.getElementById('userName').textContent = currentUser.name;
+            document.getElementById('adminUserName').textContent = currentUser.name;
         }
         
         let allUsers = [];
         let allJobs = [];
         let allActivities = [];
         let editingUserId = null;
+        let selectedUsers = new Set();
+        let csvUsersToImport = [];
 
         async function loadUsers() {
             allUsers = await getAllUsers();
@@ -466,9 +576,12 @@
                 tbody.innerHTML = '<div class="loading">No users found</div>';
                 return;
             }
-            
+
             tbody.innerHTML = usersToDisplay.map(user => `
-                <div class="table-grid row">
+                <div class="table-grid row" style="grid-template-columns: 40px 2fr 2fr 1fr 1fr 150px;">
+                    <div style="display: flex; align-items: center;">
+                        <input type="checkbox" data-user-id="${user.id}" onchange="toggleUserSelection('${user.id}')" style="width: 18px; height: 18px; cursor: pointer;">
+                    </div>
                     <div>${safe(user.name)}</div>
                     <div>${safe(user.email)}</div>
                     <div><span class="role-badge ${safe(user.role)}">${safe(user.role)}</span></div>
@@ -479,6 +592,139 @@
                     </div>
                 </div>
             `).join('');
+        }
+
+        function toggleUserSelection(userId) {
+            if (selectedUsers.has(userId)) {
+                selectedUsers.delete(userId);
+            } else {
+                selectedUsers.add(userId);
+            }
+            updateSelectionUI();
+        }
+
+        function toggleSelectAll() {
+            const checkbox = document.getElementById('selectAllCheckbox');
+            const filtered = getFilteredUsers();
+            if (checkbox.checked) {
+                filtered.forEach(u => selectedUsers.add(u.id));
+            } else {
+                filtered.forEach(u => selectedUsers.delete(u.id));
+            }
+            updateSelectionUI();
+        }
+
+        function updateSelectionUI() {
+            const count = selectedUsers.size;
+            document.getElementById('selectionCount').textContent = count + ' selected';
+            document.getElementById('bulkDeleteBtn').style.display = count > 0 ? 'block' : 'none';
+            document.getElementById('selectAllCheckbox').checked = count > 0;
+        }
+
+        function deleteBulkUsers() {
+            const count = selectedUsers.size;
+            if (!confirm(`Delete ${count} selected user(s)? This cannot be undone.`)) return;
+
+            const userIds = Array.from(selectedUsers);
+            let deleted = 0;
+            let failed = 0;
+
+            Promise.all(userIds.map(id => deleteUser(id))).then(results => {
+                results.forEach(result => {
+                    if (result.success) deleted++;
+                    else failed++;
+                });
+                selectedUsers.clear();
+                updateSelectionUI();
+                loadUsers();
+                alert(`${deleted} user(s) deleted${failed > 0 ? `, ${failed} failed` : ''}`);
+            });
+        }
+
+        function openImportUsersModal() {
+            csvUsersToImport = [];
+            document.getElementById('csvInput').value = '';
+            document.getElementById('previewContainer').style.display = 'none';
+            document.getElementById('importBtn').style.display = 'none';
+            document.getElementById('importUsersModal').classList.add('show');
+        }
+
+        function closeImportModal() {
+            document.getElementById('importUsersModal').classList.remove('show');
+        }
+
+        function handleCSVUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const csv = e.target.result;
+                const lines = csv.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#'));
+
+                csvUsersToImport = lines.map(line => {
+                    const [name, email, role, company] = line.split(',').map(s => s.trim());
+                    return { name, email, role, company };
+                }).filter(u => u.name && u.email && u.role && u.company);
+
+                if (csvUsersToImport.length === 0) {
+                    alert('No valid users found in CSV');
+                    return;
+                }
+
+                displayCSVPreview();
+            };
+            reader.readAsText(file);
+        }
+
+        function displayCSVPreview() {
+            document.getElementById('previewCount').textContent = csvUsersToImport.length;
+
+            const previewTable = document.getElementById('previewTable');
+            previewTable.innerHTML = `
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px; padding: 8px; background: var(--bg-input); border-bottom: 1px solid var(--border); font-weight: 600; font-size: 0.8rem;">
+                    <div>Name</div><div>Email</div><div>Role</div><div>Company</div>
+                </div>
+                ${csvUsersToImport.map(u => `
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px; padding: 8px; border-bottom: 1px solid var(--border); font-size: 0.85rem;">
+                        <div>${safe(u.name)}</div>
+                        <div style="color: var(--text-secondary);">${safe(u.email)}</div>
+                        <div><span class="role-badge ${safe(u.role)}" style="font-size: 0.7rem;">${safe(u.role)}</span></div>
+                        <div>${safe(u.company)}</div>
+                    </div>
+                `).join('')}
+            `;
+
+            document.getElementById('previewContainer').style.display = 'block';
+            document.getElementById('importBtn').style.display = 'block';
+        }
+
+        async function importCSVUsers() {
+            const btn = document.getElementById('importBtn');
+            btn.disabled = true;
+            btn.textContent = 'Importing...';
+
+            let successful = 0;
+            let failed = 0;
+
+            for (const userData of csvUsersToImport) {
+                const result = await createUser({
+                    name: userData.name,
+                    email: userData.email,
+                    role: userData.role,
+                    company: userData.company,
+                    password: Math.random().toString(36).slice(-12)
+                });
+
+                if (result.success) successful++;
+                else failed++;
+            }
+
+            closeImportModal();
+            await loadUsers();
+            alert(`Imported ${successful} user(s)${failed > 0 ? ` (${failed} failed)` : ''}`);
+            btn.disabled = false;
+            btn.textContent = 'Import All';
         }
         
         function getFilteredUsers() {
@@ -569,6 +815,27 @@
             }
         }
         
+        // Drag & drop for CSV
+        const dropZone = document.getElementById('dropZone');
+        if (dropZone) {
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('drag-over');
+            });
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('drag-over');
+            });
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('drag-over');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    document.getElementById('csvInput').files = files;
+                    handleCSVUpload({ target: { files } });
+                }
+            });
+        }
+
         // Load on start
         async function initializeDashboard() {
             await loadUsers();

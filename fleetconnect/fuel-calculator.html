@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fuel Calculator | FleetConnect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #1a1a1a; color: #f5f0e8; min-height: 100vh; }
+
+        /* Mobile-first container */
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+
+        /* Header */
+        .header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #333; }
+        .header h1 { font-size: 1.6rem; font-weight: 700; }
+        .header-back { background: none; border: none; color: #60a5fa; font-size: 1.4rem; cursor: pointer; padding: 8px; }
+        .header-back:hover { color: #3b82f6; }
+
+        /* Card sections */
+        .card { background: #242424; border: 1px solid #333; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+        .card-title { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; color: #60a5fa; margin-bottom: 12px; letter-spacing: 0.5px; }
+
+        /* Input section */
+        .input-group { margin-bottom: 14px; }
+        .input-group label { display: block; font-size: 0.75rem; color: #888; margin-bottom: 6px; text-transform: uppercase; font-weight: 500; }
+
+        /* Large, touch-friendly inputs */
+        .input-wrapper { display: flex; gap: 8px; align-items: center; }
+        .input-field { flex: 1; padding: 14px 12px; background: #1e1e1e; border: 1px solid #333; border-radius: 8px; color: #f5f0e8; font-size: 1rem; font-family: 'Inter', sans-serif; text-align: center; }
+        .input-field:focus { outline: none; border-color: #60a5fa; }
+
+        /* Stepper buttons */
+        .stepper-btn { width: 44px; height: 44px; padding: 0; background: #333; border: 1px solid #444; border-radius: 8px; color: #60a5fa; font-size: 1.2rem; cursor: pointer; flex-shrink: 0; transition: all 0.2s; }
+        .stepper-btn:hover { background: #3d3d3d; border-color: #60a5fa; }
+        .stepper-btn:active { transform: scale(0.95); }
+
+        /* Dropdown */
+        .select-field { width: 100%; padding: 14px 12px; background: #1e1e1e; border: 1px solid #333; border-radius: 8px; color: #f5f0e8; font-size: 1rem; font-family: 'Inter', sans-serif; cursor: pointer; }
+        .select-field:focus { outline: none; border-color: #60a5fa; }
+
+        /* Toggle for Gallons/Percentage */
+        .toggle-row { display: flex; gap: 8px; margin-bottom: 12px; }
+        .toggle-btn { flex: 1; padding: 10px; background: #333; border: 1px solid #444; border-radius: 8px; color: #888; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .toggle-btn.active { background: #60a5fa; color: #1a1a1a; border-color: #60a5fa; }
+
+        /* Slider for percentage */
+        .slider-container { margin: 12px 0; }
+        .slider { width: 100%; height: 6px; border-radius: 3px; background: #333; outline: none; -webkit-appearance: none; appearance: none; }
+        .slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 24px; height: 24px; border-radius: 50%; background: #60a5fa; cursor: pointer; border: 2px solid #1a1a1a; }
+        .slider::-moz-range-thumb { width: 24px; height: 24px; border-radius: 50%; background: #60a5fa; cursor: pointer; border: 2px solid #1a1a1a; }
+        .slider-value { text-align: center; font-weight: 600; color: #60a5fa; font-size: 0.9rem; margin-top: 6px; }
+
+        /* Tank gauge */
+        .tank-gauge { margin: 16px 0; background: #1e1e1e; padding: 16px; border-radius: 10px; }
+        .tank-visual { width: 100%; max-width: 200px; height: 120px; margin: 0 auto; background: #333; border-radius: 8px; border: 2px solid #444; display: flex; align-items: flex-end; justify-content: center; overflow: hidden; position: relative; }
+        .tank-fill { width: 100%; background: #60a5fa; transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; color: #1a1a1a; font-weight: 700; font-size: 0.85rem; }
+        .tank-fill.red { background: #ef4444; }
+        .tank-fill.orange { background: #f97316; }
+        .tank-fill.yellow { background: #fbbf24; }
+        .tank-fill.green { background: #22c55e; }
+        .tank-percent { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: 700; color: #f5f0e8; background: rgba(0,0,0,0.5); padding: 4px 8px; border-radius: 4px; pointer-events: none; }
+
+        /* Results section */
+        .results-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .result-item { background: #1e1e1e; padding: 12px; border-radius: 8px; border: 1px solid #333; }
+        .result-label { font-size: 0.7rem; color: #888; text-transform: uppercase; margin-bottom: 4px; }
+        .result-value { font-size: 1.4rem; font-weight: 700; color: #60a5fa; }
+        .result-unit { font-size: 0.75rem; color: #666; }
+
+        /* Progress bar */
+        .progress-bar-container { background: #333; border-radius: 8px; height: 12px; overflow: hidden; margin: 8px 0; }
+        .progress-bar { height: 100%; background: #60a5fa; transition: width 0.3s; }
+
+        /* Presets */
+        .presets { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+        .preset-btn { flex: 1; min-width: 70px; padding: 10px; background: #333; border: 1px solid #444; border-radius: 8px; color: #888; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .preset-btn:hover { background: #3d3d3d; color: #60a5fa; border-color: #60a5fa; }
+        .preset-btn:active { transform: scale(0.95); }
+
+        /* Action buttons */
+        .button-group { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
+        .btn { padding: 14px 16px; border-radius: 8px; border: none; font-size: 0.95rem; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; }
+        .btn-primary { background: #60a5fa; color: #1a1a1a; }
+        .btn-primary:hover { background: #3b82f6; }
+        .btn-primary:active { transform: scale(0.98); }
+        .btn-secondary { background: #333; color: #f5f0e8; border: 1px solid #444; }
+        .btn-secondary:hover { background: #3d3d3d; }
+
+        /* History section */
+        .history-item { background: #1e1e1e; padding: 12px; border-radius: 8px; margin-bottom: 8px; border-left: 3px solid #60a5fa; }
+        .history-time { font-size: 0.7rem; color: #888; }
+        .history-details { display: flex; justify-content: space-between; margin-top: 6px; font-size: 0.9rem; }
+        .history-value { color: #60a5fa; font-weight: 600; }
+
+        /* Error/Success messages */
+        .message { padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 0.9rem; }
+        .message.error { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+        .message.success { background: rgba(34, 197, 94, 0.15); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3); }
+
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .container { padding: 16px; }
+            .header { margin-bottom: 20px; }
+            .header h1 { font-size: 1.4rem; }
+            .button-group { grid-template-columns: 1fr; }
+            .results-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button class="header-back" onclick="window.history.back()" title="Go back">←</button>
+            <h1>⛽ Fuel Calculator</h1>
+        </div>
+
+        <div id="messageContainer"></div>
+
+        <!-- Input Section -->
+        <div class="card">
+            <div class="card-title">Tank Details</div>
+
+            <div class="input-group">
+                <label>Tank Capacity (Gallons)</label>
+                <div class="input-wrapper">
+                    <button class="stepper-btn" onclick="decrementCapacity()">−</button>
+                    <input type="number" id="tankCapacity" class="input-field" value="500" min="1" max="10000" step="10">
+                    <button class="stepper-btn" onclick="incrementCapacity()">+</button>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Current Level</label>
+                <div class="toggle-row">
+                    <button class="toggle-btn active" id="gallonsToggle" onclick="switchMode('gallons')">Gallons</button>
+                    <button class="toggle-btn" id="percentToggle" onclick="switchMode('percent')">Percentage</button>
+                </div>
+
+                <div id="gallonsMode">
+                    <div class="input-wrapper">
+                        <button class="stepper-btn" onclick="decrementCurrent()">−</button>
+                        <input type="number" id="currentLevel" class="input-field" value="250" min="0" max="10000" step="10">
+                        <button class="stepper-btn" onclick="incrementCurrent()">+</button>
+                    </div>
+                </div>
+
+                <div id="percentMode" style="display: none;">
+                    <div class="slider-container">
+                        <input type="range" id="levelSlider" class="slider" min="0" max="100" value="50" oninput="updateFromSlider()">
+                        <div class="slider-value"><span id="sliderPercent">50</span>%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tank Gauge -->
+            <div class="tank-gauge">
+                <div class="tank-visual">
+                    <div class="tank-fill" id="tankFill">
+                        <div class="tank-percent" id="tankPercent">50%</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Fuel Type</label>
+                <select id="fuelType" class="select-field" onchange="calculateFuel()">
+                    <option value="diesel">Diesel</option>
+                    <option value="def">DEF</option>
+                    <option value="gasoline">Gasoline</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label>Price per Gallon ($)</label>
+                <input type="number" id="pricePerGallon" class="input-field" value="3.50" min="0" max="100" step="0.01" onchange="calculateFuel()" oninput="calculateFuel()">
+            </div>
+
+            <!-- Quick Presets -->
+            <div style="margin-top: 14px;">
+                <label style="font-size: 0.75rem; color: #888; text-transform: uppercase; margin-bottom: 8px; display: block;">Quick Tank Presets</label>
+                <div class="presets">
+                    <button class="preset-btn" onclick="setCapacity(250)">250 gal</button>
+                    <button class="preset-btn" onclick="setCapacity(500)">500 gal</button>
+                    <button class="preset-btn" onclick="setCapacity(1000)">1000 gal</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="card">
+            <div class="card-title">Calculation Results</div>
+
+            <div class="results-grid">
+                <div class="result-item">
+                    <div class="result-label">🔢 Gallons Needed</div>
+                    <div class="result-value" id="gallonsNeeded">250</div>
+                    <div class="result-unit">gal</div>
+                </div>
+
+                <div class="result-item">
+                    <div class="result-label">💰 Estimated Cost</div>
+                    <div class="result-value" id="estimatedCost">$875</div>
+                    <div class="result-unit">USD</div>
+                </div>
+
+                <div class="result-item">
+                    <div class="result-label">📊 Fill Percentage</div>
+                    <div style="margin-top: 6px;">
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" id="fillPercentBar" style="width: 50%;"></div>
+                        </div>
+                        <div class="result-value" style="font-size: 1rem; margin-top: 4px;">
+                            <span id="fillPercent">50</span>%
+                        </div>
+                    </div>
+                </div>
+
+                <div class="result-item">
+                    <div class="result-label">⏱️ Est. Fill Time</div>
+                    <div class="result-value" id="fillTime">5 min</div>
+                    <div class="result-unit">@ 50 gal/min</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="button-group">
+            <button class="btn btn-secondary" onclick="clearCalculator()">Clear</button>
+            <button class="btn btn-primary" onclick="addToInvoice()">📄 Add to Invoice</button>
+        </div>
+
+        <!-- History Section -->
+        <div class="card" id="historyCard" style="display: none;">
+            <div class="card-title">📜 Recent Calculations</div>
+            <div id="historyList"></div>
+        </div>
+    </div>
+
+    <script src="supabase-client.js"></script>
+    <script src="feature-flags.js"></script>
+    <script>
+        let currentMode = 'gallons';
+        let calculations = [];
+
+        // Initialize
+        (async () => {
+            const user = checkAuth(['fieldworker']);
+            if (!user) return;
+
+            await FC_FLAGS.init('fieldworker');
+            loadHistory();
+            calculateFuel();
+            setDefaultPrice();
+        })();
+
+        async function setDefaultPrice() {
+            try {
+                const { data: prices } = await db
+                    .from('fuel_prices')
+                    .select('price')
+                    .eq('fuel_type', 'diesel')
+                    .order('created_at', { ascending: false })
+                    .limit(1);
+
+                if (prices && prices.length > 0) {
+                    document.getElementById('pricePerGallon').value = prices[0].price || 3.50;
+                    calculateFuel();
+                }
+            } catch (err) {
+                console.error('Error fetching price:', err);
+            }
+        }
+
+        function switchMode(mode) {
+            currentMode = mode;
+            document.getElementById('gallonsMode').style.display = mode === 'gallons' ? 'block' : 'none';
+            document.getElementById('percentMode').style.display = mode === 'percent' ? 'block' : 'none';
+            document.getElementById('gallonsToggle').classList.toggle('active', mode === 'gallons');
+            document.getElementById('percentToggle').classList.toggle('active', mode === 'percent');
+            calculateFuel();
+        }
+
+        function incrementCapacity() {
+            const input = document.getElementById('tankCapacity');
+            input.value = Math.min(10000, parseInt(input.value || 0) + 10);
+            calculateFuel();
+        }
+
+        function decrementCapacity() {
+            const input = document.getElementById('tankCapacity');
+            input.value = Math.max(1, parseInt(input.value || 0) - 10);
+            calculateFuel();
+        }
+
+        function incrementCurrent() {
+            const input = document.getElementById('currentLevel');
+            const capacity = parseInt(document.getElementById('tankCapacity').value) || 500;
+            input.value = Math.min(capacity, parseInt(input.value || 0) + 10);
+            calculateFuel();
+        }
+
+        function decrementCurrent() {
+            const input = document.getElementById('currentLevel');
+            input.value = Math.max(0, parseInt(input.value || 0) - 10);
+            calculateFuel();
+        }
+
+        function updateFromSlider() {
+            const slider = document.getElementById('levelSlider');
+            document.getElementById('sliderPercent').textContent = slider.value;
+            calculateFuel();
+        }
+
+        function setCapacity(gal) {
+            document.getElementById('tankCapacity').value = gal;
+            calculateFuel();
+        }
+
+        function calculateFuel() {
+            const capacity = parseInt(document.getElementById('tankCapacity').value) || 500;
+            let current;
+
+            if (currentMode === 'gallons') {
+                current = parseInt(document.getElementById('currentLevel').value) || 0;
+            } else {
+                const percent = parseInt(document.getElementById('levelSlider').value) || 50;
+                current = (capacity * percent) / 100;
+                document.getElementById('currentLevel').value = Math.round(current);
+            }
+
+            const gallonsNeeded = Math.max(0, capacity - current);
+            const price = parseFloat(document.getElementById('pricePerGallon').value) || 3.50;
+            const cost = gallonsNeeded * price;
+            const fillPercent = Math.round((current / capacity) * 100);
+            const fillTime = Math.ceil(gallonsNeeded / 50);
+
+            // Update display
+            document.getElementById('gallonsNeeded').textContent = gallonsNeeded.toFixed(0);
+            document.getElementById('estimatedCost').textContent = '$' + cost.toFixed(2);
+            document.getElementById('fillPercent').textContent = fillPercent;
+            document.getElementById('fillPercentBar').style.width = fillPercent + '%';
+            document.getElementById('fillTime').textContent = fillTime + ' min';
+            document.getElementById('sliderPercent').textContent = fillPercent;
+            document.getElementById('levelSlider').value = fillPercent;
+
+            // Update tank visual
+            const fill = document.getElementById('tankFill');
+            fill.style.height = fillPercent + '%';
+            fill.textContent = '';
+            const percent = document.createElement('div');
+            percent.className = 'tank-percent';
+            percent.textContent = fillPercent + '%';
+            fill.appendChild(percent);
+
+            // Color coding
+            fill.className = 'tank-fill';
+            if (fillPercent <= 25) fill.classList.add('red');
+            else if (fillPercent <= 50) fill.classList.add('orange');
+            else if (fillPercent <= 75) fill.classList.add('yellow');
+            else fill.classList.add('green');
+
+            // Update percent display (outside fill for visibility)
+            document.getElementById('tankPercent').textContent = fillPercent + '%';
+        }
+
+        function clearCalculator() {
+            document.getElementById('tankCapacity').value = 500;
+            document.getElementById('currentLevel').value = 250;
+            document.getElementById('levelSlider').value = 50;
+            calculateFuel();
+        }
+
+        function addToInvoice() {
+            const capacity = parseInt(document.getElementById('tankCapacity').value) || 500;
+            let current;
+            if (currentMode === 'gallons') {
+                current = parseInt(document.getElementById('currentLevel').value) || 0;
+            } else {
+                const percent = parseInt(document.getElementById('levelSlider').value) || 50;
+                current = (capacity * percent) / 100;
+            }
+
+            const gallonsNeeded = Math.max(0, capacity - current);
+            const price = parseFloat(document.getElementById('pricePerGallon').value) || 3.50;
+            const cost = gallonsNeeded * price;
+            const fuelType = document.getElementById('fuelType').value;
+
+            // Save to history
+            const now = new Date();
+            const calc = {
+                timestamp: now.toISOString(),
+                display: `${now.toLocaleTimeString()} - ${fuelType}: ${gallonsNeeded.toFixed(0)} gal ($${cost.toFixed(2)})`,
+                gallons: gallonsNeeded,
+                cost: cost,
+                fuelType: fuelType
+            };
+
+            calculations.unshift(calc);
+            if (calculations.length > 5) calculations.pop();
+            localStorage.setItem('fc_fuel_calcs', JSON.stringify(calculations));
+
+            showMessage('Added to invoice! Ready to submit.', 'success');
+            loadHistory();
+        }
+
+        function loadHistory() {
+            const saved = localStorage.getItem('fc_fuel_calcs');
+            calculations = saved ? JSON.parse(saved) : [];
+
+            if (calculations.length > 0) {
+                document.getElementById('historyCard').style.display = 'block';
+                const list = document.getElementById('historyList');
+                list.innerHTML = calculations.map((calc, idx) => `
+                    <div class="history-item">
+                        <div class="history-time">${new Date(calc.timestamp).toLocaleTimeString()}</div>
+                        <div class="history-details">
+                            <div>${calc.fuelType} - ${calc.gallons.toFixed(0)} gal</div>
+                            <div class="history-value">$${calc.cost.toFixed(2)}</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function showMessage(msg, type) {
+            const container = document.getElementById('messageContainer');
+            const div = document.createElement('div');
+            div.className = `message ${type}`;
+            div.textContent = msg;
+            container.innerHTML = '';
+            container.appendChild(div);
+            setTimeout(() => {
+                if (container.contains(div)) container.removeChild(div);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

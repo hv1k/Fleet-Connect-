@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vendor Comparison | FleetConnect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #1a1a1a; color: #f5f0e8; min-height: 100vh; transition: background 0.3s, color 0.3s; }
+
+        /* Light Mode */
+        body.dark { background: #f5f0e8; color: #1a1a1a; }
+        body.dark .sidebar { background: #ffffff; border-color: #e8e4dc; }
+        body.dark .sidebar-logo { color: #60a5fa; }
+        body.dark .nav-item { color: #5c5c5c; }
+        body.dark .nav-item:hover { background: #f0ebe3; color: #1a1a1a; }
+        body.dark .nav-item.active { background: #dbeafe; color: #3b82f6; }
+        body.dark .nav-section-title { color: #8c8c8c; }
+        body.dark .user-menu { background: #f0ebe3; }
+        body.dark .user-name { color: #1a1a1a; }
+        body.dark .dark-mode-toggle { color: #5c5c5c; }
+        body.dark .header { background: #ffffff; border-color: #e8e4dc; }
+        body.dark .header h1 { color: #1a1a1a; }
+        body.dark .header-subtitle { color: #5c5c5c; }
+        body.dark .quick-action-btn { background: #ffffff; border-color: #e8e4dc; color: #1a1a1a; }
+        body.dark .quick-action-btn:hover { background: #f0ebe3; border-color: #60a5fa; }
+        body.dark .filter-card { background: #ffffff; border-color: #e8e4dc; }
+        body.dark .filter-label { color: #8c8c8c; }
+        body.dark .search-input { background-color: #ffffff; border-color: #e8e4dc; color: #1a1a1a; }
+        body.dark .filter-select { background: #ffffff; border-color: #e8e4dc; color: #5c5c5c; }
+        body.dark .vendor-card { background: #ffffff; border-color: #e8e4dc; }
+        body.dark .vendor-name { color: #1a1a1a; }
+        body.dark .vendor-rating { color: #1a1a1a; }
+        body.dark .vendor-metric-label { color: #8c8c8c; }
+        body.dark .vendor-metric-value { color: #1a1a1a; }
+        body.dark .vendor-service-area { color: #5c5c5c; }
+        body.dark .availability-indicator { border-color: #e8e4dc; }
+        body.dark .btn-primary { background: #60a5fa; color: #fff; border: none; }
+        body.dark .btn-primary:hover { background: #3b82f6; }
+        body.dark .comparison-table { background: #ffffff; border-color: #e8e4dc; }
+        body.dark th { background: #f0ebe3; color: #8c8c8c; border-color: #e8e4dc; }
+        body.dark td { border-color: #e8e4dc; color: #5c5c5c; }
+        body.dark tr:hover { background: #f0ebe3; }
+        body.dark .modal { background: #ffffff; }
+        body.dark .modal-header { border-color: #e8e4dc; }
+        body.dark .modal-header h3 { color: #1a1a1a; }
+        body.dark .modal-close { background: #f0ebe3; color: #5c5c5c; }
+        body.dark .modal-footer { background: #f0ebe3; border-color: #e8e4dc; }
+        body.dark .btn-secondary { background: #ffffff; border-color: #e8e4dc; color: #5c5c5c; }
+        body.dark .modal-body { color: #1a1a1a; }
+
+        .layout { display: flex; min-height: 100vh; }
+
+        /* Sidebar */
+        .sidebar { width: 240px; background: #242424; border-right: 1px solid #333; padding: 24px 16px; position: fixed; left: 0; height: 100vh; z-index: 100; display: flex; flex-direction: column; }
+        .sidebar-header { display: flex; align-items: center; gap: 10px; margin-bottom: 32px; padding: 20px 20px 12px; }
+        .sidebar-logo { font-size: 1.2rem; font-weight: 700; color: #60a5fa; }
+        .nav-section { margin-bottom: 24px; }
+        .nav-section-title { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: #666; padding: 0 12px; margin-bottom: 8px; letter-spacing: 0.5px; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; color: #b8b0a8; text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: all 0.2s; cursor: pointer; }
+        .nav-item:hover { background: #333; color: #f5f0e8; }
+        .nav-item.active { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
+        .nav-item svg { width: 20px; height: 20px; }
+
+        .sidebar-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid #333; }
+        .user-menu { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 10px; background: #333; }
+        .user-avatar-lg { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #60a5fa, #3b82f6); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 600; font-size: 0.85rem; }
+        .user-info { flex: 1; }
+        .user-name { font-size: 0.85rem; font-weight: 600; color: #f5f0e8; }
+        .user-role { font-size: 0.7rem; color: #888; }
+        .logout-btn { color: #888; cursor: pointer; padding: 6px; border-radius: 6px; background: none; border: none; }
+        .logout-btn:hover { background: #444; color: #f5f0e8; }
+
+        /* Main */
+        .main { flex: 1; margin-left: 240px; min-height: 100vh; }
+        .header { background: #242424; padding: 20px 32px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50; }
+        .header-left { display: flex; align-items: center; gap: 16px; }
+        .header h1 { font-size: 1.4rem; font-weight: 700; color: #f5f0e8; }
+        .header-subtitle { font-size: 0.85rem; color: #888; }
+        .content { padding: 32px; }
+
+        /* Filters */
+        .filter-card { background: #242424; border-radius: 16px; padding: 24px; border: 1px solid #333; margin-bottom: 28px; }
+        .filter-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 16px; }
+        @media (max-width: 1200px) { .filter-row { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 600px) { .filter-row { grid-template-columns: 1fr; } }
+        .filter-group { display: flex; flex-direction: column; }
+        .filter-label { font-size: 0.8rem; font-weight: 500; color: #888; margin-bottom: 6px; }
+        .search-input, .filter-select { padding: 10px 12px; border: 1px solid #444; border-radius: 8px; font-size: 0.85rem; background: #2a2a2a; color: #f5f0e8; font-family: inherit; }
+        .search-input:focus, .filter-select:focus { outline: none; border-color: #60a5fa; }
+        .filter-btn { padding: 10px 18px; background: #60a5fa; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; margin-top: 22px; }
+        .filter-btn:hover { background: #3b82f6; }
+
+        /* Vendor Grid */
+        .vendor-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; margin-bottom: 28px; }
+        @media (max-width: 1000px) { .vendor-grid { grid-template-columns: 1fr; } }
+
+        .vendor-card { background: #242424; border-radius: 16px; padding: 24px; border: 1px solid #333; transition: all 0.2s; cursor: pointer; }
+        .vendor-card:hover { border-color: #60a5fa; box-shadow: 0 0 20px rgba(96, 165, 250, 0.1); }
+        .vendor-card.selected { border-color: #60a5fa; background: rgba(96, 165, 250, 0.05); }
+
+        .vendor-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px; }
+        .vendor-info { flex: 1; }
+        .vendor-logo { width: 48px; height: 48px; border-radius: 10px; background: linear-gradient(135deg, #60a5fa, #3b82f6); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 1.2rem; margin-bottom: 12px; }
+        .vendor-name { font-size: 1.1rem; font-weight: 700; color: #f5f0e8; margin-bottom: 4px; }
+        .vendor-rating { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+        .star { color: #fbbf24; }
+        .star.empty { color: #444; }
+        .rating-text { font-size: 0.85rem; color: #888; }
+
+        .vendor-metrics { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px; }
+        .metric { background: #2a2a2a; padding: 12px; border-radius: 8px; }
+        .metric-icon { font-size: 1.2rem; margin-right: 6px; }
+        .vendor-metric-label { font-size: 0.7rem; color: #888; text-transform: uppercase; }
+        .vendor-metric-value { font-size: 1.1rem; font-weight: 700; color: #f5f0e8; margin-top: 4px; }
+
+        .vendor-service-area { padding: 12px; background: #2a2a2a; border-radius: 8px; margin-bottom: 16px; font-size: 0.85rem; color: #b8b0a8; }
+        .availability-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; margin-bottom: 16px; }
+        .availability-badge.green { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+        .availability-badge.yellow { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
+        .availability-badge.red { background: rgba(248, 113, 113, 0.15); color: #f87171; }
+        .availability-indicator { width: 10px; height: 10px; border-radius: 50%; border: 2px solid; }
+
+        .vendor-actions { display: flex; gap: 10px; }
+        .btn-primary, .btn-secondary { flex: 1; padding: 10px; border: none; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+        .btn-primary { background: #60a5fa; color: #fff; }
+        .btn-primary:hover { background: #3b82f6; }
+        .btn-secondary { background: #333; color: #f5f0e8; border: 1px solid #444; }
+        .btn-secondary:hover { background: #444; }
+
+        /* Sort Controls */
+        .sort-controls { display: flex; gap: 12px; margin-bottom: 24px; align-items: center; }
+        .sort-label { font-size: 0.85rem; color: #888; font-weight: 500; }
+        .sort-btn { padding: 8px 16px; background: #333; border: 1px solid #444; border-radius: 8px; color: #f5f0e8; cursor: pointer; font-size: 0.8rem; transition: all 0.2s; }
+        .sort-btn.active { background: #60a5fa; border-color: #60a5fa; }
+
+        /* Comparison Section */
+        .comparison-section { background: #242424; border-radius: 16px; padding: 24px; border: 1px solid #333; margin-bottom: 28px; display: none; }
+        .comparison-section.show { display: block; }
+        .comparison-header { font-size: 1rem; font-weight: 700; color: #f5f0e8; margin-bottom: 20px; }
+        .comparison-table { width: 100%; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 12px; font-size: 0.75rem; font-weight: 600; color: #888; text-transform: uppercase; background: #2a2a2a; border-bottom: 1px solid #333; }
+        td { padding: 14px 12px; border-bottom: 1px solid #333; font-size: 0.85rem; color: #b8b0a8; }
+        tr:hover { background: #2a2a2a; }
+
+        /* Mobile */
+        .mobile-toggle { display: none; width: 40px; height: 40px; border: 1px solid #444; border-radius: 8px; background: #2a2a2a; color: #f5f0e8; align-items: center; justify-content: center; cursor: pointer; }
+        @media (max-width: 900px) {
+            .sidebar { display: none; }
+            .sidebar.open { display: flex; position: fixed; z-index: 100; }
+            .main { margin-left: 0; }
+            .mobile-toggle { display: flex; }
+        }
+
+        /* Modal */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.show { display: flex; }
+        .modal { background: #242424; border-radius: 16px; width: 100%; max-width: 500px; overflow: hidden; border: 1px solid #333; }
+        .modal-header { padding: 20px 24px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { font-size: 1rem; font-weight: 600; color: #f5f0e8; }
+        .modal-close { width: 28px; height: 28px; border-radius: 6px; border: none; background: #333; color: #888; cursor: pointer; }
+        .modal-close:hover { background: #444; color: #f5f0e8; }
+        .modal-body { padding: 20px 24px; }
+        .modal-footer { padding: 16px 24px; border-top: 1px solid #333; display: flex; justify-content: flex-end; gap: 12px; background: #2a2a2a; }
+        .btn { padding: 10px 18px; border-radius: 8px; font-size: 0.85rem; font-weight: 500; cursor: pointer; border: none; }
+        .btn-secondary { background: #333; color: #b8b0a8; }
+        .btn-secondary:hover { background: #444; }
+
+        .empty-state { text-align: center; padding: 50px; color: #888; }
+    </style>
+</head>
+<body>
+    <div class="layout">
+
+        <aside class="sidebar">
+            <div class="sidebar-header"><span class="sidebar-logo">FleetConnect</span></div>
+            <nav>
+                <div class="nav-section">
+                    <div class="nav-section-title">Main Menu</div>
+                    <a class="nav-item" href="rental-dashboard.html">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                        Dashboard
+                    </a>
+                    <a class="nav-item" href="create-job.html">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        Create Work Order
+                    </a>
+                    <a class="nav-item active" href="vendor-comparison.html">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                        Compare Vendors
+                    </a>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-menu">
+                    <div class="user-avatar-lg" id="userAvatar">R</div>
+                    <div class="user-info"><div class="user-name" id="userName">Rental Co.</div><div class="user-role">Rental Account</div></div>
+                    <button class="logout-btn" onclick="logout()"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg></button>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main">
+            <header class="header">
+                <div class="header-left">
+                    <button class="mobile-toggle" onclick="toggleMobileSidebar()"><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+                    <div>
+                        <h1>Vendor Comparison</h1>
+                        <p class="header-subtitle">Find the best vendor for your job</p>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content">
+                <!-- Filters -->
+                <div class="filter-card">
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label class="filter-label">Service Area</label>
+                            <input type="text" class="search-input" id="serviceAreaFilter" placeholder="e.g., Los Angeles">
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">Fuel Type</label>
+                            <select class="filter-select" id="fuelTypeFilter">
+                                <option value="">All Types</option>
+                                <option value="diesel">Diesel</option>
+                                <option value="gasoline">Gasoline</option>
+                                <option value="def">DEF</option>
+                                <option value="mixed">Mixed</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">Availability</label>
+                            <select class="filter-select" id="availabilityFilter">
+                                <option value="">All Vendors</option>
+                                <option value="available">Available Now</option>
+                                <option value="limited">Limited</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">&nbsp;</label>
+                            <button class="filter-btn" onclick="applyFilters()">Search</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sort Controls -->
+                <div class="sort-controls">
+                    <span class="sort-label">Sort by:</span>
+                    <button class="sort-btn active" onclick="sortVendors('rating')">Rating ★</button>
+                    <button class="sort-btn" onclick="sortVendors('price')">Price 💰</button>
+                    <button class="sort-btn" onclick="sortVendors('response')">Response Time ⏱</button>
+                    <button class="sort-btn" onclick="sortVendors('distance')">Distance 📍</button>
+                </div>
+
+                <!-- Vendor Grid -->
+                <div class="vendor-grid" id="vendorGrid"></div>
+
+                <!-- Comparison Section -->
+                <div class="comparison-section" id="comparisonSection">
+                    <div class="comparison-header">Side-by-Side Comparison</div>
+                    <div class="comparison-table">
+                        <table id="comparisonTable">
+                            <thead>
+                                <tr>
+                                    <th>Metric</th>
+                                    <th id="comp1Name">Vendor 1</th>
+                                    <th id="comp2Name">Vendor 2</th>
+                                    <th id="comp3Name" style="display:none;">Vendor 3</th>
+                                </tr>
+                            </thead>
+                            <tbody id="comparisonBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Quote Modal -->
+    <div class="modal-overlay" id="quoteModal">
+        <div class="modal">
+            <div class="modal-header"><h3>Request Quote</h3><button class="modal-close" onclick="closeQuoteModal()">×</button></div>
+            <div class="modal-body">
+                <div style="margin-bottom: 16px;">
+                    <label style="font-size: 0.8rem; color: #888; margin-bottom: 6px; display: block;">Vendor</label>
+                    <div id="quoteVendorName" style="font-weight: 600; font-size: 0.95rem;"></div>
+                </div>
+                <div style="margin-bottom: 16px;">
+                    <label style="font-size: 0.8rem; color: #888; margin-bottom: 6px; display: block;">Your Email</label>
+                    <input type="email" id="quoteEmail" placeholder="your@email.com" style="width: 100%; padding: 10px 12px; background: #2a2a2a; border: 1px solid #444; border-radius: 8px; color: #f5f0e8; font-family: inherit;">
+                </div>
+                <div>
+                    <label style="font-size: 0.8rem; color: #888; margin-bottom: 6px; display: block;">Message</label>
+                    <textarea id="quoteMessage" placeholder="Let them know about your job needs..." style="width: 100%; padding: 10px 12px; background: #2a2a2a; border: 1px solid #444; border-radius: 8px; color: #f5f0e8; font-family: inherit; min-height: 100px; resize: vertical;"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeQuoteModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="sendQuote()">Send Request</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="supabase-client.js"></script>
+    <script src="feature-flags.js"></script>
+    <script>
+        const currentUser = checkAuth(['rental']);
+        if (currentUser) {
+            document.getElementById('userName').textContent = currentUser.name;
+            document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+        }
+
+        FC_FLAGS.init('rental');
+
+        let allVendors = [];
+        let selectedVendors = [];
+        let currentSort = 'rating';
+
+        // Mock vendor data
+        const mockVendors = [
+            { id: 'v1', name: 'FastFuel Inc', rating: 4.8, responseTime: '1.5 hours', completionRate: '98%', priceRange: '$3.20-$3.80/gal', fleetSize: '24 trucks', serviceArea: 'Los Angeles, Orange County, Ventura', availability: 'green', fuelTypes: 'diesel, gasoline, def', distance: '2.1 mi' },
+            { id: 'v2', name: 'QuickTank Services', rating: 4.5, responseTime: '2.3 hours', completionRate: '97%', priceRange: '$3.50-$4.20/gal', fleetSize: '12 trucks', serviceArea: 'Los Angeles, Orange County', availability: 'green', fuelTypes: 'diesel, def', distance: '5.4 mi' },
+            { id: 'v3', name: 'Reliable Delivery Co', rating: 4.2, responseTime: '3.1 hours', completionRate: '95%', priceRange: '$3.75-$4.50/gal', fleetSize: '8 trucks', serviceArea: 'Los Angeles, Long Beach', availability: 'yellow', fuelTypes: 'diesel', distance: '8.2 mi' },
+            { id: 'v4', name: 'Regional Fuels LLC', rating: 3.9, responseTime: '4.2 hours', completionRate: '92%', priceRange: '$3.40-$4.10/gal', fleetSize: '15 trucks', serviceArea: 'Los Angeles, San Bernardino', availability: 'yellow', fuelTypes: 'diesel, gasoline', distance: '12.3 mi' },
+            { id: 'v5', name: 'Premium Fuel Partners', rating: 4.7, responseTime: '1.8 hours', completionRate: '99%', priceRange: '$4.00-$4.80/gal', fleetSize: '18 trucks', serviceArea: 'Orange County, Ventura', availability: 'green', fuelTypes: 'diesel, def', distance: '15.5 mi' },
+            { id: 'v6', name: 'Swift Logistics', rating: 4.1, responseTime: '2.8 hours', completionRate: '94%', priceRange: '$3.30-$3.90/gal', fleetSize: '10 trucks', serviceArea: 'Los Angeles', availability: 'red', fuelTypes: 'diesel', distance: '3.7 mi' }
+        ];
+
+        function renderVendors() {
+            const grid = document.getElementById('vendorGrid');
+            if (allVendors.length === 0) {
+                grid.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;">No vendors found matching your criteria</div>';
+                return;
+            }
+
+            grid.innerHTML = allVendors.map(v => {
+                const isSelected = selectedVendors.some(sel => sel.id === v.id);
+                return `
+                    <div class="vendor-card ${isSelected ? 'selected' : ''}" onclick="toggleVendorSelection('${v.id}')">
+                        <div class="vendor-header">
+                            <div class="vendor-info">
+                                <div class="vendor-logo">${v.name.charAt(0)}</div>
+                                <div class="vendor-name">${safe(v.name)}</div>
+                                <div class="vendor-rating">
+                                    ${Array(5).fill(0).map((_, i) => `<span class="star ${i < Math.floor(v.rating) ? '★' : '☆'}">★</span>`).join('')}
+                                    <span class="rating-text">${v.rating} (${Math.floor(Math.random() * 200) + 50} reviews)</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="vendor-metrics">
+                            <div class="metric">
+                                <span class="metric-icon">⏱</span>
+                                <div class="vendor-metric-label">Response Time</div>
+                                <div class="vendor-metric-value">${safe(v.responseTime)}</div>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-icon">✅</span>
+                                <div class="vendor-metric-label">Completion Rate</div>
+                                <div class="vendor-metric-value">${safe(v.completionRate)}</div>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-icon">💰</span>
+                                <div class="vendor-metric-label">Price Range</div>
+                                <div class="vendor-metric-value">${safe(v.priceRange)}</div>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-icon">🚛</span>
+                                <div class="vendor-metric-label">Fleet Size</div>
+                                <div class="vendor-metric-value">${safe(v.fleetSize)}</div>
+                            </div>
+                        </div>
+                        <div class="vendor-service-area">📍 ${safe(v.serviceArea)}</div>
+                        <div class="availability-badge ${v.availability === 'green' ? 'green' : v.availability === 'yellow' ? 'yellow' : 'red'}">
+                            <span class="availability-indicator" style="background: ${v.availability === 'green' ? '#22c55e' : v.availability === 'yellow' ? '#fbbf24' : '#f87171'};"></span>
+                            ${v.availability === 'green' ? 'Available Now' : v.availability === 'yellow' ? 'Limited Availability' : 'Unavailable'}
+                        </div>
+                        <div class="vendor-actions">
+                            <button class="btn-primary" onclick="event.stopPropagation(); openQuoteModal('${v.id}')">Request Quote</button>
+                            <button class="btn-secondary" onclick="event.stopPropagation(); selectVendor('${v.id}')">Select</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function applyFilters() {
+            const serviceArea = document.getElementById('serviceAreaFilter').value.toLowerCase();
+            const fuelType = document.getElementById('fuelTypeFilter').value.toLowerCase();
+            const availability = document.getElementById('availabilityFilter').value.toLowerCase();
+
+            allVendors = mockVendors.filter(v => {
+                if (serviceArea && !v.serviceArea.toLowerCase().includes(serviceArea)) return false;
+                if (fuelType && !v.fuelTypes.toLowerCase().includes(fuelType)) return false;
+                if (availability === 'available' && v.availability !== 'green') return false;
+                if (availability === 'limited' && v.availability === 'red') return false;
+                return true;
+            });
+
+            sortVendors(currentSort);
+            renderVendors();
+        }
+
+        function sortVendors(sortBy) {
+            currentSort = sortBy;
+            document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+
+            const vendorsCopy = [...allVendors];
+            if (sortBy === 'rating') {
+                vendorsCopy.sort((a, b) => parseFloat(b.rating) - parseFloat(a.rating));
+            } else if (sortBy === 'price') {
+                vendorsCopy.sort((a, b) => {
+                    const aPrice = parseFloat(a.priceRange.split('-')[0]);
+                    const bPrice = parseFloat(b.priceRange.split('-')[0]);
+                    return aPrice - bPrice;
+                });
+            } else if (sortBy === 'response') {
+                vendorsCopy.sort((a, b) => {
+                    const aTime = parseFloat(a.responseTime);
+                    const bTime = parseFloat(b.responseTime);
+                    return aTime - bTime;
+                });
+            } else if (sortBy === 'distance') {
+                vendorsCopy.sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));
+            }
+            allVendors = vendorsCopy;
+            renderVendors();
+        }
+
+        function toggleVendorSelection(vendorId) {
+            const vendor = allVendors.find(v => v.id === vendorId);
+            const isSelected = selectedVendors.some(v => v.id === vendorId);
+            if (isSelected) {
+                selectedVendors = selectedVendors.filter(v => v.id !== vendorId);
+            } else {
+                if (selectedVendors.length < 3) {
+                    selectedVendors.push(vendor);
+                } else {
+                    alert('You can select up to 3 vendors for comparison');
+                    return;
+                }
+            }
+            renderVendors();
+            if (selectedVendors.length > 1) showComparison();
+            else document.getElementById('comparisonSection').classList.remove('show');
+        }
+
+        function selectVendor(vendorId) {
+            const vendor = allVendors.find(v => v.id === vendorId);
+            if (vendor) {
+                alert('Vendor "' + vendor.name + '" selected! (Feature would redirect to create job with vendor pre-assigned)');
+            }
+        }
+
+        function showComparison() {
+            if (selectedVendors.length < 2) return;
+
+            const tbody = document.getElementById('comparisonBody');
+            const metrics = [
+                { label: 'Rating', key: 'rating' },
+                { label: 'Response Time', key: 'responseTime' },
+                { label: 'Completion Rate', key: 'completionRate' },
+                { label: 'Price Range', key: 'priceRange' },
+                { label: 'Fleet Size', key: 'fleetSize' },
+                { label: 'Fuel Types', key: 'fuelTypes' },
+                { label: 'Distance', key: 'distance' }
+            ];
+
+            tbody.innerHTML = metrics.map(m => {
+                let html = `<tr><td style="font-weight: 600;">${m.label}</td>`;
+                for (let i = 0; i < 3; i++) {
+                    if (i < selectedVendors.length) {
+                        html += `<td>${safe(selectedVendors[i][m.key])}</td>`;
+                    } else {
+                        html += `<td style="display:none;"></td>`;
+                    }
+                }
+                html += '</tr>';
+                return html;
+            }).join('');
+
+            // Set vendor names in header
+            for (let i = 0; i < 3; i++) {
+                const el = document.getElementById(`comp${i + 1}Name`);
+                if (i < selectedVendors.length) {
+                    el.style.display = '';
+                    el.textContent = selectedVendors[i].name;
+                } else {
+                    el.style.display = 'none';
+                }
+            }
+
+            document.getElementById('comparisonSection').classList.add('show');
+        }
+
+        function openQuoteModal(vendorId) {
+            const vendor = allVendors.find(v => v.id === vendorId);
+            if (vendor) {
+                document.getElementById('quoteVendorName').textContent = vendor.name;
+                document.getElementById('quoteEmail').value = '';
+                document.getElementById('quoteMessage').value = '';
+                document.getElementById('quoteModal').classList.add('show');
+            }
+        }
+
+        function closeQuoteModal() {
+            document.getElementById('quoteModal').classList.remove('show');
+        }
+
+        function sendQuote() {
+            const email = document.getElementById('quoteEmail').value;
+            const message = document.getElementById('quoteMessage').value;
+            if (!email || !message) {
+                alert('Please fill in all fields');
+                return;
+            }
+            alert('Quote request sent! (Feature would send email to vendor)');
+            closeQuoteModal();
+        }
+
+        function toggleMobileSidebar() {
+            document.querySelector('.sidebar').classList.toggle('open');
+        }
+
+        // Initialize
+        applyFilters();
+    </script>
+</body>
+</html>
