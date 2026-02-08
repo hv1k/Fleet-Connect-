@@ -225,9 +225,9 @@
 
         /* Priority Badge */
         .priority-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; margin-left: 8px; }
-        .priority-badge.fuel { background: rgba(251, 191, 36, 0.2); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.4); }
-        .priority-badge.swap { background: rgba(96, 165, 250, 0.2); color: #60a5fa; border: 1px solid rgba(96, 165, 250, 0.4); }
-        .priority-badge.normal { background: rgba(120, 113, 108, 0.2); color: #888; border: 1px solid rgba(120, 113, 108, 0.4); }
+        .priority-badge.high { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); }
+        .priority-badge.medium { background: rgba(251, 191, 36, 0.2); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.4); }
+        .priority-badge.low { background: rgba(34, 197, 94, 0.2); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.4); }
 
         /* No Address Styling */
         .no-address { color: #666; font-style: italic; }
@@ -382,14 +382,14 @@
             return allInvoices.filter(inv => inv.job_id === jobId);
         }
 
-        function getPriorityBadge(jobType) {
-            const type = (jobType || '').toLowerCase();
-            if (type.includes('fuel')) {
-                return { class: 'fuel', text: '⚡ Priority' };
-            } else if (type.includes('swap')) {
-                return { class: 'swap', text: 'Standard' };
+        function getPriorityBadge(priority) {
+            const p = (priority || '').toLowerCase();
+            if (p === 'urgent' || p === 'emergency') {
+                return { class: 'high', text: '⚠ Urgent' };
+            } else if (p === 'high' || p === 'normal' || p === '') {
+                return { class: 'medium', text: 'Normal' };
             } else {
-                return { class: 'normal', text: 'Normal' };
+                return { class: 'low', text: '✓ Low' };
             }
         }
 
@@ -423,7 +423,7 @@
                 const equipment = getEquipmentForJob(job.id);
                 const invoices = getInvoicesForJob(job.id);
                 const hasAddress = job.address_street || job.address_city;
-                const badge = getPriorityBadge(job.job_type);
+                const badge = getPriorityBadge(job.priority);
                 return `
                     <div class="job-card ${job.priority === 'urgent' || job.priority === 'emergency' ? 'urgent' : ''}">
                         <div class="job-header">
