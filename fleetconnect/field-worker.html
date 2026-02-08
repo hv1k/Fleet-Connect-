@@ -222,6 +222,15 @@
         .toast.show { opacity: 1; }
         .toast.success { background: #22c55e; color: #fff; }
         .toast.error { background: #ef4444; color: #fff; }
+
+        /* Priority Badge */
+        .priority-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; margin-left: 8px; }
+        .priority-badge.fuel { background: rgba(251, 191, 36, 0.2); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.4); }
+        .priority-badge.swap { background: rgba(96, 165, 250, 0.2); color: #60a5fa; border: 1px solid rgba(96, 165, 250, 0.4); }
+        .priority-badge.normal { background: rgba(120, 113, 108, 0.2); color: #888; border: 1px solid rgba(120, 113, 108, 0.4); }
+
+        /* No Address Styling */
+        .no-address { color: #666; font-style: italic; }
     </style>
 </head>
 <body>
@@ -373,6 +382,28 @@
             return allInvoices.filter(inv => inv.job_id === jobId);
         }
 
+        function getPriorityBadge(jobType) {
+            const type = (jobType || '').toLowerCase();
+            if (type.includes('fuel')) {
+                return { class: 'fuel', text: '⚡ Priority' };
+            } else if (type.includes('swap')) {
+                return { class: 'swap', text: 'Standard' };
+            } else {
+                return { class: 'normal', text: 'Normal' };
+            }
+        }
+
+        function contactVendor(jobId) {
+            const job = allJobs.find(j => j.id === jobId);
+            if (!job) return;
+
+            const vendorEmail = job.vendor_email || 'vendor@fleetconnect.com';
+            const subject = encodeURIComponent(`Address Update Needed - ${job.job_site_name || 'Job ' + jobId}`);
+            const body = encodeURIComponent(`Hi,\n\nI'm working on job "${job.job_site_name || 'Untitled'}" but the address is missing from the system. Could you please update the address?\n\nThank you!`);
+            window.location.href = `mailto:${vendorEmail}?subject=${subject}&body=${body}`;
+            showToast('Opening email client...', 'success');
+        }
+
         function renderJobs() {
             const filtered = currentTab === 'active'
                 ? allJobs.filter(j => ['assigned','accepted','in-progress'].includes(j.status))
@@ -391,19 +422,23 @@
             container.innerHTML = filtered.map(job => {
                 const equipment = getEquipmentForJob(job.id);
                 const invoices = getInvoicesForJob(job.id);
+                const hasAddress = job.address_street || job.address_city;
+                const badge = getPriorityBadge(job.job_type);
                 return `
                     <div class="job-card ${job.priority === 'urgent' || job.priority === 'emergency' ? 'urgent' : ''}">
                         <div class="job-header">
                             <div class="job-title">${safe(job.job_site_name || 'Untitled Job')}</div>
-                            <div class="job-meta">${formatJobType(job.job_type)} • ${invoices.length} invoice${invoices.length !== 1 ? 's' : ''}</div>
+                            <div class="job-meta">${formatJobType(job.job_type)}<span class="priority-badge ${badge.class}">${badge.text}</span> • ${invoices.length} invoice${invoices.length !== 1 ? 's' : ''}</div>
                         </div>
                         <div class="job-info">
                             <div class="job-info-row">
                                 <span class="job-info-label">Location</span>
                                 <span class="job-info-value">
-                                    <a href="https://maps.google.com/?q=${encodeURIComponent((job.address_street||'')+' '+(job.address_city||'')+' '+(job.address_state||''))}" target="_blank">
-                                        ${safe(job.address_city || '-')}, ${safe(job.address_state || '-')}
-                                    </a>
+                                    ${hasAddress ? `
+                                        <a href="https://maps.google.com/?q=${encodeURIComponent((job.address_street||'')+' '+(job.address_city||'')+' '+(job.address_state||''))}" target="_blank">
+                                            ${safe(job.address_city || '')}, ${safe(job.address_state || '')}
+                                        </a>
+                                    ` : `<span class="no-address">No address on file</span>`}
                                 </span>
                             </div>
                             <div class="job-info-row">
@@ -417,7 +452,7 @@
                         <div class="job-actions">
                             ${FC_FLAGS.isOn('invoice_creation') && job.status !== 'completed' ? `<button class="btn btn-primary" onclick="openInvoiceModal('${job.id}')">Create Invoice</button>` : ''}
                             <button class="btn btn-outline" onclick="viewHistory('${job.id}')">History</button>
-                            ${FC_FLAGS.isOn('navigation') && (job.address_street || job.address_city) ? `<button class="btn btn-navigate" onclick="navigateToJob('${encodeURIComponent((job.address_street||'')+', '+(job.address_city||'')+', '+(job.address_state||'')+' '+(job.address_zip||''))}')">📍 Navigate</button>` : ''}
+                            ${FC_FLAGS.isOn('navigation') && hasAddress ? `<button class="btn btn-navigate" onclick="navigateToJob('${encodeURIComponent((job.address_street||'')+', '+(job.address_city||'')+', '+(job.address_state||'')+' '+(job.address_zip||''))}')">📍 Navigate</button>` : !hasAddress ? `<button class="btn btn-outline" onclick="contactVendor('${job.id}')">📧 Contact Vendor</button>` : ''}
                         </div>
                     </div>
                 `;
