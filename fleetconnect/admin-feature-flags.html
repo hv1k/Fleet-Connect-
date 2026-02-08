@@ -104,6 +104,25 @@
         .toast.error { background: var(--error); color: white; }
 
         .loading { text-align: center; padding: 60px; color: var(--text-secondary); font-size: 0.9rem; }
+
+        /* Changelog Section */
+        .changelog-section { margin-top: 48px; padding-top: 32px; border-top: 1px solid var(--border); }
+        .changelog-header { margin-bottom: 20px; }
+        .changelog-header h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 4px; }
+        .changelog-header p { font-size: 0.85rem; color: var(--text-secondary); }
+        .changelog-panel { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+        .changelog-empty { padding: 24px; text-align: center; color: var(--text-secondary); font-size: 0.9rem; }
+        .changelog-list { max-height: 600px; overflow-y: auto; }
+        .changelog-entry { padding: 14px 20px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: start; gap: 16px; transition: background-color 0.2s; }
+        .changelog-entry:hover { background-color: #2d2d2d; }
+        .changelog-entry:last-child { border-bottom: none; }
+        .changelog-entry-content { flex: 1; }
+        .changelog-entry-flag { font-size: 0.85rem; font-weight: 600; color: var(--text-primary); }
+        .changelog-entry-role { font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .changelog-entry-change { font-size: 0.8rem; margin-top: 6px; padding: 4px 8px; border-radius: 4px; display: inline-block; font-weight: 600; }
+        .changelog-entry-change.enabled { background: rgba(34, 197, 94, 0.15); color: var(--success); }
+        .changelog-entry-change.disabled { background: rgba(239, 68, 68, 0.15); color: var(--error); }
+        .changelog-entry-time { font-size: 0.75rem; color: var(--text-secondary); white-space: nowrap; }
     </style>
 </head>
 <body>
@@ -173,6 +192,17 @@
         <div id="flagsContainer">
             <div class="loading">Loading feature flags...</div>
         </div>
+
+        <!-- Changelog Section -->
+        <div class="changelog-section">
+            <div class="changelog-header">
+                <h2>Recent Changes</h2>
+                <p>Last 10 flag modifications</p>
+            </div>
+            <div class="changelog-panel" id="changelogPanel">
+                <div class="changelog-empty">No changes yet</div>
+            </div>
+        </div>
     </div>
 
     <!-- Toast -->
@@ -191,6 +221,7 @@
             document.getElementById('userName').textContent = user.name || 'Admin';
 
             await loadFlags();
+            renderChangelog();
         });
 
         async function loadFlags() {
@@ -285,6 +316,85 @@
             document.getElementById('flagsContainer').innerHTML = html || '<div class="loading">No flags configured for this role.</div>';
         }
 
+        // Changelog functions
+        function getChangelog() {
+            try {
+                const data = sessionStorage.getItem('fc_flag_changelog');
+                return data ? JSON.parse(data) : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function saveChangelog(entries) {
+            try {
+                sessionStorage.setItem('fc_flag_changelog', JSON.stringify(entries));
+            } catch (e) {
+                console.error('Failed to save changelog:', e);
+            }
+        }
+
+        function addChangelogEntry(featureKey, role, enabled) {
+            const changelog = getChangelog();
+            changelog.unshift({
+                featureKey: featureKey,
+                role: role,
+                enabled: enabled,
+                timestamp: Date.now()
+            });
+            // Keep only last 10 entries
+            if (changelog.length > 10) changelog.pop();
+            saveChangelog(changelog);
+            renderChangelog();
+        }
+
+        function getRelativeTime(timestamp) {
+            const now = Date.now();
+            const diff = now - timestamp;
+            const seconds = Math.floor(diff / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+
+            if (seconds < 60) return 'just now';
+            if (minutes < 60) return minutes + ' minute' + (minutes !== 1 ? 's' : '') + ' ago';
+            if (hours < 24) return hours + ' hour' + (hours !== 1 ? 's' : '') + ' ago';
+            if (days < 7) return days + ' day' + (days !== 1 ? 's' : '') + ' ago';
+
+            const date = new Date(timestamp);
+            return date.toLocaleDateString();
+        }
+
+        function renderChangelog() {
+            const changelog = getChangelog();
+            const panel = document.getElementById('changelogPanel');
+
+            if (changelog.length === 0) {
+                panel.innerHTML = '<div class="changelog-empty">No changes yet</div>';
+                return;
+            }
+
+            let html = '<div class="changelog-list">';
+            changelog.forEach(entry => {
+                const changeType = entry.enabled ? 'Enabled' : 'Disabled';
+                const changeClass = entry.enabled ? 'enabled' : 'disabled';
+                const relTime = getRelativeTime(entry.timestamp);
+
+                html += `
+                <div class="changelog-entry">
+                    <div class="changelog-entry-content">
+                        <div class="changelog-entry-flag">${safe(entry.featureKey)}</div>
+                        <div class="changelog-entry-role">${safe(entry.role)}</div>
+                        <div class="changelog-entry-change ${changeClass}">${changeType}</div>
+                    </div>
+                    <div class="changelog-entry-time">${relTime}</div>
+                </div>
+                `;
+            });
+            html += '</div>';
+            panel.innerHTML = html;
+        }
+
         async function toggleFlag(role, featureKey, enabled, checkbox) {
             const cardId = 'card-' + role + '-' + featureKey.replace(/\./g, '-');
             const card = document.getElementById(cardId);
@@ -303,6 +413,9 @@
                     const roleFlags = allFlags.filter(f => f.role === role);
                     document.getElementById('statEnabled').textContent = roleFlags.filter(f => f.enabled).length;
                     document.getElementById('statDisabled').textContent = roleFlags.filter(f => !f.enabled).length;
+
+                    // Log change to changelog
+                    addChangelogEntry(featureKey, role, enabled);
 
                     // Update category badge
                     renderFlags(currentRole);
@@ -327,6 +440,8 @@
                 const ok = await FC_FLAGS.updateFlag(role, flag.feature_key, enabled);
                 if (ok) {
                     flag.enabled = enabled;
+                    // Log each change to changelog
+                    addChangelogEntry(flag.feature_key, role, enabled);
                     successCount++;
                 }
             }
