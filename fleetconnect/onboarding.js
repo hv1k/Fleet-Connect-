@@ -11,8 +11,9 @@ class FleetConnectOnboarding {
         this.isVisible = false;
         this.overlayElement = null;
         this.user = null;
-        this.storageKey = 'fc_onboarding_complete';
-        this.roleStorageKey = 'fc_onboarding_role';
+        // Storage keys are now per-user to prevent showing tutorial on every login
+        this.storageKey = null; // Will be set in init() after user is fetched
+        this.roleStorageKey = null;
 
         // Initialize immediately
         this.init();
@@ -24,6 +25,16 @@ class FleetConnectOnboarding {
     init() {
         // Try to get current user
         this.user = this.getCurrentUser();
+
+        // Setup per-user storage keys once we have the user
+        if (this.user && this.user.id) {
+            this.storageKey = `fleetconnect_onboarding_${this.user.id}_seen`;
+            this.roleStorageKey = `fleetconnect_onboarding_${this.user.id}_role`;
+        } else {
+            // Fallback if no user ID
+            this.storageKey = 'fc_onboarding_complete';
+            this.roleStorageKey = 'fc_onboarding_role';
+        }
 
         // Setup steps based on user role
         if (this.user && this.user.role) {
@@ -60,12 +71,13 @@ class FleetConnectOnboarding {
      */
     shouldAutoShow() {
         if (!this.user) return false;
+        if (!this.storageKey) return false;
 
-        const isComplete = localStorage.getItem(this.storageKey) === 'true';
-        const lastRole = localStorage.getItem(this.roleStorageKey);
+        // Only show if user hasn't seen it before
+        const hasSeenOnboarding = localStorage.getItem(this.storageKey) === 'true';
 
-        // Show if not complete OR if role changed
-        return !isComplete || lastRole !== this.user.role;
+        // Show if not seen before
+        return !hasSeenOnboarding;
     }
 
     /**
@@ -450,9 +462,9 @@ class FleetConnectOnboarding {
      * Mark onboarding as complete and hide
      */
     complete() {
-        localStorage.setItem(this.storageKey, 'true');
-        if (this.user) {
-            localStorage.setItem(this.roleStorageKey, this.user.role);
+        // Mark onboarding as seen for this specific user
+        if (this.storageKey) {
+            localStorage.setItem(this.storageKey, 'true');
         }
         this.hide();
     }

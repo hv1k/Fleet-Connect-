@@ -148,6 +148,9 @@
                     <a href="work-orders.html">Work Orders</a>
                     <a href="create-job.html">Create Work Order</a>
                     <a href="admin-feature-flags.html">Feature Flags</a>
+                    <a href="audit-log.html">Audit Log</a>
+                    <a href="company-management.html">Companies</a>
+                    <a href="analytics.html">Analytics</a>
                     <a href="settings.html">Settings</a>
                 </div>
                 <button class="notification-bell" title="Notifications">🔔</button>
@@ -381,9 +384,9 @@
 
         function updateJobsStats() {
             const total = allJobs.length;
-            const active = allJobs.filter(j => j.status === 'active' || j.status === 'in-progress').length;
+            const active = allJobs.filter(j => ['accepted', 'in-progress', 'open', 'active'].includes(j.status)).length;
             const completed = allJobs.filter(j => j.status === 'completed').length;
-            const pending = allJobs.filter(j => j.status === 'pending').length;
+            const pending = allJobs.filter(j => ['pending', 'assigned'].includes(j.status)).length;
 
             document.getElementById('jobsTotal').textContent = total;
             document.getElementById('jobsActive').textContent = active;

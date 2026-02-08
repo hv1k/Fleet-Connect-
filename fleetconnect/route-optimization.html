@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Route Optimization | FleetConnect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #06060b; color: #f5f0e8; min-height: 100vh; }
+
+        .layout { display: flex; min-height: 100vh; }
+
+        /* Sidebar */
+        .sidebar { width: 240px; background: #0a0a12; border-right: 1px solid #1a1a2e; padding: 24px 16px; position: fixed; left: 0; height: 100vh; z-index: 100; display: flex; flex-direction: column; overflow-y: auto; }
+        .sidebar-header { display: flex; align-items: center; gap: 10px; margin-bottom: 32px; padding: 20px 20px 12px; }
+        .sidebar-logo { font-size: 1.2rem; font-weight: 700; color: #60a5fa; }
+        .nav-section { margin-bottom: 24px; }
+        .nav-section-title { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: #4a5568; padding: 0 12px; margin-bottom: 8px; letter-spacing: 0.5px; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; color: #a0aec0; text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: all 0.2s; cursor: pointer; }
+        .nav-item:hover { background: #1a1a2e; color: #f5f0e8; }
+        .nav-item.active { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
+        .nav-item svg { width: 20px; height: 20px; }
+        .sidebar-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid #1a1a2e; }
+        .user-menu { display: flex; align-items: center; gap: 12px; padding: 12px; margin-top: 12px; border-radius: 10px; background: #1a1a2e; }
+        .user-avatar-lg { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #60a5fa, #3b82f6); display: flex; align-items: center; justify-content: center; color: #06060b; font-weight: 600; font-size: 0.85rem; }
+        .user-info { flex: 1; }
+        .user-name { font-size: 0.85rem; font-weight: 600; color: #f5f0e8; }
+        .user-role { font-size: 0.7rem; color: #718096; }
+        .logout-btn { color: #718096; cursor: pointer; padding: 6px; border-radius: 6px; background: none; border: none; }
+        .logout-btn:hover { background: #1a1a2e; color: #f5f0e8; }
+
+        /* Main */
+        .main { flex: 1; margin-left: 240px; min-height: 100vh; }
+        .header { background: #0a0a12; padding: 20px 32px; border-bottom: 1px solid #1a1a2e; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50; }
+        .header h1 { font-size: 1.4rem; font-weight: 700; color: #f5f0e8; }
+        .header-subtitle { font-size: 0.85rem; color: #718096; }
+        .content { padding: 32px; display: flex; gap: 24px; height: calc(100vh - 69px); }
+
+        /* Split View */
+        .split-container { display: flex; gap: 24px; height: 100%; }
+        .left-panel { flex: 0 0 35%; background: #0f0f1a; border-radius: 16px; border: 1px solid #1a1a2e; padding: 24px; display: flex; flex-direction: column; overflow: hidden; }
+        .right-panel { flex: 1; background: #0f0f1a; border-radius: 16px; border: 1px solid #1a1a2e; overflow: hidden; }
+
+        /* Panel Headers */
+        .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #1a1a2e; }
+        .panel-title { font-size: 1.1rem; font-weight: 600; color: #f5f0e8; }
+
+        /* Worker Selector */
+        .worker-selector { margin-bottom: 20px; }
+        .selector-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: #718096; margin-bottom: 8px; display: block; }
+        .worker-select { width: 100%; padding: 10px 12px; border: 1px solid #1a1a2e; border-radius: 8px; background: #06060b; color: #f5f0e8; font-size: 0.85rem; cursor: pointer; }
+        .worker-select:focus { outline: none; border-color: #60a5fa; }
+
+        /* Job List */
+        .job-list { flex: 1; overflow-y: auto; border: 1px solid #1a1a2e; border-radius: 8px; background: #06060b; }
+        .job-item { padding: 16px; border-bottom: 1px solid #1a1a2e; cursor: move; transition: all 0.2s; }
+        .job-item:last-child { border-bottom: none; }
+        .job-item:hover { background: #1a1a2e; }
+        .job-item.dragging { opacity: 0.5; background: rgba(96, 165, 250, 0.1); }
+        .job-index { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: #60a5fa; color: #06060b; font-size: 0.75rem; font-weight: 700; margin-right: 8px; }
+        .job-name { font-weight: 600; color: #f5f0e8; display: flex; align-items: center; gap: 8px; }
+        .job-address { font-size: 0.75rem; color: #718096; margin-top: 4px; }
+        .job-time { font-size: 0.75rem; color: #a0aec0; margin-top: 4px; }
+        .job-status { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 6px; font-size: 0.65rem; font-weight: 600; margin-top: 8px; }
+        .job-status.pending { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
+        .job-status.in-progress { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
+        .job-status.completed { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+
+        /* Route Actions */
+        .route-actions { display: flex; gap: 12px; margin-top: 20px; }
+        .btn { padding: 10px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 500; cursor: pointer; border: none; transition: all 0.2s; }
+        .btn-primary { background: #60a5fa; color: #06060b; }
+        .btn-primary:hover { background: #3b82f6; }
+        .btn-secondary { background: #1a1a2e; color: #f5f0e8; border: 1px solid #1a1a2e; }
+        .btn-secondary:hover { background: #2a2a3e; }
+
+        /* Route Summary */
+        .route-summary { margin-top: 20px; padding: 16px; background: #06060b; border-radius: 8px; border: 1px solid #1a1a2e; }
+        .summary-item { display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.85rem; }
+        .summary-label { color: #718096; }
+        .summary-value { color: #f5f0e8; font-weight: 600; }
+
+        /* Map */
+        #map { width: 100%; height: 100%; }
+        .leaflet-container { font-family: 'Inter', sans-serif; }
+
+        /* Mobile */
+        .mobile-toggle { display: none; width: 40px; height: 40px; border: 1px solid #1a1a2e; border-radius: 8px; background: #1a1a2e; color: #f5f0e8; align-items: center; justify-content: center; cursor: pointer; }
+        @media (max-width: 900px) {
+            .sidebar { display: none; left: 0; }
+            .sidebar.open { display: flex; position: fixed; z-index: 100; }
+            .main { margin-left: 0; }
+            .mobile-toggle { display: flex; }
+            .content { flex-direction: column; }
+            .split-container { flex-direction: column; }
+            .left-panel { flex: 0 0 auto; max-height: 300px; }
+            .right-panel { flex: 1; }
+        }
+
+        .loading { text-align: center; padding: 40px; color: #718096; }
+        .spinner { width: 36px; height: 36px; border: 3px solid #1a1a2e; border-top-color: #60a5fa; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .empty-state { text-align: center; padding: 40px; color: #718096; }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar-header"><span class="sidebar-logo">FleetConnect</span></div>
+            <nav>
+                <div class="nav-section">
+                    <div class="nav-section-title">Main Menu</div>
+                    <a class="nav-item" href="vendor-dashboard.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>Dashboard</a>
+                    <a class="nav-item active" href="route-optimization.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.553-.894L9 7.5M9 20l6-5.5M9 20v-2.5m6-4V5"/></svg>Route Optimization</a>
+                    <a class="nav-item" href="dispatch-board.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 4H5a2 2 0 00-2 2v14a2 2 0 002 2h4m0-6h.01M9 9h.01M9 14h.01M16 4h4a2 2 0 012 2v14a2 2 0 01-2 2h-4m0-6h.01M16 9h.01M16 14h.01"/></svg>Dispatch Board</a>
+                    <a class="nav-item" href="profitability.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6M3 4h18v18H3z"/></svg>Profitability</a>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-menu">
+                    <div class="user-avatar-lg" id="userAvatar">V</div>
+                    <div class="user-info"><div class="user-name" id="userName">Vendor</div><div class="user-role">Vendor Account</div></div>
+                    <button class="logout-btn" onclick="logout()"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg></button>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main">
+            <header class="header">
+                <div>
+                    <button class="mobile-toggle" onclick="toggleMobileSidebar()"><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+                    <h1>Route Optimization</h1>
+                    <p class="header-subtitle">Plan optimal routes for field workers</p>
+                </div>
+            </header>
+
+            <div class="content">
+                <!-- Left Panel: Job List -->
+                <div class="split-container">
+                    <div class="left-panel">
+                        <div class="panel-header">
+                            <div class="panel-title">Today's Jobs</div>
+                        </div>
+
+                        <div class="worker-selector">
+                            <label class="selector-label">Select Worker</label>
+                            <select class="worker-select" id="workerSelect" onchange="loadJobsForWorker()">
+                                <option value="">-- All Workers --</option>
+                            </select>
+                        </div>
+
+                        <div id="jobListContainer" class="job-list">
+                            <div class="loading"><div class="spinner"></div>Loading jobs...</div>
+                        </div>
+
+                        <div class="route-summary">
+                            <div class="summary-item">
+                                <span class="summary-label">Total Stops:</span>
+                                <span class="summary-value" id="totalStops">0</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">Est. Miles:</span>
+                                <span class="summary-value" id="estMiles">0</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">Est. Time:</span>
+                                <span class="summary-value" id="estTime">0 min</span>
+                            </div>
+                        </div>
+
+                        <div class="route-actions">
+                            <button class="btn btn-primary" onclick="optimizeRoute()">Optimize Route</button>
+                            <button class="btn btn-secondary" onclick="saveRoute()">Save Route</button>
+                        </div>
+                    </div>
+
+                    <!-- Right Panel: Map -->
+                    <div class="right-panel" id="map"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="supabase-client.js"></script>
+    <script src="feature-flags.js"></script>
+    <script src="realtime.js"></script>
+    <script>
+        let map, routeLayer, markerCluster = {};
+        let currentJobs = [];
+        let workers = [];
+        let allJobs = [];
+
+        function toggleMobileSidebar() {
+            document.querySelector('.sidebar').classList.toggle('open');
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (typeof checkAuth !== 'undefined') {
+                const user = checkAuth(['vendor']);
+                if (user) {
+                    document.getElementById('userName').textContent = user.name;
+                    document.getElementById('userAvatar').textContent = user.name.charAt(0).toUpperCase();
+
+                    await FC_FLAGS.init('vendor');
+                    FC_FLAGS.gatePage('page.route_optimization', 'vendor-dashboard.html');
+
+                    initMap();
+                    await loadData();
+                }
+            }
+        });
+
+        function initMap() {
+            map = L.map('map').setView([40, -95], 4);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(map);
+            routeLayer = L.featureGroup().addTo(map);
+        }
+
+        async function loadData() {
+            try {
+                allJobs = await getJobsForCurrentUser();
+                const { data: workersData } = await db.from('users').select('id, name').eq('role', 'fieldworker');
+                workers = workersData || [];
+
+                populateWorkerSelect();
+                await loadJobsForWorker();
+            } catch (err) {
+                console.error('Error loading data:', err);
+                document.getElementById('jobListContainer').innerHTML = '<div class="empty-state">Error loading jobs</div>';
+            }
+        }
+
+        function populateWorkerSelect() {
+            const select = document.getElementById('workerSelect');
+            workers.forEach(w => {
+                const option = document.createElement('option');
+                option.value = w.id;
+                option.textContent = w.name;
+                select.appendChild(option);
+            });
+        }
+
+        async function loadJobsForWorker() {
+            const workerId = document.getElementById('workerSelect').value;
+            let filtered = allJobs;
+
+            if (workerId) {
+                filtered = allJobs.filter(j => j.assigned_worker === workerId && ['pending', 'assigned', 'accepted', 'in-progress'].includes(j.status));
+            } else {
+                filtered = allJobs.filter(j => ['pending', 'assigned', 'accepted', 'in-progress'].includes(j.status));
+            }
+
+            currentJobs = filtered;
+            renderJobList();
+            updateMap();
+        }
+
+        function renderJobList() {
+            const container = document.getElementById('jobListContainer');
+
+            if (currentJobs.length === 0) {
+                container.innerHTML = '<div class="empty-state">No jobs assigned</div>';
+                updateSummary();
+                return;
+            }
+
+            container.innerHTML = currentJobs.map((job, idx) => `
+                <div class="job-item" draggable="true" data-job-id="${job.id}" ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="dragDrop(event, ${idx})" ondragend="dragEnd(event)">
+                    <div class="job-name">
+                        <div class="job-index">${idx + 1}</div>
+                        ${safe(job.job_site_name || 'Untitled')}
+                    </div>
+                    <div class="job-address">${safe(job.address_city || '')} ${safe(job.address_state || '')}</div>
+                    <div class="job-time">${job.date_out ? new Date(job.date_out).toLocaleString('en-US', {month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'}) : 'No time'}</div>
+                    <span class="job-status ${job.status}">${job.status}</span>
+                </div>
+            `).join('');
+
+            updateSummary();
+        }
+
+        function dragStart(e) {
+            e.target.closest('.job-item').classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function dragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        }
+
+        function dragDrop(e, targetIdx) {
+            e.preventDefault();
+            const sourceElement = document.querySelector('.job-item.dragging');
+            const sourceIdx = Array.from(document.querySelectorAll('.job-item')).indexOf(sourceElement);
+
+            if (sourceIdx !== targetIdx) {
+                const [job] = currentJobs.splice(sourceIdx, 1);
+                currentJobs.splice(targetIdx, 0, job);
+                renderJobList();
+                updateMap();
+            }
+        }
+
+        function dragEnd(e) {
+            e.target.closest('.job-item').classList.remove('dragging');
+        }
+
+        function updateMap() {
+            routeLayer.clearLayers();
+            markerCluster = {};
+
+            if (currentJobs.length === 0) return;
+
+            const colors = ['#3b82f6', '#f97316', '#22c55e'];
+            const statusColors = { pending: '#fbbf24', 'in-progress': '#3b82f6', completed: '#22c55e' };
+
+            const coordinates = currentJobs.map((j, idx) => ({
+                lat: j.latitude || 40 + Math.random() * 10,
+                lng: j.longitude || -95 + Math.random() * 10,
+                idx,
+                job: j
+            }));
+
+            coordinates.forEach((coord, idx) => {
+                const marker = L.circleMarker([coord.lat, coord.lng], {
+                    radius: 12,
+                    fillColor: statusColors[coord.job.status] || '#3b82f6',
+                    color: '#06060b',
+                    weight: 2,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                });
+
+                const label = L.marker([coord.lat, coord.lng], {
+                    icon: L.divIcon({
+                        html: `<div style="width:24px;height:24px;background:#06060b;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#f5f0e8;font-weight:700;font-size:12px;">${idx + 1}</div>`,
+                        iconSize: [24, 24],
+                        className: ''
+                    })
+                });
+
+                marker.bindPopup(`${safe(coord.job.job_site_name)}<br/>${safe(coord.job.address_city)}`);
+                routeLayer.addLayer(marker);
+                routeLayer.addLayer(label);
+                markerCluster[idx] = { lat: coord.lat, lng: coord.lng };
+            });
+
+            if (coordinates.length > 1) {
+                const points = coordinates.map(c => [c.lat, c.lng]);
+                const polyline = L.polyline(points, {
+                    color: '#60a5fa',
+                    weight: 2,
+                    opacity: 0.6,
+                    dashArray: '5, 5'
+                });
+                routeLayer.addLayer(polyline);
+            }
+
+            const bounds = routeLayer.getBounds();
+            if (bounds.isValid()) {
+                map.fitBounds(bounds, { padding: [50, 50] });
+            }
+        }
+
+        function updateSummary() {
+            const stops = currentJobs.length;
+            const avgMilesPerStop = 5;
+            const estMiles = stops * avgMilesPerStop;
+            const avgMinutesPerMile = 1.2;
+            const estMinutes = Math.round(estMiles * avgMinutesPerMile);
+
+            document.getElementById('totalStops').textContent = stops;
+            document.getElementById('estMiles').textContent = Math.round(estMiles);
+            document.getElementById('estTime').textContent = estMinutes + ' min';
+        }
+
+        function optimizeRoute() {
+            if (currentJobs.length < 2) {
+                alert('Need at least 2 jobs to optimize');
+                return;
+            }
+
+            const sorted = [...currentJobs].sort((a, b) => {
+                const aLat = a.latitude || 40;
+                const aLng = a.longitude || -95;
+                const bLat = b.latitude || 40;
+                const bLng = b.longitude || -95;
+
+                const aDist = Math.sqrt(Math.pow(aLat - 40, 2) + Math.pow(aLng + 95, 2));
+                const bDist = Math.sqrt(Math.pow(bLat - 40, 2) + Math.pow(bLng + 95, 2));
+                return aDist - bDist;
+            });
+
+            currentJobs = sorted;
+            renderJobList();
+            updateMap();
+        }
+
+        async function saveRoute() {
+            if (currentJobs.length === 0) {
+                alert('No jobs to save');
+                return;
+            }
+
+            try {
+                const workerId = document.getElementById('workerSelect').value;
+                for (let i = 0; i < currentJobs.length; i++) {
+                    await db.from('jobs').update({ route_order: i }).eq('id', currentJobs[i].id);
+                }
+                alert('Route saved successfully!');
+            } catch (err) {
+                alert('Error saving route: ' + err.message);
+            }
+        }
+    </script>
+</body>
+</html>

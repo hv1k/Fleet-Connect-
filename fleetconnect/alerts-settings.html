@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alert Settings | FleetConnect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #1a1a1a; color: #f5f0e8; min-height: 100vh; }
+
+        /* Light Mode */
+        body.dark { background: #f5f0e8; color: #1a1a1a; }
+        body.dark .sidebar { background: #ffffff; border-color: #e8e4dc; }
+        body.dark .sidebar-logo { color: #60a5fa; }
+        body.dark .nav-item { color: #5c5c5c; }
+        body.dark .nav-item:hover { background: #f0ebe3; color: #1a1a1a; }
+        body.dark .nav-item.active { background: #dbeafe; color: #3b82f6; }
+        body.dark .header { background: #ffffff; border-color: #e8e4dc; }
+        body.dark .header h1 { color: #1a1a1a; }
+        body.dark .alert-card { background: #ffffff; border-color: #e8e4dc; }
+        body.dark .alert-title { color: #1a1a1a; }
+        body.dark .alert-description { color: #5c5c5c; }
+        body.dark .form-group label { color: #5c5c5c; }
+        body.dark .form-group input, body.dark .form-group select, body.dark .form-group textarea { background: #f9f9f9; border-color: #e8e4dc; color: #1a1a1a; }
+        body.dark .btn-primary { background: #3b82f6; }
+        body.dark .btn-secondary { background: #f0ebe3; color: #1a1a1a; border-color: #e8e4dc; }
+        body.dark .toggle-switch { background: #e8e4dc; }
+        body.dark .toggle-switch.active { background: #3b82f6; }
+        body.dark .success-message { background: #dcfce7; color: #166534; border-color: #22c55e; }
+
+        .layout { display: flex; min-height: 100vh; }
+
+        /* Sidebar */
+        .sidebar { width: 240px; background: #242424; border-right: 1px solid #333; padding: 24px 16px; position: fixed; left: 0; height: 100vh; z-index: 100; display: flex; flex-direction: column; }
+        .sidebar-header { display: flex; align-items: center; gap: 10px; margin-bottom: 32px; padding: 20px 20px 12px; }
+        .sidebar-logo { font-size: 1.2rem; font-weight: 700; color: #60a5fa; }
+        .nav-section { margin-bottom: 24px; }
+        .nav-section-title { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: #666; padding: 0 12px; margin-bottom: 8px; letter-spacing: 0.5px; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; color: #b8b0a8; text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: all 0.2s; cursor: pointer; }
+        .nav-item:hover { background: #333; color: #f5f0e8; }
+        .nav-item.active { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
+        .nav-item svg { width: 20px; height: 20px; }
+
+        .sidebar-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid #333; }
+        .user-menu { display: flex; align-items: center; gap: 12px; padding: 12px; background: #333; border-radius: 10px; }
+        .user-avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #60a5fa, #3b82f6); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 0.85rem; }
+        .user-name { font-size: 0.85rem; font-weight: 600; color: #f5f0e8; }
+        .user-role { font-size: 0.7rem; color: #888; }
+        .user-info { flex: 1; min-width: 0; }
+        .logout-btn { background: none; border: none; color: #888; cursor: pointer; padding: 6px; border-radius: 6px; }
+        .logout-btn:hover { background: #444; color: #f5f0e8; }
+
+        /* Main */
+        .main { margin-left: 240px; flex: 1; min-height: 100vh; }
+        .header { background: #242424; padding: 20px 32px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50; }
+        .header h1 { font-size: 1.4rem; font-weight: 700; color: #f5f0e8; }
+        .content { padding: 32px; max-width: 1000px; }
+
+        /* Alert Card */
+        .alert-card { background: #242424; border-radius: 16px; border: 1px solid #333; padding: 24px; margin-bottom: 20px; }
+        .alert-header { display: flex; align-items: start; gap: 16px; margin-bottom: 20px; }
+        .alert-icon { font-size: 2rem; }
+        .alert-info { flex: 1; }
+        .alert-title { font-size: 1rem; font-weight: 600; color: #f5f0e8; margin-bottom: 4px; }
+        .alert-description { font-size: 0.85rem; color: #888; }
+
+        /* Toggle Switch */
+        .toggle-switch { display: inline-flex; align-items: center; cursor: pointer; }
+        .toggle-slider { width: 44px; height: 24px; background: #444; border-radius: 12px; position: relative; transition: background 0.2s; margin-left: 12px; }
+        .toggle-slider::after { content: ''; position: absolute; width: 20px; height: 20px; background: #f5f0e8; border-radius: 50%; top: 2px; left: 2px; transition: 0.2s; }
+        .toggle-switch.active .toggle-slider { background: #60a5fa; }
+        .toggle-switch.active .toggle-slider::after { left: 22px; }
+
+        /* Config Section */
+        .config-section { padding: 20px; background: #2a2a2a; border-radius: 10px; margin-top: 16px; border: 1px solid #333; }
+        .config-title { font-size: 0.85rem; font-weight: 600; color: #f5f0e8; margin-bottom: 12px; }
+
+        /* Form */
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 0.8rem; font-weight: 500; color: #999; margin-bottom: 6px; }
+        .form-group input, .form-group select { width: 100%; padding: 10px 12px; font-family: inherit; font-size: 0.85rem; background: #2a2a2a; border: 1px solid #444; border-radius: 8px; color: #f5f0e8; }
+        .form-group input:focus, .form-group select:focus { outline: none; border-color: #60a5fa; }
+
+        /* Checkboxes */
+        .checkbox-group { margin-top: 12px; }
+        .checkbox-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; }
+        .checkbox-item input[type="checkbox"] { cursor: pointer; }
+        .checkbox-item label { margin: 0; cursor: pointer; font-size: 0.85rem; color: #f5f0e8; }
+
+        /* Buttons */
+        .button-group { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
+        .btn { padding: 12px 24px; border-radius: 10px; font-size: 0.9rem; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; }
+        .btn-primary { background: #60a5fa; color: #fff; }
+        .btn-primary:hover { background: #3b82f6; }
+        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-secondary { background: #333; color: #f5f0e8; border: 1px solid #444; }
+        .btn-secondary:hover { background: #444; }
+
+        /* Success Message */
+        .success-message { display: none; padding: 16px; background: rgba(34, 197, 94, 0.1); border: 1px solid #22c55e; border-radius: 10px; color: #22c55e; margin-bottom: 20px; font-size: 0.9rem; }
+        .success-message.show { display: block; }
+
+        .mobile-toggle { display: none; width: 40px; height: 40px; border: 1px solid #444; border-radius: 8px; background: #2a2a2a; color: #f5f0e8; align-items: center; justify-content: center; cursor: pointer; }
+
+        @media (max-width: 900px) {
+            .sidebar { display: none; }
+            .sidebar.open { display: flex; position: fixed; z-index: 100; }
+            .main { margin-left: 0; }
+            .mobile-toggle { display: flex; }
+            .content { padding: 16px 20px; }
+            .header { padding: 16px 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar-header"><span class="sidebar-logo">FleetConnect</span></div>
+            <nav id="sidebarNav"></nav>
+            <div class="sidebar-footer">
+                <div class="user-menu">
+                    <div class="user-avatar" id="userAvatar">R</div>
+                    <div class="user-info"><div class="user-name" id="userName">Rental Co.</div><div class="user-role">Rental Account</div></div>
+                    <button class="logout-btn" onclick="logout()" title="Logout"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg></button>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main">
+            <header class="header">
+                <div>
+                    <button class="mobile-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')"><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+                </div>
+                <h1>Alert Settings</h1>
+            </header>
+
+            <div class="content">
+                <div class="success-message" id="successMessage">✓ Settings saved successfully</div>
+
+                <!-- Fuel Level Alert -->
+                <div class="alert-card">
+                    <div class="alert-header">
+                        <div class="alert-icon">⛽</div>
+                        <div class="alert-info">
+                            <div class="alert-title">Low Fuel Level Alert</div>
+                            <div class="alert-description">Notify when equipment fuel level drops below threshold</div>
+                        </div>
+                        <label class="toggle-switch" id="toggleFuel" onclick="toggleAlert(this)">
+                            <div class="toggle-slider"></div>
+                        </label>
+                    </div>
+                    <div class="config-section" id="fuelConfig" style="display:none;">
+                        <div class="config-title">Configuration</div>
+                        <div class="form-group">
+                            <label>Fuel Level Threshold (%)</label>
+                            <input type="number" id="fuelThreshold" min="5" max="50" value="25" placeholder="25">
+                        </div>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="fuelEmail" checked>
+                                <label for="fuelEmail">Email</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="fuelSms" checked>
+                                <label for="fuelSms">SMS</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="fuelApp" checked>
+                                <label for="fuelApp">In-App</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Maintenance Alert -->
+                <div class="alert-card">
+                    <div class="alert-header">
+                        <div class="alert-icon">🔧</div>
+                        <div class="alert-info">
+                            <div class="alert-title">Equipment Maintenance Alert</div>
+                            <div class="alert-description">Notify before scheduled maintenance is due</div>
+                        </div>
+                        <label class="toggle-switch" id="toggleMaint" onclick="toggleAlert(this)">
+                            <div class="toggle-slider"></div>
+                        </label>
+                    </div>
+                    <div class="config-section" id="maintConfig" style="display:none;">
+                        <div class="config-title">Configuration</div>
+                        <div class="form-group">
+                            <label>Days Before Due</label>
+                            <input type="number" id="maintDays" min="1" max="30" value="7" placeholder="7">
+                        </div>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="maintEmail" checked>
+                                <label for="maintEmail">Email</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="maintSms" checked>
+                                <label for="maintSms">SMS</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="maintApp" checked>
+                                <label for="maintApp">In-App</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contract Expiration Alert -->
+                <div class="alert-card">
+                    <div class="alert-header">
+                        <div class="alert-icon">📅</div>
+                        <div class="alert-info">
+                            <div class="alert-title">Contract Expiration Alert</div>
+                            <div class="alert-description">Notify before rental contract expires</div>
+                        </div>
+                        <label class="toggle-switch active" id="toggleContract" onclick="toggleAlert(this)">
+                            <div class="toggle-slider"></div>
+                        </label>
+                    </div>
+                    <div class="config-section" id="contractConfig" style="">
+                        <div class="config-title">Configuration</div>
+                        <div class="form-group">
+                            <label>Days Before Expiration</label>
+                            <input type="number" id="contractDays" min="1" max="60" value="14" placeholder="14">
+                        </div>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="contractEmail" checked>
+                                <label for="contractEmail">Email</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="contractSms">
+                                <label for="contractSms">SMS</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="contractApp" checked>
+                                <label for="contractApp">In-App</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Job Status Change Alert -->
+                <div class="alert-card">
+                    <div class="alert-header">
+                        <div class="alert-icon">📋</div>
+                        <div class="alert-info">
+                            <div class="alert-title">Job Status Change Alert</div>
+                            <div class="alert-description">Notify when work order status changes</div>
+                        </div>
+                        <label class="toggle-switch active" id="toggleStatus" onclick="toggleAlert(this)">
+                            <div class="toggle-slider"></div>
+                        </label>
+                    </div>
+                    <div class="config-section" id="statusConfig" style="">
+                        <div class="config-title">Configuration</div>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="statusEmail" checked>
+                                <label for="statusEmail">Email</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="statusSms">
+                                <label for="statusSms">SMS</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="statusApp" checked>
+                                <label for="statusApp">In-App</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Invoice Submitted Alert -->
+                <div class="alert-card">
+                    <div class="alert-header">
+                        <div class="alert-icon">💰</div>
+                        <div class="alert-info">
+                            <div class="alert-title">Invoice Submitted Alert</div>
+                            <div class="alert-description">Notify when new invoices are submitted</div>
+                        </div>
+                        <label class="toggle-switch active" id="toggleInvoice" onclick="toggleAlert(this)">
+                            <div class="toggle-slider"></div>
+                        </label>
+                    </div>
+                    <div class="config-section" id="invoiceConfig" style="">
+                        <div class="config-title">Configuration</div>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="invoiceEmail" checked>
+                                <label for="invoiceEmail">Email</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="invoiceSms">
+                                <label for="invoiceSms">SMS</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="invoiceApp" checked>
+                                <label for="invoiceApp">In-App</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
+                    <button class="btn btn-secondary" onclick="sendTestAlert()">Send Test Alert</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="supabase-client.js"></script>
+    <script src="feature-flags.js"></script>
+    <script>
+        // Auth Check
+        const currentUser = checkAuth(['rental']);
+        if (currentUser) {
+            document.getElementById('userName').textContent = currentUser.name;
+            document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+        }
+
+        // Feature Flags
+        FC_FLAGS.init('rental').then(() => {
+            FC_FLAGS.gatePage('feature.alerts_settings', '/rental-dashboard.html');
+        });
+
+        // Navigation
+        const icons = {
+            grid: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>',
+            bell: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>',
+            settings: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>'
+        };
+
+        const navItems = [
+            { label: 'Dashboard', href: 'rental-dashboard.html', icon: 'grid' },
+            { label: 'Alert Settings', href: 'alerts-settings.html', icon: 'bell', active: true },
+            { label: 'Settings', href: 'settings.html', icon: 'settings' }
+        ];
+
+        document.getElementById('sidebarNav').innerHTML = `
+            <div class="nav-section"><div class="nav-section-title">Main Menu</div>
+                ${navItems.map(i => `<a class="nav-item${i.active ? ' active' : ''}" href="${i.href}"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24">${icons[i.icon]}</svg>${i.label}</a>`).join('')}
+            </div>`;
+
+        // Alert Management
+        function toggleAlert(el) {
+            const toggle = el.closest('.toggle-switch');
+            toggle.classList.toggle('active');
+
+            const cardId = toggle.id.replace('toggle', '').toLowerCase();
+            const configId = cardId + 'Config';
+            const config = document.getElementById(configId);
+            if (config) {
+                config.style.display = toggle.classList.contains('active') ? '' : 'none';
+            }
+        }
+
+        async function saveSettings() {
+            const settings = {
+                fuel_alert: {
+                    enabled: document.getElementById('toggleFuel').classList.contains('active'),
+                    threshold: parseInt(document.getElementById('fuelThreshold').value) || 25,
+                    channels: {
+                        email: document.getElementById('fuelEmail').checked,
+                        sms: document.getElementById('fuelSms').checked,
+                        app: document.getElementById('fuelApp').checked
+                    }
+                },
+                maintenance_alert: {
+                    enabled: document.getElementById('toggleMaint').classList.contains('active'),
+                    days_before: parseInt(document.getElementById('maintDays').value) || 7,
+                    channels: {
+                        email: document.getElementById('maintEmail').checked,
+                        sms: document.getElementById('maintSms').checked,
+                        app: document.getElementById('maintApp').checked
+                    }
+                },
+                contract_alert: {
+                    enabled: document.getElementById('toggleContract').classList.contains('active'),
+                    days_before: parseInt(document.getElementById('contractDays').value) || 14,
+                    channels: {
+                        email: document.getElementById('contractEmail').checked,
+                        sms: document.getElementById('contractSms').checked,
+                        app: document.getElementById('contractApp').checked
+                    }
+                },
+                status_alert: {
+                    enabled: document.getElementById('toggleStatus').classList.contains('active'),
+                    channels: {
+                        email: document.getElementById('statusEmail').checked,
+                        sms: document.getElementById('statusSms').checked,
+                        app: document.getElementById('statusApp').checked
+                    }
+                },
+                invoice_alert: {
+                    enabled: document.getElementById('toggleInvoice').classList.contains('active'),
+                    channels: {
+                        email: document.getElementById('invoiceEmail').checked,
+                        sms: document.getElementById('invoiceSms').checked,
+                        app: document.getElementById('invoiceApp').checked
+                    }
+                }
+            };
+
+            try {
+                localStorage.setItem('alert_settings_' + currentUser.id, JSON.stringify(settings));
+                showSuccessMessage();
+            } catch (err) {
+                alert('Error saving settings: ' + err.message);
+            }
+        }
+
+        async function sendTestAlert() {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = 'Sending...';
+
+            try {
+                // Simulate sending test notification
+                await new Promise(r => setTimeout(r, 1500));
+                alert('Test alert sent! Check your email and in-app notifications.');
+                btn.disabled = false;
+                btn.textContent = 'Send Test Alert';
+            } catch (err) {
+                alert('Error: ' + err.message);
+                btn.disabled = false;
+                btn.textContent = 'Send Test Alert';
+            }
+        }
+
+        function showSuccessMessage() {
+            const msg = document.getElementById('successMessage');
+            msg.classList.add('show');
+            setTimeout(() => msg.classList.remove('show'), 3000);
+        }
+
+        // Load settings on page load
+        function loadSettings() {
+            try {
+                const saved = localStorage.getItem('alert_settings_' + currentUser.id);
+                if (!saved) return;
+
+                const settings = JSON.parse(saved);
+
+                // Fuel Alert
+                if (settings.fuel_alert) {
+                    document.getElementById('toggleFuel').classList.toggle('active', settings.fuel_alert.enabled);
+                    document.getElementById('fuelConfig').style.display = settings.fuel_alert.enabled ? '' : 'none';
+                    document.getElementById('fuelThreshold').value = settings.fuel_alert.threshold || 25;
+                    document.getElementById('fuelEmail').checked = settings.fuel_alert.channels?.email ?? true;
+                    document.getElementById('fuelSms').checked = settings.fuel_alert.channels?.sms ?? true;
+                    document.getElementById('fuelApp').checked = settings.fuel_alert.channels?.app ?? true;
+                }
+
+                // Maintenance Alert
+                if (settings.maintenance_alert) {
+                    document.getElementById('toggleMaint').classList.toggle('active', settings.maintenance_alert.enabled);
+                    document.getElementById('maintConfig').style.display = settings.maintenance_alert.enabled ? '' : 'none';
+                    document.getElementById('maintDays').value = settings.maintenance_alert.days_before || 7;
+                    document.getElementById('maintEmail').checked = settings.maintenance_alert.channels?.email ?? true;
+                    document.getElementById('maintSms').checked = settings.maintenance_alert.channels?.sms ?? true;
+                    document.getElementById('maintApp').checked = settings.maintenance_alert.channels?.app ?? true;
+                }
+
+                // Contract Alert
+                if (settings.contract_alert) {
+                    document.getElementById('toggleContract').classList.toggle('active', settings.contract_alert.enabled);
+                    document.getElementById('contractConfig').style.display = settings.contract_alert.enabled ? '' : 'none';
+                    document.getElementById('contractDays').value = settings.contract_alert.days_before || 14;
+                    document.getElementById('contractEmail').checked = settings.contract_alert.channels?.email ?? true;
+                    document.getElementById('contractSms').checked = settings.contract_alert.channels?.sms ?? true;
+                    document.getElementById('contractApp').checked = settings.contract_alert.channels?.app ?? true;
+                }
+
+                // Status Alert
+                if (settings.status_alert) {
+                    document.getElementById('toggleStatus').classList.toggle('active', settings.status_alert.enabled);
+                    document.getElementById('statusConfig').style.display = settings.status_alert.enabled ? '' : 'none';
+                    document.getElementById('statusEmail').checked = settings.status_alert.channels?.email ?? true;
+                    document.getElementById('statusSms').checked = settings.status_alert.channels?.sms ?? true;
+                    document.getElementById('statusApp').checked = settings.status_alert.channels?.app ?? true;
+                }
+
+                // Invoice Alert
+                if (settings.invoice_alert) {
+                    document.getElementById('toggleInvoice').classList.toggle('active', settings.invoice_alert.enabled);
+                    document.getElementById('invoiceConfig').style.display = settings.invoice_alert.enabled ? '' : 'none';
+                    document.getElementById('invoiceEmail').checked = settings.invoice_alert.channels?.email ?? true;
+                    document.getElementById('invoiceSms').checked = settings.invoice_alert.channels?.sms ?? true;
+                    document.getElementById('invoiceApp').checked = settings.invoice_alert.channels?.app ?? true;
+                }
+            } catch (err) {
+                console.error('Error loading settings:', err);
+            }
+        }
+
+        loadSettings();
+    </script>
+</body>
+</html>

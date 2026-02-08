@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Equipment Tracking | FleetConnect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #1a1a1a; color: #f5f0e8; min-height: 100vh; }
+
+        /* Light Mode */
+        body.dark { background: #f5f0e8; color: #1a1a1a; }
+        body.dark .sidebar { background: #ffffff; border-color: #e8e4dc; }
+        body.dark .sidebar-logo { color: #60a5fa; }
+        body.dark .nav-item { color: #5c5c5c; }
+        body.dark .nav-item:hover { background: #f0ebe3; color: #1a1a1a; }
+        body.dark .nav-item.active { background: #dbeafe; color: #3b82f6; }
+        body.dark .header { background: #ffffff; border-color: #e8e4dc; }
+        body.dark .header h1 { color: #1a1a1a; }
+        body.dark .sidebar-panel { background: #ffffff; border-color: #e8e4dc; }
+        body.dark .equipment-item { background: #f9f9f9; border-color: #e8e4dc; }
+        body.dark .equipment-item:hover { background: #f0ebe3; }
+        body.dark .equipment-item-name { color: #1a1a1a; }
+        body.dark .equipment-item-status { color: #5c5c5c; }
+        body.dark .status-indicator { border-color: #e8e4dc; }
+        body.dark .search-input { background: #f9f9f9; border-color: #e8e4dc; color: #1a1a1a; }
+
+        .layout { display: flex; min-height: 100vh; }
+
+        /* Sidebar */
+        .sidebar { width: 240px; background: #242424; border-right: 1px solid #333; padding: 24px 16px; position: fixed; left: 0; height: 100vh; z-index: 100; display: flex; flex-direction: column; }
+        .sidebar-header { display: flex; align-items: center; gap: 10px; margin-bottom: 32px; padding: 20px 20px 12px; }
+        .sidebar-logo { font-size: 1.2rem; font-weight: 700; color: #60a5fa; }
+        .nav-section { margin-bottom: 24px; }
+        .nav-section-title { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: #666; padding: 0 12px; margin-bottom: 8px; letter-spacing: 0.5px; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; color: #b8b0a8; text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: all 0.2s; cursor: pointer; }
+        .nav-item:hover { background: #333; color: #f5f0e8; }
+        .nav-item.active { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
+        .nav-item svg { width: 20px; height: 20px; }
+
+        .sidebar-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid #333; }
+        .user-menu { display: flex; align-items: center; gap: 12px; padding: 12px; background: #333; border-radius: 10px; }
+        .user-avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #60a5fa, #3b82f6); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 0.85rem; }
+        .user-name { font-size: 0.85rem; font-weight: 600; color: #f5f0e8; }
+        .user-role { font-size: 0.7rem; color: #888; }
+        .user-info { flex: 1; min-width: 0; }
+        .logout-btn { background: none; border: none; color: #888; cursor: pointer; padding: 6px; border-radius: 6px; }
+        .logout-btn:hover { background: #444; color: #f5f0e8; }
+
+        /* Main */
+        .main { margin-left: 240px; flex: 1; min-height: 100vh; display: flex; flex-direction: column; }
+        .header { background: #242424; padding: 20px 32px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50; }
+        .header h1 { font-size: 1.4rem; font-weight: 700; color: #f5f0e8; }
+
+        /* Controls */
+        .controls { padding: 16px 32px; background: #242424; border-bottom: 1px solid #333; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        .view-toggle { display: flex; gap: 8px; }
+        .toggle-btn { padding: 8px 16px; background: #333; color: #b8b0a8; border: 1px solid #444; border-radius: 8px; cursor: pointer; font-size: 0.85rem; font-weight: 500; transition: all 0.2s; }
+        .toggle-btn.active { background: #60a5fa; color: #fff; border-color: #60a5fa; }
+
+        .search-input { padding: 8px 12px 8px 36px; border: 1px solid #444; border-radius: 8px; font-size: 0.85rem; width: 220px; background: #2a2a2a url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23666'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'/%3E%3C/svg%3E") 10px center no-repeat; background-size: 16px; color: #f5f0e8; }
+        .search-input:focus { outline: none; border-color: #60a5fa; }
+
+        /* Content Container */
+        .content-container { flex: 1; display: flex; gap: 0; }
+
+        /* Map */
+        #map { flex: 1; }
+
+        /* Sidebar Panel */
+        .sidebar-panel { width: 300px; background: #242424; border-left: 1px solid #333; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; }
+        .panel-title { font-size: 0.9rem; font-weight: 600; color: #f5f0e8; margin-bottom: 16px; }
+        .equipment-list { flex: 1; overflow-y: auto; }
+        .equipment-item { padding: 12px; background: #2a2a2a; border: 1px solid #333; border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 10px; }
+        .equipment-item:hover { background: #333; border-color: #60a5fa; }
+        .equipment-item.active { border-color: #60a5fa; background: rgba(96, 165, 250, 0.1); }
+
+        .status-indicator { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; border: 2px solid #333; }
+        .status-indicator.active { background: #22c55e; border-color: #22c55e; }
+        .status-indicator.idle { background: #fbbf24; border-color: #fbbf24; }
+        .status-indicator.offline { background: #f87171; border-color: #f87171; }
+
+        .equipment-item-name { font-size: 0.85rem; font-weight: 600; color: #f5f0e8; }
+        .equipment-item-status { font-size: 0.75rem; color: #888; margin-top: 2px; }
+
+        /* Popup */
+        .leaflet-popup-content { font-family: 'Inter', sans-serif; color: #1a1a1a; }
+        .popup-title { font-size: 0.95rem; font-weight: 600; margin-bottom: 8px; }
+        .popup-detail { font-size: 0.8rem; margin: 4px 0; }
+        .popup-detail-label { color: #666; }
+
+        .mobile-toggle { display: none; width: 40px; height: 40px; border: 1px solid #444; border-radius: 8px; background: #2a2a2a; color: #f5f0e8; align-items: center; justify-content: center; cursor: pointer; }
+
+        @media (max-width: 900px) {
+            .sidebar { display: none; }
+            .sidebar.open { display: flex; position: fixed; z-index: 100; }
+            .main { margin-left: 0; }
+            .mobile-toggle { display: flex; }
+            .content-container { flex-direction: column; }
+            .sidebar-panel { width: 100%; max-height: 300px; border-left: none; border-top: 1px solid #333; }
+            .header { padding: 16px 20px; }
+            .controls { padding: 12px 20px; }
+        }
+
+        /* List View */
+        .list-view-container { display: none; flex: 1; overflow-y: auto; padding: 20px; }
+        .list-view-container.active { display: block; }
+
+        .list-item { background: #2a2a2a; border: 1px solid #333; border-radius: 10px; padding: 16px; margin-bottom: 12px; }
+        .list-item-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px; }
+        .list-item-title { font-size: 0.95rem; font-weight: 600; color: #f5f0e8; }
+        .list-item-status { font-size: 0.75rem; padding: 4px 10px; border-radius: 20px; font-weight: 600; background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+        .list-item-details { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 0.85rem; }
+        .list-detail { }
+        .list-detail-label { color: #888; margin-bottom: 2px; }
+        .list-detail-value { color: #f5f0e8; font-weight: 500; }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar-header"><span class="sidebar-logo">FleetConnect</span></div>
+            <nav id="sidebarNav"></nav>
+            <div class="sidebar-footer">
+                <div class="user-menu">
+                    <div class="user-avatar" id="userAvatar">R</div>
+                    <div class="user-info"><div class="user-name" id="userName">Rental Co.</div><div class="user-role">Rental Account</div></div>
+                    <button class="logout-btn" onclick="logout()" title="Logout"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg></button>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main">
+            <header class="header">
+                <div>
+                    <button class="mobile-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')"><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+                </div>
+                <h1>Equipment Tracking</h1>
+            </header>
+
+            <div class="controls">
+                <input type="text" class="search-input" id="searchInput" placeholder="Search equipment..." onkeyup="filterEquipment()">
+                <div class="view-toggle">
+                    <button class="toggle-btn active" onclick="switchView('map')">Map View</button>
+                    <button class="toggle-btn" onclick="switchView('list')">List View</button>
+                </div>
+            </div>
+
+            <div class="content-container">
+                <!-- Map -->
+                <div id="map" style="flex: 1;"></div>
+
+                <!-- Sidebar Panel -->
+                <div class="sidebar-panel">
+                    <div class="panel-title">Equipment (<span id="equipmentCount">0</span>)</div>
+                    <div class="equipment-list" id="equipmentList"></div>
+                </div>
+
+                <!-- List View -->
+                <div class="list-view-container" id="listView"></div>
+            </div>
+        </main>
+    </div>
+
+    <script src="supabase-client.js"></script>
+    <script src="feature-flags.js"></script>
+    <script>
+        // Auth Check
+        const currentUser = checkAuth(['rental']);
+        if (currentUser) {
+            document.getElementById('userName').textContent = currentUser.name;
+            document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+        }
+
+        // Feature Flags
+        FC_FLAGS.init('rental').then(() => {
+            FC_FLAGS.gatePage('feature.equipment_tracking', '/rental-dashboard.html');
+        });
+
+        // Navigation
+        const icons = {
+            grid: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>',
+            map: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 003 16.382V5.618a1 1 0 011.553-.894L9 7.382m0 0l6-3.724m-6 3.724v12.252m6-3.724l5.447 2.724A1 1 0 0021 16.382V5.618a1 1 0 00-1.553-.894L15 7.382m0 0V19.63"/>',
+            settings: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>'
+        };
+
+        const navItems = [
+            { label: 'Dashboard', href: 'rental-dashboard.html', icon: 'grid' },
+            { label: 'Equipment Tracking', href: 'equipment-tracking.html', icon: 'map', active: true },
+            { label: 'Settings', href: 'settings.html', icon: 'settings' }
+        ];
+
+        document.getElementById('sidebarNav').innerHTML = `
+            <div class="nav-section"><div class="nav-section-title">Main Menu</div>
+                ${navItems.map(i => `<a class="nav-item${i.active ? ' active' : ''}" href="${i.href}"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24">${icons[i.icon]}</svg>${i.label}</a>`).join('')}
+            </div>`;
+
+        // Map Setup
+        let map;
+        let markers = {};
+        let allEquipment = [];
+
+        function initMap() {
+            map = L.map('map').setView([40, -95], 4);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(map);
+
+            loadEquipmentData();
+        }
+
+        async function loadEquipmentData() {
+            try {
+                const jobs = await getJobsForCurrentUser();
+                allEquipment = jobs.map((job, idx) => ({
+                    id: job.id,
+                    name: job.job_site_name || 'Untitled Job',
+                    location: [40 + Math.random() * 10 - 5, -95 + Math.random() * 20 - 10],
+                    status: job.status === 'completed' ? 'offline' : job.status === 'in-progress' ? 'active' : 'idle',
+                    fuel: Math.floor(Math.random() * 100),
+                    lastDelivery: job.updated_at,
+                    customer: job.customer_name
+                }));
+
+                renderMap();
+                renderEquipmentList();
+            } catch (err) {
+                console.error('Error loading equipment:', err);
+            }
+        }
+
+        function renderMap() {
+            allEquipment.forEach(eq => {
+                if (markers[eq.id]) map.removeLayer(markers[eq.id]);
+
+                const color = eq.status === 'active' ? '#22c55e' : eq.status === 'idle' ? '#fbbf24' : '#f87171';
+                const html = `<div style="width:30px;height:30px;background:${color};border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:14px;">📦</div>`;
+                const icon = L.divIcon({ html, className: '', iconSize: [30, 30] });
+
+                markers[eq.id] = L.marker(eq.location, { icon }).addTo(map)
+                    .bindPopup(`
+                        <div class="popup-title">${safe(eq.name)}</div>
+                        <div class="popup-detail"><span class="popup-detail-label">Status:</span> ${eq.status}</div>
+                        <div class="popup-detail"><span class="popup-detail-label">Fuel:</span> ${eq.fuel}%</div>
+                        <div class="popup-detail"><span class="popup-detail-label">Customer:</span> ${safe(eq.customer)}</div>
+                    `)
+                    .on('click', () => selectEquipment(eq.id));
+            });
+        }
+
+        function renderEquipmentList() {
+            const filtered = getFilteredEquipment();
+            document.getElementById('equipmentCount').textContent = filtered.length;
+
+            const html = filtered.map(eq => `
+                <div class="equipment-item ${eq.id === selectedEquipmentId ? 'active' : ''}" onclick="selectEquipment('${eq.id}')">
+                    <div class="status-indicator ${eq.status}"></div>
+                    <div>
+                        <div class="equipment-item-name">${safe(eq.name)}</div>
+                        <div class="equipment-item-status">${eq.status} • ${eq.fuel}% fuel</div>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('equipmentList').innerHTML = html || '<div style="color:#888;text-align:center;padding:20px;">No equipment</div>';
+        }
+
+        function renderListView() {
+            const filtered = getFilteredEquipment();
+            const html = filtered.map(eq => `
+                <div class="list-item">
+                    <div class="list-item-header">
+                        <div class="list-item-title">${safe(eq.name)}</div>
+                        <div class="list-item-status">${eq.status}</div>
+                    </div>
+                    <div class="list-item-details">
+                        <div class="list-detail">
+                            <div class="list-detail-label">Status</div>
+                            <div class="list-detail-value">${eq.status}</div>
+                        </div>
+                        <div class="list-detail">
+                            <div class="list-detail-label">Fuel Level</div>
+                            <div class="list-detail-value">${eq.fuel}%</div>
+                        </div>
+                        <div class="list-detail">
+                            <div class="list-detail-label">Customer</div>
+                            <div class="list-detail-value">${safe(eq.customer)}</div>
+                        </div>
+                        <div class="list-detail">
+                            <div class="list-detail-label">Last Delivery</div>
+                            <div class="list-detail-value">${formatDate(eq.lastDelivery)}</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('listView').innerHTML = html || '<div style="color:#888;text-align:center;padding:40px;">No equipment</div>';
+        }
+
+        let selectedEquipmentId = null;
+
+        function selectEquipment(id) {
+            selectedEquipmentId = id;
+            renderEquipmentList();
+        }
+
+        function getFilteredEquipment() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            return allEquipment.filter(eq =>
+                (eq.name || '').toLowerCase().includes(search) ||
+                (eq.customer || '').toLowerCase().includes(search)
+            );
+        }
+
+        function filterEquipment() {
+            renderEquipmentList();
+            renderListView();
+        }
+
+        function switchView(view) {
+            if (view === 'map') {
+                document.getElementById('map').style.display = 'block';
+                document.getElementById('listView').classList.remove('active');
+            } else {
+                document.getElementById('map').style.display = 'none';
+                document.getElementById('listView').classList.add('active');
+                renderListView();
+            }
+
+            document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+
+        // Initialize
+        initMap();
+    </script>
+</body>
+</html>

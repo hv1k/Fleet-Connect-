@@ -6,6 +6,13 @@
     <title>My Jobs | FleetConnect</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#60a5fa">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="FleetConnect">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: #1a1a1a; color: #f5f0e8; min-height: 100vh; }
@@ -231,6 +238,47 @@
 
         /* No Address Styling */
         .no-address { color: #666; font-style: italic; }
+
+        /* Enhanced Signature Modal */
+        .signature-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); z-index: 2000; display: flex; flex-direction: column; }
+        .signature-modal-header { padding: 16px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; background: #1a1a1a; }
+        .signature-modal-header h3 { font-size: 1rem; color: #f5f0e8; margin: 0; }
+        .signature-modal-close { background: none; border: none; color: #888; font-size: 1.5rem; cursor: pointer; padding: 4px 8px; }
+        .signature-modal-close:hover { color: #f5f0e8; }
+        .signature-modal-canvas { flex: 1; display: flex; align-items: center; justify-content: center; background: #fff; }
+        .signature-modal-canvas canvas { width: 100%; height: 100%; display: block; touch-action: none; cursor: crosshair; }
+        .signature-modal-footer { padding: 16px; background: #1a1a1a; border-top: 1px solid #333; display: flex; gap: 8px; }
+        .signature-modal-footer button { flex: 1; padding: 12px; border-radius: 8px; border: none; font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
+        .sig-btn-clear { background: #333; color: #888; }
+        .sig-btn-clear:hover { background: #444; color: #f5f0e8; }
+        .sig-btn-done { background: #60a5fa; color: #1a1a1a; }
+        .sig-btn-done:hover { background: #3b82f6; }
+
+        /* Photo Upload Section */
+        .photo-upload-section { background: #242424; border: 1px solid #333; border-radius: 12px; padding: 16px; margin-top: 20px; }
+        .photo-upload-title { font-size: 0.9rem; font-weight: 600; color: #f5f0e8; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .photo-required-badge { color: #ef4444; font-size: 1rem; }
+        .camera-button-group { display: grid; grid-template-columns: 1fr; gap: 8px; margin-bottom: 16px; }
+        .camera-button { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px 16px; background: #333; border: 2px solid #444; border-radius: 10px; color: #f5f0e8; font-family: 'Inter', sans-serif; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .camera-button:hover { background: #3d3d3d; border-color: #60a5fa; color: #60a5fa; }
+        .camera-button:active { transform: scale(0.98); }
+        .camera-button svg { width: 20px; height: 20px; }
+        .photo-categories { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+        .photo-category { background: #1e1e1e; padding: 12px; border-radius: 8px; border: 1px solid #333; }
+        .photo-category-label { font-size: 0.8rem; font-weight: 600; color: #60a5fa; text-transform: uppercase; display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+        .photo-category-required { color: #ef4444; }
+        .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .photo-thumbnail { position: relative; width: 100%; aspect-ratio: 1; border-radius: 8px; overflow: hidden; background: #333; border: 2px solid #333; }
+        .photo-thumbnail img, .photo-thumbnail video { width: 100%; height: 100%; object-fit: cover; }
+        .photo-thumbnail-delete { position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; background: #ef4444; border: none; border-radius: 50%; color: white; font-size: 14px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .photo-thumbnail-delete:hover { background: #dc2626; }
+        .photo-input-hidden { display: none; }
+
+        /* Mobile Camera Optimization */
+        @media (max-width: 768px) {
+          .camera-button { padding: 16px; font-size: 1rem; }
+          .photo-grid { grid-template-columns: repeat(2, 1fr); }
+        }
     </style>
 </head>
 <body>
@@ -297,12 +345,31 @@
     <script src="notifications.js"></script>
     <script src="realtime.js"></script>
     <script src="onboarding.js"></script>
+    <script src="offline-sync.js"></script>
+    <script src="pwa-register.js"></script>
     <script>
         const currentUser = checkAuth(['fieldworker']);
         if (!currentUser) throw new Error('Not authenticated');
 
         // Initialize feature flags for field worker role
         FC_FLAGS.init('fieldworker');
+
+        // Register service worker for offline support
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.register('service-worker.js').then(reg => {
+            console.log('[FieldWorker] Service Worker registered:', reg);
+            // Check for updates
+            reg.addEventListener('updatefound', () => {
+              const newWorker = reg.installing;
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  console.log('[FieldWorker] Service Worker update available');
+                  showToast('App update available. Refresh to get the latest version.', 'success');
+                }
+              });
+            });
+          }).catch(err => console.warn('[FieldWorker] Service Worker registration failed:', err));
+        }
 
         // Setup user info
         document.getElementById('userName').textContent = currentUser.name;
@@ -438,7 +505,7 @@
                                         <a href="https://maps.google.com/?q=${encodeURIComponent((job.address_street||'')+' '+(job.address_city||'')+' '+(job.address_state||''))}" target="_blank">
                                             ${safe(job.address_city || '')}, ${safe(job.address_state || '')}
                                         </a>
-                                    ` : `<span class="no-address">No address on file</span>`}
+                                    ` : `<span class="no-address">${safe(job.customer_name || 'Address pending')}</span>`}
                                 </span>
                             </div>
                             <div class="job-info-row">
@@ -621,19 +688,39 @@
                         </div>
                     </div>
 
+                    ${FC_FLAGS.isOn('photo_invoice') ? `<div class="photo-upload-section">
+                        <div class="photo-upload-title">
+                            <span>📷 Required Photos</span>
+                            <span class="photo-required-badge">*</span>
+                        </div>
+                        <p style="font-size:0.8rem;color:#888;margin-bottom:12px;">Capture photos for meter/gauge readings (required before submission)</p>
+                        <div class="camera-button-group">
+                            <button type="button" class="camera-button" onclick="openPhotoCapture('meter_before')">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                📸 Meter Before
+                            </button>
+                            <button type="button" class="camera-button" onclick="openPhotoCapture('meter_after')">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                📸 Meter After
+                            </button>
+                            <button type="button" class="camera-button" onclick="openPhotoCapture('equipment')">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                📸 Equipment
+                            </button>
+                        </div>
+                        <div id="photoCategoriesContainer"></div>
+                        <input type="file" id="photoInput" accept="image/*" multiple capture="environment" class="photo-input-hidden" onchange="handlePhotoCapture(event)">
+                    </div>` : ''}
+
                     ${FC_FLAGS.isOn('signature') ? `<div class="signature-section">
                         <div class="section-title">Site Contact Signature</div>
                         <p style="font-size:0.8rem;color:#888;margin-bottom:10px;">Have the site contact sign below to confirm delivery</p>
-                        <div class="signature-canvas-wrap">
-                            <canvas id="signatureCanvas" width="600" height="150"></canvas>
-                            <div class="signature-placeholder" id="sigPlaceholder">Sign here</div>
-                        </div>
-                        <div class="signature-actions">
-                            <button type="button" onclick="clearSignature()">Clear</button>
-                            <button type="button" id="sigNameBtn" onclick="document.getElementById('signerName').focus()">Add Name</button>
+                        <button type="button" class="btn btn-primary" style="width:100%;margin-bottom:12px;" onclick="openSignatureModal()">✍️ Capture Signature</button>
+                        <div id="signaturePreview" style="display:none;text-align:center;margin-top:12px;">
+                            <img id="signatureImg" style="max-width:100%;height:auto;border-radius:8px;border:1px solid #333;">
+                            <p style="font-size:0.8rem;color:#22c55e;margin-top:8px;">✓ Signature captured</p>
                         </div>
                         <input type="text" id="signerName" placeholder="Signer's name (optional)" style="width:100%;margin-top:8px;padding:10px;border-radius:8px;border:1px solid #444;background:#333;color:#f5f0e8;font-size:0.85rem;">
-                        <div class="signature-status" id="sigStatus">✓ Signature captured</div>
                     </div>` : ''}
 
                     <button class="submit-invoice" id="submitBtn" onclick="submitInvoice('${jobId}')">
@@ -1012,6 +1099,406 @@
             currentTab = this.dataset.tab;
             renderJobs();
         }));
+
+        // ===== PHOTO INVOICE FEATURE =====
+        let capturedPhotos = {
+          meter_before: [],
+          meter_after: [],
+          equipment: []
+        };
+
+        function openPhotoCapture(category) {
+          const input = document.getElementById('photoInput');
+          input.dataset.category = category;
+          input.click();
+        }
+
+        function handlePhotoCapture(event) {
+          const category = event.target.dataset.category;
+          const files = Array.from(event.target.files);
+
+          // Compress and add photos
+          Promise.all(files.map(file => compressImage(file))).then(compressedPhotos => {
+            capturedPhotos[category] = [...(capturedPhotos[category] || []), ...compressedPhotos];
+            renderPhotoCategories();
+            showToast(`${files.length} photo(s) added to ${category.replace('_', ' ')}`, 'success');
+          });
+
+          // Reset input
+          event.target.value = '';
+        }
+
+        function compressImage(file) {
+          return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+              const img = new Image();
+              img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+
+                // Resize to max 1200px width
+                const maxWidth = 1200;
+                if (width > maxWidth) {
+                  height = (maxWidth / width) * height;
+                  width = maxWidth;
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // Compress to 80% quality JPEG
+                const compressed = canvas.toDataURL('image/jpeg', 0.8);
+                resolve({
+                  data: compressed,
+                  name: file.name,
+                  size: compressed.length
+                });
+              };
+              img.src = event.target.result;
+            };
+          });
+        }
+
+        function renderPhotoCategories() {
+          const container = document.getElementById('photoCategoriesContainer');
+          if (!container) return;
+
+          const categories = [
+            { id: 'meter_before', label: 'Meter Before', required: true },
+            { id: 'meter_after', label: 'Meter After', required: true },
+            { id: 'equipment', label: 'Equipment Photo', required: true }
+          ];
+
+          container.innerHTML = categories.map(cat => `
+            <div class="photo-category">
+              <div class="photo-category-label">
+                ${cat.label}
+                ${cat.required ? '<span class="photo-category-required">*</span>' : ''}
+              </div>
+              <div class="photo-grid" id="grid-${cat.id}">
+                ${(capturedPhotos[cat.id] || []).map((photo, i) => `
+                  <div class="photo-thumbnail">
+                    <img src="${photo.data}" alt="Photo">
+                    <button type="button" class="photo-thumbnail-delete" onclick="deletePhoto('${cat.id}', ${i})">×</button>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `).join('');
+        }
+
+        function deletePhoto(category, index) {
+          capturedPhotos[category].splice(index, 1);
+          renderPhotoCategories();
+          showToast('Photo deleted', 'success');
+        }
+
+        function validatePhotos() {
+          const required = ['meter_before', 'meter_after', 'equipment'];
+          for (const cat of required) {
+            if (!capturedPhotos[cat] || capturedPhotos[cat].length === 0) {
+              showToast(`Missing required photo: ${cat.replace('_', ' ')}`, 'error');
+              return false;
+            }
+          }
+          return true;
+        }
+
+        // ===== ENHANCED SIGNATURE MODAL =====
+        let enhancedSignatureData = null;
+        let sigModalCanvas, sigModalCtx, sigModalDrawing = false;
+
+        function openSignatureModal() {
+          const modal = document.createElement('div');
+          modal.className = 'signature-modal';
+          modal.id = 'signatureModal';
+          modal.innerHTML = `
+            <div class="signature-modal-header">
+              <h3>✍️ Capture Signature</h3>
+              <button class="signature-modal-close" onclick="closeSignatureModal()">×</button>
+            </div>
+            <div class="signature-modal-canvas">
+              <canvas id="sigModalCanvas" style="width:100%;height:100%;"></canvas>
+            </div>
+            <div class="signature-modal-footer">
+              <button type="button" class="signature-modal-footer button sig-btn-clear" onclick="clearSignatureModal()">Clear</button>
+              <button type="button" class="signature-modal-footer button sig-btn-done" onclick="saveSignatureModal()">Done</button>
+            </div>
+          `;
+          document.body.appendChild(modal);
+          document.body.style.overflow = 'hidden';
+          setTimeout(initSignatureModal, 50);
+        }
+
+        function initSignatureModal() {
+          sigModalCanvas = document.getElementById('sigModalCanvas');
+          if (!sigModalCanvas) return;
+
+          sigModalCtx = sigModalCanvas.getContext('2d');
+
+          // Set canvas size to match container
+          const rect = sigModalCanvas.parentElement.getBoundingClientRect();
+          sigModalCanvas.width = rect.width;
+          sigModalCanvas.height = rect.height;
+
+          // Setup drawing
+          sigModalCtx.strokeStyle = '#333';
+          sigModalCtx.lineWidth = 2.5;
+          sigModalCtx.lineCap = 'round';
+          sigModalCtx.lineJoin = 'round';
+
+          // Determine if touch or mouse
+          const isTouchDevice = () => {
+            return (('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0));
+          };
+
+          if (isTouchDevice()) {
+            sigModalCanvas.addEventListener('touchstart', sigModalStart, false);
+            sigModalCanvas.addEventListener('touchmove', sigModalMove, false);
+            sigModalCanvas.addEventListener('touchend', sigModalEnd, false);
+          } else {
+            sigModalCanvas.addEventListener('mousedown', sigModalStart, false);
+            sigModalCanvas.addEventListener('mousemove', sigModalMove, false);
+            sigModalCanvas.addEventListener('mouseup', sigModalEnd, false);
+            sigModalCanvas.addEventListener('mouseleave', sigModalEnd, false);
+          }
+
+          // Set background to white
+          sigModalCtx.fillStyle = '#fff';
+          sigModalCtx.fillRect(0, 0, sigModalCanvas.width, sigModalCanvas.height);
+        }
+
+        function getSignatureCoords(e) {
+          const rect = sigModalCanvas.getBoundingClientRect();
+          if (e.touches) {
+            return {
+              x: e.touches[0].clientX - rect.left,
+              y: e.touches[0].clientY - rect.top
+            };
+          } else {
+            return {
+              x: e.clientX - rect.left,
+              y: e.clientY - rect.top
+            };
+          }
+        }
+
+        function sigModalStart(e) {
+          e.preventDefault();
+          sigModalDrawing = true;
+          const coords = getSignatureCoords(e);
+          sigModalCtx.beginPath();
+          sigModalCtx.moveTo(coords.x, coords.y);
+        }
+
+        function sigModalMove(e) {
+          if (!sigModalDrawing) return;
+          e.preventDefault();
+          const coords = getSignatureCoords(e);
+          sigModalCtx.lineTo(coords.x, coords.y);
+          sigModalCtx.stroke();
+        }
+
+        function sigModalEnd(e) {
+          if (sigModalDrawing) {
+            e.preventDefault();
+            sigModalDrawing = false;
+          }
+        }
+
+        function clearSignatureModal() {
+          if (sigModalCanvas) {
+            sigModalCtx.fillStyle = '#fff';
+            sigModalCtx.fillRect(0, 0, sigModalCanvas.width, sigModalCanvas.height);
+            enhancedSignatureData = null;
+          }
+        }
+
+        function saveSignatureModal() {
+          if (!sigModalCanvas) return;
+          enhancedSignatureData = sigModalCanvas.toDataURL('image/png');
+          signatureData = enhancedSignatureData;
+
+          // Show preview
+          const preview = document.getElementById('signaturePreview');
+          if (preview) {
+            const img = document.getElementById('signatureImg');
+            img.src = enhancedSignatureData;
+            preview.style.display = 'block';
+          }
+
+          closeSignatureModal();
+          showToast('Signature captured successfully!', 'success');
+        }
+
+        function closeSignatureModal() {
+          const modal = document.getElementById('signatureModal');
+          if (modal) modal.remove();
+          document.body.style.overflow = '';
+          sigModalCanvas = null;
+          sigModalCtx = null;
+        }
+
+        // ===== UPDATE SUBMIT INVOICE =====
+        const originalSubmitInvoice = submitInvoice;
+        async function submitInvoice(jobId) {
+          // Validate photos if feature enabled
+          if (FC_FLAGS.isOn('photo_invoice')) {
+            if (!validatePhotos()) return;
+          }
+
+          // Validate signature if feature enabled
+          if (FC_FLAGS.isOn('signature') && !signatureData) {
+            showToast('Please capture a signature before submitting', 'error');
+            return;
+          }
+
+          // Call original submit with photo data
+          try {
+            // Store photos temporarily for submission
+            const invoiceWithPhotos = {
+              photos: capturedPhotos
+            };
+
+            // Merge with existing submitInvoice logic
+            const unitIds = Object.keys(activeUnits);
+            if (unitIds.length === 0) { showToast('Please select at least one unit', 'error'); return; }
+
+            for (const unitId of unitIds) {
+              const hours = document.getElementById(`hours-${unitId}`).value;
+              const diesel = document.getElementById(`diesel-${unitId}`).value;
+              const def = document.getElementById(`def-${unitId}`).value;
+              if (!hours || !diesel || !def) { showToast('Fill in hours, diesel, and DEF for all selected units', 'error'); return; }
+            }
+
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.textContent = 'Uploading photos...';
+
+            let uploadedPhotos = [], uploadedVideos = [];
+            const hasIncident = document.getElementById('hasIncident').checked;
+
+            // Upload incident photos/videos
+            if (hasIncident) {
+              for (const photo of selectedPhotos) { const url = await uploadFile(photo, 'photos'); if (url) uploadedPhotos.push(url); }
+              for (const video of selectedVideos) { const url = await uploadFile(video, 'videos'); if (url) uploadedVideos.push(url); }
+            }
+
+            // Upload required photos (compress already done)
+            let photosUrlsByCategory = {};
+            if (FC_FLAGS.isOn('photo_invoice')) {
+              btn.textContent = 'Processing photos...';
+              for (const [category, photos] of Object.entries(capturedPhotos)) {
+                photosUrlsByCategory[category] = photos.map(p => p.data);
+              }
+            }
+
+            btn.textContent = 'Saving...';
+
+            const equipment = getEquipmentForJob(jobId);
+            const unitsData = unitIds.map(unitId => {
+              const eq = equipment.find(e => e.id === unitId);
+              return {
+                unit_id: unitId,
+                unit_number: eq?.equipment_number || '',
+                unit_description: eq?.description || '',
+                unit_hours: parseFloat(document.getElementById(`hours-${unitId}`).value),
+                diesel_gallons: parseFloat(document.getElementById(`diesel-${unitId}`).value),
+                def_gallons: parseFloat(document.getElementById(`def-${unitId}`).value)
+              };
+            });
+
+            const totalDiesel = unitsData.reduce((sum, u) => sum + u.diesel_gallons, 0);
+            const totalDef = unitsData.reduce((sum, u) => sum + u.def_gallons, 0);
+            const date = document.getElementById('invoiceDate').value;
+            const time = document.getElementById('invoiceTime').value;
+
+            let notes = document.getElementById('invoiceNotes').value;
+            const signerName = document.getElementById('signerName')?.value || '';
+            if (capturedGPS) {
+              const gpsString = `GPS: ${capturedGPS.latitude.toFixed(6)}, ${capturedGPS.longitude.toFixed(6)} | `;
+              notes = gpsString + (notes || '');
+            }
+            if (signerName) {
+              notes = (notes || '') + ` | Signed by: ${signerName}`;
+            }
+
+            const { data, error } = await db.from('invoices').insert([{
+              job_id: jobId,
+              worker_id: currentUser.id,
+              worker_name: document.getElementById('workerName').value,
+              invoice_date: date,
+              invoice_time: time,
+              notes: notes,
+              units_data: unitsData,
+              total_diesel: totalDiesel,
+              total_def: totalDef,
+              has_incident: hasIncident,
+              incident_description: hasIncident ? document.getElementById('incidentDescription').value : null,
+              incident_photos: uploadedPhotos,
+              incident_videos: uploadedVideos,
+              signature_data: signatureData || null,
+              photos_meter_before: photosUrlsByCategory.meter_before || [],
+              photos_meter_after: photosUrlsByCategory.meter_after || [],
+              photos_equipment: photosUrlsByCategory.equipment || [],
+              latitude: capturedGPS?.latitude || null,
+              longitude: capturedGPS?.longitude || null,
+              location_accuracy: capturedGPS?.accuracy || null
+            }]).select().single();
+
+            if (error) {
+              console.error('Error:', error);
+              showToast('Error creating invoice: ' + error.message, 'error');
+              btn.disabled = false;
+              btn.textContent = 'Create Invoice';
+              return;
+            }
+
+            // Save to offline storage if offline
+            if (!navigator.onLine && typeof offlineSync !== 'undefined') {
+              await offlineSync.saveOfflineInvoice({
+                job_id: jobId,
+                worker_id: currentUser.id,
+                worker_name: document.getElementById('workerName').value,
+                invoice_date: date,
+                invoice_time: time,
+                notes: notes,
+                units_data: unitsData,
+                total_diesel: totalDiesel,
+                total_def: totalDef,
+                has_incident: hasIncident,
+                incident_description: hasIncident ? document.getElementById('incidentDescription').value : null,
+                incident_photos: uploadedPhotos,
+                incident_videos: uploadedVideos,
+                signature_data: signatureData || null,
+                photos_meter_before: photosUrlsByCategory.meter_before || [],
+                photos_meter_after: photosUrlsByCategory.meter_after || [],
+                photos_equipment: photosUrlsByCategory.equipment || [],
+                latitude: capturedGPS?.latitude || null,
+                longitude: capturedGPS?.longitude || null,
+                location_accuracy: capturedGPS?.accuracy || null
+              });
+              showToast('Invoice saved offline. Will sync when online.', 'success');
+            }
+
+            closeInvoiceModal();
+            capturedPhotos = { meter_before: [], meter_after: [], equipment: [] };
+            signatureData = null;
+            enhancedSignatureData = null;
+            loadData();
+          } catch (err) {
+            console.error('Submit error:', err);
+            showToast('Error: ' + (err.message || 'Unknown error'), 'error');
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = false;
+            btn.textContent = 'Create Invoice';
+          }
+        }
 
         loadData();
     </script>

@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dispatch Board | FleetConnect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #06060b; color: #f5f0e8; min-height: 100vh; }
+
+        .layout { display: flex; min-height: 100vh; }
+
+        /* Sidebar */
+        .sidebar { width: 240px; background: #0a0a12; border-right: 1px solid #1a1a2e; padding: 24px 16px; position: fixed; left: 0; height: 100vh; z-index: 100; display: flex; flex-direction: column; overflow-y: auto; }
+        .sidebar-header { display: flex; align-items: center; gap: 10px; margin-bottom: 32px; padding: 20px 20px 12px; }
+        .sidebar-logo { font-size: 1.2rem; font-weight: 700; color: #60a5fa; }
+        .nav-section { margin-bottom: 24px; }
+        .nav-section-title { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: #4a5568; padding: 0 12px; margin-bottom: 8px; letter-spacing: 0.5px; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; color: #a0aec0; text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: all 0.2s; cursor: pointer; }
+        .nav-item:hover { background: #1a1a2e; color: #f5f0e8; }
+        .nav-item.active { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
+        .nav-item svg { width: 20px; height: 20px; }
+        .sidebar-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid #1a1a2e; }
+        .user-menu { display: flex; align-items: center; gap: 12px; padding: 12px; margin-top: 12px; border-radius: 10px; background: #1a1a2e; }
+        .user-avatar-lg { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #60a5fa, #3b82f6); display: flex; align-items: center; justify-content: center; color: #06060b; font-weight: 600; font-size: 0.85rem; }
+        .user-info { flex: 1; }
+        .user-name { font-size: 0.85rem; font-weight: 600; color: #f5f0e8; }
+        .user-role { font-size: 0.7rem; color: #718096; }
+        .logout-btn { color: #718096; cursor: pointer; padding: 6px; border-radius: 6px; background: none; border: none; }
+        .logout-btn:hover { background: #1a1a2e; color: #f5f0e8; }
+
+        /* Main */
+        .main { flex: 1; margin-left: 240px; min-height: 100vh; }
+        .header { background: #0a0a12; padding: 20px 32px; border-bottom: 1px solid #1a1a2e; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50; }
+        .header h1 { font-size: 1.4rem; font-weight: 700; color: #f5f0e8; }
+        .header-subtitle { font-size: 0.85rem; color: #718096; }
+        .content { padding: 32px; }
+
+        /* Stats Row */
+        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
+        .stat-card { background: #0f0f1a; border-radius: 12px; border: 1px solid #1a1a2e; padding: 16px 20px; }
+        .stat-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: #718096; margin-bottom: 8px; }
+        .stat-value { font-size: 1.6rem; font-weight: 700; color: #60a5fa; }
+
+        /* Filters */
+        .filters { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+        .filter-group { display: flex; gap: 8px; align-items: center; }
+        .filter-label { font-size: 0.85rem; font-weight: 500; color: #a0aec0; }
+        .filter-input, .filter-select { padding: 8px 12px; border: 1px solid #1a1a2e; border-radius: 8px; background: #06060b; color: #f5f0e8; font-size: 0.85rem; }
+        .filter-input:focus, .filter-select:focus { outline: none; border-color: #60a5fa; }
+
+        /* Kanban Board */
+        .kanban-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+        .kanban-column { background: #0f0f1a; border-radius: 12px; border: 1px solid #1a1a2e; display: flex; flex-direction: column; min-height: 600px; }
+        .column-header { padding: 16px 20px; border-bottom: 1px solid #1a1a2e; }
+        .column-title { font-size: 0.9rem; font-weight: 600; color: #f5f0e8; }
+        .column-count { font-size: 0.75rem; color: #718096; margin-top: 4px; }
+        .column-content { flex: 1; padding: 16px; overflow-y: auto; }
+        .column-drop-zone { min-height: 100px; background: rgba(96, 165, 250, 0.05); border: 2px dashed transparent; border-radius: 8px; transition: all 0.2s; }
+        .column-drop-zone.drag-over { border-color: #60a5fa; background: rgba(96, 165, 250, 0.1); }
+
+        /* Job Card */
+        .job-card { background: #1a1a2e; border: 1px solid #2a2a3e; border-radius: 10px; padding: 14px; margin-bottom: 12px; cursor: grab; transition: all 0.2s; }
+        .job-card:hover { background: #252540; border-color: #60a5fa; }
+        .job-card.dragging { opacity: 0.5; }
+        .job-card-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px; }
+        .job-card-customer { font-size: 0.9rem; font-weight: 600; color: #f5f0e8; }
+        .job-card-priority { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 6px; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; }
+        .job-card-priority.high { background: rgba(248, 113, 113, 0.15); color: #f87171; }
+        .job-card-priority.medium { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
+        .job-card-priority.low { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
+        .job-card-address { font-size: 0.75rem; color: #a0aec0; margin-top: 6px; }
+        .job-card-equipment { font-size: 0.75rem; color: #718096; margin-top: 4px; }
+        .job-card-worker { font-size: 0.75rem; color: #60a5fa; margin-top: 6px; padding-top: 6px; border-top: 1px solid #2a2a3e; }
+        .job-card-time { font-size: 0.7rem; color: #718096; margin-top: 4px; }
+
+        /* Detail Slide Panel */
+        .slide-panel { position: fixed; right: -400px; top: 0; width: 400px; height: 100vh; background: #0a0a12; border-left: 1px solid #1a1a2e; z-index: 200; transition: right 0.3s ease; overflow-y: auto; }
+        .slide-panel.open { right: 0; }
+        .panel-header { padding: 20px; border-bottom: 1px solid #1a1a2e; display: flex; justify-content: space-between; align-items: center; }
+        .panel-title { font-size: 1rem; font-weight: 600; color: #f5f0e8; }
+        .panel-close { background: none; border: none; color: #a0aec0; cursor: pointer; font-size: 1.5rem; }
+        .panel-body { padding: 20px; }
+        .detail-section { margin-bottom: 20px; }
+        .detail-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: #718096; margin-bottom: 6px; }
+        .detail-value { font-size: 0.9rem; color: #f5f0e8; }
+        .panel-actions { padding: 20px; border-top: 1px solid #1a1a2e; display: flex; gap: 12px; }
+
+        /* Mobile */
+        .mobile-toggle { display: none; width: 40px; height: 40px; border: 1px solid #1a1a2e; border-radius: 8px; background: #1a1a2e; color: #f5f0e8; align-items: center; justify-content: center; cursor: pointer; }
+        @media (max-width: 1400px) { .kanban-container { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 900px) {
+            .sidebar { display: none; }
+            .sidebar.open { display: flex; position: fixed; z-index: 100; }
+            .main { margin-left: 0; }
+            .mobile-toggle { display: flex; }
+            .kanban-container { grid-template-columns: 1fr; }
+            .slide-panel { width: 100%; }
+        }
+
+        .loading { text-align: center; padding: 40px; color: #718096; }
+        .spinner { width: 36px; height: 36px; border: 3px solid #1a1a2e; border-top-color: #60a5fa; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar-header"><span class="sidebar-logo">FleetConnect</span></div>
+            <nav>
+                <div class="nav-section">
+                    <div class="nav-section-title">Main Menu</div>
+                    <a class="nav-item" href="vendor-dashboard.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>Dashboard</a>
+                    <a class="nav-item" href="route-optimization.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.553-.894L9 7.5M9 20l6-5.5M9 20v-2.5m6-4V5"/></svg>Route Optimization</a>
+                    <a class="nav-item active" href="dispatch-board.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 4H5a2 2 0 00-2 2v14a2 2 0 002 2h4m0-6h.01M9 9h.01M9 14h.01M16 4h4a2 2 0 012 2v14a2 2 0 01-2 2h-4m0-6h.01M16 9h.01M16 14h.01"/></svg>Dispatch Board</a>
+                    <a class="nav-item" href="profitability.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6M3 4h18v18H3z"/></svg>Profitability</a>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-menu">
+                    <div class="user-avatar-lg" id="userAvatar">V</div>
+                    <div class="user-info"><div class="user-name" id="userName">Vendor</div><div class="user-role">Vendor Account</div></div>
+                    <button class="logout-btn" onclick="logout()"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg></button>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main">
+            <header class="header">
+                <div>
+                    <button class="mobile-toggle" onclick="toggleMobileSidebar()"><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+                    <h1>Dispatch Board</h1>
+                    <p class="header-subtitle">Manage job assignments and workflow</p>
+                </div>
+            </header>
+
+            <div class="content">
+                <!-- Stats Row -->
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="stat-label">New/Unassigned</div>
+                        <div class="stat-value" id="statNew">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Assigned</div>
+                        <div class="stat-value" id="statAssigned">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">In Progress</div>
+                        <div class="stat-value" id="statInProgress">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Completed</div>
+                        <div class="stat-value" id="statCompleted">0</div>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="filters">
+                    <div class="filter-group">
+                        <label class="filter-label">Date Range:</label>
+                        <select class="filter-select" id="dateRangeFilter" onchange="refreshBoard()">
+                            <option value="today">Today</option>
+                            <option value="week">This Week</option>
+                            <option value="month">This Month</option>
+                            <option value="all">All</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Worker:</label>
+                        <select class="filter-select" id="workerFilter" onchange="refreshBoard()">
+                            <option value="">All Workers</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Priority:</label>
+                        <select class="filter-select" id="priorityFilter" onchange="refreshBoard()">
+                            <option value="">All</option>
+                            <option value="high">High</option>
+                            <option value="medium">Medium</option>
+                            <option value="low">Low</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Kanban Board -->
+                <div class="kanban-container">
+                    <div class="kanban-column">
+                        <div class="column-header">
+                            <div class="column-title">New/Unassigned</div>
+                            <div class="column-count" id="newCount">0 jobs</div>
+                        </div>
+                        <div class="column-content" id="columnNew" ondragover="dragOver(event)" ondrop="dropCard(event, 'new')" ondragleave="dragLeave(event)">
+                            <div class="column-drop-zone"></div>
+                        </div>
+                    </div>
+
+                    <div class="kanban-column">
+                        <div class="column-header">
+                            <div class="column-title">Assigned</div>
+                            <div class="column-count" id="assignedCount">0 jobs</div>
+                        </div>
+                        <div class="column-content" id="columnAssigned" ondragover="dragOver(event)" ondrop="dropCard(event, 'assigned')" ondragleave="dragLeave(event)">
+                            <div class="column-drop-zone"></div>
+                        </div>
+                    </div>
+
+                    <div class="kanban-column">
+                        <div class="column-header">
+                            <div class="column-title">In Progress</div>
+                            <div class="column-count" id="inProgressCount">0 jobs</div>
+                        </div>
+                        <div class="column-content" id="columnInProgress" ondragover="dragOver(event)" ondrop="dropCard(event, 'in-progress')" ondragleave="dragLeave(event)">
+                            <div class="column-drop-zone"></div>
+                        </div>
+                    </div>
+
+                    <div class="kanban-column">
+                        <div class="column-header">
+                            <div class="column-title">Completed</div>
+                            <div class="column-count" id="completedCount">0 jobs</div>
+                        </div>
+                        <div class="column-content" id="columnCompleted" ondragover="dragOver(event)" ondrop="dropCard(event, 'completed')" ondragleave="dragLeave(event)">
+                            <div class="column-drop-zone"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Detail Slide Panel -->
+    <div class="slide-panel" id="detailPanel">
+        <div class="panel-header">
+            <div class="panel-title" id="detailTitle">Job Details</div>
+            <button class="panel-close" onclick="closeDetail()">×</button>
+        </div>
+        <div class="panel-body" id="detailContent"></div>
+        <div class="panel-actions">
+            <button class="btn btn-secondary" onclick="closeDetail()" style="flex:1;padding:10px;border:1px solid #1a1a2e;border-radius:8px;background:#1a1a2e;color:#f5f0e8;cursor:pointer;">Close</button>
+        </div>
+    </div>
+
+    <script src="supabase-client.js"></script>
+    <script src="feature-flags.js"></script>
+    <script src="realtime.js"></script>
+    <script>
+        let allJobs = [];
+        let workers = [];
+        let draggedCard = null;
+        let currentDetailJob = null;
+
+        function toggleMobileSidebar() {
+            document.querySelector('.sidebar').classList.toggle('open');
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (typeof checkAuth !== 'undefined') {
+                const user = checkAuth(['vendor']);
+                if (user) {
+                    document.getElementById('userName').textContent = user.name;
+                    document.getElementById('userAvatar').textContent = user.name.charAt(0).toUpperCase();
+
+                    await FC_FLAGS.init('vendor');
+                    FC_FLAGS.gatePage('page.dispatch_board', 'vendor-dashboard.html');
+
+                    await loadData();
+                    populateFilters();
+                    refreshBoard();
+                }
+            }
+        });
+
+        async function loadData() {
+            try {
+                allJobs = await getJobsForCurrentUser();
+                const { data: workersData } = await db.from('users').select('id, name').eq('role', 'fieldworker');
+                workers = workersData || [];
+            } catch (err) {
+                console.error('Error loading data:', err);
+            }
+        }
+
+        function populateFilters() {
+            const workerSelect = document.getElementById('workerFilter');
+            workers.forEach(w => {
+                const option = document.createElement('option');
+                option.value = w.id;
+                option.textContent = w.name;
+                workerSelect.appendChild(option);
+            });
+        }
+
+        function refreshBoard() {
+            const dateRange = document.getElementById('dateRangeFilter').value;
+            const workerId = document.getElementById('workerFilter').value;
+            const priority = document.getElementById('priorityFilter').value;
+
+            let filtered = allJobs;
+
+            if (workerId) {
+                filtered = filtered.filter(j => j.assigned_worker === workerId);
+            }
+
+            if (priority) {
+                filtered = filtered.filter(j => j.priority === priority);
+            }
+
+            const now = new Date();
+            if (dateRange === 'today') {
+                const today = new Date(now).toISOString().split('T')[0];
+                filtered = filtered.filter(j => j.date_out && j.date_out.startsWith(today));
+            } else if (dateRange === 'week') {
+                const weekAgo = new Date(now.getTime() - 7 * 86400000);
+                filtered = filtered.filter(j => j.date_out && new Date(j.date_out) >= weekAgo);
+            } else if (dateRange === 'month') {
+                const monthAgo = new Date(now.getTime() - 30 * 86400000);
+                filtered = filtered.filter(j => j.date_out && new Date(j.date_out) >= monthAgo);
+            }
+
+            renderBoard(filtered);
+        }
+
+        function renderBoard(filteredJobs) {
+            const statuses = ['new', 'assigned', 'in-progress', 'completed'];
+            const statusMap = {
+                'new': ['pending', 'open'],
+                'assigned': ['assigned', 'accepted'],
+                'in-progress': ['in-progress'],
+                'completed': ['completed']
+            };
+
+            statuses.forEach(status => {
+                const jobs = filteredJobs.filter(j => statusMap[status].includes(j.status));
+                const column = document.getElementById(`column${status.charAt(0).toUpperCase() + status.slice(1).replace('-', '')}`);
+                const count = document.getElementById(`${status.replace('-', '')}Count`);
+                const statEl = document.getElementById(`stat${status.charAt(0).toUpperCase() + status.slice(1).replace('-', '')}`);
+
+                count.textContent = `${jobs.length} job${jobs.length !== 1 ? 's' : ''}`;
+                if (statEl) statEl.textContent = jobs.length;
+
+                column.innerHTML = jobs.map(job => `
+                    <div class="job-card" draggable="true" data-job-id="${job.id}" ondragstart="dragStart(event)" ondragend="dragEnd(event)" onclick="showDetail(event, '${job.id}')">
+                        <div class="job-card-header">
+                            <div class="job-card-customer">${safe(job.customer_name || 'Unknown')}</div>
+                            ${job.priority ? `<span class="job-card-priority ${job.priority}">${job.priority}</span>` : ''}
+                        </div>
+                        <div class="job-card-address">${safe(job.address_city || '')}, ${safe(job.address_state || '')}</div>
+                        <div class="job-card-equipment">Equipment: ${job.equipment_count || 0}</div>
+                        ${job.assigned_worker ? `<div class="job-card-worker">Assigned</div>` : ''}
+                        <div class="job-card-time">${job.date_out ? new Date(job.date_out).toLocaleDateString() : 'No date'}</div>
+                    </div>
+                `).join('');
+            });
+        }
+
+        function dragStart(e) {
+            draggedCard = e.target.closest('.job-card');
+            draggedCard.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function dragEnd(e) {
+            draggedCard.classList.remove('dragging');
+            draggedCard = null;
+            document.querySelectorAll('.column-drop-zone').forEach(z => z.classList.remove('drag-over'));
+        }
+
+        function dragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            e.currentTarget.closest('.column-content').querySelector('.column-drop-zone').classList.add('drag-over');
+        }
+
+        function dragLeave(e) {
+            e.currentTarget.closest('.column-content').querySelector('.column-drop-zone').classList.remove('drag-over');
+        }
+
+        async function dropCard(e, newStatus) {
+            e.preventDefault();
+            if (!draggedCard) return;
+
+            const jobId = draggedCard.dataset.jobId;
+            const statusMap = {
+                'new': 'pending',
+                'assigned': 'assigned',
+                'in-progress': 'in-progress',
+                'completed': 'completed'
+            };
+
+            try {
+                await db.from('jobs').update({ status: statusMap[newStatus] }).eq('id', jobId);
+                await loadData();
+                refreshBoard();
+            } catch (err) {
+                console.error('Error updating job:', err);
+            }
+
+            e.currentTarget.querySelector('.column-drop-zone').classList.remove('drag-over');
+        }
+
+        function showDetail(e, jobId) {
+            e.stopPropagation();
+            const job = allJobs.find(j => j.id === jobId);
+            if (!job) return;
+
+            currentDetailJob = job;
+            const worker = job.assigned_worker ? workers.find(w => w.id === job.assigned_worker) : null;
+
+            document.getElementById('detailTitle').textContent = `${safe(job.job_site_name)}`;
+            document.getElementById('detailContent').innerHTML = `
+                <div class="detail-section">
+                    <div class="detail-label">Customer</div>
+                    <div class="detail-value">${safe(job.customer_name || '-')}</div>
+                </div>
+                <div class="detail-section">
+                    <div class="detail-label">Address</div>
+                    <div class="detail-value">${safe([job.address_street, job.address_city, job.address_state, job.address_zip].filter(Boolean).join(', '))}</div>
+                </div>
+                <div class="detail-section">
+                    <div class="detail-label">Equipment Count</div>
+                    <div class="detail-value">${job.equipment_count || 0}</div>
+                </div>
+                <div class="detail-section">
+                    <div class="detail-label">Assigned Worker</div>
+                    <div class="detail-value">${worker ? worker.name : 'Unassigned'}</div>
+                </div>
+                <div class="detail-section">
+                    <div class="detail-label">Status</div>
+                    <div class="detail-value" style="text-transform:capitalize;">${job.status}</div>
+                </div>
+                <div class="detail-section">
+                    <div class="detail-label">Date</div>
+                    <div class="detail-value">${job.date_out ? new Date(job.date_out).toLocaleString() : '-'}</div>
+                </div>
+                <div class="detail-section">
+                    <div class="detail-label">Instructions</div>
+                    <div class="detail-value">${safe(job.instructions || 'None')}</div>
+                </div>
+            `;
+
+            document.getElementById('detailPanel').classList.add('open');
+        }
+
+        function closeDetail() {
+            document.getElementById('detailPanel').classList.remove('open');
+            currentDetailJob = null;
+        }
+
+        // Update window.loadData for realtime
+        window.loadData = async () => {
+            await loadData();
+            refreshBoard();
+        };
+    </script>
+</body>
+</html>

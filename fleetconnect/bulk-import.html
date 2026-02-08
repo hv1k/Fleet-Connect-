@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bulk Import | FleetConnect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #1a1a1a; color: #f5f0e8; min-height: 100vh; }
+
+        /* Light Mode */
+        body.dark { background: #f5f0e8; color: #1a1a1a; }
+        body.dark .sidebar { background: #ffffff; border-color: #e8e4dc; }
+        body.dark .sidebar-logo { color: #60a5fa; }
+        body.dark .nav-item { color: #5c5c5c; }
+        body.dark .nav-item:hover { background: #f0ebe3; color: #1a1a1a; }
+        body.dark .nav-item.active { background: #dbeafe; color: #3b82f6; }
+        body.dark .header { background: #ffffff; border-color: #e8e4dc; }
+        body.dark .header h1 { color: #1a1a1a; }
+        body.dark .card { background: #ffffff; border-color: #e8e4dc; }
+        body.dark .card-title { color: #1a1a1a; }
+        body.dark .upload-area { background: #f9f9f9; border-color: #dbeafe; }
+        body.dark .upload-area.drag-over { background: #e3f2fd; border-color: #60a5fa; }
+        body.dark .btn-primary { background: #3b82f6; }
+        body.dark .btn-secondary { background: #f0ebe3; color: #1a1a1a; border-color: #e8e4dc; }
+        body.dark .modal { background: #ffffff; }
+        body.dark .modal-header { border-color: #e8e4dc; }
+        body.dark .modal-header h3 { color: #1a1a1a; }
+        body.dark th { background: #f0ebe3; color: #1a1a1a; border-color: #e8e4dc; }
+        body.dark td { color: #5c5c5c; border-color: #e8e4dc; }
+        body.dark .error-row { background: #fee2e2; }
+        body.dark .error-row td { color: #dc2626; }
+        body.dark .success-row { background: #dcfce7; }
+
+        .layout { display: flex; min-height: 100vh; }
+
+        /* Sidebar */
+        .sidebar { width: 240px; background: #242424; border-right: 1px solid #333; padding: 24px 16px; position: fixed; left: 0; height: 100vh; z-index: 100; display: flex; flex-direction: column; }
+        .sidebar-header { display: flex; align-items: center; gap: 10px; margin-bottom: 32px; padding: 20px 20px 12px; }
+        .sidebar-logo { font-size: 1.2rem; font-weight: 700; color: #60a5fa; }
+        .nav-section { margin-bottom: 24px; }
+        .nav-section-title { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: #666; padding: 0 12px; margin-bottom: 8px; letter-spacing: 0.5px; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; color: #b8b0a8; text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: all 0.2s; cursor: pointer; }
+        .nav-item:hover { background: #333; color: #f5f0e8; }
+        .nav-item.active { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
+        .nav-item svg { width: 20px; height: 20px; }
+
+        .sidebar-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid #333; }
+        .user-menu { display: flex; align-items: center; gap: 12px; padding: 12px; background: #333; border-radius: 10px; }
+        .user-avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #60a5fa, #3b82f6); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 0.85rem; }
+        .user-name { font-size: 0.85rem; font-weight: 600; color: #f5f0e8; }
+        .user-role { font-size: 0.7rem; color: #888; }
+        .user-info { flex: 1; min-width: 0; }
+        .logout-btn { background: none; border: none; color: #888; cursor: pointer; padding: 6px; border-radius: 6px; }
+        .logout-btn:hover { background: #444; color: #f5f0e8; }
+
+        /* Main */
+        .main { margin-left: 240px; flex: 1; min-height: 100vh; }
+        .header { background: #242424; padding: 20px 32px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50; }
+        .header h1 { font-size: 1.4rem; font-weight: 700; color: #f5f0e8; }
+        .content { padding: 32px; }
+
+        /* Card */
+        .card { background: #242424; border-radius: 16px; border: 1px solid #333; padding: 24px; margin-bottom: 24px; }
+        .card-title { font-size: 1rem; font-weight: 600; color: #f5f0e8; margin-bottom: 20px; }
+
+        /* Upload Area */
+        .upload-area { border: 2px dashed #444; border-radius: 10px; padding: 40px 20px; text-align: center; cursor: pointer; transition: all 0.2s; }
+        .upload-area:hover { border-color: #60a5fa; background: rgba(96, 165, 250, 0.05); }
+        .upload-area.drag-over { border-color: #60a5fa; background: rgba(96, 165, 250, 0.1); }
+        .upload-icon { font-size: 3rem; margin-bottom: 12px; }
+        .upload-text { font-size: 0.9rem; color: #f5f0e8; margin-bottom: 4px; }
+        .upload-hint { font-size: 0.85rem; color: #888; }
+        .file-input { display: none; }
+
+        /* Preview Table */
+        .preview-section { margin-top: 24px; }
+        .table-wrapper { overflow-x: auto; border-radius: 10px; border: 1px solid #333; }
+        table { width: 100%; border-collapse: collapse; }
+        th { padding: 12px 16px; text-align: left; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: #888; background: #2a2a2a; border-bottom: 1px solid #333; }
+        td { padding: 12px 16px; border-bottom: 1px solid #333; font-size: 0.85rem; color: #b8b0a8; }
+        tr:hover { background: #2a2a2a; }
+
+        .error-row { background: rgba(248, 113, 113, 0.1); }
+        .error-row td { color: #f87171; }
+        .error-icon { color: #dc2626; font-weight: 700; }
+
+        /* Status Badge */
+        .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+        .status-badge.valid { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+        .status-badge.error { background: rgba(248, 113, 113, 0.15); color: #f87171; }
+
+        /* Column Mapper */
+        .mapper-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 20px; }
+        @media (max-width: 900px) { .mapper-grid { grid-template-columns: 1fr; } }
+        .mapper-item { }
+        .mapper-label { font-size: 0.8rem; font-weight: 500; color: #999; margin-bottom: 6px; display: block; }
+        .mapper-select { width: 100%; padding: 10px 12px; font-family: inherit; font-size: 0.85rem; background: #2a2a2a; border: 1px solid #444; border-radius: 8px; color: #f5f0e8; }
+        .mapper-select:focus { outline: none; border-color: #60a5fa; }
+
+        /* Progress Bar */
+        .progress-bar { width: 100%; height: 8px; background: #333; border-radius: 4px; overflow: hidden; margin: 20px 0; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #60a5fa, #3b82f6); width: 0%; transition: width 0.3s; }
+
+        /* Buttons */
+        .btn { padding: 12px 24px; border-radius: 10px; font-size: 0.9rem; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; }
+        .btn-primary { background: #60a5fa; color: #fff; }
+        .btn-primary:hover { background: #3b82f6; }
+        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-secondary { background: #333; color: #f5f0e8; border: 1px solid #444; }
+        .btn-secondary:hover { background: #444; }
+
+        .button-group { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
+
+        /* Summary */
+        .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 20px; }
+        @media (max-width: 900px) { .summary-grid { grid-template-columns: 1fr; } }
+        .summary-item { padding: 16px; background: #2a2a2a; border-radius: 10px; border-left: 3px solid; }
+        .summary-item.created { border-color: #22c55e; }
+        .summary-item.skipped { border-color: #fbbf24; }
+        .summary-item.error { border-color: #f87171; }
+        .summary-label { font-size: 0.8rem; color: #888; margin-bottom: 4px; }
+        .summary-value { font-size: 1.6rem; font-weight: 700; }
+
+        /* Modal */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.show { display: flex; }
+        .modal { background: #242424; border-radius: 16px; width: 100%; max-width: 600px; overflow: hidden; border: 1px solid #333; }
+        .modal-header { padding: 20px 24px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { font-size: 1rem; font-weight: 600; color: #f5f0e8; }
+        .modal-close { width: 28px; height: 28px; border-radius: 6px; border: none; background: #333; color: #888; cursor: pointer; font-size: 1.2rem; }
+        .modal-close:hover { background: #444; color: #f5f0e8; }
+        .modal-body { padding: 20px 24px; max-height: 60vh; overflow-y: auto; }
+
+        /* Empty State */
+        .empty-state { text-align: center; padding: 40px; color: #888; }
+
+        .mobile-toggle { display: none; width: 40px; height: 40px; border: 1px solid #444; border-radius: 8px; background: #2a2a2a; color: #f5f0e8; align-items: center; justify-content: center; cursor: pointer; }
+
+        @media (max-width: 900px) {
+            .sidebar { display: none; }
+            .sidebar.open { display: flex; position: fixed; z-index: 100; }
+            .main { margin-left: 0; }
+            .mobile-toggle { display: flex; }
+            .content { padding: 16px 20px; }
+            .mapper-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar-header"><span class="sidebar-logo">FleetConnect</span></div>
+            <nav id="sidebarNav"></nav>
+            <div class="sidebar-footer">
+                <div class="user-menu">
+                    <div class="user-avatar" id="userAvatar">R</div>
+                    <div class="user-info"><div class="user-name" id="userName">Rental Co.</div><div class="user-role">Rental Account</div></div>
+                    <button class="logout-btn" onclick="logout()" title="Logout"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg></button>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main">
+            <header class="header">
+                <div>
+                    <button class="mobile-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')"><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+                </div>
+                <h1>Bulk Job Import</h1>
+            </header>
+
+            <div class="content">
+                <!-- Upload Card -->
+                <div class="card">
+                    <div class="card-title">Upload CSV or Excel File</div>
+                    <div class="upload-area" id="uploadArea" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" onclick="document.getElementById('fileInput').click()">
+                        <div class="upload-icon">📁</div>
+                        <div class="upload-text">Drop CSV or Excel file here or click to browse</div>
+                        <div class="upload-hint">Supported: .csv, .xlsx, .xls</div>
+                        <input type="file" id="fileInput" class="file-input" accept=".csv,.xlsx,.xls" onchange="handleFileUpload(event)">
+                    </div>
+                </div>
+
+                <!-- Column Mapping -->
+                <div class="card" id="mapperCard" style="display:none;">
+                    <div class="card-title">Map Columns</div>
+                    <div class="mapper-grid" id="mapperGrid"></div>
+                    <div class="button-group">
+                        <button class="btn btn-primary" onclick="previewData()">Preview Rows</button>
+                        <button class="btn btn-secondary" onclick="resetFile()">Clear & Start Over</button>
+                    </div>
+                </div>
+
+                <!-- Preview Table -->
+                <div class="card" id="previewCard" style="display:none;">
+                    <div class="card-title">Preview (<span id="previewRowCount">0</span> rows)</div>
+                    <div class="table-wrapper">
+                        <table id="previewTable">
+                            <thead id="previewHead"></thead>
+                            <tbody id="previewBody"></tbody>
+                        </table>
+                    </div>
+                    <div class="button-group">
+                        <button class="btn btn-primary" onclick="startImport()">Import Valid Rows</button>
+                        <button class="btn btn-secondary" onclick="resetFile()">Cancel</button>
+                    </div>
+                </div>
+
+                <!-- Summary -->
+                <div class="card" id="summaryCard" style="display:none;">
+                    <div class="card-title">Import Complete</div>
+                    <div class="summary-grid">
+                        <div class="summary-item created">
+                            <div class="summary-label">Created</div>
+                            <div class="summary-value" id="summaryCreated">0</div>
+                        </div>
+                        <div class="summary-item skipped">
+                            <div class="summary-label">Skipped</div>
+                            <div class="summary-value" id="summarySkipped">0</div>
+                        </div>
+                        <div class="summary-item error">
+                            <div class="summary-label">Errors</div>
+                            <div class="summary-value" id="summaryErrors">0</div>
+                        </div>
+                    </div>
+                    <div class="button-group">
+                        <a href="rental-dashboard.html" class="btn btn-primary">Back to Dashboard</a>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="supabase-client.js"></script>
+    <script src="feature-flags.js"></script>
+    <script>
+        // Auth Check
+        const currentUser = checkAuth(['rental']);
+        if (currentUser) {
+            document.getElementById('userName').textContent = currentUser.name;
+            document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+        }
+
+        // Feature Flags
+        FC_FLAGS.init('rental').then(() => {
+            FC_FLAGS.gatePage('feature.bulk_import', '/rental-dashboard.html');
+        });
+
+        // Navigation
+        const icons = {
+            grid: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>',
+            plus: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>',
+            clipboard: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>',
+            settings: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>',
+            upload: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>'
+        };
+
+        const navItems = [
+            { label: 'Dashboard', href: 'rental-dashboard.html', icon: 'grid' },
+            { label: 'Create Work Order', href: 'create-job.html', icon: 'plus' },
+            { label: 'Work Orders', href: 'work-orders.html', icon: 'clipboard' },
+            { label: 'Bulk Import', href: 'bulk-import.html', icon: 'upload', active: true },
+            { label: 'Settings', href: 'settings.html', icon: 'settings' }
+        ];
+
+        document.getElementById('sidebarNav').innerHTML = `
+            <div class="nav-section"><div class="nav-section-title">Main Menu</div>
+                ${navItems.map(i => `<a class="nav-item${i.active ? ' active' : ''}" href="${i.href}"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24">${icons[i.icon]}</svg>${i.label}</a>`).join('')}
+            </div>`;
+
+        // File handling
+        let rawData = [];
+        let headers = [];
+        let columnMap = {};
+
+        const requiredColumns = ['job_site_name', 'contract_number', 'po_number'];
+        const optionalColumns = ['address_street', 'address_city', 'address_state', 'address_zip', 'customer_name', 'job_type', 'date_out'];
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            document.getElementById('uploadArea').classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            document.getElementById('uploadArea').classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            document.getElementById('uploadArea').classList.remove('drag-over');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        }
+
+        function handleFileUpload(e) {
+            const file = e.target.files[0];
+            if (file) handleFile(file);
+        }
+
+        function handleFile(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                    rawData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                    if (rawData.length < 2) {
+                        alert('File must contain at least a header row and one data row');
+                        return;
+                    }
+
+                    headers = rawData[0].map(h => (h || '').trim());
+                    showColumnMapper();
+                } catch (err) {
+                    alert('Error reading file: ' + err.message);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function showColumnMapper() {
+            const allColumns = [...requiredColumns, ...optionalColumns];
+            let html = '';
+
+            allColumns.forEach(col => {
+                const isRequired = requiredColumns.includes(col);
+                const displayName = col.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                const matched = headers.find(h => h.toLowerCase().includes(col.replace(/_/g, ' ')));
+                const selectedIdx = matched ? headers.indexOf(matched) : -1;
+
+                html += `
+                    <div class="mapper-item">
+                        <label class="mapper-label">${displayName}${isRequired ? ' <span style="color:#f87171;">*</span>' : ''}</label>
+                        <select class="mapper-select" onchange="columnMap['${col}'] = this.value === '' ? null : parseInt(this.value)">
+                            <option value="">-- Do not map --</option>
+                            ${headers.map((h, i) => `<option value="${i}" ${selectedIdx === i ? 'selected' : ''}>${safe(h)}</option>`).join('')}
+                        </select>
+                    </div>
+                `;
+                columnMap[col] = selectedIdx >= 0 ? selectedIdx : null;
+            });
+
+            document.getElementById('mapperGrid').innerHTML = html;
+            document.getElementById('mapperCard').style.display = 'block';
+        }
+
+        function previewData() {
+            const required = requiredColumns.every(col => columnMap[col] !== null);
+            if (!required) {
+                alert('Please map all required columns');
+                return;
+            }
+
+            const rows = rawData.slice(1).slice(0, 10);
+            const previewRows = rows.map((row, idx) => ({
+                idx: idx,
+                data: row,
+                errors: validateRow(row)
+            }));
+
+            let headHtml = '<tr>';
+            requiredColumns.forEach(col => {
+                const displayName = col.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                headHtml += `<th>${displayName}</th>`;
+            });
+            headHtml += '<th>Status</th></tr>';
+
+            let bodyHtml = '';
+            previewRows.forEach(row => {
+                const isError = row.errors.length > 0;
+                bodyHtml += `<tr class="${isError ? 'error-row' : ''}">`;
+
+                requiredColumns.forEach(col => {
+                    const idx = columnMap[col];
+                    const value = idx !== null ? safe(row.data[idx] || '') : '';
+                    bodyHtml += `<td>${value}</td>`;
+                });
+
+                if (row.errors.length > 0) {
+                    bodyHtml += `<td><span class="error-icon">✕</span> ${safe(row.errors[0])}</td>`;
+                } else {
+                    bodyHtml += `<td><span class="status-badge valid">Valid</span></td>`;
+                }
+                bodyHtml += '</tr>';
+            });
+
+            document.getElementById('previewHead').innerHTML = headHtml;
+            document.getElementById('previewBody').innerHTML = bodyHtml;
+            document.getElementById('previewRowCount').textContent = rows.length;
+            document.getElementById('previewCard').style.display = 'block';
+            document.getElementById('previewCard').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function validateRow(row) {
+            const errors = [];
+
+            for (const col of requiredColumns) {
+                const idx = columnMap[col];
+                const value = idx !== null ? (row[idx] || '').toString().trim() : '';
+                if (!value) {
+                    errors.push(`Missing required field: ${col}`);
+                    break;
+                }
+            }
+
+            return errors;
+        }
+
+        async function startImport() {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = 'Importing...';
+
+            const allRows = rawData.slice(1);
+            let created = 0, skipped = 0, errors = 0;
+
+            const progressBar = document.querySelector('.progress-fill');
+
+            for (let i = 0; i < allRows.length; i++) {
+                const row = allRows[i];
+                const rowErrors = validateRow(row);
+
+                if (rowErrors.length > 0) {
+                    skipped++;
+                } else {
+                    try {
+                        const jobData = {
+                            contractNumber: row[columnMap['contract_number']] || '',
+                            poNumber: row[columnMap['po_number']] || '',
+                            jobSiteName: row[columnMap['job_site_name']] || '',
+                            address: {
+                                street: columnMap['address_street'] !== null ? row[columnMap['address_street']] : '',
+                                city: columnMap['address_city'] !== null ? row[columnMap['address_city']] : '',
+                                state: columnMap['address_state'] !== null ? row[columnMap['address_state']] : '',
+                                zip: columnMap['address_zip'] !== null ? row[columnMap['address_zip']] : ''
+                            },
+                            customerName: columnMap['customer_name'] !== null ? row[columnMap['customer_name']] : '',
+                            jobType: columnMap['job_type'] !== null ? row[columnMap['job_type']] : 'fuel-delivery',
+                            dateOut: columnMap['date_out'] !== null ? row[columnMap['date_out']] : null,
+                            status: 'pending',
+                            createdBy: currentUser?.id
+                        };
+
+                        const result = await createJob(jobData, []);
+                        if (result.success) {
+                            created++;
+                        } else {
+                            errors++;
+                        }
+                    } catch (err) {
+                        console.error('Import error:', err);
+                        errors++;
+                    }
+                }
+
+                const progress = ((i + 1) / allRows.length) * 100;
+                if (progressBar) progressBar.style.width = progress + '%';
+            }
+
+            showSummary(created, skipped, errors);
+        }
+
+        function showSummary(created, skipped, errors) {
+            document.getElementById('previewCard').style.display = 'none';
+            document.getElementById('mapperCard').style.display = 'none';
+
+            document.getElementById('summaryCreated').textContent = created;
+            document.getElementById('summarySkipped').textContent = skipped;
+            document.getElementById('summaryErrors').textContent = errors;
+
+            document.getElementById('summaryCard').style.display = 'block';
+            document.getElementById('summaryCard').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function resetFile() {
+            rawData = [];
+            headers = [];
+            columnMap = {};
+
+            document.getElementById('fileInput').value = '';
+            document.getElementById('uploadArea').classList.remove('drag-over');
+            document.getElementById('mapperCard').style.display = 'none';
+            document.getElementById('previewCard').style.display = 'none';
+            document.getElementById('summaryCard').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

@@ -465,9 +465,20 @@
                 const jobDel = allDeliveries.filter(d => d.job_id === job.id);
                 // Use field worker invoices as fallback when deliveries table has no data
                 const fwInv = (window.fwInvoices || []).filter(i => i.job_id === job.id);
-                const diesel = jobDel.length > 0
-                    ? jobDel.reduce((s, d) => s + (parseFloat(d.gallons) || 0), 0)
-                    : fwInv.reduce((s, i) => s + (parseFloat(i.total_diesel) || 0), 0);
+
+                // Calculate diesel - ensure we only use valid numeric values
+                let diesel = 0;
+                if (jobDel.length > 0) {
+                    diesel = jobDel.reduce((s, d) => {
+                        const gal = parseFloat(d.gallons);
+                        return s + (!isNaN(gal) ? gal : 0);
+                    }, 0);
+                } else {
+                    diesel = fwInv.reduce((s, i) => {
+                        const gal = parseFloat(i.total_diesel);
+                        return s + (!isNaN(gal) ? gal : 0);
+                    }, 0);
+                }
                 totalDiesel += diesel;
 
                 // Find matched invoice

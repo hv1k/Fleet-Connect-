@@ -6,6 +6,13 @@
     <title>Vendor Dashboard | FleetConnect</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#60a5fa">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="FleetConnect">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: #1a1a1a; color: #f5f0e8; min-height: 100vh; transition: background 0.3s, color 0.3s; }
@@ -387,7 +394,8 @@
     <script src="demo-switcher.js"></script>
     <script src="notifications.js"></script>
     <script src="realtime.js"></script>
-<script src="onboarding.js"></script>
+    <script src="onboarding.js"></script>
+    <script src="pwa-register.js"></script>
     <script>
         // Dark mode toggle
         function toggleDarkMode() {
@@ -459,8 +467,21 @@
             const now = new Date();
             const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
             const monthInvoices = allInvoices.filter(i => new Date(i.created_at) >= monthStart);
-            const totalDiesel = monthInvoices.reduce((s,i) => s + (parseFloat(i.total_diesel)||0), 0);
-            const totalDef = monthInvoices.reduce((s,i) => s + (parseFloat(i.total_def)||0), 0);
+
+            // Validate and sum diesel (handle null/undefined/NaN)
+            let totalDiesel = 0;
+            monthInvoices.forEach(i => {
+                const diesel = parseFloat(i.total_diesel);
+                if (!isNaN(diesel) && diesel > 0) totalDiesel += diesel;
+            });
+
+            // Validate and sum DEF (handle null/undefined/NaN) - cap at reasonable limits
+            let totalDef = 0;
+            monthInvoices.forEach(i => {
+                const def = parseFloat(i.total_def);
+                if (!isNaN(def) && def > 0 && def < 100000) totalDef += def; // reasonable per-record limit
+            });
+
             document.getElementById('statDiesel').textContent = Math.round(totalDiesel).toLocaleString();
             document.getElementById('statDEF').textContent = Math.round(totalDef).toLocaleString();
             document.getElementById('statWorkers').textContent = allJobs.filter(j => ['pending','assigned','open'].includes(j.status)).length;

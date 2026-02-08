@@ -8,6 +8,14 @@
     <meta property="og:description" content="Manage your fleet operations, fuel deliveries, and work orders in one place.">
     <title>Sign In | FleetConnect</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%2360a5fa'/><text x='16' y='22' font-size='18' font-weight='bold' fill='%230a0a0f' text-anchor='middle' font-family='sans-serif'>F</text></svg>">
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#60a5fa">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="FleetConnect">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' rx='40' fill='%2360a5fa'/><text x='90' y='130' font-size='110' font-weight='bold' fill='%230a0a0f' text-anchor='middle' font-family='sans-serif'>F</text></svg>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -893,6 +901,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-client.js"></script>
     <script src="demo-switcher.js"></script>
+    <script src="pwa-register.js"></script>
     <script>
         // =============================================
         // LOGIN LOGIC

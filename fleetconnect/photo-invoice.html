@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo Invoice | FleetConnect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #1a1a1a; color: #f5f0e8; min-height: 100vh; }
+        .container { max-width: 700px; margin: 0 auto; padding: 16px; padding-bottom: 100px; }
+
+        .header { padding: 20px 0; border-bottom: 1px solid #333; margin-bottom: 20px; }
+        .header h1 { font-size: 1.4rem; font-weight: 700; margin-bottom: 4px; }
+        .header p { font-size: 0.85rem; color: #888; }
+
+        .card { background: #242424; border: 1px solid #333; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+        .card-title { font-size: 0.9rem; font-weight: 600; color: #f5f0e8; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .card-required { color: #ef4444; font-size: 1rem; }
+
+        .camera-button { width: 100%; padding: 16px; background: #333; border: 2px solid #444; border-radius: 10px; color: #f5f0e8; font-family: 'Inter', sans-serif; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .camera-button:hover { background: #3d3d3d; border-color: #60a5fa; color: #60a5fa; }
+        .camera-button:active { transform: scale(0.98); }
+        .camera-button svg { width: 20px; height: 20px; }
+
+        .photo-category { background: #1e1e1e; padding: 12px; border-radius: 8px; border: 1px solid #333; margin-bottom: 8px; }
+        .photo-category:last-child { margin-bottom: 0; }
+        .category-label { font-size: 0.8rem; font-weight: 600; color: #60a5fa; text-transform: uppercase; display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+        .category-required { color: #ef4444; }
+        .photo-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+
+        .photo-thumbnail { position: relative; width: 100%; aspect-ratio: 1; border-radius: 8px; overflow: hidden; background: #333; border: 2px solid #444; }
+        .photo-thumbnail img, .photo-thumbnail video { width: 100%; height: 100%; object-fit: cover; }
+        .photo-thumbnail-delete { position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; background: #ef4444; border: none; border-radius: 50%; color: white; font-size: 14px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .photo-thumbnail-delete:hover { background: #dc2626; }
+
+        .input-hidden { display: none; }
+
+        .btn { width: 100%; padding: 14px; border-radius: 8px; border: none; font-family: 'Inter', sans-serif; font-size: 0.95rem; font-weight: 600; cursor: pointer; }
+        .btn-primary { background: #60a5fa; color: #1a1a1a; }
+        .btn-primary:hover { background: #3b82f6; }
+        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-outline { background: transparent; color: #888; border: 1px solid #333; }
+        .btn-outline:hover { background: #333; color: #f5f0e8; }
+
+        .button-group { display: flex; gap: 8px; }
+        .button-group button { flex: 1; }
+
+        .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); padding: 12px 24px; border-radius: 10px; font-size: 0.85rem; font-weight: 500; z-index: 2000; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+        .toast.show { opacity: 1; }
+        .toast.success { background: #22c55e; color: #fff; }
+        .toast.error { background: #ef4444; color: #fff; }
+        .toast.info { background: #60a5fa; color: #fff; }
+
+        .submit-section { position: fixed; bottom: 0; left: 0; right: 0; padding: 16px; background: #242424; border-top: 1px solid #333; display: flex; gap: 8px; }
+        .submit-section button { flex: 1; padding: 14px; font-family: 'Inter', sans-serif; font-size: 0.95rem; font-weight: 600; border-radius: 8px; border: none; cursor: pointer; }
+        .submit-section .btn-primary { background: #60a5fa; color: #1a1a1a; }
+        .submit-section .btn-primary:hover { background: #3b82f6; }
+        .submit-section .btn-outline { background: #333; color: #888; border: 1px solid #444; }
+        .submit-section .btn-outline:hover { background: #444; color: #f5f0e8; }
+
+        .empty-state { text-align: center; padding: 40px 20px; color: #666; }
+        .empty-state svg { width: 48px; height: 48px; margin-bottom: 12px; opacity: 0.4; }
+
+        @media (max-width: 480px) {
+          .container { padding: 12px; }
+          .photo-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📸 Photo Invoice</h1>
+            <p>Capture required meter and equipment photos</p>
+        </div>
+
+        <div id="invoiceForm">
+            <!-- Job Info -->
+            <div class="card" id="jobInfoCard" style="display:none;">
+                <div class="card-title">Job Information</div>
+                <div id="jobInfo" style="font-size:0.9rem;color:#888;"></div>
+            </div>
+
+            <!-- Photo Categories -->
+            <div class="card">
+                <div class="card-title">
+                    <span>📷 Required Photos</span>
+                    <span class="card-required">*</span>
+                </div>
+                <p style="font-size:0.8rem;color:#888;margin-bottom:12px;">Capture meter readings and equipment photos</p>
+
+                <button type="button" class="camera-button" style="margin-bottom:8px;" onclick="openPhotoCapture('meter_before')">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    📸 Meter Before
+                </button>
+                <button type="button" class="camera-button" style="margin-bottom:8px;" onclick="openPhotoCapture('meter_after')">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    📸 Meter After
+                </button>
+                <button type="button" class="camera-button" onclick="openPhotoCapture('equipment')">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    📸 Equipment
+                </button>
+
+                <div id="photoCategoriesContainer" style="margin-top:12px;"></div>
+            </div>
+
+            <!-- Notes (Optional) -->
+            <div class="card">
+                <div class="card-title">Notes (Optional)</div>
+                <textarea id="invoiceNotes" placeholder="Any additional notes..." style="width:100%;padding:10px;border-radius:8px;border:1px solid #333;background:#1e1e1e;color:#f5f0e8;font-family:'Inter',sans-serif;font-size:0.85rem;min-height:70px;resize:vertical;"></textarea>
+            </div>
+        </div>
+
+        <div id="emptyState" class="empty-state" style="display:none;">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            <p>No invoice data available. Please go back to create an invoice.</p>
+        </div>
+    </div>
+
+    <div class="submit-section">
+        <button class="btn-outline" onclick="window.history.back()">Cancel</button>
+        <button class="btn-primary" id="submitBtn" onclick="submitPhotoInvoice()">Submit</button>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <input type="file" id="photoInput" accept="image/*" multiple capture="environment" class="input-hidden" onchange="handlePhotoCapture(event)">
+
+    <script src="supabase-client.js"></script>
+    <script src="feature-flags.js"></script>
+    <script src="offline-sync.js"></script>
+    <script>
+        const currentUser = checkAuth(['fieldworker']);
+        if (!currentUser) throw new Error('Not authenticated');
+
+        FC_FLAGS.init('fieldworker');
+
+        let capturedPhotos = {
+          meter_before: [],
+          meter_after: [],
+          equipment: []
+        };
+        let currentJobId = null;
+        let currentJob = null;
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast show ${type}`;
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        function openPhotoCapture(category) {
+            const input = document.getElementById('photoInput');
+            input.dataset.category = category;
+            input.click();
+        }
+
+        function handlePhotoCapture(event) {
+            const category = event.target.dataset.category;
+            const files = Array.from(event.target.files);
+
+            Promise.all(files.map(file => compressImage(file))).then(compressedPhotos => {
+                capturedPhotos[category] = [...(capturedPhotos[category] || []), ...compressedPhotos];
+                renderPhotoCategories();
+                showToast(`${files.length} photo(s) added to ${category.replace('_', ' ')}`, 'success');
+            });
+
+            event.target.value = '';
+        }
+
+        function compressImage(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+
+                        const maxWidth = 1200;
+                        if (width > maxWidth) {
+                            height = (maxWidth / width) * height;
+                            width = maxWidth;
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        const compressed = canvas.toDataURL('image/jpeg', 0.8);
+                        resolve({
+                            data: compressed,
+                            name: file.name,
+                            size: compressed.length
+                        });
+                    };
+                    img.src = event.target.result;
+                };
+            });
+        }
+
+        function renderPhotoCategories() {
+            const container = document.getElementById('photoCategoriesContainer');
+            const categories = [
+                { id: 'meter_before', label: 'Meter Before', required: true },
+                { id: 'meter_after', label: 'Meter After', required: true },
+                { id: 'equipment', label: 'Equipment Photo', required: true }
+            ];
+
+            container.innerHTML = categories.map(cat => `
+                <div class="photo-category">
+                    <div class="category-label">
+                        ${cat.label}
+                        ${cat.required ? '<span class="category-required">*</span>' : ''}
+                    </div>
+                    <div class="photo-grid" id="grid-${cat.id}">
+                        ${(capturedPhotos[cat.id] || []).map((photo, i) => `
+                            <div class="photo-thumbnail">
+                                <img src="${photo.data}" alt="Photo">
+                                <button type="button" class="photo-thumbnail-delete" onclick="deletePhoto('${cat.id}', ${i})">×</button>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function deletePhoto(category, index) {
+            capturedPhotos[category].splice(index, 1);
+            renderPhotoCategories();
+            showToast('Photo deleted', 'success');
+        }
+
+        function validatePhotos() {
+            const required = ['meter_before', 'meter_after', 'equipment'];
+            for (const cat of required) {
+                if (!capturedPhotos[cat] || capturedPhotos[cat].length === 0) {
+                    showToast(`Missing required photo: ${cat.replace('_', ' ')}`, 'error');
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        async function submitPhotoInvoice() {
+            if (!validatePhotos()) return;
+
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Processing...';
+
+            try {
+                const notes = document.getElementById('invoiceNotes').value;
+
+                let photosUrlsByCategory = {};
+                for (const [category, photos] of Object.entries(capturedPhotos)) {
+                    photosUrlsByCategory[category] = photos.map(p => p.data);
+                }
+
+                // Save to database (or offline if unavailable)
+                const invoiceData = {
+                    job_id: currentJobId,
+                    worker_id: currentUser.id,
+                    worker_name: currentUser.name,
+                    invoice_date: new Date().toISOString().split('T')[0],
+                    invoice_time: new Date().toTimeString().slice(0, 5),
+                    notes: notes || null,
+                    photos_meter_before: photosUrlsByCategory.meter_before || [],
+                    photos_meter_after: photosUrlsByCategory.meter_after || [],
+                    photos_equipment: photosUrlsByCategory.equipment || [],
+                    units_data: [],
+                    total_diesel: 0,
+                    total_def: 0,
+                    has_incident: false
+                };
+
+                if (navigator.onLine) {
+                    const { data, error } = await db.from('invoices').insert([invoiceData]).select().single();
+                    if (error) throw error;
+                    showToast('Photo invoice submitted successfully!', 'success');
+                } else {
+                    if (typeof offlineSync !== 'undefined') {
+                        await offlineSync.saveOfflineInvoice(invoiceData);
+                        showToast('Saved offline. Will sync when online.', 'success');
+                    }
+                }
+
+                setTimeout(() => window.history.back(), 1500);
+            } catch (err) {
+                console.error('Submit error:', err);
+                showToast('Error: ' + (err.message || 'Unknown error'), 'error');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit';
+            }
+        }
+
+        // Initialize
+        renderPhotoCategories();
+    </script>
+</body>
+</html>
