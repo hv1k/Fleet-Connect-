@@ -442,7 +442,13 @@
         
         async function loadData() {
             allJobs = await getJobsForCurrentUser();
-            const { data: invoices } = await db.from('invoices').select('*').order('created_at', { ascending: false });
+            // Only load invoices for the current vendor's jobs
+            let invoicesQuery = db.from('invoices').select('*');
+            const jobIds = allJobs.map(j => j.id);
+            if (jobIds.length > 0) {
+                invoicesQuery = invoicesQuery.in('job_id', jobIds);
+            }
+            const { data: invoices } = await invoicesQuery.order('created_at', { ascending: false });
             allInvoices = invoices || [];
             updateStats(); renderChart(); renderDonut(); renderJobs(); renderActivityFeed();
         }
