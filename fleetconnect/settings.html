@@ -12,9 +12,25 @@
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Settings | FleetConnect</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+        :root {
+            --bg-dark: #1a1a1a;
+            --bg-card: #242424;
+            --bg-hover: #333;
+            --border: #333;
+            --text-primary: #e8e0d8;
+            --text-secondary: #b8b0a8;
+            --text-muted: #888;
+            --accent: #3b82f6;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --admin: #60a5fa;
+        }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Inter', sans-serif;
@@ -208,7 +224,7 @@
             margin-left: 260px;
             flex: 1;
             min-height: 100vh;
-            background: #0a0a0a;
+            background: #1a1a1a;
         }
 
         .header {
@@ -233,7 +249,7 @@
 
         .content {
             padding: 32px;
-            background: #0a0a0a;
+            background: #1a1a1a;
         }
 
         /* Cards */
@@ -346,8 +362,10 @@
             color: #0a0a0a;
         }
 
+        
         .btn-primary:hover {
-            background: #00b8a3;
+            background: #3b82f6;
+            box-shadow: 0 4px 16px rgba(96, 165, 250, 0.3);
         }
 
         .btn-primary:active {
@@ -673,7 +691,7 @@
 
                         <div class="form-group">
                             <label class="form-label">New Password</label>
-                            <input type="password" id="newPassword" placeholder="Enter new password (min 8 characters)" id="newPasswordInput">
+                            <input type="password" id="newPassword" placeholder="Enter new password (min 8 characters)">
                             <div class="strength-meter">
                                 <div class="strength-bar" id="strengthBar"></div>
                             </div>
@@ -1007,7 +1025,7 @@
         updateSessionTime();
         setInterval(updateSessionTime, 60000); // Update every minute
 
-        document.getElementById('logoutBtn').addEventListener('click', logout);
+        
         document.getElementById('signOutBtn').addEventListener('click', logout);
 
         function logout() {

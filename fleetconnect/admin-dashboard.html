@@ -38,8 +38,8 @@
         body { font-family: 'Inter', sans-serif; background: var(--bg-dark); color: var(--text-primary); min-height: 100vh; line-height: 1.6; display: flex; }
 
         /* Sidebar */
-        .admin-sidebar { width: 260px; background: var(--bg-card); border-right: 1px solid var(--border); padding: 24px 16px; position: fixed; left: 0; top: 0; height: 100vh; overflow-y: auto; z-index: 99; }
-        .admin-sidebar-logo { font-size: 1.1rem; font-weight: 700; color: var(--admin); margin-bottom: 32px; }
+        .admin-sidebar { width: 260px; background: var(--bg-card); border-right: 1px solid var(--border); padding: 24px 16px; position: fixed; left: 0; top: 0; height: 100vh; overflow-y: auto; z-index: 99; display: flex; flex-direction: column; }
+        .admin-sidebar-logo { font-size: 1.1rem; font-weight: 700; color: var(--admin); margin-bottom: 16px; }
         .admin-nav-section { margin-bottom: 24px; }
         .admin-nav-section-title { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); padding: 0 12px; margin-bottom: 8px; letter-spacing: 0.5px; }
         .admin-nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; color: #b8b0a8; text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: all 0.2s; cursor: pointer; margin-bottom: 4px; }
@@ -128,14 +128,14 @@
         .table-grid.row:hover { background: var(--bg-hover); }
         
         .role-badge { display: inline-block; padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
-        .role-badge.admin { background: rgba(168, 85, 247, 0.15); color: var(--admin); }
+        .role-badge.admin { background: rgba(96, 165, 250, 0.15); color: var(--admin); }
         .role-badge.rental { background: rgba(0, 168, 255, 0.15); color: var(--accent-blue); }
         .role-badge.vendor { background: rgba(0, 212, 170, 0.15); color: var(--accent); }
         .role-badge.fieldworker { background: rgba(255, 170, 0, 0.15); color: var(--warning); }
         
         .btn { padding: 8px 16px; font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 500; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
         .btn-primary { background: var(--admin); color: white; border: none; }
-        .btn-primary:hover { box-shadow: 0 4px 16px rgba(168, 85, 247, 0.3); }
+        .btn-primary:hover { box-shadow: 0 4px 16px rgba(96, 165, 250, 0.3); }
         .btn-small { padding: 6px 12px; font-size: 0.8rem; }
         .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); }
         .btn-outline:hover { border-color: var(--text-secondary); color: var(--text-primary); }
@@ -159,8 +159,8 @@
 
         .loading { text-align: center; padding: 40px; color: var(--text-secondary); }
         
-        #dropZone:hover { border-color: var(--admin); background: rgba(168, 85, 247, 0.1); }
-        #dropZone.drag-over { border-color: var(--admin); background: rgba(168, 85, 247, 0.15); }
+        #dropZone:hover { border-color: var(--admin); background: rgba(96, 165, 250, 0.1); }
+        #dropZone.drag-over { border-color: var(--admin); background: rgba(96, 165, 250, 0.15); }
 
         @media (max-width: 800px) {
             .table-grid { grid-template-columns: 1fr; gap: 8px; }
@@ -920,6 +920,7 @@ Jane Smith,jane@example.com,fieldworker,XYZ Rentals</code>
       });
     })();
     </script>
+<script src="feature-flags.js"></script>
 <script src="hamburger-menu.js"></script>
 <script src="global-search.js"></script>
 <script src="notification-center.js"></script>
