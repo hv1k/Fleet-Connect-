@@ -219,7 +219,7 @@
 <body>
     <aside class="admin-sidebar" id="adminSidebar">
         <div class="admin-sidebar-logo">FLEETCONNECT</div>
-        <div style="padding: 0 12px 16px;"><button class="notification-bell" title="Notifications" style="background:transparent;border:none;color:#888;font-size:1.4rem;cursor:pointer;padding:0;">🔔</button> <button class="theme-toggle" title="Toggle light/dark mode">🌙</button></div>
+        <div style="padding: 0 12px 16px;"><button class="notification-bell" title="Notifications" aria-label="Notifications" style="background:transparent;border:none;color:#888;font-size:1.4rem;cursor:pointer;padding:0;">🔔</button> <button class="theme-toggle" title="Toggle light/dark mode" aria-label="Toggle light/dark mode">🌙</button></div>
         <nav>
             <div class="admin-nav-section">
                 <div class="admin-nav-section-title">Main</div>
@@ -311,7 +311,7 @@
     <div class="side-panel" id="sidePanel">
         <div class="panel-header">
             <h2 id="panelTitle">Company Details</h2>
-            <button class="panel-close" onclick="closeSidePanel()">×</button>
+            <button class="panel-close" onclick="closeSidePanel()" aria-label="Close">×</button>
         </div>
         <div class="panel-body">
             <!-- Company Info Section -->
@@ -397,7 +397,7 @@
         <div class="modal">
             <div class="modal-header">
                 <h2 id="modalTitle">Add Company</h2>
-                <button class="modal-close" onclick="closeCompanyModal()">×</button>
+                <button class="modal-close" onclick="closeCompanyModal()" aria-label="Close">×</button>
             </div>
             <div class="modal-body">
                 <form id="companyForm">
@@ -760,5 +760,8 @@
       });
     })();
     </script>
+<script src="hamburger-menu.js"></script>
+<script src="global-search.js"></script>
+<script src="notification-center.js"></script>
 </body>
 </html>

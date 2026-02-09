@@ -303,7 +303,7 @@
 <body>
         <aside class="admin-sidebar" id="adminSidebar">
         <div class="admin-sidebar-logo">FLEETCONNECT</div>
-        <div style="padding: 0 12px 16px;"><button class="notification-bell" title="Notifications" style="background:transparent;border:none;color:#888;font-size:1.4rem;cursor:pointer;padding:0;">🔔</button> <button class="theme-toggle" title="Toggle light/dark mode">🌙</button></div>
+        <div style="padding: 0 12px 16px;"><button class="notification-bell" title="Notifications" aria-label="Notifications" style="background:transparent;border:none;color:#888;font-size:1.4rem;cursor:pointer;padding:0;">🔔</button> <button class="theme-toggle" title="Toggle light/dark mode" aria-label="Toggle light/dark mode">🌙</button></div>
         <nav>
             <div class="admin-nav-section">
                 <div class="admin-nav-section-title">Main</div>
@@ -366,7 +366,7 @@
                         <p class="header-subtitle">Search and manage all work orders</p>
                     </div>
                 </div>
-                <a href="create-job.html" class="btn btn-primary" style="display:flex;align-items:center;gap:8px;padding:10px 20px;font-size:0.85rem;text-decoration:none;"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>Create Work Order</a>
+                <a href="create-job.html" class="btn btn-primary" id="createOrderBtn" style="display:flex;align-items:center;gap:8px;padding:10px 20px;font-size:0.85rem;text-decoration:none;"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>Create Work Order</a>
             </header>
 
             <div class="content">
@@ -424,7 +424,7 @@
     <!-- Job Detail Modal -->
     <div class="modal-overlay" id="jobModal">
         <div class="modal">
-            <div class="modal-header"><h3 id="modalTitle">Work Order Details</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+            <div class="modal-header"><h3 id="modalTitle">Work Order Details</h3><button class="modal-close" onclick="closeModal()" aria-label="Close">&times;</button></div>
             <div class="modal-body" id="modalBody"></div>
             <div class="modal-footer" id="modalFooter"><button class="btn btn-secondary" onclick="closeModal()">Close</button></div>
         </div>
@@ -460,7 +460,7 @@
     <!-- Assign Field Worker Modal -->
     <div class="modal-overlay" id="assignWorkerModal">
         <div class="modal" style="max-width:500px;">
-            <div class="modal-header"><h3>Assign Field Worker</h3><button class="modal-close" onclick="closeAssignWorkerModal()">&times;</button></div>
+            <div class="modal-header"><h3>Assign Field Worker</h3><button class="modal-close" onclick="closeAssignWorkerModal()" aria-label="Close">&times;</button></div>
             <div class="modal-body" id="workerList"></div>
             <div class="modal-footer"><button class="btn btn-secondary" onclick="closeAssignWorkerModal()">Cancel</button><button class="btn btn-primary" id="assignWorkerBtn" onclick="confirmAssignWorker()" disabled>Assign</button></div>
         </div>
@@ -471,14 +471,22 @@
 
     <script src="supabase-client.js"></script>
     <script src="feature-flags.js"></script>
-    <script src="demo-switcher.js"></script>
     <script src="notifications.js"></script>
     <script src="realtime.js"></script>
 <script src="onboarding.js"></script>
     <script>
         // ===== AUTH & NAV =====
-        const currentUser = checkAuth();
+        const currentUser = checkAuth(['admin','vendor','rental','fieldworker']);
         if (!currentUser) throw new Error('Not authenticated');
+        const isFieldworkerReadonly = currentUser.role === 'fieldworker';
+
+        // Hide create button and show readonly header for fieldworkers
+        if (isFieldworkerReadonly) {
+            const createBtn = document.getElementById('createOrderBtn');
+            if (createBtn) createBtn.style.display = 'none';
+            const headerSub = document.querySelector('.header-subtitle');
+            if (headerSub) headerSub.textContent = 'View your completed work orders (read-only)';
+        }
 
         // Redirect admin users who just logged in to the admin dashboard
         if (currentUser.role === 'admin' && document.referrer.includes('login.html')) {
@@ -598,6 +606,10 @@
             const type = document.getElementById('typeFilter').value;
 
             let filtered = allJobs;
+            // Fieldworkers only see completed jobs assigned to them
+            if (isFieldworkerReadonly) {
+                filtered = filtered.filter(j => j.status === 'completed' && j.assigned_worker === currentUser.id);
+            }
             if (search) {
                 filtered = filtered.filter(j =>
                     (j.job_site_name || '').toLowerCase().includes(search) ||
@@ -648,9 +660,9 @@
                         <div class="job-actions" onclick="event.stopPropagation()">
                             <button class="btn btn-primary" onclick="openJob('${job.id}')">View Details</button>
                             ${deliveries.length > 0 ? '<button class="btn btn-secondary" onclick="openDeliveries(\'' + job.id + '\')">Deliveries (' + deliveries.length + ')</button>' : ''}
-                            ${job.invoice_image ? '<button class="btn btn-invoice" onclick="viewImage(\'' + job.invoice_image + '\')">📄 Invoice</button>' : ''}
-                            ${canRespondToJob(job) ? '<button class="btn btn-accept" onclick="acceptJob(\'' + job.id + '\')">✓ Accept</button><button class="btn btn-decline" onclick="declineJob(\'' + job.id + '\')">✗ Decline</button>' : ''}
-                            ${currentUser.role === 'vendor' && job.status !== 'completed' ? '<button class="btn btn-assign" onclick="openAssignWorkerModal(\'' + job.id + '\')">' + (job.assigned_worker ? '↻ Reassign Worker' : '👷 Assign Worker') + '</button>' : ''}
+                            ${!isFieldworkerReadonly && job.invoice_image ? '<button class="btn btn-invoice" onclick="viewImage(\'' + job.invoice_image + '\')">📄 Invoice</button>' : ''}
+                            ${!isFieldworkerReadonly && canRespondToJob(job) ? '<button class="btn btn-accept" onclick="acceptJob(\'' + job.id + '\')">✓ Accept</button><button class="btn btn-decline" onclick="declineJob(\'' + job.id + '\')">✗ Decline</button>' : ''}
+                            ${!isFieldworkerReadonly && currentUser.role === 'vendor' && job.status !== 'completed' ? '<button class="btn btn-assign" onclick="openAssignWorkerModal(\'' + job.id + '\')">' + (job.assigned_worker ? '↻ Reassign Worker' : '👷 Assign Worker') + '</button>' : ''}
                         </div>
                     </div>
                 `;
@@ -1198,5 +1210,8 @@
       });
     })();
     </script>
+<script src="hamburger-menu.js"></script>
+<script src="global-search.js"></script>
+<script src="notification-center.js"></script>
 </body>
 </html>

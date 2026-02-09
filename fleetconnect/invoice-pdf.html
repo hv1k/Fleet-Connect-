@@ -229,7 +229,7 @@
 
         <aside class="sidebar">
             <div class="sidebar-header"><span class="sidebar-logo">FleetConnect</span></div>
-        <div style="padding: 0 12px 16px;"><button class="theme-toggle" title="Toggle light/dark mode">🌙</button></div>
+        <div style="padding: 0 12px 16px;"><button class="theme-toggle" title="Toggle light/dark mode" aria-label="Toggle light/dark mode">🌙</button></div>
             <nav>
                 <div class="nav-section">
                     <div class="nav-section-title">Rental Management</div>
@@ -314,7 +314,7 @@
     <!-- Invoice Preview Modal -->
     <div class="modal-overlay" id="previewModal">
         <div class="modal">
-            <div class="modal-header"><h3>Invoice Preview & Download</h3><button class="modal-close" onclick="closePreviewModal()">×</button></div>
+            <div class="modal-header"><h3>Invoice Preview & Download</h3><button class="modal-close" onclick="closePreviewModal()" aria-label="Close">×</button></div>
             <div class="modal-body" id="previewBody"></div>
             <div class="modal-footer" id="previewFooter">
                 <button class="btn btn-secondary" onclick="closePreviewModal()">Close</button>
@@ -325,7 +325,6 @@
 
     <script src="supabase-client.js"></script>
     <script src="feature-flags.js"></script>
-    <script src="demo-switcher.js"></script>
     <script>
         let allDeliveries = [], allJobs = [], allInvoices = [];
         let selectedInvoiceData = null;
@@ -583,5 +582,8 @@
       });
     })();
     </script>
+<script src="hamburger-menu.js"></script>
+<script src="global-search.js"></script>
+<script src="notification-center.js"></script>
 </body>
 </html>

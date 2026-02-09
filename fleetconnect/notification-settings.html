@@ -208,7 +208,7 @@
                     <a href="analytics.html">Analytics</a>
                     <a href="settings.html">Settings</a>
                 </div>
-                <button class="notification-bell" title="Notifications" style="background: transparent; border: none; color: var(--text-secondary); font-size: 1.4rem; cursor: pointer; padding: 0;">🔔</button>
+                <button class="notification-bell" title="Notifications" aria-label="Notifications" style="background: transparent; border: none; color: var(--text-secondary); font-size: 1.4rem; cursor: pointer; padding: 0;">🔔</button>
                 <div class="admin-badge">ADMIN</div>
                 <div class="user-info">
                     <span class="user-name" id="userName">Admin</span>
@@ -283,7 +283,7 @@
         <div class="modal">
             <div class="modal-header">
                 <h2>Add Notification Rule</h2>
-                <button class="modal-close" onclick="closeAddRuleModal()">×</button>
+                <button class="modal-close" onclick="closeAddRuleModal()" aria-label="Close">×</button>
             </div>
             <div class="modal-body">
                 <form id="addRuleForm">
@@ -373,7 +373,7 @@
         <div class="modal">
             <div class="modal-header">
                 <h2>Edit Template</h2>
-                <button class="modal-close" onclick="closeEditTemplateModal()">×</button>
+                <button class="modal-close" onclick="closeEditTemplateModal()" aria-label="Close">×</button>
             </div>
             <div class="modal-body">
                 <form id="editTemplateForm">
@@ -677,6 +677,9 @@
     })();
     </script>
 
-    <div style="position:fixed;top:16px;right:16px;z-index:9999;"><button class="theme-toggle" title="Toggle light/dark mode">🌙</button></div>
+    <div style="position:fixed;top:16px;right:16px;z-index:9999;"><button class="theme-toggle" title="Toggle light/dark mode" aria-label="Toggle light/dark mode">🌙</button></div>
+<script src="hamburger-menu.js"></script>
+<script src="global-search.js"></script>
+<script src="notification-center.js"></script>
 </body>
 </html>

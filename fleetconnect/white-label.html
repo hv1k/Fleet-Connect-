@@ -220,7 +220,7 @@
                     <a href="analytics.html">Analytics</a>
                     <a href="settings.html">Settings</a>
                 </div>
-                <button class="notification-bell" title="Notifications">🔔</button> <button class="theme-toggle" title="Toggle light/dark mode">🌙</button>
+                <button class="notification-bell" title="Notifications" aria-label="Notifications">🔔</button> <button class="theme-toggle" title="Toggle light/dark mode" aria-label="Toggle light/dark mode">🌙</button>
                 <div class="admin-badge">ADMIN</div>
                 <div class="user-info">
                     <span class="user-name" id="userName">Admin</span>
@@ -252,7 +252,7 @@
         <div class="modal">
             <div class="modal-header">
                 <h2 id="modalTitle">Create Brand Configuration</h2>
-                <button class="modal-close" onclick="closeModal()">×</button>
+                <button class="modal-close" onclick="closeModal()" aria-label="Close">×</button>
             </div>
 
             <div class="modal-body">
@@ -747,5 +747,8 @@
       });
     })();
     </script>
+<script src="hamburger-menu.js"></script>
+<script src="global-search.js"></script>
+<script src="notification-center.js"></script>
 </body>
 </html>

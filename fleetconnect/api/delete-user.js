@@ -29,6 +29,31 @@ function verifyToken(token) {
     }
 }
 
+
+// Rate limiting
+const RATE_WINDOW_MS = 60000;
+const MAX_REQUESTS = 30;
+const _rlAttempts = new Map();
+
+function _getRateKey(req) {
+    return req.headers['x-forwarded-for']?.split(',')[0] || req.socket?.remoteAddress || 'unknown';
+}
+
+function _isRateLimited(key) {
+    const now = Date.now();
+    const entry = _rlAttempts.get(key);
+    if (!entry) return false;
+    if (now - entry.first > RATE_WINDOW_MS) { _rlAttempts.delete(key); return false; }
+    return entry.count >= MAX_REQUESTS;
+}
+
+function _recordRequest(key) {
+    const now = Date.now();
+    const entry = _rlAttempts.get(key);
+    if (!entry || now - entry.first > RATE_WINDOW_MS) { _rlAttempts.set(key, { count: 1, first: now }); return; }
+    entry.count += 1;
+}
+
 export default async function handler(req, res) {
     const origin = getCorsOrigin(req);
     res.setHeader('Access-Control-Allow-Origin', origin);
@@ -37,6 +62,13 @@ export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Credentials', 'true');
 
     if (req.method === 'OPTIONS') return res.status(200).end();
+
+    // Rate limit check
+    const _rk = _getRateKey(req);
+    if (_isRateLimited(_rk)) {
+        return res.status(429).json({ error: 'Too many requests. Please try again later.' });
+    }
+    _recordRequest(_rk);
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
     try {

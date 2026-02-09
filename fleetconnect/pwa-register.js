@@ -37,8 +37,8 @@
         setInterval(() => this.checkForUpdates(), 60000); // Check every minute
       }
 
-      // Request notification permission
-      this.requestNotificationPermission();
+      // Notification permission is now requested on user gesture only.
+      // Call window.PWARegister.requestNotificationPermission() from a button click.
     },
 
     // Register service worker

@@ -256,7 +256,7 @@
     <div class="layout">
         <aside class="sidebar">
             <div class="sidebar-header"><span class="sidebar-logo">FleetConnect</span></div>
-        <div style="padding: 0 12px 16px;"><button class="theme-toggle" title="Toggle light/dark mode">🌙</button></div>
+        <div style="padding: 0 12px 16px;"><button class="theme-toggle" title="Toggle light/dark mode" aria-label="Toggle light/dark mode">🌙</button></div>
             <nav id="sidebarNav">
                 <div class="nav-section">
                     <div class="nav-section-title">Main Menu</div>
@@ -342,7 +342,7 @@
         <div class="modal">
             <div class="modal-header">
                 <h3>Upload Document</h3>
-                <button class="modal-close" onclick="closeUploadModal()">×</button>
+                <button class="modal-close" onclick="closeUploadModal()" aria-label="Close">×</button>
             </div>
             <div class="modal-body">
                 <div class="form-group">
@@ -402,7 +402,7 @@
         <div class="modal">
             <div class="modal-header">
                 <h3 id="previewTitle">Preview</h3>
-                <button class="modal-close" onclick="closePreviewModal()">×</button>
+                <button class="modal-close" onclick="closePreviewModal()" aria-label="Close">×</button>
             </div>
             <div class="modal-body" id="previewContent" style="text-align:center;">
                 <div style="height:400px;display:flex;align-items:center;justify-content:center;">Loading preview...</div>
@@ -762,5 +762,8 @@
       });
     })();
     </script>
+<script src="hamburger-menu.js"></script>
+<script src="global-search.js"></script>
+<script src="notification-center.js"></script>
 </body>
 </html>

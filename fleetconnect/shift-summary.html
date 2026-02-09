@@ -274,7 +274,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2>Shift Comparison</h2>
-                <button class="modal-close" onclick="closeComparison()">×</button>
+                <button class="modal-close" onclick="closeComparison()" aria-label="Close">×</button>
             </div>
             <div id="comparisonContent"></div>
         </div>
@@ -518,6 +518,9 @@ Please review this summary.`;
     })();
     </script>
 
-    <div style="position:fixed;top:16px;right:16px;z-index:9999;"><button class="theme-toggle" title="Toggle light/dark mode">🌙</button></div>
+    <div style="position:fixed;top:16px;right:16px;z-index:9999;"><button class="theme-toggle" title="Toggle light/dark mode" aria-label="Toggle light/dark mode">🌙</button></div>
+<script src="hamburger-menu.js"></script>
+<script src="global-search.js"></script>
+<script src="notification-center.js"></script>
 </body>
 </html>

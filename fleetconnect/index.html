@@ -16,7 +16,6 @@
 </head>
 <body>
     <script src="supabase-client.js"></script>
-    <script src="demo-switcher.js"></script>
     <script>
         // Redirect to role-appropriate dashboard (or login if not authenticated)
         const user = getCurrentUser();
@@ -27,7 +26,7 @@
         }
     </script>
 
-    <div style="position:fixed;top:16px;right:16px;z-index:9999;"><button class="theme-toggle" title="Toggle light/dark mode">🌙</button></div>
+    <div style="position:fixed;top:16px;right:16px;z-index:9999;"><button class="theme-toggle" title="Toggle light/dark mode" aria-label="Toggle light/dark mode">🌙</button></div>
     <script>
     // Theme toggle
     (function(){

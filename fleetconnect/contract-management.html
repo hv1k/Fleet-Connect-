@@ -257,7 +257,7 @@
 
         <aside class="sidebar">
             <div class="sidebar-header"><span class="sidebar-logo">FleetConnect</span></div>
-        <div style="padding: 0 12px 16px;"><button class="theme-toggle" title="Toggle light/dark mode">🌙</button></div>
+        <div style="padding: 0 12px 16px;"><button class="theme-toggle" title="Toggle light/dark mode" aria-label="Toggle light/dark mode">🌙</button></div>
             <nav>
                 <div class="nav-section">
                     <div class="nav-section-title">Rental Management</div>
@@ -352,7 +352,7 @@
     <!-- Add/Edit Contract Modal -->
     <div class="modal-overlay" id="contractModal">
         <div class="modal">
-            <div class="modal-header"><h3 id="modalTitle">Add Contract</h3><button class="modal-close" onclick="closeContractModal()">×</button></div>
+            <div class="modal-header"><h3 id="modalTitle">Add Contract</h3><button class="modal-close" onclick="closeContractModal()" aria-label="Close">×</button></div>
             <div class="modal-body" id="modalBody"></div>
             <div class="modal-footer" id="modalFooter">
                 <button class="btn btn-secondary" onclick="closeContractModal()">Cancel</button>
@@ -364,7 +364,7 @@
     <!-- Contract Detail Modal -->
     <div class="modal-overlay" id="detailModal">
         <div class="modal">
-            <div class="modal-header"><h3 id="detailTitle">Contract Details</h3><button class="modal-close" onclick="closeDetailModal()">×</button></div>
+            <div class="modal-header"><h3 id="detailTitle">Contract Details</h3><button class="modal-close" onclick="closeDetailModal()" aria-label="Close">×</button></div>
             <div class="modal-body" id="detailBody"></div>
             <div class="modal-footer" id="detailFooter">
                 <button class="btn btn-secondary" onclick="closeDetailModal()">Close</button>
@@ -375,7 +375,6 @@
 
     <script src="supabase-client.js"></script>
     <script src="feature-flags.js"></script>
-    <script src="demo-switcher.js"></script>
     <script>
         let allContracts = [], allJobs = [];
         let selectedContractId = null;
@@ -779,5 +778,8 @@
       });
     })();
     </script>
+<script src="hamburger-menu.js"></script>
+<script src="global-search.js"></script>
+<script src="notification-center.js"></script>
 </body>
 </html>

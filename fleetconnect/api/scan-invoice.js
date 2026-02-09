@@ -1,3 +1,13 @@
+import { createClient } from '@supabase/supabase-js';
+import jwt from 'jsonwebtoken';
+
+const supabase = createClient(
+    process.env.SUPABASE_URL || 'https://ojqoxdsibiutpfhtvyyo.supabase.co',
+    process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY
+);
+
+const JWT_SECRET = process.env.JWT_SECRET;
+
 const ALLOWED_ORIGINS = [
     'https://fleet-connect-three.vercel.app',
     'http://localhost:3000',
@@ -12,10 +22,45 @@ function getCorsOrigin(req) {
     return ALLOWED_ORIGINS[0];
 }
 
+function verifyToken(token) {
+    try {
+        if (!JWT_SECRET) return null;
+        return jwt.verify(token, JWT_SECRET);
+    } catch {
+        return null;
+    }
+}
+
+
+// Rate limiting
+const RATE_WINDOW_MS = 60000;
+const MAX_REQUESTS = 10;
+const _rlAttempts = new Map();
+
+function _getRateKey(req) {
+    return req.headers['x-forwarded-for']?.split(',')[0] || req.socket?.remoteAddress || 'unknown';
+}
+
+function _isRateLimited(key) {
+    const now = Date.now();
+    const entry = _rlAttempts.get(key);
+    if (!entry) return false;
+    if (now - entry.first > RATE_WINDOW_MS) { _rlAttempts.delete(key); return false; }
+    return entry.count >= MAX_REQUESTS;
+}
+
+function _recordRequest(key) {
+    const now = Date.now();
+    const entry = _rlAttempts.get(key);
+    if (!entry || now - entry.first > RATE_WINDOW_MS) { _rlAttempts.set(key, { count: 1, first: now }); return; }
+    entry.count += 1;
+}
+
 export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', getCorsOrigin(req));
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
     
     if (req.method === 'OPTIONS') {
         return res.status(200).end();
@@ -23,6 +68,24 @@ export default async function handler(req, res) {
     
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
+    }
+
+    // Rate limit check
+    const _rk = _getRateKey(req);
+    if (_isRateLimited(_rk)) {
+        return res.status(429).json({ error: 'Too many scan requests. Please try again later.' });
+    }
+    _recordRequest(_rk);
+
+    // Verify authentication
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const decoded = verifyToken(authHeader.split(' ')[1]);
+    if (!decoded) {
+        return res.status(401).json({ error: 'Invalid or expired token' });
     }
     
     const CLAUDE_API_KEY = process.env.CLAUDE_API_KEY;

@@ -228,21 +228,100 @@
 
     <script src="supabase-client.js"></script>
     <script>
-        // Customer Portal - Light theme, no auth required
+        // Customer Portal - requires auth or job lookup verification
         let allEquipment = [];
         let allDeliveries = [];
         let allJobs = [];
+        let portalAuthenticated = false;
+
+        // Check if user is logged in via session
+        const portalUser = (typeof getCurrentUser === 'function') ? getCurrentUser() : null;
+        if (!portalUser) {
+            // Check sessionStorage fallback
+            try {
+                const stored = sessionStorage.getItem('fc_user') || localStorage.getItem('fc_user');
+                if (stored) {
+                    portalAuthenticated = true;
+                }
+            } catch(e) {}
+        } else {
+            portalAuthenticated = true;
+        }
 
         // Try to get customer data from URL params or local storage
         const urlParams = new URLSearchParams(window.location.search);
         const customerToken = urlParams.get('token') || localStorage.getItem('customer_token');
         const customerId = urlParams.get('customer_id') || localStorage.getItem('customer_id');
 
-        if (!customerId) {
-            // Demo mode - load sample data
+        if (!portalAuthenticated && !customerId && !customerToken) {
+            // Show job lookup form instead of exposing data
+            showJobLookupForm();
+        } else if (!customerId) {
             loadDemoData();
         } else {
             loadCustomerData();
+        }
+
+        function showJobLookupForm() {
+            document.querySelector('.content').innerHTML = `
+                <div style="max-width: 480px; margin: 60px auto; background: #ffffff; border: 1px solid #e8e4dc; border-radius: 14px; padding: 40px;">
+                    <h2 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 8px;">Equipment Portal Access</h2>
+                    <p style="color: #8c8c8c; font-size: 0.9rem; margin-bottom: 24px;">Enter your job ID and email address to view your equipment status.</p>
+                    <div style="margin-bottom: 16px;">
+                        <label style="display:block; font-size: 0.85rem; font-weight: 500; margin-bottom: 6px;">Job ID</label>
+                        <input type="text" id="lookupJobId" placeholder="e.g. abc123-def456" style="width:100%; padding: 12px; border: 1px solid #e8e4dc; border-radius: 8px; font-size: 0.9rem; font-family: inherit;">
+                    </div>
+                    <div style="margin-bottom: 24px;">
+                        <label style="display:block; font-size: 0.85rem; font-weight: 500; margin-bottom: 6px;">Email Address</label>
+                        <input type="email" id="lookupEmail" placeholder="you@company.com" style="width:100%; padding: 12px; border: 1px solid #e8e4dc; border-radius: 8px; font-size: 0.9rem; font-family: inherit;">
+                    </div>
+                    <div id="lookupError" style="display:none; color: #dc2626; font-size: 0.85rem; margin-bottom: 16px; padding: 10px; background: #fee2e2; border-radius: 8px;"></div>
+                    <button onclick="verifyJobAccess()" style="width:100%; padding: 14px; background: #3b82f6; color: #fff; border: none; border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer;">View Equipment</button>
+                    <p style="text-align: center; margin-top: 16px; font-size: 0.85rem; color: #8c8c8c;">
+                        Have an account? <a href="login.html" style="color: #3b82f6; text-decoration: none; font-weight: 500;">Sign in</a>
+                    </p>
+                </div>
+            `;
+        }
+
+        async function verifyJobAccess() {
+            const jobId = document.getElementById('lookupJobId').value.trim();
+            const email = document.getElementById('lookupEmail').value.trim().toLowerCase();
+            const errorDiv = document.getElementById('lookupError');
+
+            if (!jobId || !email) {
+                errorDiv.textContent = 'Please enter both Job ID and email address.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            try {
+                const { data: job, error } = await db.from('jobs').select('*').eq('id', jobId).single();
+                if (error || !job) {
+                    errorDiv.textContent = 'No job found with that ID. Please check and try again.';
+                    errorDiv.style.display = 'block';
+                    return;
+                }
+
+                // Verify email matches customer or contact
+                const jobEmail = (job.customer_email || '').toLowerCase();
+                const contactEmail = (job.contact_email || '').toLowerCase();
+                const customerName = (job.customer_name || '').toLowerCase();
+
+                if (email !== jobEmail && email !== contactEmail) {
+                    errorDiv.textContent = 'Email does not match the records for this job.';
+                    errorDiv.style.display = 'block';
+                    return;
+                }
+
+                // Verified — store and reload
+                localStorage.setItem('customer_id', jobId);
+                localStorage.setItem('customer_name', job.customer_name || '');
+                window.location.reload();
+            } catch (err) {
+                errorDiv.textContent = 'An error occurred. Please try again.';
+                errorDiv.style.display = 'block';
+            }
         }
 
         function loadDemoData() {
@@ -442,6 +521,9 @@
     })();
     </script>
 
-    <div style="position:fixed;top:16px;right:16px;z-index:9999;"><button class="theme-toggle" title="Toggle light/dark mode">🌙</button></div>
+    <div style="position:fixed;top:16px;right:16px;z-index:9999;"><button class="theme-toggle" title="Toggle light/dark mode" aria-label="Toggle light/dark mode">🌙</button></div>
+<script src="hamburger-menu.js"></script>
+<script src="global-search.js"></script>
+<script src="notification-center.js"></script>
 </body>
 </html>

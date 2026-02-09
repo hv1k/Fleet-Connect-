@@ -371,7 +371,7 @@
         
         <aside class="sidebar">
             <div class="sidebar-header"><span class="sidebar-logo">FleetConnect</span></div>
-        <div style="padding: 0 12px 16px;"><button class="theme-toggle" title="Toggle light/dark mode">🌙</button></div>
+        <div style="padding: 0 12px 16px;"><button class="theme-toggle" title="Toggle light/dark mode" aria-label="Toggle light/dark mode">🌙</button></div>
             <nav>
                 <div class="nav-section">
                     <div class="nav-section-title">Main Menu</div>
@@ -531,7 +531,7 @@
     <!-- Job Detail Modal -->
     <div class="modal-overlay" id="jobModal">
         <div class="modal">
-            <div class="modal-header"><h3 id="modalTitle">Order Details</h3><button class="modal-close" onclick="closeModal()">×</button></div>
+            <div class="modal-header"><h3 id="modalTitle">Order Details</h3><button class="modal-close" onclick="closeModal()" aria-label="Close">×</button></div>
             <div class="modal-body" id="modalBody"></div>
             <div class="modal-footer" id="modalFooter">
                 <button class="btn btn-secondary" onclick="closeModal()">Close</button>
@@ -541,7 +541,6 @@
 
     <script src="supabase-client.js"></script>
     <script src="feature-flags.js"></script>
-    <script src="demo-switcher.js"></script>
     <script src="notifications.js"></script>
     <script src="realtime.js"></script>
 <script src="onboarding.js"></script>
@@ -585,14 +584,19 @@
         let allJobs = [], allDeliveries = [], vendors = [];
         
         async function loadData() {
-            allJobs = await getJobsForCurrentUser();
-            allDeliveries = await getDeliveriesForCurrentUser();
-            vendors = await getAllVendors();
-            updateStats();
-            renderChart();
-            renderDonut();
-            renderJobs();
-            renderActivityFeed();
+            try {
+                allJobs = await getJobsForCurrentUser();
+                allDeliveries = await getDeliveriesForCurrentUser();
+                vendors = await getAllVendors();
+                updateStats();
+                renderChart();
+                renderDonut();
+                renderJobs();
+                renderActivityFeed();
+            } catch (err) {
+                console.error('Failed to load data:', err);
+                document.querySelector('.main-content, .content, main').innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-secondary)"><h2>Unable to load data</h2><p>Please check your connection and try again.</p><button onclick="location.reload()" class="btn btn-primary" style="margin-top:16px">Retry</button></div>';
+            }
         }
         
         function updateStats() {
@@ -953,5 +957,8 @@
       });
     })();
     </script>
+<script src="hamburger-menu.js"></script>
+<script src="global-search.js"></script>
+<script src="notification-center.js"></script>
 </body>
 </html>

@@ -228,7 +228,7 @@
 <body>
         <aside class="admin-sidebar" id="adminSidebar">
         <div class="admin-sidebar-logo">FLEETCONNECT</div>
-        <div style="padding: 0 12px 16px;"><button class="notification-bell" title="Notifications" style="background:transparent;border:none;color:#888;font-size:1.4rem;cursor:pointer;padding:0;">🔔</button> <button class="theme-toggle" title="Toggle light/dark mode">🌙</button></div>
+        <div style="padding: 0 12px 16px;"><button class="notification-bell" title="Notifications" aria-label="Notifications" style="background:transparent;border:none;color:#888;font-size:1.4rem;cursor:pointer;padding:0;">🔔</button> <button class="theme-toggle" title="Toggle light/dark mode" aria-label="Toggle light/dark mode">🌙</button></div>
         <nav>
             <div class="admin-nav-section">
                 <div class="admin-nav-section-title">Main</div>
@@ -404,7 +404,7 @@
         <div class="modal">
             <div class="modal-header">
                 <h2 id="modalTitle">Add User</h2>
-                <button class="modal-close" onclick="closeModal()">×</button>
+                <button class="modal-close" onclick="closeModal()" aria-label="Close">×</button>
             </div>
             <div class="modal-body">
                 <form id="userForm">
@@ -450,7 +450,7 @@
         <div class="modal" style="max-width: 600px;">
             <div class="modal-header">
                 <h2>Import Users from CSV</h2>
-                <button class="modal-close" onclick="closeImportModal()">×</button>
+                <button class="modal-close" onclick="closeImportModal()" aria-label="Close">×</button>
             </div>
             <div class="modal-body">
                 <div style="margin-bottom: 20px; padding: 14px; background: var(--bg-input); border-radius: 8px; border: 2px dashed var(--border); text-align: center; cursor: pointer; transition: all 0.2s;" id="dropZone" onclick="document.getElementById('csvInput').click()">
@@ -476,7 +476,6 @@ Jane Smith,jane@example.com,fieldworker,XYZ Rentals</code>
     </div>
     
     <script src="supabase-client.js"></script>
-    <script src="demo-switcher.js"></script>
     <script src="notifications.js"></script>
     <script src="realtime.js"></script>
 <script src="onboarding.js"></script>
@@ -496,10 +495,15 @@ Jane Smith,jane@example.com,fieldworker,XYZ Rentals</code>
         let csvUsersToImport = [];
 
         async function loadUsers() {
-            allUsers = await getAllUsers();
-            updateStats();
-            populateCompanyFilter();
-            renderTable();
+            try {
+                allUsers = await getAllUsers();
+                updateStats();
+                populateCompanyFilter();
+                renderTable();
+            } catch (err) {
+                console.error('Failed to load users:', err);
+                document.querySelector('.admin-main').innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-secondary)"><h2>Unable to load data</h2><p>Please check your connection and try again.</p><button onclick="location.reload()" class="btn btn-primary" style="margin-top:16px">Retry</button></div>';
+            }
         }
 
         function populateCompanyFilter() {
@@ -527,7 +531,7 @@ Jane Smith,jane@example.com,fieldworker,XYZ Rentals</code>
 
         async function loadJobsData() {
             try {
-                const { data, error } = await supabase.from('jobs').select('*');
+                const { data, error } = await db.from('jobs').select('*');
                 if (error) throw error;
 
                 allJobs = data || [];
@@ -539,7 +543,7 @@ Jane Smith,jane@example.com,fieldworker,XYZ Rentals</code>
 
         async function loadActivityData() {
             try {
-                const { data, error } = await supabase
+                const { data, error } = await db
                     .from('activity_log')
                     .select('*')
                     .order('created_at', { ascending: false })
@@ -916,5 +920,8 @@ Jane Smith,jane@example.com,fieldworker,XYZ Rentals</code>
       });
     })();
     </script>
+<script src="hamburger-menu.js"></script>
+<script src="global-search.js"></script>
+<script src="notification-center.js"></script>
 </body>
 </html>

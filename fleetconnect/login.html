@@ -741,11 +741,7 @@
     
         /* Light Mode */
         .light-mode { --bg-dark: #f5f5f5; --bg-card: #ffffff; --bg-input: #e8e8e8; --bg-hover: #e8e8e8; --border: #d0d0d0; --text-primary: #1a1a1a; --text-secondary: #555555; --text-muted: #888888; }
-        .light-mode .sidebar, .light-mode .admin-sidebar { background: #ffffff !important; border-color: #d0d0d0 !important; }
-        .light-mode .sidebar-logo, .light-mode .admin-sidebar-logo { color: #3b82f6 !important; }
-        .light-mode .nav-item, .light-mode .admin-nav-item { color: #555555 !important; }
-        .light-mode .nav-item:hover, .light-mode .admin-nav-item:hover { background: #e8e8e8 !important; color: #1a1a1a !important; }
-        .light-mode .nav-item.active, .light-mode .admin-nav-item.active { background: #dbeafe !important; color: #2563eb !important; }
+        /* Sidebar styles removed — login page has no sidebar */
         .light-mode .nav-section-title, .light-mode .admin-nav-section { color: #888888 !important; }
         .light-mode .user-menu { background: #e8e8e8 !important; }
         .light-mode .user-name { color: #1a1a1a !important; }
@@ -762,7 +758,7 @@
         .light-mode .badge { background: #dbeafe !important; color: #2563eb !important; }
         .light-mode .btn-secondary { background: #e8e8e8 !important; color: #1a1a1a !important; border-color: #d0d0d0 !important; }
         .light-mode .btn-secondary:hover { background: #d0d0d0 !important; }
-        .light-mode .sidebar-footer, .light-mode .admin-sidebar-footer { border-color: #d0d0d0 !important; }
+        /* Sidebar footer styles removed — login page has no sidebar */
         .light-mode .logout-btn:hover { background: #e8e8e8 !important; }
         .light-mode table th { background: #e8e8e8 !important; color: #1a1a1a !important; border-color: #d0d0d0 !important; }
         .light-mode table td { border-color: #d0d0d0 !important; color: #1a1a1a !important; }
@@ -962,7 +958,6 @@
     <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-client.js"></script>
-    <script src="demo-switcher.js"></script>
     <script src="pwa-register.js"></script>
     <script>
         // =============================================
@@ -1143,7 +1138,7 @@
             forgotLink.style.pointerEvents = 'none';
 
             try {
-                const response = await fetch('/api/request-reset', {
+                const response = await fetch('/api/reset-password', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -1228,6 +1223,6 @@
     })();
     </script>
 
-    <div style="position:fixed;top:16px;right:16px;z-index:9999;"><button class="theme-toggle" title="Toggle light/dark mode">🌙</button></div>
+    <div style="position:fixed;top:16px;right:16px;z-index:9999;"><button class="theme-toggle" title="Toggle light/dark mode" aria-label="Toggle light/dark mode">🌙</button></div>
 </body>
 </html>
