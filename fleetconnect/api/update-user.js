@@ -87,6 +87,30 @@ export default async function handler(req, res) {
             return res.status(403).json({ error: 'Admin access required' });
         }
 
+        // Special action: migrate plaintext passwords to bcrypt
+        const { action } = req.body;
+        if (action === 'migrate-passwords') {
+            const { data: users, error: fetchError } = await supabase
+                .from('users')
+                .select('id, password');
+            if (fetchError) {
+                return res.status(500).json({ error: 'Failed to fetch users', details: fetchError.message });
+            }
+            let migratedCount = 0;
+            for (const user of users) {
+                if (user.password && user.password.startsWith('$2')) continue;
+                const hashed = await bcrypt.hash(user.password, 12);
+                const { error: updateError } = await supabase
+                    .from('users')
+                    .update({ password: hashed })
+                    .eq('id', user.id);
+                if (updateError) { console.error(`Failed to migrate user ${user.id}:`, updateError.message); continue; }
+                migratedCount++;
+            }
+            return res.status(200).json({ success: true, migrated: migratedCount, total: users.length });
+        }
+
+        // Regular user update flow
         const { userId, email, password, name, role, company, vendor_id } = req.body;
 
         if (!userId) {
