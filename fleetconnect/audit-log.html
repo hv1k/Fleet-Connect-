@@ -30,7 +30,7 @@
             --login: #888;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg-dark); color: var(--text-primary); min-height: 100vh; line-height: 1.6; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-dark); color: var(--text-primary); min-height: 100vh; line-height: 1.6; display: flex; }
         .container { position: relative; z-index: 1; max-width: 1400px; margin: 0 auto; padding: 24px 32px; }
 
         .nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
@@ -121,21 +121,72 @@
             .table-grid.row { display: block; padding: 16px 24px; }
             .table-grid.row div:before { content: attr(data-label); font-weight: 600; color: var(--text-secondary); display: block; font-size: 0.75rem; margin-bottom: 4px; }
         }
+
+        /* Sidebar */
+        .admin-sidebar { width: 260px; background: var(--bg-card); border-right: 1px solid var(--border); padding: 24px 16px; position: fixed; left: 0; top: 0; height: 100vh; overflow-y: auto; z-index: 99; }
+        .admin-sidebar-logo { font-size: 1.1rem; font-weight: 700; color: var(--admin, #60a5fa); margin-bottom: 32px; }
+        .admin-nav-section { margin-bottom: 24px; }
+        .admin-nav-section-title { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted, #666); padding: 0 12px; margin-bottom: 8px; letter-spacing: 0.5px; }
+        .admin-nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; color: #b8b0a8; text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: all 0.2s; cursor: pointer; margin-bottom: 4px; }
+        .admin-nav-item:hover { background: var(--bg-hover, #333); color: var(--text-primary); }
+        .admin-nav-item.active { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
+        .admin-nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+        .admin-sidebar-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border); }
+        .main-content { flex: 1; margin-left: 260px; }
+        @media (max-width: 768px) {
+            .admin-sidebar { width: 100%; height: auto; position: relative; border-right: none; border-bottom: 1px solid var(--border); padding: 12px; }
+            .main-content { margin-left: 0; }
+        }
     </style>
 </head>
 <body>
+<aside class="admin-sidebar" id="adminSidebar">
+    <div class="admin-sidebar-logo">FLEETCONNECT</div>
+    <nav>
+        <div class="admin-nav-section">
+            <div class="admin-nav-section-title">Main</div>
+            <a class="admin-nav-item" href="admin-dashboard.html">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                Dashboard
+            </a>
+            <a class="admin-nav-item" href="work-orders.html">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                Work Orders
+            </a>
+        </div>
+        <div class="admin-nav-section">
+            <div class="admin-nav-section-title">Admin</div>
+            <a class="admin-nav-item" href="admin-feature-flags.html">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                Feature Flags
+            </a>
+            <a class="admin-nav-item active" href="audit-log.html">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                Audit Log
+            </a>
+            <a class="admin-nav-item" href="analytics.html">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                Analytics
+            </a>
+            <a class="admin-nav-item" href="settings.html">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                Settings
+            </a>
+        </div>
+    </nav>
+    <div class="admin-sidebar-footer">
+        <div style="padding: 12px; background: var(--bg-hover); border-radius: 8px;">
+            <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary); margin-bottom: 4px;" id="adminUserName">Admin</div>
+            <div style="font-size: 0.75rem; color: var(--text-secondary);">Administrator</div>
+        </div>
+    </div>
+</aside>
+
+    <div class="main-content">
     <div class="container">
         <nav class="nav">
             <a href="index.html" class="logo">FLEETCONNECT</a>
             <div class="nav-right">
-                <div class="nav-links">
-                    <a href="admin-dashboard.html">Users</a>
-                    <a href="work-orders.html">Work Orders</a>
-                    <a href="create-job.html">Create Work Order</a>
-                    <a href="admin-feature-flags.html">Feature Flags</a>
-                    <a href="audit-log.html" class="active">Audit Log</a>
-                    <a href="settings.html">Settings</a>
-                </div>
                 <button class="notification-bell" title="Notifications">🔔</button>
                 <div class="admin-badge">ADMIN</div>
                 <div class="user-info">
@@ -513,5 +564,6 @@
         // Load on start
         loadAuditLogs();
     </script>
+    </div>
 </body>
 </html>
