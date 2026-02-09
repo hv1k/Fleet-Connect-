@@ -2,6 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <script>
+      // Theme init - prevent flash of wrong theme
+      (function(){
+        var t = localStorage.getItem('fleetconnect-theme');
+        if(t === 'light') document.documentElement.classList.add('light-mode');
+      })();
+    </script>
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bulk Import | FleetConnect</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -148,12 +156,67 @@
             .content { padding: 16px 20px; }
             .mapper-grid { grid-template-columns: 1fr; }
         }
-    </style>
+    
+        /* Light Mode */
+        .light-mode { --bg-dark: #f5f5f5; --bg-card: #ffffff; --bg-input: #e8e8e8; --bg-hover: #e8e8e8; --border: #d0d0d0; --text-primary: #1a1a1a; --text-secondary: #555555; --text-muted: #888888; }
+        .light-mode .sidebar, .light-mode .admin-sidebar { background: #ffffff !important; border-color: #d0d0d0 !important; }
+        .light-mode .sidebar-logo, .light-mode .admin-sidebar-logo { color: #3b82f6 !important; }
+        .light-mode .nav-item, .light-mode .admin-nav-item { color: #555555 !important; }
+        .light-mode .nav-item:hover, .light-mode .admin-nav-item:hover { background: #e8e8e8 !important; color: #1a1a1a !important; }
+        .light-mode .nav-item.active, .light-mode .admin-nav-item.active { background: #dbeafe !important; color: #2563eb !important; }
+        .light-mode .nav-section-title, .light-mode .admin-nav-section { color: #888888 !important; }
+        .light-mode .user-menu { background: #e8e8e8 !important; }
+        .light-mode .user-name { color: #1a1a1a !important; }
+        .light-mode .header { background: #ffffff !important; border-color: #d0d0d0 !important; }
+        .light-mode .header h1 { color: #1a1a1a !important; }
+        .light-mode .header-subtitle { color: #555555 !important; }
+        .light-mode .main, .light-mode .content, .light-mode .admin-main { background: #f5f5f5 !important; }
+        .light-mode .card, .light-mode .stat-card, .light-mode .metric-card, .light-mode .admin-card { background: #ffffff !important; border-color: #d0d0d0 !important; }
+        .light-mode .card-title, .light-mode .stat-label { color: #1a1a1a !important; }
+        .light-mode .card-subtitle { color: #555555 !important; }
+        .light-mode input, .light-mode textarea, .light-mode select { background: #e8e8e8 !important; border-color: #d0d0d0 !important; color: #1a1a1a !important; }
+        .light-mode input::placeholder, .light-mode textarea::placeholder { color: #888888 !important; }
+        .light-mode .form-label, .light-mode label { color: #1a1a1a !important; }
+        .light-mode .badge { background: #dbeafe !important; color: #2563eb !important; }
+        .light-mode .btn-secondary { background: #e8e8e8 !important; color: #1a1a1a !important; border-color: #d0d0d0 !important; }
+        .light-mode .btn-secondary:hover { background: #d0d0d0 !important; }
+        .light-mode .sidebar-footer, .light-mode .admin-sidebar-footer { border-color: #d0d0d0 !important; }
+        .light-mode .logout-btn:hover { background: #e8e8e8 !important; }
+        .light-mode table th { background: #e8e8e8 !important; color: #1a1a1a !important; border-color: #d0d0d0 !important; }
+        .light-mode table td { border-color: #d0d0d0 !important; color: #1a1a1a !important; }
+        .light-mode table tr:hover { background: #e8e8e8 !important; }
+        .light-mode .modal-overlay { background: rgba(0,0,0,0.3) !important; }
+        .light-mode .modal, .light-mode .modal-content { background: #ffffff !important; border-color: #d0d0d0 !important; color: #1a1a1a !important; }
+        .light-mode .notification-bell { color: #555555 !important; }
+        .light-mode .search-box, .light-mode .search-input { background: #e8e8e8 !important; border-color: #d0d0d0 !important; color: #1a1a1a !important; }
+        .light-mode .tab, .light-mode .tab-btn { color: #555555 !important; }
+        .light-mode .tab.active, .light-mode .tab-btn.active { color: #3b82f6 !important; border-color: #3b82f6 !important; }
+        .light-mode .dropdown, .light-mode .dropdown-menu { background: #ffffff !important; border-color: #d0d0d0 !important; }
+        .light-mode .dropdown-item:hover { background: #e8e8e8 !important; }
+        .light-mode .toggle-switch { background: #d0d0d0 !important; }
+        .light-mode .toggle-switch.active { background: #2563eb !important; }
+        .light-mode .tooltip { background: #1a1a1a !important; color: #ffffff !important; }
+        .light-mode .progress-bar { background: #e8e8e8 !important; }
+        .light-mode .empty-state { color: #555555 !important; }
+        .light-mode .filter-bar, .light-mode .toolbar { background: #ffffff !important; border-color: #d0d0d0 !important; }
+        .light-mode .chip { background: #e8e8e8 !important; color: #1a1a1a !important; }
+        .light-mode pre, .light-mode code { background: #e8e8e8 !important; color: #1a1a1a !important; }
+        .light-mode .status-badge { border-color: #d0d0d0 !important; }
+        .light-mode ::selection { background: #3b82f6; color: #ffffff; }
+        .light-mode ::-webkit-scrollbar-track { background: #f5f5f5; }
+        .light-mode ::-webkit-scrollbar-thumb { background: #d0d0d0; }
+        .light-mode ::-webkit-scrollbar-thumb:hover { background: #bbbbbb; }
+
+        .theme-toggle { background: none; border: 1px solid var(--border); border-radius: 8px; padding: 8px; cursor: pointer; color: var(--text-primary); font-size: 1.2rem; transition: all 0.2s; line-height: 1; }
+        .theme-toggle:hover { background: var(--bg-hover); }
+
+        </style>
 </head>
 <body>
     <div class="layout">
         <aside class="sidebar">
             <div class="sidebar-header"><span class="sidebar-logo">FleetConnect</span></div>
+        <div style="padding: 0 12px 16px;"><button class="theme-toggle" title="Toggle light/dark mode">🌙</button></div>
             <nav id="sidebarNav"></nav>
             <div class="sidebar-footer">
                 <div class="user-menu">
@@ -493,6 +556,23 @@
             document.getElementById('previewCard').style.display = 'none';
             document.getElementById('summaryCard').style.display = 'none';
         }
+    </script>
+    <script>
+    // Theme toggle
+    (function(){
+      var btn = document.querySelector('.theme-toggle');
+      if(!btn) return;
+      function updateIcon(){
+        btn.textContent = document.documentElement.classList.contains('light-mode') ? '☀️' : '🌙';
+      }
+      updateIcon();
+      btn.addEventListener('click', function(){
+        document.documentElement.classList.toggle('light-mode');
+        localStorage.setItem('fleetconnect-theme',
+          document.documentElement.classList.contains('light-mode') ? 'light' : 'dark');
+        updateIcon();
+      });
+    })();
     </script>
 </body>
 </html>

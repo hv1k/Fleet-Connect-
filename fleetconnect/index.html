@@ -2,6 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <script>
+      // Theme init - prevent flash of wrong theme
+      (function(){
+        var t = localStorage.getItem('fleetconnect-theme');
+        if(t === 'light') document.documentElement.classList.add('light-mode');
+      })();
+    </script>
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FleetConnect</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -17,6 +25,25 @@
         } else {
             window.location.replace('login.html');
         }
+    </script>
+
+    <div style="position:fixed;top:16px;right:16px;z-index:9999;"><button class="theme-toggle" title="Toggle light/dark mode">🌙</button></div>
+    <script>
+    // Theme toggle
+    (function(){
+      var btn = document.querySelector('.theme-toggle');
+      if(!btn) return;
+      function updateIcon(){
+        btn.textContent = document.documentElement.classList.contains('light-mode') ? '☀️' : '🌙';
+      }
+      updateIcon();
+      btn.addEventListener('click', function(){
+        document.documentElement.classList.toggle('light-mode');
+        localStorage.setItem('fleetconnect-theme',
+          document.documentElement.classList.contains('light-mode') ? 'light' : 'dark');
+        updateIcon();
+      });
+    })();
     </script>
 </body>
 </html>
