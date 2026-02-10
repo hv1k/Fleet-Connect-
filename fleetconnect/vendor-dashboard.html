@@ -379,12 +379,20 @@
             .admin-sidebar { width: 100%; height: auto; position: relative; left: auto; top: auto; border-right: none; border-bottom: 1px solid var(--border, #333); padding: 12px; }
             .main-content { margin-left: 0; }
         }
-    </style>
+    
+        /* Sidebar actions (bell + theme toggle) */
+        .admin-sidebar .sidebar-actions { display: flex; align-items: center; gap: 8px; padding: 0 12px; margin-bottom: 16px; }
+        .admin-sidebar .sidebar-actions button { background: none; border: 1px solid var(--border, #333); border-radius: 8px; padding: 6px; cursor: pointer; color: var(--text-secondary, #b8b0a8); font-size: 1rem; line-height: 1; display: flex; align-items: center; justify-content: center; }
+        .admin-sidebar .sidebar-actions button svg, .admin-sidebar .sidebar-actions button img { width: 16px; height: 16px; }
+        /* Sidebar layout fix */
+        .admin-sidebar { display: flex; flex-direction: column; }
+        .admin-sidebar nav { flex: 1; overflow-y: auto; }
+</style>
 </head>
 <body>
     <aside class="admin-sidebar" id="adminSidebar">
         <div class="admin-sidebar-logo">FLEETCONNECT</div>
-        <div style="padding: 0 12px 16px;"><button class="notification-bell" title="Notifications" aria-label="Notifications" style="background:transparent;border:none;color:#888;font-size:1.4rem;cursor:pointer;padding:0;">🔔</button> <button class="theme-toggle" title="Toggle light/dark mode" aria-label="Toggle light/dark mode">🌙</button></div>
+        <div class="sidebar-actions"><button class="notification-bell" title="Notifications" aria-label="Notifications">🔔</button> <button class="theme-toggle" title="Toggle light/dark mode" aria-label="Toggle light/dark mode">🌙</button></div>
         <nav>
             <div class="admin-nav-section">
                 <div class="admin-nav-section-title">MAIN</div>
@@ -817,7 +825,7 @@
             const container = document.getElementById('activityList');
             
             if (activities.length === 0) {
-                container.innerHTML = '<div class="empty-state" style="padding:40px;">No recent activity</div>';
+                container.innerHTML = '<div class="empty-state" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;"><div style="font-size:3rem;margin-bottom:16px;opacity:0.5;">📭</div><h3 style="font-size:1.2rem;font-weight:600;color:var(--text-primary,#e8e0d8);margin-bottom:8px;">No recent activity</h3><p style="font-size:0.9rem;color:var(--text-secondary,#b8b0a8);">Activity will appear here as jobs are updated</p></div>';
                 return;
             }
             
@@ -868,7 +876,7 @@
             let filtered = allJobs.filter(j => ['pending','assigned','accepted','in-progress','open'].includes(j.status));
             if (search) filtered = filtered.filter(j => (j.job_site_name||'').toLowerCase().includes(search) || (j.contract_number||'').toLowerCase().includes(search));
             const container = document.getElementById('jobsTable');
-            if (!filtered.length) { container.innerHTML = '<div class="empty-state">No jobs found</div>'; document.getElementById('tableFooter').style.display='none'; return; }
+            if (!filtered.length) { container.innerHTML = '<div class="empty-state" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;"><div style="font-size:3rem;margin-bottom:16px;opacity:0.5;">🔍</div><h3 style="font-size:1.2rem;font-weight:600;color:var(--text-primary,#e8e0d8);margin-bottom:8px;">No jobs found</h3><p style="font-size:0.9rem;color:var(--text-secondary,#b8b0a8);">Jobs assigned to you will appear here</p></div>'; document.getElementById('tableFooter').style.display='none'; return; }
             const user = getCurrentUser();
             const vendorId = user ? user.vendor_id : null;
             container.innerHTML = '<table><thead><tr><th>Job Site</th><th>Contract #</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>' + filtered.slice(0,10).map(j => {

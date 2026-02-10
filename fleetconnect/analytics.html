@@ -181,12 +181,20 @@
         .theme-toggle { background: none; border: 1px solid var(--border); border-radius: 8px; padding: 8px; cursor: pointer; color: var(--text-primary); font-size: 1.2rem; transition: all 0.2s; line-height: 1; }
         .theme-toggle:hover { background: var(--bg-hover); }
 
-        </style>
+        
+        /* Sidebar actions (bell + theme toggle) */
+        .admin-sidebar .sidebar-actions { display: flex; align-items: center; gap: 8px; padding: 0 12px; margin-bottom: 16px; }
+        .admin-sidebar .sidebar-actions button { background: none; border: 1px solid var(--border, #333); border-radius: 8px; padding: 6px; cursor: pointer; color: var(--text-secondary, #b8b0a8); font-size: 1rem; line-height: 1; display: flex; align-items: center; justify-content: center; }
+        .admin-sidebar .sidebar-actions button svg, .admin-sidebar .sidebar-actions button img { width: 16px; height: 16px; }
+        /* Sidebar layout fix */
+        .admin-sidebar { display: flex; flex-direction: column; }
+        .admin-sidebar nav { flex: 1; overflow-y: auto; }
+</style>
 </head>
 <body>
     <aside class="admin-sidebar" id="adminSidebar">
         <div class="admin-sidebar-logo">FLEETCONNECT</div>
-        <div style="padding: 0 12px 16px;"><button class="notification-bell" title="Notifications" aria-label="Notifications" style="background:transparent;border:none;color:#888;font-size:1.4rem;cursor:pointer;padding:0;">🔔</button> <button class="theme-toggle" title="Toggle light/dark mode" aria-label="Toggle light/dark mode">🌙</button></div>
+        <div class="sidebar-actions"><button class="notification-bell" title="Notifications" aria-label="Notifications">🔔</button> <button class="theme-toggle" title="Toggle light/dark mode" aria-label="Toggle light/dark mode">🌙</button></div>
         <nav>
             <div class="admin-nav-section">
                 <div class="admin-nav-section-title">Main</div>
@@ -492,18 +500,26 @@
             }).reduce((sum, inv) => sum + (parseFloat(inv.amount) || 0), 0);
             const revenueChange = ((totalRevenue - totalRevenuePrev) / Math.max(1, totalRevenuePrev)) * 100;
 
+            // Helper for trend display
+            function trendHtml(change) {
+                if (change === 0) return `— <span style="color:var(--text-secondary)">0.0% vs previous</span>`;
+                const arrow = change > 0 ? '↑' : '↓';
+                const cls = change > 0 ? 'positive' : 'negative';
+                return `${arrow} <span class="${cls}">${Math.abs(change).toFixed(1)}% vs previous</span>`;
+            }
+
             // Update KPI cards
             document.getElementById('kpiTotalJobs').textContent = totalJobs.toLocaleString();
-            document.getElementById('kpiJobsChange').innerHTML = `${jobsChange > 0 ? '↑' : '↓'} <span class="${jobsChange > 0 ? 'positive' : 'negative'}">${Math.abs(jobsChange).toFixed(1)}% vs previous</span>`;
+            document.getElementById('kpiJobsChange').innerHTML = trendHtml(jobsChange);
 
             document.getElementById('kpiActiveUsers').textContent = activeUsers;
-            document.getElementById('kpiUsersChange').innerHTML = `${usersChange > 0 ? '↑' : '↓'} <span class="${usersChange > 0 ? 'positive' : 'negative'}">${Math.abs(usersChange).toFixed(1)}% vs previous</span>`;
+            document.getElementById('kpiUsersChange').innerHTML = trendHtml(usersChange);
 
             document.getElementById('kpiGallons').textContent = totalGallons.toLocaleString('en-US', { maximumFractionDigits: 0 });
-            document.getElementById('kpiGallonsChange').innerHTML = `${gallonsChange > 0 ? '↑' : '↓'} <span class="${gallonsChange > 0 ? 'positive' : 'negative'}">${Math.abs(gallonsChange).toFixed(1)}% vs previous</span>`;
+            document.getElementById('kpiGallonsChange').innerHTML = trendHtml(gallonsChange);
 
             document.getElementById('kpiRevenue').textContent = '$' + totalRevenue.toLocaleString('en-US', { maximumFractionDigits: 0 });
-            document.getElementById('kpiRevenueChange').innerHTML = `${revenueChange > 0 ? '↑' : '↓'} <span class="${revenueChange > 0 ? 'positive' : 'negative'}">${Math.abs(revenueChange).toFixed(1)}% vs previous</span>`;
+            document.getElementById('kpiRevenueChange').innerHTML = trendHtml(revenueChange);
 
             // Render charts
             renderJobsChart(jobsInRange, start, end);
@@ -519,7 +535,16 @@
         }
 
         function renderJobsChart(jobs, start, end) {
-            const ctx = document.getElementById('jobsChart').getContext('2d');
+            const canvas = document.getElementById('jobsChart');
+            if (jobs.length === 0) {
+                canvas.style.display = 'none';
+                canvas.parentElement.insertAdjacentHTML('beforeend', '<div class="empty-state chart-empty-state" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;"><div style="font-size:3rem;margin-bottom:16px;opacity:0.5;">📊</div><h3 style="font-size:1.2rem;font-weight:600;color:var(--text-primary,#e8e0d8);margin-bottom:8px;">No data for this period</h3><p style="font-size:0.9rem;color:var(--text-secondary,#b8b0a8);">Try selecting a different date range</p></div>');
+                return;
+            }
+            canvas.style.display = '';
+            const existing = canvas.parentElement.querySelector('.chart-empty-state');
+            if (existing) existing.remove();
+            const ctx = canvas.getContext('2d');
             const dailyCounts = {};
 
             jobs.forEach(job => {
@@ -536,7 +561,7 @@
         }
 
         function renderRevenueChart(start, end) {
-            const ctx = document.getElementById('revenueChart').getContext('2d');
+            const canvas = document.getElementById('revenueChart');
             const dailyRevenue = {};
 
             allInvoices.forEach(inv => {
@@ -549,6 +574,18 @@
 
             const labels = Object.keys(dailyRevenue).sort();
             const data = labels.map(label => dailyRevenue[label]);
+
+            if (labels.length === 0) {
+                canvas.style.display = 'none';
+                if (!canvas.parentElement.querySelector('.chart-empty-state')) {
+                    canvas.parentElement.insertAdjacentHTML('beforeend', '<div class="empty-state chart-empty-state" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;"><div style="font-size:3rem;margin-bottom:16px;opacity:0.5;">💰</div><h3 style="font-size:1.2rem;font-weight:600;color:var(--text-primary,#e8e0d8);margin-bottom:8px;">No revenue data for this period</h3><p style="font-size:0.9rem;color:var(--text-secondary,#b8b0a8);">Try selecting a different date range</p></div>');
+                }
+                return;
+            }
+            canvas.style.display = '';
+            const existing = canvas.parentElement.querySelector('.chart-empty-state');
+            if (existing) existing.remove();
+            const ctx = canvas.getContext('2d');
 
             ctx.canvas.width = ctx.canvas.offsetWidth;
             ctx.canvas.height = 300;

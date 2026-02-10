@@ -308,12 +308,20 @@
         html.light-mode .modal { background: #ffffff; }
         html.light-mode .modal-header { border-color: #d0d0d0; }
         html.light-mode .btn-secondary { background: #ffffff; border-color: #d0d0d0; color: #5c5c5c; }
-    </style>
+    
+        /* Sidebar actions (bell + theme toggle) */
+        .admin-sidebar .sidebar-actions { display: flex; align-items: center; gap: 8px; padding: 0 12px; margin-bottom: 16px; }
+        .admin-sidebar .sidebar-actions button { background: none; border: 1px solid var(--border, #333); border-radius: 8px; padding: 6px; cursor: pointer; color: var(--text-secondary, #b8b0a8); font-size: 1rem; line-height: 1; display: flex; align-items: center; justify-content: center; }
+        .admin-sidebar .sidebar-actions button svg, .admin-sidebar .sidebar-actions button img { width: 16px; height: 16px; }
+        /* Sidebar layout fix */
+        .admin-sidebar { display: flex; flex-direction: column; }
+        .admin-sidebar nav { flex: 1; overflow-y: auto; }
+</style>
 </head>
 <body>
         <aside class="admin-sidebar" id="adminSidebar">
         <div class="admin-sidebar-logo">FLEETCONNECT</div>
-        <div style="padding: 0 12px 16px;"><button class="notification-bell" title="Notifications" aria-label="Notifications" style="background:transparent;border:none;color:#888;font-size:1.4rem;cursor:pointer;padding:0;">🔔</button> <button class="theme-toggle" title="Toggle light/dark mode" aria-label="Toggle light/dark mode">🌙</button></div>
+        <div class="sidebar-actions"><button class="notification-bell" title="Notifications" aria-label="Notifications">🔔</button> <button class="theme-toggle" title="Toggle light/dark mode" aria-label="Toggle light/dark mode">🌙</button></div>
         <nav>
             <div class="admin-nav-section">
                 <div class="admin-nav-section-title">Main</div>
@@ -716,7 +724,11 @@
 
             const container = document.getElementById('jobsList');
             if (filtered.length === 0) {
-                container.innerHTML = '<div class="empty-state"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg><h3>No work orders found</h3><p>Try adjusting your search or filters</p></div>';
+                if (allJobs.length === 0) {
+                    container.innerHTML = '<div class="empty-state" style="display:flex;flex-direction:column;align-items:center;"><div style="font-size:3rem;margin-bottom:16px;opacity:0.5;">📋</div><h3 style="font-size:1.2rem;font-weight:600;margin-bottom:8px;">No work orders yet</h3><p style="font-size:0.9rem;color:#888;margin-bottom:24px;">Create your first work order to get started</p><a href="create-job.html" class="btn btn-primary" style="text-decoration:none;">+ Create Work Order</a></div>';
+                } else {
+                    container.innerHTML = '<div class="empty-state" style="display:flex;flex-direction:column;align-items:center;"><div style="font-size:3rem;margin-bottom:16px;opacity:0.5;">🔍</div><h3 style="font-size:1.2rem;font-weight:600;margin-bottom:8px;">No work orders found</h3><p style="font-size:0.9rem;color:#888;">Try adjusting your search or filters</p></div>';
+                }
                 return;
             }
 

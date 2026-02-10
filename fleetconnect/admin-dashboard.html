@@ -158,6 +158,10 @@
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 
         .loading { text-align: center; padding: 40px; color: var(--text-secondary); }
+        .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; text-align: center; }
+        .empty-state-icon { font-size: 3rem; margin-bottom: 16px; opacity: 0.5; }
+        .empty-state-title { font-size: 1.2rem; font-weight: 600; color: var(--text-primary, #e8e0d8); margin-bottom: 8px; }
+        .empty-state-text { font-size: 0.9rem; color: var(--text-secondary, #b8b0a8); margin-bottom: 24px; max-width: 400px; }
         
         #dropZone:hover { border-color: var(--admin); background: rgba(96, 165, 250, 0.1); }
         #dropZone.drag-over { border-color: var(--admin); background: rgba(96, 165, 250, 0.15); }
@@ -223,12 +227,20 @@
         .theme-toggle { background: none; border: 1px solid var(--border); border-radius: 8px; padding: 8px; cursor: pointer; color: var(--text-primary); font-size: 1.2rem; transition: all 0.2s; line-height: 1; }
         .theme-toggle:hover { background: var(--bg-hover); }
 
-        </style>
+        
+        /* Sidebar actions (bell + theme toggle) */
+        .admin-sidebar .sidebar-actions { display: flex; align-items: center; gap: 8px; padding: 0 12px; margin-bottom: 16px; }
+        .admin-sidebar .sidebar-actions button { background: none; border: 1px solid var(--border, #333); border-radius: 8px; padding: 6px; cursor: pointer; color: var(--text-secondary, #b8b0a8); font-size: 1rem; line-height: 1; display: flex; align-items: center; justify-content: center; }
+        .admin-sidebar .sidebar-actions button svg, .admin-sidebar .sidebar-actions button img { width: 16px; height: 16px; }
+        /* Sidebar layout fix */
+        .admin-sidebar { display: flex; flex-direction: column; }
+        .admin-sidebar nav { flex: 1; overflow-y: auto; }
+</style>
 </head>
 <body>
         <aside class="admin-sidebar" id="adminSidebar">
         <div class="admin-sidebar-logo">FLEETCONNECT</div>
-        <div style="padding: 0 12px 16px;"><button class="notification-bell" title="Notifications" aria-label="Notifications" style="background:transparent;border:none;color:#888;font-size:1.4rem;cursor:pointer;padding:0;">🔔</button> <button class="theme-toggle" title="Toggle light/dark mode" aria-label="Toggle light/dark mode">🌙</button></div>
+        <div class="sidebar-actions"><button class="notification-bell" title="Notifications" aria-label="Notifications">🔔</button> <button class="theme-toggle" title="Toggle light/dark mode" aria-label="Toggle light/dark mode">🌙</button></div>
         <nav>
             <div class="admin-nav-section">
                 <div class="admin-nav-section-title">Main</div>
@@ -558,7 +570,7 @@ Jane Smith,jane@example.com,fieldworker,XYZ Rentals</code>
                         .map(job => ({
                             id: job.id,
                             type: 'job_created',
-                            description: `Job created: ${job.site_name}`,
+                            description: `Job created: ${job.site_name || job.job_site_name || job.title || job.description || 'Untitled Job'}`,
                             created_at: job.created_at
                         }));
                 }
@@ -586,7 +598,7 @@ Jane Smith,jane@example.com,fieldworker,XYZ Rentals</code>
             const feedContainer = document.getElementById('activityFeed');
 
             if (allActivities.length === 0) {
-                feedContainer.innerHTML = '<div class="loading">No recent activity</div>';
+                feedContainer.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><h3 class="empty-state-title">No recent activity</h3><p class="empty-state-text">Activity will appear here as users interact with the system</p></div>';
                 return;
             }
 
@@ -631,7 +643,7 @@ Jane Smith,jane@example.com,fieldworker,XYZ Rentals</code>
             }
 
             if (usersToDisplay.length === 0) {
-                tbody.innerHTML = '<div class="loading">No users found</div>';
+                tbody.innerHTML = '<div class="empty-state" style="padding:30px 20px;"><div class="empty-state-icon">👥</div><h3 class="empty-state-title">No users found</h3><p class="empty-state-text">Try adjusting your search or filters</p></div>';
                 return;
             }
 

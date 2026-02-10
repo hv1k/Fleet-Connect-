@@ -29,19 +29,7 @@
         const styles = `
             /* Live Indicator Container */
             #fc-live-indicator-container {
-                position: fixed;
-                bottom: 16px;
-                left: 256px;
-                z-index: 999;
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-                display: flex;
-                align-items: center;
-                gap: 6px;
-                padding: 6px 12px;
-                border-radius: 4px;
-                background-color: rgba(42, 42, 42, 0.8);
-                backdrop-filter: blur(4px);
-                border: 1px solid rgba(255, 255, 255, 0.1);
+                display: none;
             }
 
             /* Live Indicator Dot */
