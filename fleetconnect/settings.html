@@ -793,6 +793,8 @@
             invoice: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>',
             chart: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 20V10M12 20V4M6 20v-6"/>',
             dollar: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>',
+            clock: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>',
+            fuel: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>',
             calendar: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>',
             settings: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>',
 
@@ -826,59 +828,97 @@
         // Navigation config per role
         const navConfig = {
             admin: [
+                { section: 'MAIN' },
                 { label: 'Dashboard', href: 'admin-dashboard.html', icon: 'grid' },
                 { label: 'Create Work Order', href: 'create-job.html', icon: 'plus' },
                 { label: 'Work Orders', href: 'work-orders.html', icon: 'clipboard' },
+                { section: 'ADMIN' },
+                { label: 'Company Management', href: 'company-management.html', icon: 'users' },
+                { label: 'Feature Flags', href: 'admin-feature-flags.html', icon: 'settings' },
+                { label: 'Audit Log', href: 'audit-log.html', icon: 'clipboard' },
+                { label: 'Analytics', href: 'analytics.html', icon: 'bar-chart' },
                 { label: 'Settings', href: 'settings.html', icon: 'settings', active: true }
             ],
             rental: [
+                { section: 'MAIN' },
                 { label: 'Dashboard', href: 'rental-dashboard.html', icon: 'grid' },
                 { label: 'Create Work Order', href: 'create-job.html', icon: 'plus' },
                 { label: 'Work Orders', href: 'work-orders.html', icon: 'clipboard' },
+                { section: 'MANAGEMENT' },
                 { label: 'Invoices', href: 'rental-invoices.html', icon: 'invoice' },
+                { label: 'Contracts', href: 'contract-management.html', icon: 'invoice' },
+                { label: 'Equipment', href: 'equipment-tracking.html', icon: 'box' },
+                { label: 'Vendor Comparison', href: 'vendor-comparison.html', icon: 'users' },
+                { label: 'Recurring Jobs', href: 'recurring-jobs.html', icon: 'refresh' },
+                { section: 'TOOLS' },
+                { label: 'Reports', href: 'reports.html', icon: 'bar-chart' },
                 { label: 'Daily Log', href: 'daily-log.html', icon: 'calendar' },
+                { label: 'Documents', href: 'document-storage.html', icon: 'folder' },
+                { label: 'Bulk Import', href: 'bulk-import.html', icon: 'plus' },
+                { label: 'Messages', href: 'chat.html', icon: 'message-circle' },
+                { section: 'SETTINGS' },
+                { label: 'Alert Settings', href: 'alerts-settings.html', icon: 'settings' },
                 { label: 'Settings', href: 'settings.html', icon: 'settings', active: true }
             ],
             vendor: [
+                { section: 'MAIN' },
                 { label: 'Dashboard', href: 'vendor-dashboard.html', icon: 'grid' },
                 { label: 'Work Orders', href: 'work-orders.html', icon: 'clipboard' },
                 { label: 'Create Work Order', href: 'create-job.html', icon: 'plus' },
                 { label: 'Daily Log', href: 'daily-log.html', icon: 'calendar' },
+                { section: 'OPERATIONS' },
                 { label: 'Dispatch Board', href: 'dispatch-board.html', icon: 'layout' },
                 { label: 'Route Optimization', href: 'route-optimization.html', icon: 'route' },
                 { label: 'Worker Metrics', href: 'worker-metrics.html', icon: 'users' },
                 { label: 'Inventory', href: 'inventory-management.html', icon: 'box' },
+                { section: 'BUSINESS' },
                 { label: 'Invoices', href: 'invoices.html', icon: 'dollar' },
                 { label: 'Payments', href: 'payments.html', icon: 'credit-card' },
                 { label: 'Profitability', href: 'profitability.html', icon: 'trending-up' },
                 { label: 'Subcontractors', href: 'subcontractor-management.html', icon: 'user-plus' },
                 { label: 'Job Bidding', href: 'job-bidding.html', icon: 'tag' },
                 { label: 'SLA Management', href: 'sla-management.html', icon: 'shield' },
+                { section: 'TOOLS' },
                 { label: 'Reports', href: 'reports.html', icon: 'bar-chart' },
                 { label: 'Documents', href: 'document-storage.html', icon: 'folder' },
                 { label: 'QuickBooks Sync', href: 'qb-sync.html', icon: 'refresh' },
                 { label: 'Messages', href: 'chat.html', icon: 'message-circle' },
-                { label: 'Settings', href: 'settings.html', icon: 'settings', active: true },
+                { section: 'SETTINGS' },
+                { label: 'Settings', href: 'settings.html', icon: 'settings', active: true }
             ],
             fieldworker: [
+                { section: 'MAIN' },
                 { label: 'My Jobs', href: 'field-worker.html', icon: 'grid' },
                 { label: 'Work Orders', href: 'work-orders.html', icon: 'clipboard' },
+                { label: 'Time Tracking', href: 'time-tracking.html', icon: 'clock' },
+                { section: 'TOOLS' },
+                { label: 'Messages', href: 'chat.html', icon: 'message-circle' },
+                { label: 'Documents', href: 'document-storage.html', icon: 'folder' },
+                { label: 'Fuel Calculator', href: 'fuel-calculator.html', icon: 'fuel' },
+                { section: 'SETTINGS' },
                 { label: 'Settings', href: 'settings.html', icon: 'settings', active: true }
             ]
         };
 
         // Render navigation
         const navItems = navConfig[currentUser.role] || navConfig.admin;
-        var _sn = document.getElementById('sidebarNav'); if(_sn) _sn.innerHTML = `
-            <div class="nav-section">
-                <div class="nav-section-title">Main Menu</div>
-                ${navItems.map(item => `
-                    <a class="nav-item${item.active ? ' active' : ''}" href="${item.href}">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">${icons[item.icon]}</svg>
-                        ${item.label}
-                    </a>
-                `).join('')}
-        `;
+        let navHTML = '';
+        navItems.forEach(item => {
+            if (item.section) {
+                navHTML += \`<div class="admin-nav-section"><div class="admin-nav-section-title">\${item.section}</div>\`;
+            } else {
+                navHTML += \`<a class="admin-nav-item\${item.active ? ' active' : ''}" href="\${item.href}">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">\${icons[item.icon] || ''}</svg>
+                    \${item.label}
+                </a>\`;
+            }
+        });
+        navHTML += '</div>';
+        var _sn = document.getElementById('sidebarNav'); if(_sn) _sn.innerHTML = navHTML;
+
+        // Update role label
+        const roleLabelsMap = { admin: 'Administrator', rental: 'Rental Account', vendor: 'Vendor Account', fieldworker: 'Field Worker' };
+        var _rl = document.querySelector('.admin-sidebar-role'); if(_rl) _rl.textContent = roleLabelsMap[currentUser.role] || currentUser.role;
 
         // Update user info in sidebar
         var _ua = document.getElementById('userAvatar'); if(_ua) _ua.textContent = currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U';
