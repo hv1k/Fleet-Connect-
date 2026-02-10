@@ -531,8 +531,17 @@
         } else {
             const currentUser = checkAuth(['rental']);
             if (currentUser) {
-                document.getElementById('userName').textContent = currentUser.name;
-                document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+                // Null-safe checks for user identity elements
+                const _un = document.getElementById('userName');
+                if (_un) _un.textContent = currentUser.name;
+                if (document.getElementById('adminUserName')) document.getElementById('adminUserName').textContent = currentUser.name;
+                const _ua = document.getElementById('userAvatar');
+                if (_ua) _ua.textContent = currentUser.name.charAt(0).toUpperCase();
+
+                // Update role label element
+                const roleLabel = document.querySelector('.admin-sidebar-role');
+                if (roleLabel) roleLabel.textContent = 'Rental Account';
+
                 const hour = new Date().getHours();
                 const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
                 document.getElementById('welcomeMsg').textContent = greeting + ', ' + currentUser.name + '!';
@@ -543,6 +552,18 @@
             FC_FLAGS.hide('charts.overview', '#chartsSection');
             FC_FLAGS.hide('activity_feed', '#activitySection');
             loadData();
+
+            // Loading timeout fallback - BUG-006/007
+            setTimeout(() => {
+                const activityList = document.getElementById('activityList');
+                if (activityList && activityList.innerHTML.includes('Loading')) {
+                    activityList.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">No recent activity</div>';
+                }
+                const jobsTable = document.getElementById('jobsTable') || document.getElementById('workOrdersContainer');
+                if (jobsTable && jobsTable.innerHTML.includes('Loading')) {
+                    jobsTable.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">No work orders found</div>';
+                }
+            }, 10000);
         }
         
         let allJobs = [], allDeliveries = [], vendors = [];

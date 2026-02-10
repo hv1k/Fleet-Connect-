@@ -247,7 +247,7 @@
         <div class="admin-sidebar-footer">
             <div style="padding: 12px; background: var(--bg-hover, #333); border-radius: 8px;">
                 <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary, #f5f0e8); margin-bottom: 4px;" id="adminUserName">System Admin</div>
-                <div style="font-size: 0.75rem; color: var(--text-secondary, #888);">Administrator</div>
+                <div class="admin-sidebar-role" style="font-size: 0.75rem; color: var(--text-secondary, #888);">Administrator</div>
                 <button onclick="logout()" style="margin-top: 8px; width: 100%; padding: 6px; background: transparent; border: 1px solid #333; color: #888; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 0.75rem; cursor: pointer; transition: all 0.2s;">Logout</button>
             </div>
         </div>
@@ -887,6 +887,7 @@
                 jNumber: document.getElementById('jNumber').value,
                 contactName: document.getElementById('contactName').value,
                 contactPhone: document.getElementById('contactPhone').value,
+                rental_company: currentUser?.name || document.getElementById('rentalCompany')?.value || '',
                 rentalCompany: document.getElementById('rentalCompany').value,
                 salesman: document.getElementById('salesman').value,
                 dateOut: document.getElementById('dateOut').value,

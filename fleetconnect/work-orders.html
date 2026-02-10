@@ -326,7 +326,7 @@
         <div class="admin-sidebar-footer">
             <div style="padding: 12px; background: var(--bg-hover, #333); border-radius: 8px;">
                 <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary, #f5f0e8); margin-bottom: 4px;" id="adminUserName">System Admin</div>
-                <div style="font-size: 0.75rem; color: var(--text-secondary, #888);">Administrator</div>
+                <div class="admin-sidebar-role" style="font-size: 0.75rem; color: var(--text-secondary, #888);">Administrator</div>
                 <button onclick="logout()" style="margin-top: 8px; width: 100%; padding: 6px; background: transparent; border: 1px solid #333; color: #888; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 0.75rem; cursor: pointer; transition: all 0.2s;">Logout</button>
             </div>
         </div>
@@ -516,8 +516,8 @@
         }
 
         function updateStats() {
-            const active = allJobs.filter(j => ['accepted', 'in-progress'].includes(j.status)).length;
-            const pending = allJobs.filter(j => ['pending', 'assigned', 'open'].includes(j.status)).length;
+            const active = allJobs.filter(j => ['accepted', 'assigned', 'in-progress'].includes(j.status)).length;
+            const pending = allJobs.filter(j => ['pending', 'open'].includes(j.status)).length;
             const completed = allJobs.filter(j => j.status === 'completed').length;
             document.getElementById('statTotal').textContent = allJobs.length;
             document.getElementById('statActive').textContent = active;
@@ -620,7 +620,7 @@
                         <div class="detail-item"><div class="detail-label">PO #</div><div class="detail-value">${job.po_number || '—'}</div></div>
                         <div class="detail-item"><div class="detail-label">Job Type</div><div class="detail-value">${formatJobType(job.job_type)}</div></div>
                         <div class="detail-item"><div class="detail-label">Status</div><div class="detail-value"><span class="status-badge ${job.status}"><span class="dot"></span>${job.status}</span></div></div>
-                        <div class="detail-item"><div class="detail-label">Priority</div><div class="detail-value">${job.priority || 'normal'}</div></div>
+                        <div class="detail-item"><div class="detail-label">Priority</div><div class="detail-value">${(job.priority || 'Normal').charAt(0).toUpperCase() + (job.priority || 'normal').slice(1)}</div></div>
                         <div class="detail-item"><div class="detail-label">Created</div><div class="detail-value">${formatDate(job.created_at)}</div></div>
                     </div>
                 </div>

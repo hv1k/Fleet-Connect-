@@ -529,7 +529,12 @@
                 return { class: 'low', text: '✓ Low' };
             }
 
-            // Heuristics if no priority or "normal"
+            // Explicitly return Normal for "normal" or "medium" priority
+            if (p === 'normal' || p === 'medium') {
+                return { class: 'medium', text: '⭐ Normal' };
+            }
+
+            // Heuristics only if priority is completely empty/null
             if (job) {
                 const now = new Date();
                 const created = new Date(job.created_at);
@@ -841,6 +846,7 @@
             document.body.style.overflow = 'hidden';
             setTimeout(initSignature, 100);
             setTimeout(initVoiceNotes, 150);
+            setTimeout(updatePhotoButtonStates, 200);
         }
 
         function captureGPSLocation() {
@@ -1253,6 +1259,7 @@
           Promise.all(files.map(file => compressImage(file))).then(compressedPhotos => {
             capturedPhotos[category] = [...(capturedPhotos[category] || []), ...compressedPhotos];
             renderPhotoCategories();
+            updatePhotoButtonStates();
             showToast(`${files.length} photo(s) added to ${category.replace('_', ' ')}`, 'success');
           });
 
@@ -1327,14 +1334,72 @@
         function deletePhoto(category, index) {
           capturedPhotos[category].splice(index, 1);
           renderPhotoCategories();
+          updatePhotoButtonStates();
           showToast('Photo deleted', 'success');
+        }
+
+        function updatePhotoButtonStates() {
+          // Update visual state of photo capture buttons based on capturedPhotos
+          const categories = ['meter_before', 'meter_after', 'equipment'];
+
+          categories.forEach(category => {
+            const btn = document.querySelector(`[onclick*="openPhotoCapture('${category}')"]`);
+            if (!btn) return;
+
+            const hasCaptured = capturedPhotos[category] && capturedPhotos[category].length > 0;
+
+            if (hasCaptured) {
+              // Visual feedback for captured state
+              btn.style.border = '2px solid #22c55e';
+              btn.style.background = 'rgba(34, 197, 94, 0.1)';
+              btn.style.color = '#22c55e';
+
+              // Add check mark indicator
+              if (!btn.dataset.hasMark) {
+                btn.innerHTML = btn.innerHTML.replace('📸', '✅');
+                btn.dataset.hasMark = 'true';
+              }
+            } else {
+              // Visual feedback for missing state
+              btn.style.border = '';
+              btn.style.background = '';
+              btn.style.color = '';
+
+              // Remove check mark, restore camera
+              if (btn.dataset.hasMark) {
+                btn.innerHTML = btn.innerHTML.replace('✅', '📸');
+                btn.dataset.hasMark = '';
+              }
+            }
+          });
         }
 
         function validatePhotos() {
           const required = ['meter_before', 'meter_after', 'equipment'];
           for (const cat of required) {
             if (!capturedPhotos[cat] || capturedPhotos[cat].length === 0) {
-              showToast(`Missing required photo: ${cat.replace('_', ' ')}`, 'error');
+              // Improved error message with proper formatting
+              const friendlyName = cat.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+              showToast(`Please capture the required photo: ${friendlyName}`, 'error');
+
+              // Also try to show fallback alert if toast might not be visible
+              const toastContainer = document.querySelector('.toast-container');
+              if (!toastContainer || !toastContainer.children.length) {
+                alert(`Please capture the required photo: ${friendlyName}`);
+              }
+
+              // Highlight the missing photo button visually
+              const photoBtn = document.querySelector(`[onclick*="openPhotoCapture('${cat}')"]`);
+              if (photoBtn) {
+                photoBtn.style.border = '2px solid #ef4444';
+                photoBtn.style.background = 'rgba(239, 68, 68, 0.1)';
+                // Remove highlight after 3 seconds
+                setTimeout(() => {
+                  photoBtn.style.border = '';
+                  photoBtn.style.background = '';
+                }, 3000);
+              }
+
               return false;
             }
           }
@@ -1479,10 +1544,8 @@
         // ===== UPDATE SUBMIT INVOICE =====
         const originalSubmitInvoice = submitInvoice;
         async function submitInvoice(jobId) {
-          // Validate photos if feature enabled
-          if (FC_FLAGS.isOn('photo_invoice')) {
-            if (!validatePhotos()) return;
-          }
+          // Always validate photos since the form shows them as required
+          if (!validatePhotos()) return;
 
           // Validate signature if feature enabled
           if (FC_FLAGS.isOn('signature') && !signatureData) {

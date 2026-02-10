@@ -538,13 +538,25 @@
         } else {
             const currentUser = checkAuth(['vendor']);
             if (currentUser) {
-                document.getElementById('userName').textContent = currentUser.name;
-                document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+                // BUG-002: Null-safe checks for user identity elements
+                const userNameEl = document.getElementById('adminUserName');
+                if (userNameEl) {
+                    userNameEl.textContent = currentUser.name;
+                }
+
+                // BUG-011: Update role label for vendor
+                const userRoleEl = document.querySelector('.admin-sidebar-role');
+                if (userRoleEl) {
+                    userRoleEl.textContent = 'Vendor Account';
+                }
 
                 // Welcome message with time of day
                 const hour = new Date().getHours();
                 const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
-                document.getElementById('welcomeMsg').textContent = greeting + ', ' + currentUser.name + '!';
+                const welcomeMsgEl = document.getElementById('welcomeMsg');
+                if (welcomeMsgEl) {
+                    welcomeMsgEl.textContent = greeting + ', ' + currentUser.name + '!';
+                }
             }
 
             // Initialize feature flags
@@ -575,6 +587,18 @@
                 const { data: invoices } = await invoicesQuery.order('created_at', { ascending: false });
                 allInvoices = invoices || [];
                 updateStats(); renderChart(); renderDonut(); renderJobs(); renderActivityFeed();
+
+                // BUG-008: Add 10-second timeout with fallback messages for Activity Feed and Jobs Table
+                setTimeout(() => {
+                    const activityList = document.getElementById('activityList');
+                    if (activityList && activityList.innerHTML.includes('Loading')) {
+                        activityList.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">No recent activity</div>';
+                    }
+                    const jobsTable = document.getElementById('jobsTable');
+                    if (jobsTable && jobsTable.innerHTML.includes('Loading')) {
+                        jobsTable.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">No jobs found</div>';
+                    }
+                }, 10000);
             } catch (err) {
                 console.error('Failed to load data:', err);
                 document.querySelector('.main-content, .content, main').innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-secondary)"><h2>Unable to load data</h2><p>Please check your connection and try again.</p><button onclick="location.reload()" class="btn btn-primary" style="margin-top:16px">Retry</button></div>';

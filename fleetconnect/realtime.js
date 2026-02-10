@@ -17,6 +17,8 @@
     let channels = [];
     let isConnected = false;
     let toastStack = [];
+    let activeSubscriptions = {};
+    let reconnectDebounceTimer = null;
 
     // ============================================================================
     // STYLE INJECTION
@@ -418,7 +420,14 @@
     // ============================================================================
 
     function subscribeDeliveries() {
-        const channel = db.channel('deliveries-changes', {
+        const channelName = 'deliveries-changes';
+        // Check if already subscribed
+        if (activeSubscriptions[channelName]) {
+            console.log('[Realtime] Already subscribed to deliveries, skipping duplicate');
+            return;
+        }
+
+        const channel = db.channel(channelName, {
             config: {
                 broadcast: { ack: false }
             }
@@ -462,11 +471,17 @@
             .subscribe((status) => {
                 if (status === 'SUBSCRIBED') {
                     console.log('[Realtime] Subscribed to deliveries');
+                    activeSubscriptions[channelName] = true;
                     updateConnectionStatus(true);
                 } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
                     console.warn('[Realtime] Subscription status:', status);
                     updateConnectionStatus(false);
-                    attemptReconnect();
+                    // Debounce reconnection to prevent flooding
+                    clearTimeout(reconnectDebounceTimer);
+                    reconnectDebounceTimer = setTimeout(() => {
+                        delete activeSubscriptions[channelName];
+                        attemptReconnect();
+                    }, 5000);
                 }
             });
 
@@ -474,7 +489,14 @@
     }
 
     function subscribeJobs() {
-        const channel = db.channel('jobs-changes', {
+        const channelName = 'jobs-changes';
+        // Check if already subscribed
+        if (activeSubscriptions[channelName]) {
+            console.log('[Realtime] Already subscribed to jobs, skipping duplicate');
+            return;
+        }
+
+        const channel = db.channel(channelName, {
             config: {
                 broadcast: { ack: false }
             }
@@ -552,11 +574,17 @@
             .subscribe((status) => {
                 if (status === 'SUBSCRIBED') {
                     console.log('[Realtime] Subscribed to jobs');
+                    activeSubscriptions[channelName] = true;
                     updateConnectionStatus(true);
                 } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
                     console.warn('[Realtime] Jobs subscription status:', status);
                     updateConnectionStatus(false);
-                    attemptReconnect();
+                    // Debounce reconnection to prevent flooding
+                    clearTimeout(reconnectDebounceTimer);
+                    reconnectDebounceTimer = setTimeout(() => {
+                        delete activeSubscriptions[channelName];
+                        attemptReconnect();
+                    }, 5000);
                 }
             });
 
@@ -564,7 +592,14 @@
     }
 
     function subscribeInvoices() {
-        const channel = db.channel('invoices-changes', {
+        const channelName = 'invoices-changes';
+        // Check if already subscribed
+        if (activeSubscriptions[channelName]) {
+            console.log('[Realtime] Already subscribed to invoices, skipping duplicate');
+            return;
+        }
+
+        const channel = db.channel(channelName, {
             config: {
                 broadcast: { ack: false }
             }
@@ -624,11 +659,17 @@
             .subscribe((status) => {
                 if (status === 'SUBSCRIBED') {
                     console.log('[Realtime] Subscribed to invoices');
+                    activeSubscriptions[channelName] = true;
                     updateConnectionStatus(true);
                 } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
                     console.warn('[Realtime] Invoices subscription status:', status);
                     updateConnectionStatus(false);
-                    attemptReconnect();
+                    // Debounce reconnection to prevent flooding
+                    clearTimeout(reconnectDebounceTimer);
+                    reconnectDebounceTimer = setTimeout(() => {
+                        delete activeSubscriptions[channelName];
+                        attemptReconnect();
+                    }, 5000);
                 }
             });
 

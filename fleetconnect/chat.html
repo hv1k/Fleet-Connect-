@@ -483,7 +483,7 @@
             input.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
-                    sendMessage();
+                    handleSendMessage();
                 }
             });
 
@@ -492,10 +492,10 @@
                 input.style.height = Math.min(input.scrollHeight, 100) + 'px';
             });
 
-            sendBtn.addEventListener('click', sendMessage);
+            sendBtn.addEventListener('click', handleSendMessage);
         }
 
-        async function sendMessage() {
+        async function handleSendMessage() {
             const input = document.getElementById('messageInput');
             const content = input.value.trim();
 

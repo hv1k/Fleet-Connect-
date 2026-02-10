@@ -902,11 +902,12 @@
                     })
                 });
 
-                const data = await response.json();
-
                 if (!response.ok) {
-                    throw new Error(data.error || 'Failed to change password');
+                    let errorMsg = 'Failed to change password';
+                    try { const data = await response.json(); errorMsg = data.error || errorMsg; } catch(e) {}
+                    throw new Error(errorMsg);
                 }
+                const data = await response.json();
 
                 document.getElementById('currentPassword').value = '';
                 document.getElementById('newPassword').value = '';
