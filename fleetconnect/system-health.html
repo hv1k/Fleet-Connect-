@@ -35,7 +35,7 @@
             --admin: #60a5fa;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg-dark); color: var(--text-primary); min-height: 100vh; line-height: 1.6; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-dark); color: var(--text-primary); min-height: 100vh; line-height: 1.6; display: flex; }
         .container { position: relative; z-index: 1; max-width: 1400px; margin: 0 auto; padding: 24px 32px; }
 
         .nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
@@ -181,31 +181,46 @@
         .theme-toggle { background: none; border: 1px solid var(--border); border-radius: 8px; padding: 8px; cursor: pointer; color: var(--text-primary); font-size: 1.2rem; transition: all 0.2s; line-height: 1; }
         .theme-toggle:hover { background: var(--bg-hover); }
 
-        </style>
+        
+        /* Sidebar */
+        .admin-sidebar { width: 260px; background: var(--bg-card); border-right: 1px solid var(--border); padding: 24px 16px; position: fixed; left: 0; top: 0; height: 100vh; overflow-y: auto; z-index: 99; display: flex; flex-direction: column; }
+        .admin-sidebar-logo { font-size: 1.1rem; font-weight: 700; color: var(--admin); margin-bottom: 16px; }
+        .admin-nav-section { margin-bottom: 24px; }
+        .admin-nav-section-title { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); padding: 0 12px; margin-bottom: 8px; letter-spacing: 0.5px; }
+        .admin-nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; color: #b8b0a8; text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: all 0.2s; cursor: pointer; margin-bottom: 4px; }
+        .admin-nav-item:hover { background: var(--bg-hover); color: var(--text-primary); }
+        .admin-nav-item.active { background: rgba(96, 165, 250, 0.15); color: var(--admin); }
+        .admin-nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+        .admin-sidebar-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border); }
+        .admin-sidebar nav { flex: 1; overflow-y: auto; }
+        .admin-sidebar .sidebar-actions { display: flex; align-items: center; gap: 8px; padding: 0 12px; margin-bottom: 16px; }
+        .admin-sidebar .sidebar-actions button { background: none; border: 1px solid var(--border, #333); border-radius: 8px; padding: 6px; cursor: pointer; color: var(--text-secondary, #b8b0a8); font-size: 1rem; line-height: 1; display: flex; align-items: center; justify-content: center; }
+        .main-content { flex: 1; margin-left: 260px; }
+
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .admin-sidebar { width: 100%; height: auto; position: relative; left: auto; top: auto; border-right: none; border-bottom: 1px solid var(--border); padding: 12px; margin-bottom: 20px; }
+            .main-content { margin-left: 0; }
+        }
+
+</style>
 </head>
 <body>
-    <div class="container">
-        <nav class="nav">
-            <a href="index.html" class="logo">FLEETCONNECT</a>
-            <div class="nav-right">
-                <div class="nav-links">
-                    <a href="admin-dashboard.html">Users</a>
-                    <a href="work-orders.html">Work Orders</a>
-                    <a href="create-job.html">Create Work Order</a>
-                    <a href="admin-feature-flags.html">Feature Flags</a>
-                    <a href="audit-log.html">Audit Log</a>
-                    <a href="company-management.html">Companies</a>
-                    <a href="analytics.html">Analytics</a>
-                    <a href="settings.html">Settings</a>
-                </div>
-                <button class="notification-bell" title="Notifications" aria-label="Notifications">🔔</button>
-                <div class="admin-badge">ADMIN</div>
-                <div class="user-info">
-                    <span class="user-name" id="userName">Admin</span>
-                    <button class="logout-btn" onclick="logout()">Logout</button>
-                </div>
+        <aside class="admin-sidebar" id="adminSidebar">
+        <div class="admin-sidebar-logo">FLEETCONNECT</div>
+        <div class="sidebar-actions"><button class="notification-bell" title="Notifications" aria-label="Notifications">🔔</button> <button class="theme-toggle" title="Toggle light/dark mode" aria-label="Toggle light/dark mode">🌙</button></div>
+        <nav id="sidebarNav"></nav>
+        <div class="admin-sidebar-footer">
+            <div style="padding: 12px; background: var(--bg-hover, #333); border-radius: 8px;">
+                <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary, #f5f0e8); margin-bottom: 4px;" id="adminUserName">System Admin</div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary, #888);">Administrator</div>
+                <button onclick="logout()" style="margin-top: 8px; width: 100%; padding: 6px; background: transparent; border: 1px solid #333; color: #888; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 0.75rem; cursor: pointer; transition: all 0.2s;">Logout</button>
             </div>
-        </nav>
+        </div>
+    </aside>
+
+    <div class="main-content">
+    <div class="container">
 
         <div class="header">
             <div class="header-left">
@@ -393,7 +408,11 @@
         </div>
     </div>
 
+    </div>
+
+    
     <script src="supabase-client.js"></script>
+    <script src="sidebar.js"></script>
     <script>
         let refreshInterval = null;
         let isLive = true;
@@ -401,7 +420,7 @@
         // Check auth
         const currentUser = checkAuth(['admin']);
         if (currentUser) {
-            document.getElementById('userName').textContent = currentUser.name;
+            document.getElementById('adminUserName').textContent = currentUser.name;
         }
 
         // Simulated data generators
@@ -621,8 +640,6 @@
       });
     })();
     </script>
-
-    <div style="position:fixed;top:16px;right:16px;z-index:9999;"><button class="theme-toggle" title="Toggle light/dark mode" aria-label="Toggle light/dark mode">🌙</button></div>
 <script src="hamburger-menu.js"></script>
 <script src="global-search.js"></script>
 <script src="notification-center.js"></script>
