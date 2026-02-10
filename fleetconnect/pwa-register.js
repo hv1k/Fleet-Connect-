@@ -22,7 +22,8 @@
         console.log('[PWA] Install prompt available');
         e.preventDefault();
         this.deferredPrompt = e;
-        this.showInstallBanner();
+        // Don't auto-show install banner — too intrusive
+        // this.showInstallBanner();
       });
 
       // App installed event
