@@ -202,8 +202,7 @@
         .light-mode table tr:hover { background: #e8e8e8 !important; }
         .light-mode .modal-overlay { background: rgba(0,0,0,0.3) !important; }
         .light-mode .modal, .light-mode .modal-content { background: #ffffff !important; border-color: #d0d0d0 !important; color: #1a1a1a !important; }
-        .light-mode .notification-bell { color: #555555 !important; }
-        .light-mode .search-box, .light-mode .search-input { background: #e8e8e8 !important; border-color: #d0d0d0 !important; color: #1a1a1a !important; }
+        .light-mode.light-mode .search-box, .light-mode .search-input { background: #e8e8e8 !important; border-color: #d0d0d0 !important; color: #1a1a1a !important; }
         .light-mode .tab, .light-mode .tab-btn { color: #555555 !important; }
         .light-mode .tab.active, .light-mode .tab-btn.active { color: #3b82f6 !important; border-color: #3b82f6 !important; }
         .light-mode .dropdown, .light-mode .dropdown-menu { background: #ffffff !important; border-color: #d0d0d0 !important; }
@@ -222,14 +221,7 @@
         .light-mode ::-webkit-scrollbar-thumb { background: #d0d0d0; }
         .light-mode ::-webkit-scrollbar-thumb:hover { background: #bbbbbb; }
 
-        .theme-toggle { background: none; border: 1px solid var(--border); border-radius: 8px; padding: 8px; cursor: pointer; color: var(--text-primary); font-size: 1.2rem; transition: all 0.2s; line-height: 1; }
-        .theme-toggle:hover { background: var(--bg-hover); }
-
-        
-        /* Sidebar actions (bell + theme toggle) */
-        .admin-sidebar .sidebar-actions { display: flex; align-items: center; gap: 8px; padding: 0 12px; margin-bottom: 16px; }
-        .admin-sidebar .sidebar-actions button { background: none; border: 1px solid var(--border, #333); border-radius: 8px; padding: 6px; cursor: pointer; color: var(--text-secondary, #b8b0a8); font-size: 1rem; line-height: 1; display: flex; align-items: center; justify-content: center; }
-        .admin-sidebar .sidebar-actions button svg, .admin-sidebar .sidebar-actions button img { width: 16px; height: 16px; }
+/* Sidebar actions (bell + theme toggle) */
         /* Sidebar layout fix */
         .admin-sidebar { display: flex; flex-direction: column; }
         .admin-sidebar nav { flex: 1; overflow-y: auto; }
@@ -238,8 +230,7 @@
 <body>
     <aside class="admin-sidebar" id="adminSidebar">
         <div class="admin-sidebar-logo">FLEETCONNECT</div>
-        <div class="sidebar-actions"><button class="notification-bell" title="Notifications" aria-label="Notifications">🔔</button> <button class="theme-toggle" title="Toggle light/dark mode" aria-label="Toggle light/dark mode">🌙</button></div>
-        <nav id="sidebarNav"></nav>
+<nav id="sidebarNav"></nav>
         <div class="admin-sidebar-footer">
             <div style="padding: 12px; background: var(--bg-hover, #333); border-radius: 8px;">
                 <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary, #f5f0e8); margin-bottom: 4px;" id="adminUserName">System Admin</div>
@@ -687,23 +678,7 @@
         initialize();
     </script>
     </div>
-    <script>
-    // Theme toggle
-    (function(){
-      var btn = document.querySelector('.theme-toggle');
-      if(!btn) return;
-      function updateIcon(){
-        btn.textContent = document.documentElement.classList.contains('light-mode') ? '☀️' : '🌙';
-      }
-      updateIcon();
-      btn.addEventListener('click', function(){
-        document.documentElement.classList.toggle('light-mode');
-        localStorage.setItem('fleetconnect-theme',
-          document.documentElement.classList.contains('light-mode') ? 'light' : 'dark');
-        updateIcon();
-      });
-    })();
-    </script>
+    
 <script src="realtime.js"></script>
 <script src="hamburger-menu.js"></script>
 <script src="global-search.js"></script>

@@ -26,23 +26,7 @@
         }
     </script>
 
-    <div style="position:fixed;top:16px;right:16px;z-index:9999;"><button class="theme-toggle" title="Toggle light/dark mode" aria-label="Toggle light/dark mode">🌙</button></div>
-    <script>
-    // Theme toggle
-    (function(){
-      var btn = document.querySelector('.theme-toggle');
-      if(!btn) return;
-      function updateIcon(){
-        btn.textContent = document.documentElement.classList.contains('light-mode') ? '☀️' : '🌙';
-      }
-      updateIcon();
-      btn.addEventListener('click', function(){
-        document.documentElement.classList.toggle('light-mode');
-        localStorage.setItem('fleetconnect-theme',
-          document.documentElement.classList.contains('light-mode') ? 'light' : 'dark');
-        updateIcon();
-      });
-    })();
-    </script>
+    <div style="position:fixed;top:16px;right:16px;z-index:9999;"></div>
+    
 </body>
 </html>
