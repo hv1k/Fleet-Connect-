@@ -765,7 +765,8 @@
         .light-mode table tr:hover { background: #e8e8e8 !important; }
         .light-mode .modal-overlay { background: rgba(0,0,0,0.3) !important; }
         .light-mode .modal, .light-mode .modal-content { background: #ffffff !important; border-color: #d0d0d0 !important; color: #1a1a1a !important; }
-        .light-mode.light-mode .search-box, .light-mode .search-input { background: #e8e8e8 !important; border-color: #d0d0d0 !important; color: #1a1a1a !important; }
+        .light-mode .notification-bell { color: #555555 !important; }
+        .light-mode .search-box, .light-mode .search-input { background: #e8e8e8 !important; border-color: #d0d0d0 !important; color: #1a1a1a !important; }
         .light-mode .tab, .light-mode .tab-btn { color: #555555 !important; }
         .light-mode .tab.active, .light-mode .tab-btn.active { color: #3b82f6 !important; border-color: #3b82f6 !important; }
         .light-mode .dropdown, .light-mode .dropdown-menu { background: #ffffff !important; border-color: #d0d0d0 !important; }
@@ -784,13 +785,16 @@
         .light-mode ::-webkit-scrollbar-thumb { background: #d0d0d0; }
         .light-mode ::-webkit-scrollbar-thumb:hover { background: #bbbbbb; }
 
+        .theme-toggle { background: none; border: 1px solid var(--border); border-radius: 8px; padding: 8px; cursor: pointer; color: var(--text-primary); font-size: 1.2rem; transition: all 0.2s; line-height: 1; }
+        .theme-toggle:hover { background: var(--bg-hover); }
+
         .pwa-install-banner, [class*="install"] {
             position: relative;
             z-index: 1000;
             margin-bottom: 0;
         }
 
-</style>
+        </style>
 </head>
 <body>
 
@@ -1207,8 +1211,24 @@
             }
         });
     </script>
-    
+    <script>
+    // Theme toggle
+    (function(){
+      var btn = document.querySelector('.theme-toggle');
+      if(!btn) return;
+      function updateIcon(){
+        btn.textContent = document.documentElement.classList.contains('light-mode') ? '☀️' : '🌙';
+      }
+      updateIcon();
+      btn.addEventListener('click', function(){
+        document.documentElement.classList.toggle('light-mode');
+        localStorage.setItem('fleetconnect-theme',
+          document.documentElement.classList.contains('light-mode') ? 'light' : 'dark');
+        updateIcon();
+      });
+    })();
+    </script>
 
-    <div style="position:fixed;top:16px;right:16px;z-index:9999;"></div>
+    <div style="position:fixed;top:16px;right:16px;z-index:9999;"><button class="theme-toggle" title="Toggle light/dark mode" aria-label="Toggle light/dark mode">🌙</button></div>
 </body>
 </html>

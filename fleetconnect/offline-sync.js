@@ -271,20 +271,20 @@ class OfflineIndicator {
       bottom: 12px;
       right: 12px;
       padding: 4px 10px;
-      background: rgba(34, 197, 94, 0.15);
-      border: 1px solid rgba(34, 197, 94, 0.3);
-      color: #22c55e;
-      font-size: 0.7rem;
+      background: #1e1e1e;
+      border: 1px solid #333;
+      color: #f5f0e8;
+      font-size: 12px;
       font-weight: 500;
       border-radius: 20px;
       z-index: 50;
       display: flex;
       align-items: center;
-      gap: 5px;
-      backdrop-filter: blur(8px);
+      gap: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
     `;
-    banner.innerHTML = `<span style="width:6px;height:6px;border-radius:50%;background:#22c55e;display:inline-block;"></span> Online`;
-    document.body.insertBefore(banner, document.body.firstChild);
+    banner.innerHTML = `<span style="width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block;"></span> Online`;
+    document.body.appendChild(banner);
     this.updateBanner();
   }
 
@@ -299,20 +299,20 @@ class OfflineIndicator {
     const { pendingCount } = await offlineSync.getOfflineStatus();
 
     if (isOnline && pendingCount === 0) {
-      banner.style.background = 'rgba(34, 197, 94, 0.15)';
-      banner.style.border = '1px solid rgba(34, 197, 94, 0.3)';
-      banner.style.color = '#22c55e';
-      banner.innerHTML = `<span style="width:6px;height:6px;border-radius:50%;background:#22c55e;display:inline-block;"></span> Online`;
+      banner.style.background = '#1e1e1e';
+      banner.style.border = '1px solid #333';
+      banner.style.color = '#f5f0e8';
+      banner.innerHTML = `<span style="width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block;"></span> Online`;
     } else if (isOnline && pendingCount > 0) {
-      banner.style.background = 'rgba(96, 165, 250, 0.15)';
-      banner.style.border = '1px solid rgba(96, 165, 250, 0.3)';
+      banner.style.background = '#1e1e1e';
+      banner.style.border = '1px solid #334155';
       banner.style.color = '#60a5fa';
-      banner.innerHTML = `<span style="width:6px;height:6px;border-radius:50%;background:#60a5fa;display:inline-block;animation:pulse 1s infinite;"></span> Syncing ${pendingCount}...`;
+      banner.innerHTML = `<span style="width:8px;height:8px;border-radius:50%;background:#60a5fa;display:inline-block;animation:pulse 1s infinite;"></span> Syncing ${pendingCount}...`;
     } else {
-      banner.style.background = 'rgba(245, 158, 11, 0.15)';
-      banner.style.border = '1px solid rgba(245, 158, 11, 0.3)';
+      banner.style.background = '#1e1e1e';
+      banner.style.border = '1px solid #433a20';
       banner.style.color = '#f59e0b';
-      banner.innerHTML = `<span style="width:6px;height:6px;border-radius:50%;background:#f59e0b;display:inline-block;"></span> Offline${pendingCount > 0 ? ' • ' + pendingCount + ' pending' : ''}`;
+      banner.innerHTML = `<span style="width:8px;height:8px;border-radius:50%;background:#f59e0b;display:inline-block;"></span> Offline${pendingCount > 0 ? ' \u00b7 ' + pendingCount + ' pending' : ''}`;
     }
   }
 
