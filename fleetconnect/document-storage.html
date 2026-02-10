@@ -452,24 +452,12 @@
                 var _ua = document.getElementById('userAvatar'); if (_ua) _ua.textContent = currentUser.name.charAt(0).toUpperCase();
                 var _ur = document.getElementById('userRole'); if (_ur) _ur.textContent = currentUser.role || 'User';
                 if (document.getElementById('adminUserName')) document.getElementById('adminUserName').textContent = currentUser.name;
-                updateSidebarForRole(currentUser.role);
                 loadDocuments();
             }
         }
 
-        function updateSidebarForRole(role) {
-            const navMap = {
-                vendor: 'vendor-dashboard.html',
-                rental: 'rental-dashboard.html',
-                fieldworker: 'field-worker.html',
-                admin: 'admin-dashboard.html'
-            };
-            const dashLink = navMap[role] || 'vendor-dashboard.html';
-            document.getElementById('navDashboard').href = dashLink;
-        }
-
         function toggleMobileSidebar() {
-            document.querySelector('.sidebar').classList.toggle('open');
+            var sb = document.querySelector('.admin-sidebar'); if(sb) sb.classList.toggle('open');
         }
 
         async function loadDocuments() {
@@ -786,34 +774,6 @@
 <script src="global-search.js"></script>
 <script src="notification-center.js"></script>
     <script src="realtime.js"></script>
-<script>
-    // Vendor role-aware sidebar
-    (function() {
-      try {
-        var user = typeof getCurrentUser === 'function' ? getCurrentUser() : (typeof checkAuth === 'function' ? checkAuth() : null);
-        if (!user) {
-          var stored = localStorage.getItem('fleetconnect_user');
-          if (stored) user = JSON.parse(stored);
-        }
-        if (user && user.role === 'vendor') {
-          var nav = document.querySelector('.admin-sidebar nav');
-          if (nav) {
-          }
-          var roleTxt = document.querySelector('.admin-sidebar-role');
-          if (roleTxt) roleTxt.textContent = 'Vendor Account';
-
-        if (user && user.role === 'fieldworker') {
-            var nav = document.querySelector('.admin-sidebar nav');
-            if (nav) {
-            }
-            var roleTxt = document.querySelector('.admin-sidebar-role');
-            if (roleTxt) roleTxt.textContent = 'Field Worker';
-        }
-          var userName = document.getElementById('adminUserName');
-          if (userName) userName.textContent = user.name || 'Vendor';
-        }
-      } catch(e) { console.warn('Vendor sidebar init error:', e); }
-    })();
-</script>
+<!-- legacy sidebar script removed - sidebar.js handles nav -->
 </body>
 </html>

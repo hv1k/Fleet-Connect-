@@ -15,8 +15,35 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+        :root {
+            --bg-dark: #1a1a1a;
+            --bg-card: #242424;
+            --bg-input: #2a2a2a;
+            --bg-hover: #333;
+            --border: #333;
+            --text-primary: #f5f0e8;
+            --text-secondary: #888;
+            --text-muted: #666;
+            --accent: #60a5fa;
+            --admin: #60a5fa;
+        }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: #1a1a1a; color: #f5f0e8; min-height: 100vh; }
+        body { font-family: 'Inter', sans-serif; background: #1a1a1a; color: #f5f0e8; min-height: 100vh; display: flex; }
+
+        /* Sidebar */
+        .admin-sidebar { width: 260px; background: var(--bg-card); border-right: 1px solid var(--border); padding: 24px 16px; position: fixed; left: 0; top: 0; height: 100vh; overflow-y: auto; z-index: 99; display: flex; flex-direction: column; }
+        .admin-sidebar-logo { font-size: 1.1rem; font-weight: 700; color: var(--admin); margin-bottom: 16px; }
+        .admin-sidebar-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border); }
+        .admin-sidebar nav { flex: 1; overflow-y: auto; }
+        .admin-sidebar .sidebar-actions { display: flex; align-items: center; gap: 8px; padding: 0 12px; margin-bottom: 16px; }
+        .admin-sidebar .sidebar-actions button { background: none; border: 1px solid var(--border); border-radius: 8px; padding: 6px; cursor: pointer; color: var(--text-secondary); font-size: 1rem; line-height: 1; display: flex; align-items: center; justify-content: center; }
+        .main-content { flex: 1; margin-left: 260px; }
+        .hamburger-menu { display: none; position: fixed; top: 20px; left: 20px; z-index: 100; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 8px; cursor: pointer; width: 40px; height: 40px; }
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .admin-sidebar { width: 100%; height: auto; position: relative; left: auto; top: auto; border-right: none; border-bottom: 1px solid var(--border); padding: 12px; margin-bottom: 20px; }
+            .main-content { margin-left: 0 !important; }
+        }
 
         /* Mobile-first container */
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
@@ -173,6 +200,20 @@
         </style>
 </head>
 <body>
+    <aside class="admin-sidebar" id="adminSidebar">
+        <div class="admin-sidebar-logo">FLEETCONNECT</div>
+        <div class="sidebar-actions"><button class="notification-bell" title="Notifications" aria-label="Notifications">🔔</button> <button class="theme-toggle" title="Toggle light/dark mode" aria-label="Toggle light/dark mode">🌙</button></div>
+        <nav id="sidebarNav"></nav>
+        <div class="admin-sidebar-footer">
+            <div style="padding: 12px; background: var(--bg-hover, #333); border-radius: 8px;">
+                <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary, #f5f0e8); margin-bottom: 4px;" id="adminUserName">User</div>
+                <div class="admin-sidebar-role" style="font-size: 0.75rem; color: var(--text-secondary, #888);">User</div>
+                <button onclick="logout()" style="margin-top: 8px; width: 100%; padding: 6px; background: transparent; border: 1px solid #333; color: #888; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 0.75rem; cursor: pointer; transition: all 0.2s;">Logout</button>
+            </div>
+        </div>
+    </aside>
+
+    <div class="main-content">
     <div class="container">
         <div class="header">
             <button class="header-back" onclick="window.history.back()" title="Go back">←</button>
@@ -301,7 +342,10 @@
         </div>
     </div>
 
+    </div><!-- end main-content -->
+
     <script src="supabase-client.js"></script>
+    <script src="sidebar.js"></script>
     <script src="realtime.js"></script>
     <script src="feature-flags.js"></script>
     <script>
@@ -310,10 +354,11 @@
 
         // Initialize
         (async () => {
-            const user = checkAuth(['fieldworker']);
+            const user = checkAuth(['fieldworker', 'vendor', 'rental', 'admin']);
             if (!user) return;
+            if (document.getElementById('adminUserName')) document.getElementById('adminUserName').textContent = user.name;
 
-            await FC_FLAGS.init('fieldworker');
+            await FC_FLAGS.init(user.role || 'fieldworker');
             loadHistory();
             calculateFuel();
             setDefaultPrice();
@@ -518,7 +563,6 @@
     })();
     </script>
 
-    <div style="position:fixed;top:16px;right:16px;z-index:9999;"><button class="theme-toggle" title="Toggle light/dark mode" aria-label="Toggle light/dark mode">🌙</button></div>
 <script src="hamburger-menu.js"></script>
 <script src="global-search.js"></script>
 <script src="notification-center.js"></script>

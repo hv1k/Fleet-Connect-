@@ -41,28 +41,7 @@
 
         .layout { display: flex; height: 100vh; }
 
-        /* Sidebar Navigation */
-        .sidebar { width: 240px; background: #242424; border-right: 1px solid var(--border); padding: 24px 16px; position: fixed; left: 0; height: 100vh; z-index: 100; display: flex; flex-direction: column; overflow-y: auto; }
-        .sidebar-header { display: flex; align-items: center; gap: 10px; margin-bottom: 32px; padding: 20px 20px 12px; }
-        .sidebar-logo { font-size: 1.2rem; font-weight: 700; color: var(--accent); }
-        .nav-section { margin-bottom: 24px; }
-        .nav-section-title { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: #666; padding: 0 12px; letter-spacing: 0.5px; }
-        .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: var(--radius-sm); color: #b8b0a8; text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: all 0.2s; cursor: pointer; }
-        .nav-item:hover { background: #333; color: var(--text-primary); }
-        .nav-item.active { background: var(--accent-glow); color: var(--accent); }
-        .nav-item svg { width: 20px; height: 20px; }
-
-        .sidebar-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border); }
-        .user-menu { display: flex; align-items: center; gap: 12px; padding: 12px; background: #333; border-radius: 10px; }
-        .user-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent-dim)); display: flex; align-items: center; justify-content: center; color: var(--bg-deep); font-weight: 600; font-size: 0.85rem; flex-shrink: 0; }
-        .user-info { flex: 1; min-width: 0; }
-        .user-name { font-size: 0.85rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .user-role { font-size: 0.7rem; color: #888; }
-        .logout-btn { background: none; border: none; color: #888; cursor: pointer; padding: 6px; border-radius: 6px; flex-shrink: 0; transition: all 0.2s; }
-        .logout-btn:hover { background: #444; color: var(--text-primary); }
-
         /* Main Content */
-        .main { flex: 1; margin-left: 240px; display: flex; height: 100vh; }
 
         /* Conversations Panel */
         .conversations-panel { width: 340px; background: #1a1a1a; border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
@@ -364,11 +343,9 @@
             setupInputHandlers();
         });
         function setupUI() {
-            document.getElementById('userName').textContent = currentUser.name;
+            var _un = document.getElementById('adminUserName'); if(_un) _un.textContent = currentUser.name;
             const roleLabelsChat = { admin: 'Administrator', rental: 'Rental Account', vendor: 'Vendor Account', fieldworker: 'Field Worker' };
-            document.getElementById('userRole').textContent = roleLabelsChat[currentUser.role] || currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1);
             var _rl = document.querySelector('.admin-sidebar-role'); if(_rl) _rl.textContent = roleLabelsChat[currentUser.role] || currentUser.role;
-            document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
         }
 
         async function loadConversations() {
@@ -579,7 +556,7 @@
         window.addEventListener('resize', () => {
             if (window.innerWidth > 768) {
                 document.getElementById('conversationsPanel').classList.remove('open');
-                document.getElementById('sidebar').classList.remove('open');
+                var _sb = document.querySelector('.admin-sidebar'); if(_sb) _sb.classList.remove('open');
             }
         });
     </script>

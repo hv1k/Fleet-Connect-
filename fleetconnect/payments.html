@@ -317,6 +317,7 @@
         <div class="main-content">
             <div class="header">
                 <div class="header-left">
+                    <button class="mobile-toggle" onclick="document.querySelector('.admin-sidebar').classList.toggle('open')" style="display:none;width:40px;height:40px;border:1px solid #444;border-radius:8px;background:#2a2a2a;color:#f5f0e8;align-items:center;justify-content:center;cursor:pointer;"><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button>
                     <h1>Payments & Invoices</h1>
                 </div>
             </div>
@@ -448,58 +449,11 @@
             window.location.href = 'login.html';
         }
 
-        // Navigation config
-        const navConfig = {
-            admin: [
-                { label: 'Dashboard', href: 'admin-dashboard.html', icon: 'grid' },
-                { label: 'Create Work Order', href: 'create-job.html', icon: 'plus' },
-                { label: 'Work Orders', href: 'work-orders.html', icon: 'clipboard' },
-                { label: 'Settings', href: 'settings.html', icon: 'settings' }
-            ],
-            vendor: [
-                { label: 'Dashboard', href: 'vendor-dashboard.html', icon: 'grid' },
-                { label: 'Work Orders', href: 'work-orders.html', icon: 'clipboard' },
-                { label: 'Invoices', href: 'invoices.html', icon: 'invoice' },
-                { label: 'Settings', href: 'settings.html', icon: 'settings' }
-            ]
-        };
-
-        // SVG icons
-        const icons = {
-            grid: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/></svg>',
-            plus: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>',
-            clipboard: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>',
-            chart: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>',
-            dollar: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>',
-            settings: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>',
-            invoice: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
-        };
-
-        // Render navigation
-        function renderNav() {
-            const navElement = document.getElementById('mainNav');
-            const navItems = navConfig[currentUser.role] || [];
-
-            let html = '<div class="nav-section">';
-            navItems.forEach(item => {
-                const icon = icons[item.icon] || '';
-                const activeClass = item.active ? 'active' : '';
-                html += `<a href="${item.href}" class="nav-item ${activeClass}">${icon}<span>${item.label}</span></a>`;
-            });
-            html += '</div>';
-
-            navElement.innerHTML = html;
-        }
-
         // Set user info
         function setUserInfo() {
-            document.getElementById('userName').textContent = currentUser.name || 'User';
-            document.getElementById('userRole').textContent = currentUser.role;
-            const firstLetter = (currentUser.name || 'U').charAt(0).toUpperCase();
-            document.getElementById('userAvatar').textContent = firstLetter;
+            var _un = document.getElementById('adminUserName'); if(_un) _un.textContent = currentUser.name || 'User';
         }
 
-        renderNav();
         setUserInfo();
 
         // Data
