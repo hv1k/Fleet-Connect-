@@ -267,30 +267,23 @@ class OfflineIndicator {
     const banner = document.createElement('div');
     banner.id = this.bannerId;
     banner.style.cssText = `
-      display: none;
       position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      padding: 12px 16px;
-      background: linear-gradient(135deg, #22c55e, #16a34a);
-      color: #fff;
-      font-size: 0.85rem;
+      bottom: 12px;
+      right: 12px;
+      padding: 4px 10px;
+      background: rgba(34, 197, 94, 0.15);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      color: #22c55e;
+      font-size: 0.7rem;
       font-weight: 500;
-      text-align: center;
-      z-index: 9999;
+      border-radius: 20px;
+      z-index: 50;
       display: flex;
       align-items: center;
-      justify-content: center;
-      gap: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      gap: 5px;
+      backdrop-filter: blur(8px);
     `;
-    banner.innerHTML = `
-      <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-      </svg>
-      <span>🟢 Online</span>
-    `;
+    banner.innerHTML = `<span style="width:6px;height:6px;border-radius:50%;background:#22c55e;display:inline-block;"></span> Online`;
     document.body.insertBefore(banner, document.body.firstChild);
     this.updateBanner();
   }
@@ -306,25 +299,20 @@ class OfflineIndicator {
     const { pendingCount } = await offlineSync.getOfflineStatus();
 
     if (isOnline && pendingCount === 0) {
-      banner.style.display = 'none';
+      banner.style.background = 'rgba(34, 197, 94, 0.15)';
+      banner.style.border = '1px solid rgba(34, 197, 94, 0.3)';
+      banner.style.color = '#22c55e';
+      banner.innerHTML = `<span style="width:6px;height:6px;border-radius:50%;background:#22c55e;display:inline-block;"></span> Online`;
     } else if (isOnline && pendingCount > 0) {
-      banner.style.display = 'flex';
-      banner.style.background = 'linear-gradient(135deg, #22c55e, #16a34a)';
-      banner.innerHTML = `
-        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-        </svg>
-        <span>Syncing ${pendingCount} items...</span>
-      `;
+      banner.style.background = 'rgba(96, 165, 250, 0.15)';
+      banner.style.border = '1px solid rgba(96, 165, 250, 0.3)';
+      banner.style.color = '#60a5fa';
+      banner.innerHTML = `<span style="width:6px;height:6px;border-radius:50%;background:#60a5fa;display:inline-block;animation:pulse 1s infinite;"></span> Syncing ${pendingCount}...`;
     } else {
-      banner.style.display = 'flex';
-      banner.style.background = 'linear-gradient(135deg, #f59e0b, #d97706)';
-      banner.innerHTML = `
-        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/>
-        </svg>
-        <span>🟠 Offline • ${pendingCount} pending</span>
-      `;
+      banner.style.background = 'rgba(245, 158, 11, 0.15)';
+      banner.style.border = '1px solid rgba(245, 158, 11, 0.3)';
+      banner.style.color = '#f59e0b';
+      banner.innerHTML = `<span style="width:6px;height:6px;border-radius:50%;background:#f59e0b;display:inline-block;"></span> Offline${pendingCount > 0 ? ' • ' + pendingCount + ' pending' : ''}`;
     }
   }
 
