@@ -520,9 +520,10 @@
         } else {
             const currentUser = checkAuth(['vendor', 'rental', 'fieldworker', 'admin']);
             if (currentUser) {
-                document.getElementById('userName').textContent = currentUser.name;
-                document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
-                document.getElementById('userRole').textContent = currentUser.role || 'User';
+                var _un = document.getElementById('userName'); if (_un) _un.textContent = currentUser.name;
+                var _ua = document.getElementById('userAvatar'); if (_ua) _ua.textContent = currentUser.name.charAt(0).toUpperCase();
+                var _ur = document.getElementById('userRole'); if (_ur) _ur.textContent = currentUser.role || 'User';
+                if (document.getElementById('adminUserName')) document.getElementById('adminUserName').textContent = currentUser.name;
                 updateSidebarForRole(currentUser.role);
                 loadDocuments();
             }
