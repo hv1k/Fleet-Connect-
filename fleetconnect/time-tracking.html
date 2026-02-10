@@ -284,6 +284,7 @@
         const currentUser = checkAuth(['fieldworker']);
         if (!currentUser) throw new Error('Not authenticated');
         if (document.getElementById('adminUserName')) document.getElementById('adminUserName').textContent = currentUser.name;
+        var roleEl = document.querySelector('.admin-sidebar-role'); if (roleEl) roleEl.textContent = currentUser.role === 'fieldworker' ? 'Field Worker' : currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1);
 
         FC_FLAGS.init('fieldworker');
 

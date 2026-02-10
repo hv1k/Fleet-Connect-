@@ -28,15 +28,7 @@
         .layout { display: flex; min-height: 100vh; }
 
         /* Sidebar */
-        .sidebar { width: 240px; background: #242424; border-right: 1px solid #333; padding: 24px 16px; position: fixed; left: 0; height: 100vh; z-index: 100; display: flex; flex-direction: column; }
-        .sidebar-header { display: flex; align-items: center; gap: 10px; margin-bottom: 32px; padding: 20px 20px 12px; }
-        .sidebar-logo { font-size: 1.2rem; font-weight: 700; color: #60a5fa; }
         nav { flex: 1; overflow-y: auto; }
-        .nav-section { margin-bottom: 24px; }
-        .nav-section-title { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: #666; padding: 0 12px; letter-spacing: 0.5px; }
-        .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; color: #b8b0a8; font-size: 0.85rem; text-decoration: none; transition: all 0.2s; font-weight: 500; }
-        .nav-item:hover { background: #333; color: #f5f0e8; }
-        .nav-item.active { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
 
         /* Navigate Button */
         .btn-navigate { background: rgba(34,197,94,0.15) !important; color: #22c55e !important; border: 1px solid rgba(34,197,94,0.3) !important; }
@@ -59,38 +51,28 @@
         .signature-actions button:hover { background: #444; }
         .signature-status { text-align: center; margin-top: 8px; font-size: 0.8rem; color: #22c55e; display: none; }
         .signature-status.show { display: block; }
-        .nav-item svg { width: 20px; height: 20px; flex-shrink: 0; }
-        .sidebar-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid #333; }
-        .user-menu { display: flex; align-items: center; gap: 12px; padding: 12px; background: #333; border-radius: 10px; }
-        .user-avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #60a5fa, #3b82f6); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 0.85rem; flex-shrink: 0; }
-        .user-info { flex: 1; min-width: 0; }
-        .user-name { font-size: 0.85rem; font-weight: 600; color: #f5f0e8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .user-role { font-size: 0.7rem; color: #888; }
-        .logout-btn { background: none; border: none; color: #888; cursor: pointer; padding: 6px; border-radius: 6px; flex-shrink: 0; }
-        .logout-btn:hover { background: #444; color: #f5f0e8; }
-
         /* Mobile sidebar toggle */
         .mobile-toggle { display: none; background: none; border: none; color: #f5f0e8; cursor: pointer; padding: 4px; }
-        .admin-sidebar { width: 260px; background: var(--bg-card); border-right: 1px solid var(--border); padding: 24px 16px; position: fixed; left: 0; top: 0; height: 100vh; overflow-y: auto; z-index: 99; display: flex; flex-direction: column; }
-        .admin-sidebar-logo { font-size: 1.1rem; font-weight: 700; color: var(--admin, #60a5fa); margin-bottom: 16px; }
+        .admin-sidebar { width: 260px; background: #242424; border-right: 1px solid #333; padding: 24px 16px; position: fixed; left: 0; top: 0; height: 100vh; overflow-y: auto; z-index: 99; display: flex; flex-direction: column; }
+        .admin-sidebar-logo { font-size: 1.1rem; font-weight: 700; color: #60a5fa; margin-bottom: 16px; }
         .admin-nav-section { margin-bottom: 24px; }
-        .admin-nav-section-title { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted, #888); padding: 0 12px; margin-bottom: 8px; letter-spacing: 0.5px; }
+        .admin-nav-section-title { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: #888; padding: 0 12px; margin-bottom: 8px; letter-spacing: 0.5px; }
         .admin-nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; color: #b8b0a8; text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: all 0.2s; cursor: pointer; margin-bottom: 4px; }
-        .admin-nav-item:hover { background: var(--bg-hover, #333); color: var(--text-primary, #e8e0d8); }
-        .admin-nav-item.active { background: rgba(96, 165, 250, 0.15); color: var(--admin, #60a5fa); }
+        .admin-nav-item:hover { background: #333; color: #f5f0e8; }
+        .admin-nav-item.active { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
         .admin-nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
-        .admin-sidebar-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border, #333); }
+        .admin-sidebar-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid #333; }
+        .admin-sidebar nav { flex: 1; overflow-y: auto; }
         .main-content { flex: 1; margin-left: 260px; }
 
         @media (max-width: 768px) {
-            .sidebar { left: -260px; transition: left 0.3s; }
-            .sidebar.open { left: 0; box-shadow: 4px 0 20px rgba(0,0,0,0.5); }
-            .main { margin-left: 0 !important; }
+            .admin-sidebar { left: -260px; transition: left 0.3s; }
+            .admin-sidebar.open { left: 0; box-shadow: 4px 0 20px rgba(0,0,0,0.5); }
+            .main-content { margin-left: 0 !important; }
             .mobile-toggle { display: block; }
         }
 
         /* Main */
-        .main { margin-left: 240px; flex: 1; min-height: 100vh; padding-bottom: 20px; }
         .header { padding: 24px 32px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
         .header-left { display: flex; align-items: center; gap: 12px; }
         .header h1 { font-size: 1.4rem; font-weight: 700; }
@@ -308,18 +290,18 @@
     
         /* Light Mode */
         .light-mode { --bg-dark: #f5f5f5; --bg-card: #ffffff; --bg-input: #e8e8e8; --bg-hover: #e8e8e8; --border: #d0d0d0; --text-primary: #1a1a1a; --text-secondary: #555555; --text-muted: #888888; }
-        .light-mode .sidebar, .light-mode .admin-sidebar { background: #ffffff !important; border-color: #d0d0d0 !important; }
-        .light-mode .sidebar-logo, .light-mode .admin-sidebar-logo { color: #3b82f6 !important; }
-        .light-mode .nav-item, .light-mode .admin-nav-item { color: #555555 !important; }
-        .light-mode .nav-item:hover, .light-mode .admin-nav-item:hover { background: #e8e8e8 !important; color: #1a1a1a !important; }
-        .light-mode .nav-item.active, .light-mode .admin-nav-item.active { background: #dbeafe !important; color: #2563eb !important; }
-        .light-mode .nav-section-title, .light-mode .admin-nav-section { color: #888888 !important; }
+        .light-mode .admin-sidebar { background: #ffffff !important; border-color: #d0d0d0 !important; }
+        .light-mode .admin-sidebar-logo { color: #3b82f6 !important; }
+        .light-mode .admin-nav-item { color: #555555 !important; }
+        .light-mode .admin-nav-item:hover { background: #e8e8e8 !important; color: #1a1a1a !important; }
+        .light-mode .admin-nav-item.active { background: #dbeafe !important; color: #2563eb !important; }
+        .light-mode .admin-nav-section { color: #888888 !important; }
         .light-mode .user-menu { background: #e8e8e8 !important; }
         .light-mode .user-name { color: #1a1a1a !important; }
         .light-mode .header { background: #ffffff !important; border-color: #d0d0d0 !important; }
         .light-mode .header h1 { color: #1a1a1a !important; }
         .light-mode .header-subtitle { color: #555555 !important; }
-        .light-mode .main, .light-mode .content, .light-mode .admin-main { background: #f5f5f5 !important; }
+        .light-mode .main-content, .light-mode .content, .light-mode .admin-main { background: #f5f5f5 !important; }
         .light-mode .card, .light-mode .stat-card, .light-mode .metric-card, .light-mode .admin-card { background: #ffffff !important; border-color: #d0d0d0 !important; }
         .light-mode .card-title, .light-mode .stat-label { color: #1a1a1a !important; }
         .light-mode .card-subtitle { color: #555555 !important; }
@@ -329,7 +311,7 @@
         .light-mode .badge { background: #dbeafe !important; color: #2563eb !important; }
         .light-mode .btn-secondary { background: #e8e8e8 !important; color: #1a1a1a !important; border-color: #d0d0d0 !important; }
         .light-mode .btn-secondary:hover { background: #d0d0d0 !important; }
-        .light-mode .sidebar-footer, .light-mode .admin-sidebar-footer { border-color: #d0d0d0 !important; }
+        .light-mode .admin-sidebar-footer { border-color: #d0d0d0 !important; }
         .light-mode .logout-btn:hover { background: #e8e8e8 !important; }
         .light-mode table th { background: #e8e8e8 !important; color: #1a1a1a !important; border-color: #d0d0d0 !important; }
         .light-mode table td { border-color: #d0d0d0 !important; color: #1a1a1a !important; }
@@ -363,26 +345,22 @@
 </head>
 <body>
     <div class="layout">
-        <aside class="sidebar">
+        <aside class="admin-sidebar" id="adminSidebar">
             <div class="admin-sidebar-logo">FLEETCONNECT</div>
-        <div class="sidebar-actions" style="display: flex; align-items: center; gap: 8px; padding: 0 12px; margin-bottom: 16px;">
-            <button class="notification-bell" title="Notifications" aria-label="Notifications" style="background: none; border: 1px solid var(--border, #333); border-radius: 8px; padding: 6px; cursor: pointer; color: var(--text-secondary, #b8b0a8); font-size: 1rem; line-height: 1;">🔔</button>
-            <button class="theme-toggle" title="Toggle light/dark mode" aria-label="Toggle light/dark mode">🌙</button>
-        </div>
-            <nav id="sidebarNav"></nav>
-            <div class="sidebar-footer">
-                <div class="user-menu">
-                    <div class="user-avatar" id="userAvatar">?</div>
-                    <div class="user-info"><div class="user-name" id="userName">User</div><div class="user-role">Field Worker</div></div>
-                    <button class="logout-btn" onclick="logout()" title="Logout"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg></button>
+<nav id="sidebarNav"></nav>
+            <div class="admin-sidebar-footer">
+                <div style="padding: 12px; background: #333; border-radius: 8px;">
+                    <div style="font-size: 0.8rem; font-weight: 600; color: #f5f0e8; margin-bottom: 4px;" id="adminUserName">User</div>
+                    <div class="admin-sidebar-role" style="font-size: 0.75rem; color: #888;">Field Worker</div>
+                    <button onclick="logout()" style="margin-top: 8px; width: 100%; padding: 6px; background: transparent; border: 1px solid #333; color: #888; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 0.75rem; cursor: pointer; transition: all 0.2s;">Logout</button>
                 </div>
             </div>
         </aside>
 
-        <main class="main">
+        <div class="main-content">
             <header class="header">
                 <div class="header-left">
-                    <button class="mobile-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')"><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+                    <button class="mobile-toggle" onclick="document.querySelector('.admin-sidebar').classList.toggle('open')"><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button>
                     <div>
                         <h1 id="headerGreeting">My Jobs</h1>
                         <p class="header-subtitle">Manage your assigned work orders</p>
@@ -418,7 +396,7 @@
                     <div class="empty">Loading...</div>
                 </div>
             </div>
-        </main>
+        </div>
     </div>
 
     <div class="toast" id="toast"></div>
@@ -441,8 +419,8 @@
         // Service worker registration handled by pwa-register.js
 
         // Setup user info
-        document.getElementById('userName').textContent = currentUser.name;
-        document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+        var _un = document.getElementById('adminUserName'); if (_un) _un.textContent = currentUser.name;
+        var roleEl = document.querySelector('.admin-sidebar-role'); if (roleEl) roleEl.textContent = currentUser.role === 'fieldworker' ? 'Field Worker' : currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1);
         const hour = new Date().getHours();
         const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
         document.getElementById('headerGreeting').textContent = `${greeting}, ${currentUser.name.split(' ')[0]}!`;

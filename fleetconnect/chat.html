@@ -14,15 +14,15 @@
     <title>Messages | FleetConnect</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
-            --bg-deep: #06060b;
-            --bg-dark: #0a0a12;
-            --bg-card: #0f0f1a;
-            --bg-input: #111119;
-            --border: #1e1e30;
+            --bg-deep: #1a1a1a;
+            --bg-dark: #242424;
+            --bg-card: #242424;
+            --bg-input: #2a2a2a;
+            --border: #333;
             --text-primary: #f0f0f5;
             --text-secondary: #7a7a92;
             --text-muted: #4a4a5e;
@@ -44,7 +44,7 @@
         /* Main Content */
 
         /* Conversations Panel */
-        .conversations-panel { width: 340px; background: #1a1a1a; border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+        .conversations-panel { width: 340px; background: var(--bg-deep); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
         .conversations-header { padding: 20px 16px; border-bottom: 1px solid var(--border); }
         .conversations-header h2 { font-size: 1.1rem; font-weight: 600; margin-bottom: 12px; }
         .search-input { width: 100%; padding: 10px 12px 10px 36px; background: var(--bg-input) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23666'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'/%3E%3C/svg%3E") 8px center no-repeat; background-size: 18px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.85rem; color: var(--text-primary); font-family: 'Inter', sans-serif; }
@@ -64,7 +64,7 @@
 
         /* Chat Panel */
         .chat-panel { flex: 1; display: flex; flex-direction: column; }
-        .chat-header { padding: 16px 24px; border-bottom: 1px solid var(--border); background: #0f0f1a; }
+        .chat-header { padding: 16px 24px; border-bottom: 1px solid var(--border); background: var(--bg-card); }
         .chat-header h2 { font-size: 1rem; font-weight: 600; margin-bottom: 2px; }
         .chat-header-subtitle { font-size: 0.8rem; color: var(--text-secondary); }
 
@@ -96,7 +96,7 @@
         @keyframes typing { 0%, 60%, 100% { opacity: 0.3; } 30% { opacity: 1; } }
 
         /* Input Area */
-        .chat-input-area { padding: 16px 24px; border-top: 1px solid var(--border); background: #0f0f1a; display: flex; gap: 12px; align-items: flex-end; }
+        .chat-input-area { padding: 16px 24px; border-top: 1px solid var(--border); background: var(--bg-card); display: flex; gap: 12px; align-items: flex-end; }
         .input-wrapper { flex: 1; display: flex; gap: 8px; align-items: flex-end; }
         .message-input { flex: 1; padding: 12px 14px; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-md); color: var(--text-primary); font-family: 'Inter', sans-serif; font-size: 0.9rem; resize: none; max-height: 100px; transition: all 0.2s; }
         .message-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
@@ -113,15 +113,15 @@
         @keyframes spin { to { transform: rotate(360deg); } }
 
         /* Mobile */
-        
-            .main { margin-left: 0; }
+        @media (max-width: 768px) {
+            .main-content { margin-left: 0; }
             .conversations-panel { display: none; width: 100%; }
             .conversations-panel.open { display: flex; position: fixed; z-index: 999; width: 100%; height: 100%; max-width: none; border-right: none; border-bottom: none; }
             .chat-panel { width: 100%; }
             .message-content { max-width: 80%; }
         }
 
-        .mobile-header { display: none; padding: 12px 16px; background: #0f0f1a; border-bottom: 1px solid var(--border); align-items: center; gap: 12px; }
+        .mobile-header { display: none; padding: 12px 16px; background: var(--bg-card); border-bottom: 1px solid var(--border); align-items: center; gap: 12px; }
         .mobile-back-btn { background: none; border: none; color: var(--accent); cursor: pointer; font-size: 20px; }
         
 
@@ -190,25 +190,7 @@
         .light-mode ::-webkit-scrollbar-thumb { background: #d0d0d0; }
         .light-mode ::-webkit-scrollbar-thumb:hover { background: #bbbbbb; }
 
-        .theme-toggle { background: none; border: 1px solid var(--border); border-radius: 8px; padding: 8px; cursor: pointer; color: var(--text-primary); font-size: 1.2rem; transition: all 0.2s; line-height: 1; }
-        .theme-toggle:hover { background: var(--bg-hover); }
-
-                /* Light Mode */
-        html.light-mode { --bg-dark: #f5f0e8; --bg-card: #ffffff; --bg-input: #f0ebe3; --bg-hover: #e8e4dc; --border: #d0d0d0; --text-primary: #1a1a1a; --text-secondary: #5c5c5c; --text-muted: #8c8c8c; }
-        html.light-mode .admin-sidebar { background: #ffffff !important; border-color: #d0d0d0 !important; }
-        html.light-mode .admin-nav-item { color: #5c5c5c; }
-        html.light-mode .admin-nav-item:hover { background: #f0ebe3; color: #1a1a1a; }
-        html.light-mode .admin-nav-item.active { background: #dbeafe; color: #3b82f6; }
-        html.light-mode .admin-nav-section-title { color: #8c8c8c; }
-        html.light-mode .admin-sidebar-footer { border-color: #d0d0d0; }
-        html.light-mode .stat-card, html.light-mode .card, html.light-mode .table-card, html.light-mode .analytics-card { background: #ffffff; border-color: #d0d0d0; }
-        html.light-mode .search-input, html.light-mode .filter-select { background: #ffffff; border-color: #d0d0d0; color: #1a1a1a; }
-        html.light-mode th { background: #f0ebe3; color: #8c8c8c; border-color: #d0d0d0; }
-        html.light-mode td { border-color: #d0d0d0; color: #5c5c5c; }
-        html.light-mode tr:hover { background: #f0ebe3; }
-        html.light-mode .modal { background: #ffffff; }
-        html.light-mode .modal-header { border-color: #d0d0d0; }
-        html.light-mode .btn-secondary { background: #ffffff; border-color: #d0d0d0; color: #5c5c5c; }
+/* Duplicate html.light-mode block removed */
         .admin-sidebar { width: 260px; background: var(--bg-card); border-right: 1px solid var(--border); padding: 24px 16px; position: fixed; left: 0; top: 0; height: 100vh; overflow-y: auto; z-index: 99; display: flex; flex-direction: column; }
         .admin-sidebar-logo { font-size: 1.1rem; font-weight: 700; color: var(--admin, #60a5fa); margin-bottom: 16px; }
         .admin-nav-section { margin-bottom: 24px; }

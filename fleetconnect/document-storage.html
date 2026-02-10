@@ -45,28 +45,7 @@
         body.dark form label { color: #1a1a1a; }
         .layout { display: flex; min-height: 100vh; }
 
-        /* Sidebar */
-        .sidebar { width: 240px; background: #242424; border-right: 1px solid #333; padding: 24px 16px; position: fixed; left: 0; height: 100vh; z-index: 100; display: flex; flex-direction: column; }
-        .sidebar-header { display: flex; align-items: center; gap: 10px; margin-bottom: 32px; padding: 20px 20px 12px; }
-        .sidebar-logo { font-size: 1.2rem; font-weight: 700; color: #60a5fa; }
-        .nav-section { margin-bottom: 24px; }
-        .nav-section-title { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: #666; padding: 0 12px; margin-bottom: 8px; letter-spacing: 0.5px; }
-        .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; color: #b8b0a8; text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: all 0.2s; cursor: pointer; }
-        .nav-item:hover { background: #333; color: #f5f0e8; }
-        .nav-item.active { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
-        .nav-item svg { width: 20px; height: 20px; }
-
-        .sidebar-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid #333; }
-        .user-menu { display: flex; align-items: center; gap: 12px; padding: 12px; margin-top: 12px; border-radius: 10px; background: #333; }
-        .user-avatar-lg { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #60a5fa, #3b82f6); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 600; font-size: 0.85rem; }
-        .user-info { flex: 1; }
-        .user-name { font-size: 0.85rem; font-weight: 600; color: #f5f0e8; }
-        .user-role { font-size: 0.7rem; color: #888; }
-        .logout-btn { color: #888; cursor: pointer; padding: 6px; border-radius: 6px; background: none; border: none; }
-        .logout-btn:hover { background: #444; color: #f5f0e8; }
-
         /* Main */
-        .main { flex: 1; margin-left: 240px; min-height: 100vh; }
         .header { background: #242424; padding: 20px 32px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50; }
         .header-left { display: flex; align-items: center; gap: 16px; }
         .header h1 { font-size: 1.4rem; font-weight: 700; color: #f5f0e8; }
@@ -230,22 +209,7 @@
         .light-mode ::-webkit-scrollbar-thumb { background: #d0d0d0; }
         .light-mode ::-webkit-scrollbar-thumb:hover { background: #bbbbbb; }
 
-/* Light Mode */
-        html.light-mode { --bg-dark: #f5f0e8; --bg-card: #ffffff; --bg-input: #f0ebe3; --bg-hover: #e8e4dc; --border: #d0d0d0; --text-primary: #1a1a1a; --text-secondary: #5c5c5c; --text-muted: #8c8c8c; }
-        html.light-mode .admin-sidebar { background: #ffffff !important; border-color: #d0d0d0 !important; }
-        html.light-mode .admin-nav-item { color: #5c5c5c; }
-        html.light-mode .admin-nav-item:hover { background: #f0ebe3; color: #1a1a1a; }
-        html.light-mode .admin-nav-item.active { background: #dbeafe; color: #3b82f6; }
-        html.light-mode .admin-nav-section-title { color: #8c8c8c; }
-        html.light-mode .admin-sidebar-footer { border-color: #d0d0d0; }
-        html.light-mode .stat-card, html.light-mode .card, html.light-mode .table-card, html.light-mode .analytics-card { background: #ffffff; border-color: #d0d0d0; }
-        html.light-mode .search-input, html.light-mode .filter-select { background: #ffffff; border-color: #d0d0d0; color: #1a1a1a; }
-        html.light-mode th { background: #f0ebe3; color: #8c8c8c; border-color: #d0d0d0; }
-        html.light-mode td { border-color: #d0d0d0; color: #5c5c5c; }
-        html.light-mode tr:hover { background: #f0ebe3; }
-        html.light-mode .modal { background: #ffffff; }
-        html.light-mode .modal-header { border-color: #d0d0d0; }
-        html.light-mode .btn-secondary { background: #ffffff; border-color: #d0d0d0; color: #5c5c5c; }
+/* Duplicate html.light-mode block removed */
         .admin-sidebar { width: 260px; background: var(--bg-card); border-right: 1px solid var(--border); padding: 24px 16px; position: fixed; left: 0; top: 0; height: 100vh; overflow-y: auto; z-index: 99; display: flex; flex-direction: column; }
         .admin-sidebar-logo { font-size: 1.1rem; font-weight: 700; color: var(--admin, #60a5fa); margin-bottom: 16px; }
         .admin-nav-section { margin-bottom: 24px; }
@@ -440,9 +404,6 @@
         } else {
             const currentUser = checkAuth(['vendor', 'rental', 'fieldworker', 'admin']);
             if (currentUser) {
-                var _un = document.getElementById('userName'); if (_un) _un.textContent = currentUser.name;
-                var _ua = document.getElementById('userAvatar'); if (_ua) _ua.textContent = currentUser.name.charAt(0).toUpperCase();
-                var _ur = document.getElementById('userRole'); if (_ur) _ur.textContent = currentUser.role || 'User';
                 if (document.getElementById('adminUserName')) document.getElementById('adminUserName').textContent = currentUser.name;
                 loadDocuments();
             }

@@ -41,183 +41,9 @@
             display: flex;
         }
 
-        /* Dark/Light Mode */
-        body.light { background: #f5f0e8; color: #1a1a1a; }
-        body.light .sidebar { background: #ffffff; border-color: #e8e4dc; }
-        body.light .sidebar-logo { color: #3b82f6; }
-        body.light .nav-item { color: #5c5c5c; }
-        body.light .nav-item:hover { background: #f0ebe3; color: #1a1a1a; }
-        body.light .nav-item.active { background: #dbeafe; color: #2563eb; }
-        body.light .nav-section-title { color: #8c8c8c; }
-        body.light .user-menu { background: #f0ebe3; }
-        body.light .user-name { color: #1a1a1a; }
-        body.light .header { background: #ffffff; border-color: #e8e4dc; }
-        body.light .header h1 { color: #1a1a1a; }
-        body.light .header-subtitle { color: #5c5c5c; }
-        body.light .main { background: #f5f0e8; }
-        body.light .content { background: #f5f0e8; }
-        body.light .card { background: #ffffff; border-color: #e8e4dc; }
-        body.light .card-title { color: #1a1a1a; }
-        body.light .card-subtitle { color: #5c5c5c; }
-        body.light input, body.light textarea { background: #f0ebe3; border-color: #e8e4dc; color: #1a1a1a; }
-        body.light input:focus, body.light textarea:focus { border-color: #2563eb; }
-        body.light input::placeholder, body.light textarea::placeholder { color: #8c8c8c; }
-        body.light .form-label { color: #1a1a1a; }
-        body.light .badge { background: #dbeafe; color: #2563eb; }
-        body.light .toggle-switch { background: #e8e4dc; }
-        body.light .toggle-switch.active { background: #2563eb; }
-        body.light .btn-secondary { background: #f0ebe3; color: #1a1a1a; border-color: #e8e4dc; }
-        body.light .btn-secondary:hover { background: #e8e4dc; }
-        body.light .strength-meter { background: #e8e4dc; }
-        body.light .strength-bar { background: #e8e4dc; }
-        body.light .strength-text { color: #5c5c5c; }
-        body.light .error-text { color: #dc2626; }
-        body.light .success-text { color: #059669; }
-        body.light .info-text { color: #5c5c5c; }
-        body.light .sidebar-footer { border-color: #e8e4dc; }
-        body.light .logout-btn:hover { background: #f0ebe3; color: #f87171; }
-
         .layout { display: flex; min-height: 100vh; }
 
-        /* Sidebar */
-        .sidebar {
-            width: 240px;
-            background: #242424;
-            border-right: 1px solid #333;
-            padding: 24px 16px;
-            position: fixed;
-            left: 0;
-            height: 100vh;
-            z-index: 100;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .sidebar-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 32px;
-            padding: 20px 20px 12px;
-        }
-
-        .sidebar-logo {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: #60a5fa;
-        }
-
-        nav {
-            flex: 1;
-            overflow-y: auto;
-        }
-
-        .nav-section {
-            margin-bottom: 24px;
-        }
-
-        .nav-section-title {
-            font-size: 0.7rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            color: #666;
-            padding: 0 12px;
-            letter-spacing: 0.5px;
-        }
-
-        .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 10px 12px;
-            border-radius: 8px;
-            color: #b8b0a8;
-            font-size: 0.85rem;
-            text-decoration: none;
-            transition: all 0.2s;
-            cursor: pointer;
-            font-weight: 500;
-        }
-
-        .nav-item:hover {
-            background: #333;
-            color: #f5f0e8;
-        }
-
-        .nav-item.active {
-            background: rgba(96, 165, 250, 0.15);
-            color: #60a5fa;
-        }
-
-        .nav-item svg {
-            width: 20px;
-            height: 20px;
-            flex-shrink: 0;
-        }
-
-        .sidebar-footer {
-            margin-top: auto;
-            padding-top: 16px;
-            border-top: 1px solid #333;
-        }
-
-        .user-menu {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px;
-            background: #333;
-            border-radius: 10px;
-        }
-
-        .user-avatar {
-            width: 34px;
-            height: 34px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #60a5fa, #3b82f6);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            font-weight: 700;
-            font-size: 0.85rem;
-            flex-shrink: 0;
-        }
-
-        .user-info {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .user-name {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: #f5f0e8;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .user-role {
-            font-size: 0.7rem;
-            color: #888;
-        }
-
-        .logout-btn {
-            background: none;
-            border: none;
-            color: #888;
-            cursor: pointer;
-            padding: 6px;
-            border-radius: 6px;
-            flex-shrink: 0;
-            transition: all 0.15s;
-        }
-
-        .logout-btn:hover {
-            background: #444;
-            color: #f5f0e8;
-        }
+        /* Sidebar - legacy removed, using admin-sidebar */
 
         /* Main */
         .main-content {
@@ -254,7 +80,7 @@
 
         /* Cards */
         .card {
-            background: #1a1a1a;
+            background: #242424;
             border: 1px solid #333;
             border-radius: 14px;
             padding: 28px;
@@ -482,17 +308,14 @@
         }
 
         @media (max-width: 768px) {
-            .sidebar { width: 200px; }
-            .main { margin-left: 200px; }
+            .mobile-toggle { display: block !important; }
+            .admin-sidebar { left: -260px; transition: left 0.3s; }
+            .admin-sidebar.open { left: 0; }
+            .main-content { margin-left: 0 !important; }
             .content { padding: 24px; }
             .card { padding: 20px; }
             .header { padding: 20px 24px; }
             .header h1 { font-size: 1.2rem; }
-        }
-
-        @media (max-width: 600px) {
-            .sidebar { width: 0; transform: translateX(-100%); }
-            .main { margin-left: 0; }
         }
 
         /* Utils */
@@ -570,25 +393,7 @@
         .light-mode ::-webkit-scrollbar-thumb { background: #d0d0d0; }
         .light-mode ::-webkit-scrollbar-thumb:hover { background: #bbbbbb; }
 
-        .theme-toggle { background: none; border: 1px solid var(--border); border-radius: 8px; padding: 8px; cursor: pointer; color: var(--text-primary); font-size: 1.2rem; transition: all 0.2s; line-height: 1; }
-        .theme-toggle:hover { background: var(--bg-hover); }
-
-                /* Light Mode */
-        html.light-mode { --bg-dark: #f5f0e8; --bg-card: #ffffff; --bg-input: #f0ebe3; --bg-hover: #e8e4dc; --border: #d0d0d0; --text-primary: #1a1a1a; --text-secondary: #5c5c5c; --text-muted: #8c8c8c; }
-        html.light-mode .admin-sidebar { background: #ffffff !important; border-color: #d0d0d0 !important; }
-        html.light-mode .admin-nav-item { color: #5c5c5c; }
-        html.light-mode .admin-nav-item:hover { background: #f0ebe3; color: #1a1a1a; }
-        html.light-mode .admin-nav-item.active { background: #dbeafe; color: #3b82f6; }
-        html.light-mode .admin-nav-section-title { color: #8c8c8c; }
-        html.light-mode .admin-sidebar-footer { border-color: #d0d0d0; }
-        html.light-mode .stat-card, html.light-mode .card, html.light-mode .table-card, html.light-mode .analytics-card { background: #ffffff; border-color: #d0d0d0; }
-        html.light-mode .search-input, html.light-mode .filter-select { background: #ffffff; border-color: #d0d0d0; color: #1a1a1a; }
-        html.light-mode th { background: #f0ebe3; color: #8c8c8c; border-color: #d0d0d0; }
-        html.light-mode td { border-color: #d0d0d0; color: #5c5c5c; }
-        html.light-mode tr:hover { background: #f0ebe3; }
-        html.light-mode .modal { background: #ffffff; }
-        html.light-mode .modal-header { border-color: #d0d0d0; }
-        html.light-mode .btn-secondary { background: #ffffff; border-color: #d0d0d0; color: #5c5c5c; }
+/* Duplicate html.light-mode block removed */
     
         /* Sidebar actions (bell + theme toggle) */
         .admin-sidebar .sidebar-actions { display: flex; align-items: center; gap: 8px; padding: 0 12px; margin-bottom: 16px; }
@@ -607,7 +412,7 @@
         <div class="admin-sidebar-footer">
             <div style="padding: 12px; background: var(--bg-hover, #333); border-radius: 8px;">
                 <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary, #f5f0e8); margin-bottom: 4px;" id="adminUserName">System Admin</div>
-                <div style="font-size: 0.75rem; color: var(--text-secondary, #888);">Administrator</div>
+                <div class="admin-sidebar-role" style="font-size: 0.75rem; color: var(--text-secondary, #888);">Administrator</div>
                 <button onclick="logout()" style="margin-top: 8px; width: 100%; padding: 6px; background: transparent; border: 1px solid #333; color: #888; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 0.75rem; cursor: pointer; transition: all 0.2s;">Logout</button>
             </div>
         </div>
@@ -761,10 +566,7 @@
         var _rl = document.querySelector('.admin-sidebar-role'); if(_rl) _rl.textContent = roleLabelsMap[currentUser.role] || currentUser.role;
 
         // Update user info in sidebar
-        var _ua = document.getElementById('userAvatar'); if(_ua) _ua.textContent = currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U';
-        var _un = document.getElementById('userName'); if(_un) _un.textContent = currentUser.name || 'User';
         if (document.getElementById('adminUserName')) document.getElementById('adminUserName').textContent = currentUser.name || 'Admin';
-        var _ur = document.getElementById('userRole'); if(_ur) _ur.textContent = currentUser.role || 'User';
 
         // Load appearance preference
         const darkMode = localStorage.getItem('fleetconnect-theme') !== 'light';

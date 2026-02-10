@@ -289,25 +289,7 @@
         .light-mode ::-webkit-scrollbar-thumb { background: #d0d0d0; }
         .light-mode ::-webkit-scrollbar-thumb:hover { background: #bbbbbb; }
 
-        .theme-toggle { background: none; border: 1px solid var(--border); border-radius: 8px; padding: 8px; cursor: pointer; color: var(--text-primary); font-size: 1.2rem; transition: all 0.2s; line-height: 1; }
-        .theme-toggle:hover { background: var(--bg-hover); }
-
-                /* Light Mode */
-        html.light-mode { --bg-dark: #f5f0e8; --bg-card: #ffffff; --bg-input: #f0ebe3; --bg-hover: #e8e4dc; --border: #d0d0d0; --text-primary: #1a1a1a; --text-secondary: #5c5c5c; --text-muted: #8c8c8c; }
-        html.light-mode .admin-sidebar { background: #ffffff !important; border-color: #d0d0d0 !important; }
-        html.light-mode .admin-nav-item { color: #5c5c5c; }
-        html.light-mode .admin-nav-item:hover { background: #f0ebe3; color: #1a1a1a; }
-        html.light-mode .admin-nav-item.active { background: #dbeafe; color: #3b82f6; }
-        html.light-mode .admin-nav-section-title { color: #8c8c8c; }
-        html.light-mode .admin-sidebar-footer { border-color: #d0d0d0; }
-        html.light-mode .stat-card, html.light-mode .card, html.light-mode .table-card, html.light-mode .analytics-card { background: #ffffff; border-color: #d0d0d0; }
-        html.light-mode .search-input, html.light-mode .filter-select { background: #ffffff; border-color: #d0d0d0; color: #1a1a1a; }
-        html.light-mode th { background: #f0ebe3; color: #8c8c8c; border-color: #d0d0d0; }
-        html.light-mode td { border-color: #d0d0d0; color: #5c5c5c; }
-        html.light-mode tr:hover { background: #f0ebe3; }
-        html.light-mode .modal { background: #ffffff; }
-        html.light-mode .modal-header { border-color: #d0d0d0; }
-        html.light-mode .btn-secondary { background: #ffffff; border-color: #d0d0d0; color: #5c5c5c; }
+/* Duplicate html.light-mode block removed */
     
         /* Sidebar actions (bell + theme toggle) */
         .admin-sidebar .sidebar-actions { display: flex; align-items: center; gap: 8px; padding: 0 12px; margin-bottom: 16px; }
@@ -479,11 +461,7 @@
         })();
 
         // Set user info
-        var _un = document.getElementById('userName'); if(_un) _un.textContent = currentUser.name;
         if (document.getElementById('adminUserName')) document.getElementById('adminUserName').textContent = currentUser.name;
-        var _ua = document.getElementById('userAvatar'); if(_ua) _ua.textContent = currentUser.name.charAt(0).toUpperCase();
-        const roleLabels = { admin: 'Admin', rental: 'Rental Company', vendor: 'Vendor', fieldworker: 'Field Worker' };
-        var _ur = document.getElementById('userRole'); if(_ur) _ur.textContent = roleLabels[currentUser.role] || currentUser.role;
 
         // Update role label
         const roleLabelsMap = { admin: 'Administrator', rental: 'Rental Account', vendor: 'Vendor Account', fieldworker: 'Field Worker' };

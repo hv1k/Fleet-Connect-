@@ -350,6 +350,7 @@
             const user = checkAuth(['fieldworker', 'vendor', 'rental', 'admin']);
             if (!user) return;
             if (document.getElementById('adminUserName')) document.getElementById('adminUserName').textContent = user.name;
+            var roleEl = document.querySelector('.admin-sidebar-role'); if (roleEl) roleEl.textContent = user.role === 'fieldworker' ? 'Field Worker' : user.role.charAt(0).toUpperCase() + user.role.slice(1);
 
             await FC_FLAGS.init(user.role || 'fieldworker');
             loadHistory();
