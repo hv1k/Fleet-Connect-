@@ -631,8 +631,10 @@
             document.getElementById('statWorkers').textContent = allJobs.filter(j => ['pending','assigned','open'].includes(j.status)).length;
             const pendingCount = allJobs.filter(j => ['pending','assigned'].includes(j.status)).length;
             const badge = document.getElementById('pendingBadge');
-            badge.textContent = pendingCount;
-            badge.style.display = pendingCount > 0 ? 'inline' : 'none';
+            if (badge) {
+                badge.textContent = pendingCount;
+                badge.style.display = pendingCount > 0 ? 'inline' : 'none';
+            }
         }
         
         let fuelChartRange = 'week';
