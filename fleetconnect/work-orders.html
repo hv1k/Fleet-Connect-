@@ -292,9 +292,6 @@
 /* Duplicate html.light-mode block removed */
     
         /* Sidebar actions (bell + theme toggle) */
-        .admin-sidebar .sidebar-actions { display: flex; align-items: center; gap: 8px; padding: 0 12px; margin-bottom: 16px; }
-        .admin-sidebar .sidebar-actions button { background: none; border: 1px solid var(--border, #333); border-radius: 8px; padding: 6px; cursor: pointer; color: var(--text-secondary, #b8b0a8); font-size: 1rem; line-height: 1; display: flex; align-items: center; justify-content: center; }
-        .admin-sidebar .sidebar-actions button svg, .admin-sidebar .sidebar-actions button img { width: 16px; height: 16px; }
         /* Sidebar layout fix */
         .admin-sidebar { display: flex; flex-direction: column; }
         .admin-sidebar nav { flex: 1; overflow-y: auto; }
@@ -303,7 +300,6 @@
 <body>
         <aside class="admin-sidebar" id="adminSidebar">
         <div class="admin-sidebar-logo">FLEETCONNECT</div>
-        <div class="sidebar-actions"><button class="notification-bell" title="Notifications" aria-label="Notifications">🔔</button> <button class="theme-toggle" title="Toggle light/dark mode" aria-label="Toggle light/dark mode">🌙</button></div>
         <nav id="sidebarNav"></nav>
         <div class="admin-sidebar-footer">
             <div style="padding: 12px; background: var(--bg-hover, #333); border-radius: 8px;">
@@ -438,12 +434,12 @@
         if (!currentUser) throw new Error('Not authenticated');
         const isFieldworkerReadonly = currentUser.role === 'fieldworker';
 
-        // Hide create button and show readonly header for fieldworkers
+        // Hide create button and show appropriate header for fieldworkers
         if (isFieldworkerReadonly) {
             const createBtn = document.getElementById('createOrderBtn');
             if (createBtn) createBtn.style.display = 'none';
             const headerSub = document.querySelector('.header-subtitle');
-            if (headerSub) headerSub.textContent = 'View your completed work orders (read-only)';
+            if (headerSub) headerSub.textContent = 'View your assigned work orders';
         }
 
         // Redirect admin users who just logged in to the admin dashboard
@@ -510,9 +506,9 @@
             const type = document.getElementById('typeFilter').value;
 
             let filtered = allJobs;
-            // Fieldworkers only see completed jobs assigned to them
+            // Fieldworkers see all jobs assigned to them (not just completed)
             if (isFieldworkerReadonly) {
-                filtered = filtered.filter(j => j.status === 'completed' && j.assigned_worker === currentUser.id);
+                filtered = filtered.filter(j => j.assigned_worker === currentUser.id);
             }
             if (search) {
                 filtered = filtered.filter(j =>
@@ -1101,23 +1097,7 @@
         // ===== INIT =====
         loadData();
     </script>
-    <script>
-    // Theme toggle
-    (function(){
-      var btn = document.querySelector('.theme-toggle');
-      if(!btn) return;
-      function updateIcon(){
-        btn.textContent = document.documentElement.classList.contains('light-mode') ? '☀️' : '🌙';
-      }
-      updateIcon();
-      btn.addEventListener('click', function(){
-        document.documentElement.classList.toggle('light-mode');
-        localStorage.setItem('fleetconnect-theme',
-          document.documentElement.classList.contains('light-mode') ? 'light' : 'dark');
-        updateIcon();
-      });
-    })();
-    </script>
+    
 <script src="hamburger-menu.js"></script>
 <script src="global-search.js"></script>
 <script src="notification-center.js"></script>
