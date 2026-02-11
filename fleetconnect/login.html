@@ -1120,7 +1120,7 @@
         // =============================================
         // FORGOT PASSWORD
         // =============================================
-        document.getElementById('forgotLink').addEventListener('click', async (e) => {
+        var _forg = document.getElementById('forgotLink'); if(_forg) _forg.addEventListener('click', async (e) => {
             e.preventDefault();
             const email = emailInput.value.trim();
 

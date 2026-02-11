@@ -364,8 +364,8 @@
             if (typeof checkAuth !== 'undefined') {
                 const user = checkAuth(['vendor']);
                 if (user) {
-                    document.getElementById('userName').textContent = user.name;
-                    document.getElementById('userAvatar').textContent = user.name.charAt(0).toUpperCase();
+                    var _user = document.getElementById('userName'); if(_user) _user.textContent = user.name;
+                    var _user = document.getElementById('userAvatar'); if(_user) _user.textContent = user.name.charAt(0).toUpperCase();
 
                     await FC_FLAGS.init('vendor');
                     FC_FLAGS.gatePage('page.dispatch_board', 'vendor-dashboard.html');
@@ -513,7 +513,7 @@
             currentDetailJob = job;
             const worker = job.assigned_worker ? workers.find(w => w.id === job.assigned_worker) : null;
 
-            document.getElementById('detailTitle').textContent = `${safe(job.job_site_name)}`;
+            var _deta = document.getElementById('detailTitle'); if(_deta) _deta.textContent = `${safe(job.job_site_name)}`;
             document.getElementById('detailContent').innerHTML = `
                 <div class="detail-section">
                     <div class="detail-label">Customer</div>
@@ -545,11 +545,11 @@
                 </div>
             `;
 
-            document.getElementById('detailPanel').classList.add('open');
+            var _deta = document.getElementById('detailPanel'); if(_deta) _deta.classList.add('open');
         }
 
         function closeDetail() {
-            document.getElementById('detailPanel').classList.remove('open');
+            var _deta = document.getElementById('detailPanel'); if(_deta) _deta.classList.remove('open');
             currentDetailJob = null;
         }
 

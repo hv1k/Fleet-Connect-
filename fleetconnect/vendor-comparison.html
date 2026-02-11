@@ -373,8 +373,8 @@
     <script>
         const currentUser = checkAuth(['rental']);
         if (currentUser) {
-            document.getElementById('userName').textContent = currentUser.name;
-            document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+            var _user = document.getElementById('userName'); if(_user) _user.textContent = currentUser.name;
+            var _user = document.getElementById('userAvatar'); if(_user) _user.textContent = currentUser.name.charAt(0).toUpperCase();
         }
 
         FC_FLAGS.init('rental');
@@ -509,7 +509,7 @@
             }
             renderVendors();
             if (selectedVendors.length > 1) showComparison();
-            else document.getElementById('comparisonSection').classList.remove('show');
+ var _comp = document.getElementById('comparisonSection'); if(_comp) _comp.classList.remove('show');
         }
 
         function selectVendor(vendorId) {
@@ -557,21 +557,21 @@
                 }
             }
 
-            document.getElementById('comparisonSection').classList.add('show');
+            var _comp = document.getElementById('comparisonSection'); if(_comp) _comp.classList.add('show');
         }
 
         function openQuoteModal(vendorId) {
             const vendor = allVendors.find(v => v.id === vendorId);
             if (vendor) {
-                document.getElementById('quoteVendorName').textContent = vendor.name;
+                var _quot = document.getElementById('quoteVendorName'); if(_quot) _quot.textContent = vendor.name;
                 document.getElementById('quoteEmail').value = '';
                 document.getElementById('quoteMessage').value = '';
-                document.getElementById('quoteModal').classList.add('show');
+                var _quot = document.getElementById('quoteModal'); if(_quot) _quot.classList.add('show');
             }
         }
 
         function closeQuoteModal() {
-            document.getElementById('quoteModal').classList.remove('show');
+            var _quot = document.getElementById('quoteModal'); if(_quot) _quot.classList.remove('show');
         }
 
         function sendQuote() {

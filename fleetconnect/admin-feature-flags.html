@@ -308,7 +308,7 @@
                 renderFlags(currentRole);
             } catch (err) {
                 console.error('Failed to load flags:', err);
-                document.getElementById('flagsContainer').innerHTML = '<div class="loading">Failed to load feature flags. Please refresh.</div>';
+                var _flag = document.getElementById('flagsContainer'); if(_flag) _flag.innerHTML = '<div class="loading">Failed to load feature flags. Please refresh.</div>';
             }
         }
 
@@ -333,9 +333,9 @@
             const enabled = roleFlags.filter(f => f.enabled).length;
             const disabled = roleFlags.filter(f => !f.enabled).length;
 
-            document.getElementById('statEnabled').textContent = enabled;
-            document.getElementById('statDisabled').textContent = disabled;
-            document.getElementById('statTotal').textContent = roleFlags.length;
+            var _stat = document.getElementById('statEnabled'); if(_stat) _stat.textContent = enabled;
+            var _stat = document.getElementById('statDisabled'); if(_stat) _stat.textContent = disabled;
+            var _stat = document.getElementById('statTotal'); if(_stat) _stat.textContent = roleFlags.length;
 
             // Group by category
             const categories = {};
@@ -390,7 +390,7 @@
                 html += '</div></div>';
             });
 
-            document.getElementById('flagsContainer').innerHTML = html || '<div class="loading">No flags configured for this role.</div>';
+            var _flag = document.getElementById('flagsContainer'); if(_flag) _flag.innerHTML = html || '<div class="loading">No flags configured for this role.</div>';
         }
 
         // Changelog functions
@@ -492,8 +492,8 @@
 
                     // Update stats
                     const roleFlags = allFlags.filter(f => f.role === role);
-                    document.getElementById('statEnabled').textContent = roleFlags.filter(f => f.enabled).length;
-                    document.getElementById('statDisabled').textContent = roleFlags.filter(f => !f.enabled).length;
+                    var _stat = document.getElementById('statEnabled'); if(_stat) _stat.textContent = roleFlags.filter(f => f.enabled).length;
+                    var _stat = document.getElementById('statDisabled'); if(_stat) _stat.textContent = roleFlags.filter(f => !f.enabled).length;
 
                     // Log change to changelog
                     addChangelogEntry(featureKey, role, enabled);

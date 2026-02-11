@@ -477,7 +477,7 @@
 
         const currentUser = checkAuth(['admin']);
         if (currentUser) {
-            document.getElementById('adminUserName').textContent = currentUser.name;
+            var _admi = document.getElementById('adminUserName'); if(_admi) _admi.textContent = currentUser.name;
         }
 
         function loadConfigurations() {
@@ -511,14 +511,14 @@
                 </div>
             `).join('');
 
-            document.getElementById('configList').innerHTML = html || '<div class="loading">No configurations yet</div>';
+            var _conf = document.getElementById('configList'); if(_conf) _conf.innerHTML = html || '<div class="loading">No configurations yet</div>';
         }
 
         function openCreateModal() {
             editingConfigId = null;
-            document.getElementById('modalTitle').textContent = 'Create Brand Configuration';
+            var _moda = document.getElementById('modalTitle'); if(_moda) _moda.textContent = 'Create Brand Configuration';
             resetForm();
-            document.getElementById('configModal').classList.add('show');
+            var _conf = document.getElementById('configModal'); if(_conf) _conf.classList.add('show');
         }
 
         function editConfig(id) {
@@ -526,7 +526,7 @@
             if (!config) return;
 
             editingConfigId = id;
-            document.getElementById('modalTitle').textContent = 'Edit Brand Configuration';
+            var _moda = document.getElementById('modalTitle'); if(_moda) _moda.textContent = 'Edit Brand Configuration';
 
             document.getElementById('formCompany').value = config.company;
             document.getElementById('formAppName').value = config.appName;
@@ -541,7 +541,7 @@
             document.getElementById('formAccentHex').value = config.colors.accent;
 
             updateColorPreview();
-            document.getElementById('configModal').classList.add('show');
+            var _conf = document.getElementById('configModal'); if(_conf) _conf.classList.add('show');
         }
 
         function previewConfig(id) {
@@ -569,8 +569,8 @@
 
             const reader = new FileReader();
             reader.onload = (e) => {
-                document.getElementById('logoName').textContent = file.name;
-                document.getElementById('logoPreview').innerHTML = `<img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: contain;">`;
+                var _logo = document.getElementById('logoName'); if(_logo) _logo.textContent = file.name;
+                var _logo = document.getElementById('logoPreview'); if(_logo) _logo.innerHTML = `<img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: contain;">`;
             };
             reader.readAsDataURL(file);
         }
@@ -582,14 +582,14 @@
             const text = document.getElementById('formTextColor').value;
             const bg = document.getElementById('formBgColor').value;
 
-            document.getElementById('swatchPrimary').style.background = primary;
-            document.getElementById('swatchSecondary').style.background = secondary;
-            document.getElementById('swatchAccent').style.background = accent;
-            document.getElementById('swatchText').style.background = text;
-            document.getElementById('swatchBg').style.background = bg;
+            var _swat = document.getElementById('swatchPrimary'); if(_swat) _swat.style.background = primary;
+            var _swat = document.getElementById('swatchSecondary'); if(_swat) _swat.style.background = secondary;
+            var _swat = document.getElementById('swatchAccent'); if(_swat) _swat.style.background = accent;
+            var _swat = document.getElementById('swatchText'); if(_swat) _swat.style.background = text;
+            var _swat = document.getElementById('swatchBg'); if(_swat) _swat.style.background = bg;
 
-            document.getElementById('previewAppName').style.color = text;
-            document.getElementById('previewTagline').style.color = text || 'rgba(255, 255, 255, 0.6)';
+            var _prev = document.getElementById('previewAppName'); if(_prev) _prev.style.color = text;
+            var _prev = document.getElementById('previewTagline'); if(_prev) _prev.style.color = text || 'rgba(255, 255, 255, 0.6)';
 
             updateCSSOutput(primary, secondary, accent, text, bg);
         }
@@ -602,7 +602,7 @@
   --brand-text: ${text};
   --brand-bg: ${bg};
 }`;
-            document.getElementById('cssOutput').textContent = css;
+            var _cssO = document.getElementById('cssOutput'); if(_cssO) _cssO.textContent = css;
         }
 
         function copyCSSVariables() {
@@ -616,21 +616,21 @@
 
         function switchPreviewMode(mode) {
             currentPreviewMode = mode;
-            document.getElementById('previewDarkBtn').style.background = mode === 'dark' ? 'var(--accent)' : 'transparent';
-            document.getElementById('previewDarkBtn').style.color = mode === 'dark' ? 'white' : 'var(--text-secondary)';
-            document.getElementById('previewLightBtn').style.background = mode === 'light' ? 'var(--accent)' : 'transparent';
-            document.getElementById('previewLightBtn').style.color = mode === 'light' ? 'white' : 'var(--text-secondary)';
+            var _prev = document.getElementById('previewDarkBtn'); if(_prev) _prev.style.background = mode === 'dark' ? 'var(--accent)' : 'transparent';
+            var _prev = document.getElementById('previewDarkBtn'); if(_prev) _prev.style.color = mode === 'dark' ? 'white' : 'var(--text-secondary)';
+            var _prev = document.getElementById('previewLightBtn'); if(_prev) _prev.style.background = mode === 'light' ? 'var(--accent)' : 'transparent';
+            var _prev = document.getElementById('previewLightBtn'); if(_prev) _prev.style.color = mode === 'light' ? 'white' : 'var(--text-secondary)';
 
             const panel = document.getElementById('previewPanel');
             if (mode === 'light') {
                 panel.style.background = '#f5f0e8';
                 panel.style.color = '#1a1a1a';
-                document.getElementById('previewLogin').style.background = 'white';
+                var _prev = document.getElementById('previewLogin'); if(_prev) _prev.style.background = 'white';
                 document.getElementById('previewSidebar')?.style.background = '#f0ebe3';
             } else {
                 panel.style.background = 'var(--bg-card)';
                 panel.style.color = 'var(--text-primary)';
-                document.getElementById('previewLogin').style.background = 'var(--bg-input)';
+                var _prev = document.getElementById('previewLogin'); if(_prev) _prev.style.background = 'var(--bg-input)';
             }
         }
 
@@ -690,13 +690,13 @@
             document.getElementById('formTextHex').value = '#f5f0e8';
             document.getElementById('formBgColor').value = '#1a1a1a';
             document.getElementById('formBgHex').value = '#1a1a1a';
-            document.getElementById('logoName').textContent = 'No file selected';
-            document.getElementById('logoPreview').innerHTML = '';
+            var _logo = document.getElementById('logoName'); if(_logo) _logo.textContent = 'No file selected';
+            var _logo = document.getElementById('logoPreview'); if(_logo) _logo.innerHTML = '';
             updateColorPreview();
         }
 
         function closeModal() {
-            document.getElementById('configModal').classList.remove('show');
+            var _conf = document.getElementById('configModal'); if(_conf) _conf.classList.remove('show');
         }
 
         // Drag and drop for logo

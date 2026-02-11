@@ -572,7 +572,7 @@
         const darkMode = localStorage.getItem('fleetconnect-theme') !== 'light';
         if (!darkMode) {
             document.documentElement.classList.add('light-mode'); document.body.classList.add('light');
-            document.getElementById('darkModeToggle').classList.remove('active');
+            var _dark = document.getElementById('darkModeToggle'); if(_dark) _dark.classList.remove('active');
         }
 
         // ===== PROFILE FUNCTIONS =====
@@ -580,12 +580,12 @@
             document.getElementById('profileName').value = currentUser.name || '';
             document.getElementById('profileEmail').value = currentUser.email || '';
             document.getElementById('profileCompany').value = currentUser.company || '';
-            document.getElementById('profileRole').textContent = currentUser.role || '';
-            document.getElementById('roleBadge').textContent = currentUser.role || 'User';
+            var _prof = document.getElementById('profileRole'); if(_prof) _prof.textContent = currentUser.role || '';
+            var _role = document.getElementById('roleBadge'); if(_role) _role.textContent = currentUser.role || 'User';
             document.getElementById('roleBadge').className = `badge ${currentUser.role || 'admin'}`;
         }
 
-        document.getElementById('saveProfileBtn').addEventListener('click', async () => {
+        var _save = document.getElementById('saveProfileBtn'); if(_save) _save.addEventListener('click', async () => {
             const errors = {};
             const name = document.getElementById('profileName').value.trim();
             const email = document.getElementById('profileEmail').value.trim();
@@ -595,9 +595,9 @@
             if (email && !validateEmail(email)) errors.email = 'Invalid email format';
 
             // Clear errors
-            document.getElementById('profileNameError').textContent = '';
-            document.getElementById('profileEmailError').textContent = '';
-            document.getElementById('profileSuccess').style.display = 'none';
+            var _prof = document.getElementById('profileNameError'); if(_prof) _prof.textContent = '';
+            var _prof = document.getElementById('profileEmailError'); if(_prof) _prof.textContent = '';
+            var _prof = document.getElementById('profileSuccess'); if(_prof) _prof.style.display = 'none';
 
             if (Object.keys(errors).length > 0) {
                 if (errors.name) document.getElementById('profileNameError').textContent = errors.name;
@@ -607,7 +607,7 @@
 
             try {
                 document.getElementById('saveProfileBtn').disabled = true;
-                document.getElementById('saveProfileBtn').textContent = 'Saving...';
+                var _save = document.getElementById('saveProfileBtn'); if(_save) _save.textContent = 'Saving...';
 
                 // For self-edit, update sessionStorage (note: server-side update would require admin token)
                 // In production, you'd call updateUser() from supabase-client.js
@@ -623,18 +623,18 @@
                     sessionStorage.setItem('fc_user', JSON.stringify(updatedUser));
                 }
 
-                document.getElementById('profileSuccess').textContent = 'Profile updated successfully';
-                document.getElementById('profileSuccess').style.display = 'block';
+                var _prof = document.getElementById('profileSuccess'); if(_prof) _prof.textContent = 'Profile updated successfully';
+                var _prof = document.getElementById('profileSuccess'); if(_prof) _prof.style.display = 'block';
 
                 setTimeout(() => {
-                    document.getElementById('profileSuccess').style.display = 'none';
+                    var _prof = document.getElementById('profileSuccess'); if(_prof) _prof.style.display = 'none';
                 }, 3000);
             } catch (err) {
-                document.getElementById('profileNameError').textContent = 'Error saving profile. Try again.';
+                var _prof = document.getElementById('profileNameError'); if(_prof) _prof.textContent = 'Error saving profile. Try again.';
                 console.error('Profile save error:', err);
             } finally {
                 document.getElementById('saveProfileBtn').disabled = false;
-                document.getElementById('saveProfileBtn').textContent = 'Save Profile';
+                var _save = document.getElementById('saveProfileBtn'); if(_save) _save.textContent = 'Save Profile';
             }
         });
 
@@ -652,7 +652,7 @@
             return 'strong';
         }
 
-        document.getElementById('newPassword').addEventListener('input', (e) => {
+        var _newP = document.getElementById('newPassword'); if(_newP) _newP.addEventListener('input', (e) => {
             const password = e.target.value;
             const strength = calculatePasswordStrength(password);
             const bar = document.getElementById('strengthBar');
@@ -663,7 +663,7 @@
             text.textContent = strength.charAt(0).toUpperCase() + strength.slice(1) + ' password';
         });
 
-        document.getElementById('changePasswordBtn').addEventListener('click', async () => {
+        var _chan = document.getElementById('changePasswordBtn'); if(_chan) _chan.addEventListener('click', async () => {
             const errors = {};
             const currentPassword = document.getElementById('currentPassword').value;
             const newPassword = document.getElementById('newPassword').value;
@@ -675,10 +675,10 @@
             if (newPassword !== confirmPassword) errors.confirm = 'Passwords do not match';
 
             // Clear errors
-            document.getElementById('currentPasswordError').textContent = '';
-            document.getElementById('newPasswordError').textContent = '';
-            document.getElementById('confirmPasswordError').textContent = '';
-            document.getElementById('passwordSuccess').style.display = 'none';
+            var _curr = document.getElementById('currentPasswordError'); if(_curr) _curr.textContent = '';
+            var _newP = document.getElementById('newPasswordError'); if(_newP) _newP.textContent = '';
+            var _conf = document.getElementById('confirmPasswordError'); if(_conf) _conf.textContent = '';
+            var _pass = document.getElementById('passwordSuccess'); if(_pass) _pass.style.display = 'none';
 
             if (Object.keys(errors).length > 0) {
                 if (errors.current) document.getElementById('currentPasswordError').textContent = errors.current;
@@ -689,7 +689,7 @@
 
             try {
                 document.getElementById('changePasswordBtn').disabled = true;
-                document.getElementById('changePasswordBtn').textContent = 'Changing...';
+                var _chan = document.getElementById('changePasswordBtn'); if(_chan) _chan.textContent = 'Changing...';
 
                 const token = getAuthToken();
                 const response = await fetch('/api/change-password', {
@@ -715,25 +715,25 @@
                 document.getElementById('newPassword').value = '';
                 document.getElementById('confirmPassword').value = '';
                 document.getElementById('strengthBar').className = 'strength-bar';
-                document.getElementById('strengthText').textContent = '';
+                var _stre = document.getElementById('strengthText'); if(_stre) _stre.textContent = '';
 
-                document.getElementById('passwordSuccess').textContent = 'Password changed successfully';
-                document.getElementById('passwordSuccess').style.display = 'block';
+                var _pass = document.getElementById('passwordSuccess'); if(_pass) _pass.textContent = 'Password changed successfully';
+                var _pass = document.getElementById('passwordSuccess'); if(_pass) _pass.style.display = 'block';
 
                 setTimeout(() => {
-                    document.getElementById('passwordSuccess').style.display = 'none';
+                    var _pass = document.getElementById('passwordSuccess'); if(_pass) _pass.style.display = 'none';
                 }, 3000);
             } catch (err) {
-                document.getElementById('currentPasswordError').textContent = err.message || 'Error changing password';
+                var _curr = document.getElementById('currentPasswordError'); if(_curr) _curr.textContent = err.message || 'Error changing password';
                 console.error('Password change error:', err);
             } finally {
                 document.getElementById('changePasswordBtn').disabled = false;
-                document.getElementById('changePasswordBtn').textContent = 'Change Password';
+                var _chan = document.getElementById('changePasswordBtn'); if(_chan) _chan.textContent = 'Change Password';
             }
         });
 
         // ===== APPEARANCE FUNCTIONS =====
-        document.getElementById('darkModeToggle').addEventListener('click', function() {
+        var _dark = document.getElementById('darkModeToggle'); if(_dark) _dark.addEventListener('click', function() {
             this.classList.toggle('active');
             const isDark = this.classList.contains('active');
             localStorage.setItem('fleetconnect-theme', isDark ? 'dark' : 'light');
@@ -754,7 +754,7 @@
                     const expiresAt = new Date(payload.exp * 1000);
                     const now = new Date();
                     const hoursLeft = Math.max(0, Math.round((expiresAt - now) / (1000 * 60 * 60)));
-                    document.getElementById('sessionExpires').textContent = hoursLeft + ' hour' + (hoursLeft !== 1 ? 's' : '');
+                    var _sess = document.getElementById('sessionExpires'); if(_sess) _sess.textContent = hoursLeft + ' hour' + (hoursLeft !== 1 ? 's' : '');
                 } catch (err) {
                     console.error('Error parsing token:', err);
                 }
@@ -765,7 +765,7 @@
         setInterval(updateSessionTime, 60000); // Update every minute
 
         
-        document.getElementById('signOutBtn').addEventListener('click', logout);
+        var _sign = document.getElementById('signOutBtn'); if(_sign) _sign.addEventListener('click', logout);
 
         function logout() {
             clearAuth();

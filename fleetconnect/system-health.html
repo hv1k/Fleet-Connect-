@@ -410,7 +410,7 @@
         // Check auth
         const currentUser = checkAuth(['admin']);
         if (currentUser) {
-            document.getElementById('adminUserName').textContent = currentUser.name;
+            var _admi = document.getElementById('adminUserName'); if(_admi) _admi.textContent = currentUser.name;
         }
 
         // Simulated data generators
@@ -443,23 +443,23 @@
             const metrics = generateMockMetrics();
 
             // Status
-            document.getElementById('statusValue').textContent = metrics.systemStatus === 'operational' ? 'Operational' : 'Degraded';
-            document.getElementById('statusDot').style.background = metrics.systemStatus === 'operational' ? 'var(--success)' : 'var(--warning)';
+            var _stat = document.getElementById('statusValue'); if(_stat) _stat.textContent = metrics.systemStatus === 'operational' ? 'Operational' : 'Degraded';
+            var _stat = document.getElementById('statusDot'); if(_stat) _stat.style.background = metrics.systemStatus === 'operational' ? 'var(--success)' : 'var(--warning)';
 
             // API Response
-            document.getElementById('apiResponse').textContent = metrics.apiResponse + 'ms';
-            document.getElementById('apiTrend').textContent = 'avg (' + (Math.random() > 0.5 ? '↓' : '↑') + ' ' + Math.floor(Math.random() * 5) + '%)';
+            var _apiR = document.getElementById('apiResponse'); if(_apiR) _apiR.textContent = metrics.apiResponse + 'ms';
+            var _apiT = document.getElementById('apiTrend'); if(_apiT) _apiT.textContent = 'avg (' + (Math.random() > 0.5 ? '↓' : '↑') + ' ' + Math.floor(Math.random() * 5) + '%)';
 
             // Connections
-            document.getElementById('wsConnections').textContent = metrics.wsConnections;
+            var _wsCo = document.getElementById('wsConnections'); if(_wsCo) _wsCo.textContent = metrics.wsConnections;
 
             // Database
-            document.getElementById('dbSize').textContent = metrics.dbSize + ' MB';
-            document.getElementById('storagePercent').textContent = (metrics.dbSize / 500 * 100).toFixed(1) + '%';
-            document.getElementById('storageFill').style.width = (metrics.dbSize / 500 * 100) + '%';
+            var _dbSi = document.getElementById('dbSize'); if(_dbSi) _dbSi.textContent = metrics.dbSize + ' MB';
+            var _stor = document.getElementById('storagePercent'); if(_stor) _stor.textContent = (metrics.dbSize / 500 * 100).toFixed(1) + '%';
+            var _stor = document.getElementById('storageFill'); if(_stor) _stor.style.width = (metrics.dbSize / 500 * 100) + '%';
 
             // Error Rate
-            document.getElementById('errorRate').textContent = metrics.errorRate + '%';
+            var _erro = document.getElementById('errorRate'); if(_erro) _erro.textContent = metrics.errorRate + '%';
 
             // API Table
             renderAPITable(metrics.apiEndpoints);
@@ -498,7 +498,7 @@
                 `;
             }).join('');
 
-            document.getElementById('apiTable').innerHTML = html;
+            var _apiT = document.getElementById('apiTable'); if(_apiT) _apiT.innerHTML = html;
         }
 
         function renderDBTable(tables) {
@@ -511,7 +511,7 @@
                 </div>
             `).join('');
 
-            document.getElementById('dbTable').innerHTML = html || '<div class="loading">No data</div>';
+            var _dbTa = document.getElementById('dbTable'); if(_dbTa) _dbTa.innerHTML = html || '<div class="loading">No data</div>';
         }
 
         function renderConnections() {
@@ -529,7 +529,7 @@
                 </div>
             `).join('');
 
-            document.getElementById('connectionsContainer').innerHTML = html;
+            var _conn = document.getElementById('connectionsContainer'); if(_conn) _conn.innerHTML = html;
         }
 
         function renderErrorLog() {
@@ -554,7 +554,7 @@
                 </div>
             `).join('') : '<div style="color: var(--text-secondary); padding: 20px; text-align: center;">No errors in last 24 hours</div>';
 
-            document.getElementById('errorLogContainer').innerHTML = html;
+            var _erro = document.getElementById('errorLogContainer'); if(_erro) _erro.innerHTML = html;
         }
 
         function renderUptimeDots() {
@@ -562,7 +562,7 @@
                 `<div class="uptime-dot ${Math.random() > 0.95 ? 'down' : ''}" title="${Math.random() > 0.95 ? 'Down' : 'Up'}"></div>`
             ).join('');
 
-            document.getElementById('uptimeDots').innerHTML = dots;
+            var _upti = document.getElementById('uptimeDots'); if(_upti) _upti.innerHTML = dots;
         }
 
         function toggleRefresh() {
@@ -586,7 +586,7 @@
 
             let countdown = 30;
             const updateCountdown = () => {
-                document.getElementById('refreshTimer').textContent = `(${countdown}s)`;
+                var _refr = document.getElementById('refreshTimer'); if(_refr) _refr.textContent = `(${countdown}s)`;
                 countdown--;
                 if (countdown < 0) {
                     updateDashboard();
@@ -600,12 +600,12 @@
 
         function stopAutoRefresh() {
             if (refreshInterval) clearInterval(refreshInterval);
-            document.getElementById('refreshTimer').textContent = '';
+            var _refr = document.getElementById('refreshTimer'); if(_refr) _refr.textContent = '';
         }
 
         function clearErrors() {
             if (confirm('Clear all recorded errors? This action cannot be undone.')) {
-                document.getElementById('errorLogContainer').innerHTML = '<div style="color: var(--text-secondary); padding: 20px; text-align: center;">Errors cleared. Dashboard will reset errors on next refresh.</div>';
+                var _erro = document.getElementById('errorLogContainer'); if(_erro) _erro.innerHTML = '<div style="color: var(--text-secondary); padding: 20px; text-align: center;">Errors cleared. Dashboard will reset errors on next refresh.</div>';
             }
         }
 

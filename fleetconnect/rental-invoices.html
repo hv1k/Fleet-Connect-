@@ -463,8 +463,8 @@
             if (typeof checkAuth !== 'undefined') {
                 const user = checkAuth(['rental', 'admin']);
                 if (user) {
-                    document.getElementById('userName').textContent = user.name;
-                    document.getElementById('userAvatar').textContent = user.name.charAt(0).toUpperCase();
+                    var _user = document.getElementById('userName'); if(_user) _user.textContent = user.name;
+                    var _user = document.getElementById('userAvatar'); if(_user) _user.textContent = user.name.charAt(0).toUpperCase();
                 }
             }
             await loadData();
@@ -504,16 +504,16 @@
             const invoiced = completedJobs.filter(j => allInvoices.some(i => i.matched_job_id === j.id && i.match_status === 'matched')).length;
             const awaiting = completedJobs.length - invoiced;
 
-            document.getElementById('statCompleted').textContent = completedJobs.length;
-            document.getElementById('statGallons').textContent = totalGal.toLocaleString('en-US', { maximumFractionDigits: 0 });
-            document.getElementById('statInvoiced').textContent = invoiced;
-            document.getElementById('statAwaiting').textContent = awaiting;
-            document.getElementById('fuelBadge').textContent = completedJobs.length;
-            document.getElementById('invBadge').textContent = allInvoices.length;
-            document.getElementById('tabAll').textContent = allInvoices.length;
-            document.getElementById('tabMatched').textContent = allInvoices.filter(i => i.match_status === 'matched').length;
-            document.getElementById('tabPending').textContent = allInvoices.filter(i => i.match_status === 'pending_review').length;
-            document.getElementById('tabUnmatched').textContent = allInvoices.filter(i => i.match_status === 'unmatched').length;
+            var _stat = document.getElementById('statCompleted'); if(_stat) _stat.textContent = completedJobs.length;
+            var _stat = document.getElementById('statGallons'); if(_stat) _stat.textContent = totalGal.toLocaleString('en-US', { maximumFractionDigits: 0 });
+            var _stat = document.getElementById('statInvoiced'); if(_stat) _stat.textContent = invoiced;
+            var _stat = document.getElementById('statAwaiting'); if(_stat) _stat.textContent = awaiting;
+            var _fuel = document.getElementById('fuelBadge'); if(_fuel) _fuel.textContent = completedJobs.length;
+            var _invB = document.getElementById('invBadge'); if(_invB) _invB.textContent = allInvoices.length;
+            var _tabA = document.getElementById('tabAll'); if(_tabA) _tabA.textContent = allInvoices.length;
+            var _tabM = document.getElementById('tabMatched'); if(_tabM) _tabM.textContent = allInvoices.filter(i => i.match_status === 'matched').length;
+            var _tabP = document.getElementById('tabPending'); if(_tabP) _tabP.textContent = allInvoices.filter(i => i.match_status === 'pending_review').length;
+            var _tabU = document.getElementById('tabUnmatched'); if(_tabU) _tabU.textContent = allInvoices.filter(i => i.match_status === 'unmatched').length;
         }
 
         function switchTab(tab, btn) {
@@ -540,8 +540,8 @@
             const container = document.getElementById('fuelHistoryList');
             if (filtered.length === 0) {
                 container.innerHTML = '<div class="empty-state"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg><h3>No completed deliveries</h3><p>Completed fuel delivery jobs will appear here.</p></div>';
-                document.getElementById('fuelCount').textContent = '0 jobs';
-                document.getElementById('fuelTotal').textContent = '';
+                var _fuel = document.getElementById('fuelCount'); if(_fuel) _fuel.textContent = '0 jobs';
+                var _fuel = document.getElementById('fuelTotal'); if(_fuel) _fuel.textContent = '';
                 return;
             }
 
@@ -616,8 +616,8 @@
                 `;
             }).join('');
 
-            document.getElementById('fuelCount').textContent = `${filtered.length} completed job${filtered.length !== 1 ? 's' : ''}`;
-            document.getElementById('fuelTotal').textContent = `Total: ${totalDiesel.toLocaleString('en-US', {maximumFractionDigits: 0})} gal`;
+            var _fuel = document.getElementById('fuelCount'); if(_fuel) _fuel.textContent = `${filtered.length} completed job${filtered.length !== 1 ? 's' : ''}`;
+            var _fuel = document.getElementById('fuelTotal'); if(_fuel) _fuel.textContent = `Total: ${totalDiesel.toLocaleString('en-US', {maximumFractionDigits: 0})} gal`;
         }
 
         // ===== JOB DETAIL MODAL =====
@@ -637,7 +637,7 @@
             const vendorName = vendor ? vendor.company_name || vendor.name : '—';
             const matchedInv = allInvoices.find(i => i.matched_job_id === jobId && i.match_status === 'matched');
 
-            document.getElementById('modalTitle').textContent = job.job_site_name || 'Job Details';
+            var _moda = document.getElementById('modalTitle'); if(_moda) _moda.textContent = job.job_site_name || 'Job Details';
             document.getElementById('modalBody').innerHTML = `
                 <div class="detail-grid">
                     <div class="detail-section">
@@ -691,7 +691,7 @@
                 <button class="btn btn-secondary" onclick="closeModal()">Close</button>
                 ${matchedInv ? '<button class="btn btn-primary" onclick="closeModal(); viewInvoice(\'' + matchedInv.id + '\')">View Full Invoice</button>' : ''}
             `;
-            document.getElementById('detailModal').classList.add('show');
+            var _deta = document.getElementById('detailModal'); if(_deta) _deta.classList.add('show');
         }
 
         // ===== INVOICE DETAIL =====
@@ -700,7 +700,7 @@
             if (!inv) return;
             const mj = inv.matched_job_id ? allJobs.find(j => j.id === inv.matched_job_id) : null;
 
-            document.getElementById('modalTitle').textContent = 'Invoice ' + (inv.invoice_number || '');
+            var _moda = document.getElementById('modalTitle'); if(_moda) _moda.textContent = 'Invoice ' + (inv.invoice_number || '');
             document.getElementById('modalBody').innerHTML = `
                 <div class="detail-grid">
                     <div class="detail-section">
@@ -740,17 +740,17 @@
                 ${inv.pdf_base64 ? '<div style="margin-top:8px;"><div class="detail-section-title">PDF Preview</div><iframe class="pdf-viewer" src="data:application/pdf;base64,' + inv.pdf_base64 + '"></iframe></div>' : ''}
             `;
 
-            document.getElementById('modalFooter').innerHTML = '<button class="btn btn-secondary" onclick="closeModal()">Close</button>';
-            document.getElementById('detailModal').classList.add('show');
+            var _moda = document.getElementById('modalFooter'); if(_moda) _moda.innerHTML = '<button class="btn btn-secondary" onclick="closeModal()">Close</button>';
+            var _deta = document.getElementById('detailModal'); if(_deta) _deta.classList.add('show');
         }
 
         function viewInvoicePdf(id) {
             const inv = allInvoices.find(i => i.id === id);
             if (!inv || !inv.pdf_base64) return;
-            document.getElementById('modalTitle').textContent = 'Invoice PDF — ' + (inv.invoice_number || '');
-            document.getElementById('modalBody').innerHTML = '<iframe class="pdf-viewer" src="data:application/pdf;base64,' + inv.pdf_base64 + '"></iframe>';
-            document.getElementById('modalFooter').innerHTML = '<button class="btn btn-secondary" onclick="closeModal()">Close</button>';
-            document.getElementById('detailModal').classList.add('show');
+            var _moda = document.getElementById('modalTitle'); if(_moda) _moda.textContent = 'Invoice PDF — ' + (inv.invoice_number || '');
+            var _moda = document.getElementById('modalBody'); if(_moda) _moda.innerHTML = '<iframe class="pdf-viewer" src="data:application/pdf;base64,' + inv.pdf_base64 + '"></iframe>';
+            var _moda = document.getElementById('modalFooter'); if(_moda) _moda.innerHTML = '<button class="btn btn-secondary" onclick="closeModal()">Close</button>';
+            var _deta = document.getElementById('detailModal'); if(_deta) _deta.classList.add('show');
         }
 
         // ===== VENDOR INVOICES TABLE =====
@@ -792,10 +792,10 @@
                     </tr>`;
                 }).join('');
             }
-            document.getElementById('invCount').textContent = `${filtered.length} invoice${filtered.length !== 1 ? 's' : ''}`;
+            var _invC = document.getElementById('invCount'); if(_invC) _invC.textContent = `${filtered.length} invoice${filtered.length !== 1 ? 's' : ''}`;
         }
 
-        function closeModal() { document.getElementById('detailModal').classList.remove('show'); }
+ var _deta = document.getElementById('detailModal'); if(_deta) _deta.classList.remove('show');
 
         // ============ EXPORT FUNCTIONS ============
         function openExportModal() {
@@ -803,11 +803,11 @@
             const sites = [...new Set(allJobs.map(j => j.job_site_name).filter(Boolean))].sort();
             select.innerHTML = '<option value="all">All Job Sites</option>' +
                 sites.map(s => '<option value="' + s.replace(/"/g, '&quot;') + '">' + s + '</option>').join('');
-            document.getElementById('exportPreview').innerHTML = 'Select a job site and date range, then click Export.';
-            document.getElementById('exportPreview').style.color = '#888';
-            document.getElementById('exportModal').classList.add('show');
+            var _expo = document.getElementById('exportPreview'); if(_expo) _expo.innerHTML = 'Select a job site and date range, then click Export.';
+            var _expo = document.getElementById('exportPreview'); if(_expo) _expo.style.color = '#888';
+            var _expo = document.getElementById('exportModal'); if(_expo) _expo.classList.add('show');
         }
-        function closeExportModal() { document.getElementById('exportModal').classList.remove('show'); }
+ var _expo = document.getElementById('exportModal'); if(_expo) _expo.classList.remove('show');
         function toggleCustomDates() {
             document.getElementById('customDateRange').style.display =
                 document.getElementById('exportDateRange').value === 'custom' ? 'block' : 'none';

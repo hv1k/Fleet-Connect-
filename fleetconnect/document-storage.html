@@ -431,9 +431,9 @@
             const thisMonth = allDocuments.filter(d => new Date(d.created_at) >= monthStart).length;
             const totalSize = allDocuments.reduce((sum, d) => sum + (d.file_size || 0), 0);
 
-            document.getElementById('totalDocsStat').textContent = allDocuments.length;
-            document.getElementById('thisMonthStat').textContent = thisMonth;
-            document.getElementById('storageStat').textContent = (totalSize / (1024 * 1024)).toFixed(1) + ' MB';
+            var _tota = document.getElementById('totalDocsStat'); if(_tota) _tota.textContent = allDocuments.length;
+            var _this = document.getElementById('thisMonthStat'); if(_this) _this.textContent = thisMonth;
+            var _stor = document.getElementById('storageStat'); if(_stor) _stor.textContent = (totalSize / (1024 * 1024)).toFixed(1) + ' MB';
         }
 
         function loadUploadedByOptions() {
@@ -562,12 +562,12 @@
         function openUploadModal() {
             selectedFiles = [];
             document.getElementById('fileInput').value = '';
-            document.getElementById('uploadModal').classList.add('show');
+            var _uplo = document.getElementById('uploadModal'); if(_uplo) _uplo.classList.add('show');
         }
 
         function closeUploadModal() {
-            document.getElementById('uploadModal').classList.remove('show');
-            document.getElementById('progressBar').classList.remove('show');
+            var _uplo = document.getElementById('uploadModal'); if(_uplo) _uplo.classList.remove('show');
+            var _prog = document.getElementById('progressBar'); if(_prog) _prog.classList.remove('show');
         }
 
         const dropZone = document.getElementById('dropZone');
@@ -603,8 +603,8 @@
             const notes = document.getElementById('notesInput').value;
             const user = getCurrentUser();
 
-            document.getElementById('progressBar').classList.add('show');
-            document.getElementById('progressFill').style.width = '0%';
+            var _prog = document.getElementById('progressBar'); if(_prog) _prog.classList.add('show');
+            var _prog = document.getElementById('progressFill'); if(_prog) _prog.style.width = '0%';
 
             try {
                 for (let i = 0; i < selectedFiles.length; i++) {
@@ -633,7 +633,7 @@
                         }]);
 
                         const progress = ((i + 1) / selectedFiles.length) * 100;
-                        document.getElementById('progressFill').style.width = progress + '%';
+                        var _prog = document.getElementById('progressFill'); if(_prog) _prog.style.width = progress + '%';
                     };
                     reader.readAsDataURL(file);
                 }
@@ -653,7 +653,7 @@
             if (!doc) return;
 
             currentPreviewDoc = doc;
-            document.getElementById('previewTitle').textContent = doc.filename;
+            var _prev = document.getElementById('previewTitle'); if(_prev) _prev.textContent = doc.filename;
             const content = document.getElementById('previewContent');
 
             if (doc.file_type.includes('image')) {
@@ -664,11 +664,11 @@
                 content.innerHTML = '<div style="padding:40px;text-align:center;color:#888;">Preview not available for this file type. <br><br><strong>Filename:</strong> ' + safe(doc.filename) + '<br><strong>Size:</strong> ' + (doc.file_size / 1024).toFixed(1) + ' KB</div>';
             }
 
-            document.getElementById('previewModal').classList.add('show');
+            var _prev = document.getElementById('previewModal'); if(_prev) _prev.classList.add('show');
         }
 
         function closePreviewModal() {
-            document.getElementById('previewModal').classList.remove('show');
+            var _prev = document.getElementById('previewModal'); if(_prev) _prev.classList.remove('show');
         }
 
         function downloadCurrentPreview() {

@@ -515,7 +515,7 @@
         // Dark mode toggle
         function toggleDarkMode() {
             document.body.classList.toggle('dark');
-            document.getElementById('darkModeToggle').classList.toggle('active');
+            var _dark = document.getElementById('darkModeToggle'); if(_dark) _dark.classList.toggle('active');
             // Save preference
             localStorage.setItem('darkMode', document.body.classList.contains('dark'));
         }
@@ -523,7 +523,7 @@
         // Load dark mode preference on page load
         if (localStorage.getItem('darkMode') === 'true') {
             document.body.classList.add('dark');
-            document.getElementById('darkModeToggle').classList.add('active');
+            var _dark = document.getElementById('darkModeToggle'); if(_dark) _dark.classList.add('active');
         }
         
         // Mobile sidebar toggle
@@ -606,7 +606,7 @@
         }
         
         function updateStats() {
-            document.getElementById('statActiveJobs').textContent = allJobs.filter(j => ['accepted','in-progress'].includes(j.status)).length;
+            var _stat = document.getElementById('statActiveJobs'); if(_stat) _stat.textContent = allJobs.filter(j => ['accepted','in-progress'].includes(j.status)).length;
             // Filter to this month for realistic totals
             const now = new Date();
             const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -626,9 +626,9 @@
                 if (!isNaN(def) && def > 0 && def < 100000) totalDef += def; // reasonable per-record limit
             });
 
-            document.getElementById('statDiesel').textContent = Math.round(totalDiesel).toLocaleString();
-            document.getElementById('statDEF').textContent = Math.round(totalDef).toLocaleString();
-            document.getElementById('statWorkers').textContent = allJobs.filter(j => ['pending','assigned','open'].includes(j.status)).length;
+            var _stat = document.getElementById('statDiesel'); if(_stat) _stat.textContent = Math.round(totalDiesel).toLocaleString();
+            var _stat = document.getElementById('statDEF'); if(_stat) _stat.textContent = Math.round(totalDef).toLocaleString();
+            var _stat = document.getElementById('statWorkers'); if(_stat) _stat.textContent = allJobs.filter(j => ['pending','assigned','open'].includes(j.status)).length;
             const pendingCount = allJobs.filter(j => ['pending','assigned'].includes(j.status)).length;
             const badge = document.getElementById('pendingBadge');
             if (badge) {
@@ -641,12 +641,12 @@
 
         async function updateFuelChart(range) {
             fuelChartRange = range;
-            document.getElementById('fuelToggleWeek').style.background = range === 'week' ? '#60a5fa' : '#2a2a2a';
-            document.getElementById('fuelToggleWeek').style.color = range === 'week' ? '#1a1a1a' : '#f5f0e8';
-            document.getElementById('fuelToggleMonth').style.background = range === 'month' ? '#60a5fa' : '#2a2a2a';
-            document.getElementById('fuelToggleMonth').style.color = range === 'month' ? '#1a1a1a' : '#f5f0e8';
-            document.getElementById('fuelToggle30Days').style.background = range === '30days' ? '#60a5fa' : '#2a2a2a';
-            document.getElementById('fuelToggle30Days').style.color = range === '30days' ? '#1a1a1a' : '#f5f0e8';
+            var _fuel = document.getElementById('fuelToggleWeek'); if(_fuel) _fuel.style.background = range === 'week' ? '#60a5fa' : '#2a2a2a';
+            var _fuel = document.getElementById('fuelToggleWeek'); if(_fuel) _fuel.style.color = range === 'week' ? '#1a1a1a' : '#f5f0e8';
+            var _fuel = document.getElementById('fuelToggleMonth'); if(_fuel) _fuel.style.background = range === 'month' ? '#60a5fa' : '#2a2a2a';
+            var _fuel = document.getElementById('fuelToggleMonth'); if(_fuel) _fuel.style.color = range === 'month' ? '#1a1a1a' : '#f5f0e8';
+            var _fuel = document.getElementById('fuelToggle30Days'); if(_fuel) _fuel.style.background = range === '30days' ? '#60a5fa' : '#2a2a2a';
+            var _fuel = document.getElementById('fuelToggle30Days'); if(_fuel) _fuel.style.color = range === '30days' ? '#1a1a1a' : '#f5f0e8';
             renderChart();
         }
 
@@ -681,7 +681,7 @@
             const hasData = diesel.some(v => v > 0) || def.some(v => v > 0);
 
             if (!hasData) {
-                document.getElementById('fuelChart').innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;width:100%;color:#666;font-size:0.85rem;">No delivery data yet</div>';
+                var _fuel = document.getElementById('fuelChart'); if(_fuel) _fuel.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;width:100%;color:#666;font-size:0.85rem;">No delivery data yet</div>';
                 return;
             }
 
@@ -695,10 +695,10 @@
             const active = allJobs.filter(j => ['accepted','in-progress'].includes(j.status)).length;
             const pending = allJobs.filter(j => ['pending','assigned'].includes(j.status)).length;
             const total = allJobs.length || 1;
-            document.getElementById('donutTotal').textContent = total;
-            document.getElementById('legendCompleted').textContent = completed;
-            document.getElementById('legendActive').textContent = active;
-            document.getElementById('legendPending').textContent = pending;
+            var _donu = document.getElementById('donutTotal'); if(_donu) _donu.textContent = total;
+            var _lege = document.getElementById('legendCompleted'); if(_lege) _lege.textContent = completed;
+            var _lege = document.getElementById('legendActive'); if(_lege) _lege.textContent = active;
+            var _lege = document.getElementById('legendPending'); if(_lege) _lege.textContent = pending;
             const c = 2 * Math.PI * 40;
             document.getElementById('donutCompleted').setAttribute('stroke-dasharray', (completed/total)*c + ' ' + c);
             document.getElementById('donutActive').setAttribute('stroke-dasharray', (active/total)*c + ' ' + c);
@@ -755,7 +755,7 @@
             
             // Count new items
             const newCount = activities.filter(a => a.isNew).length;
-            document.getElementById('activityBadge').textContent = newCount + ' new';
+            var _acti = document.getElementById('activityBadge'); if(_acti) _acti.textContent = newCount + ' new';
             
             const container = document.getElementById('activityList');
             
@@ -824,8 +824,8 @@
                     : '<span style="color:#888;font-style:italic;">Location not provided - Contact rental company</span>';
                 return '<tr'+(isAvailable ? ' style="border-left:3px solid #f97316;"' : '')+'><td><div class="job-name">'+safe(j.job_site_name||'Untitled')+'</div><div class="job-location">'+locationHtml+'</div></td><td>'+safe(j.contract_number||'-')+'</td><td>'+formatDate(j.date_out)+'</td><td>'+statusHtml+'</td><td><div class="actions-cell">'+(isAvailable || ['pending','assigned'].includes(j.status)?'<button class="action-btn primary" onclick="acceptJob(\''+j.id+'\')">Accept</button>':'')+'</div></td></tr>';
             }).join('') + '</tbody></table>';
-            document.getElementById('tableFooter').style.display = filtered.length > 10 ? 'flex' : 'none';
-            document.getElementById('paginationInfo').textContent = 'Showing 1-'+Math.min(10,filtered.length)+' of '+filtered.length;
+            var _tabl = document.getElementById('tableFooter'); if(_tabl) _tabl.style.display = filtered.length > 10 ? 'flex' : 'none';
+            var _pagi = document.getElementById('paginationInfo'); if(_pagi) _pagi.textContent = 'Showing 1-'+Math.min(10,filtered.length)+' of '+filtered.length;
         }
         
         async function acceptJob(id) {

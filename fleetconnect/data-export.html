@@ -530,7 +530,7 @@ Content-Type: application/json</div>
     <script>
         const currentUser = checkAuth(['admin']);
         if (currentUser) {
-            document.getElementById('adminUserName').textContent = currentUser.name;
+            var _admi = document.getElementById('adminUserName'); if(_admi) _admi.textContent = currentUser.name;
         }
 
         let apiKeys = [];
@@ -653,36 +653,36 @@ Content-Type: application/json</div>
         }
 
         function updateStats() {
-            document.getElementById('statKeys').textContent = apiKeys.filter(k => k.active).length;
-            document.getElementById('statExports').textContent = exports.length;
-            document.getElementById('statWebhooks').textContent = webhooks.filter(w => w.active).length;
+            var _stat = document.getElementById('statKeys'); if(_stat) _stat.textContent = apiKeys.filter(k => k.active).length;
+            var _stat = document.getElementById('statExports'); if(_stat) _stat.textContent = exports.length;
+            var _stat = document.getElementById('statWebhooks'); if(_stat) _stat.textContent = webhooks.filter(w => w.active).length;
         }
 
         function openGenerateKeyModal() {
             document.getElementById('generateKeyForm').reset();
-            document.getElementById('generateKeyModal').classList.add('show');
+            var _gene = document.getElementById('generateKeyModal'); if(_gene) _gene.classList.add('show');
         }
 
         function closeGenerateKeyModal() {
-            document.getElementById('generateKeyModal').classList.remove('show');
+            var _gene = document.getElementById('generateKeyModal'); if(_gene) _gene.classList.remove('show');
         }
 
         function openCreateExportModal() {
             document.getElementById('createExportForm').reset();
-            document.getElementById('createExportModal').classList.add('show');
+            var _crea = document.getElementById('createExportModal'); if(_crea) _crea.classList.add('show');
         }
 
         function closeCreateExportModal() {
-            document.getElementById('createExportModal').classList.remove('show');
+            var _crea = document.getElementById('createExportModal'); if(_crea) _crea.classList.remove('show');
         }
 
         function openAddWebhookModal() {
             document.getElementById('addWebhookForm').reset();
-            document.getElementById('addWebhookModal').classList.add('show');
+            var _addW = document.getElementById('addWebhookModal'); if(_addW) _addW.classList.add('show');
         }
 
         function closeAddWebhookModal() {
-            document.getElementById('addWebhookModal').classList.remove('show');
+            var _addW = document.getElementById('addWebhookModal'); if(_addW) _addW.classList.remove('show');
         }
 
         async function saveApiKey() {

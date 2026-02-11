@@ -443,7 +443,7 @@ Jane Smith,jane@example.com,fieldworker,XYZ Rentals</code>
         const currentUser = checkAuth(['admin']);
         if (currentUser) {
             var _un = document.getElementById('userName'); if(_un) _un.textContent = currentUser.name;
-            document.getElementById('adminUserName').textContent = currentUser.name;
+            var _admi = document.getElementById('adminUserName'); if(_admi) _admi.textContent = currentUser.name;
         }
         
         let allUsers = [];
@@ -482,10 +482,10 @@ Jane Smith,jane@example.com,fieldworker,XYZ Rentals</code>
         }
         
         function updateStats() {
-            document.getElementById('statUsers').textContent = allUsers.length;
-            document.getElementById('statRentals').textContent = allUsers.filter(u => u.role === 'rental').length;
-            document.getElementById('statVendors').textContent = allUsers.filter(u => u.role === 'vendor').length;
-            document.getElementById('statWorkers').textContent = allUsers.filter(u => u.role === 'fieldworker').length;
+            var _stat = document.getElementById('statUsers'); if(_stat) _stat.textContent = allUsers.length;
+            var _stat = document.getElementById('statRentals'); if(_stat) _stat.textContent = allUsers.filter(u => u.role === 'rental').length;
+            var _stat = document.getElementById('statVendors'); if(_stat) _stat.textContent = allUsers.filter(u => u.role === 'vendor').length;
+            var _stat = document.getElementById('statWorkers'); if(_stat) _stat.textContent = allUsers.filter(u => u.role === 'fieldworker').length;
         }
 
         async function loadJobsData() {
@@ -535,10 +535,10 @@ Jane Smith,jane@example.com,fieldworker,XYZ Rentals</code>
             const completed = allJobs.filter(j => j.status === 'completed').length;
             const pending = allJobs.filter(j => ['pending', 'assigned'].includes(j.status)).length;
 
-            document.getElementById('jobsTotal').textContent = total;
-            document.getElementById('jobsActive').textContent = active;
-            document.getElementById('jobsCompleted').textContent = completed;
-            document.getElementById('jobsPending').textContent = pending;
+            var _jobs = document.getElementById('jobsTotal'); if(_jobs) _jobs.textContent = total;
+            var _jobs = document.getElementById('jobsActive'); if(_jobs) _jobs.textContent = active;
+            var _jobs = document.getElementById('jobsCompleted'); if(_jobs) _jobs.textContent = completed;
+            var _jobs = document.getElementById('jobsPending'); if(_jobs) _jobs.textContent = pending;
         }
 
         function renderActivityFeed() {
@@ -633,8 +633,8 @@ Jane Smith,jane@example.com,fieldworker,XYZ Rentals</code>
 
         function updateSelectionUI() {
             const count = selectedUsers.size;
-            document.getElementById('selectionCount').textContent = count + ' selected';
-            document.getElementById('bulkDeleteBtn').style.display = count > 0 ? 'block' : 'none';
+            var _sele = document.getElementById('selectionCount'); if(_sele) _sele.textContent = count + ' selected';
+            var _bulk = document.getElementById('bulkDeleteBtn'); if(_bulk) _bulk.style.display = count > 0 ? 'block' : 'none';
             document.getElementById('selectAllCheckbox').checked = count > 0;
         }
 
@@ -661,13 +661,13 @@ Jane Smith,jane@example.com,fieldworker,XYZ Rentals</code>
         function openImportUsersModal() {
             csvUsersToImport = [];
             document.getElementById('csvInput').value = '';
-            document.getElementById('previewContainer').style.display = 'none';
-            document.getElementById('importBtn').style.display = 'none';
-            document.getElementById('importUsersModal').classList.add('show');
+            var _prev = document.getElementById('previewContainer'); if(_prev) _prev.style.display = 'none';
+            var _impo = document.getElementById('importBtn'); if(_impo) _impo.style.display = 'none';
+            var _impo = document.getElementById('importUsersModal'); if(_impo) _impo.classList.add('show');
         }
 
         function closeImportModal() {
-            document.getElementById('importUsersModal').classList.remove('show');
+            var _impo = document.getElementById('importUsersModal'); if(_impo) _impo.classList.remove('show');
         }
 
         function handleCSVUpload(event) {
@@ -695,7 +695,7 @@ Jane Smith,jane@example.com,fieldworker,XYZ Rentals</code>
         }
 
         function displayCSVPreview() {
-            document.getElementById('previewCount').textContent = csvUsersToImport.length;
+            var _prev = document.getElementById('previewCount'); if(_prev) _prev.textContent = csvUsersToImport.length;
 
             const previewTable = document.getElementById('previewTable');
             previewTable.innerHTML = `
@@ -712,8 +712,8 @@ Jane Smith,jane@example.com,fieldworker,XYZ Rentals</code>
                 `).join('')}
             `;
 
-            document.getElementById('previewContainer').style.display = 'block';
-            document.getElementById('importBtn').style.display = 'block';
+            var _prev = document.getElementById('previewContainer'); if(_prev) _prev.style.display = 'block';
+            var _impo = document.getElementById('importBtn'); if(_impo) _impo.style.display = 'block';
         }
 
         async function importCSVUsers() {
@@ -767,9 +767,9 @@ Jane Smith,jane@example.com,fieldworker,XYZ Rentals</code>
 
         function openAddUserModal() {
             editingUserId = null;
-            document.getElementById('modalTitle').textContent = 'Add User';
+            var _moda = document.getElementById('modalTitle'); if(_moda) _moda.textContent = 'Add User';
             document.getElementById('userForm').reset();
-            document.getElementById('userModal').classList.add('show');
+            var _user = document.getElementById('userModal'); if(_user) _user.classList.add('show');
         }
         
         function editUser(userId) {
@@ -777,17 +777,17 @@ Jane Smith,jane@example.com,fieldworker,XYZ Rentals</code>
             if (!user) return;
             
             editingUserId = userId;
-            document.getElementById('modalTitle').textContent = 'Edit User';
+            var _moda = document.getElementById('modalTitle'); if(_moda) _moda.textContent = 'Edit User';
             document.getElementById('formName').value = user.name;
             document.getElementById('formEmail').value = user.email;
             document.getElementById('formPassword').value = '';
             document.getElementById('formRole').value = user.role;
             document.getElementById('formCompany').value = user.company || '';
-            document.getElementById('userModal').classList.add('show');
+            var _user = document.getElementById('userModal'); if(_user) _user.classList.add('show');
         }
         
         function closeModal() {
-            document.getElementById('userModal').classList.remove('show');
+            var _user = document.getElementById('userModal'); if(_user) _user.classList.remove('show');
         }
         
         async function saveUser() {

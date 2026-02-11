@@ -372,8 +372,8 @@
             if (typeof checkAuth !== 'undefined') {
                 const user = checkAuth(['rental', 'admin', 'vendor']);
                 if (user) {
-                    document.getElementById('userName').textContent = user.name;
-                    document.getElementById('userAvatar').textContent = user.name.charAt(0).toUpperCase();
+                    var _user = document.getElementById('userName'); if(_user) _user.textContent = user.name;
+                    var _user = document.getElementById('userAvatar'); if(_user) _user.textContent = user.name.charAt(0).toUpperCase();
 
                     // Update role label based on user's actual role
                     const roleLabels = {
@@ -382,7 +382,7 @@
                         'admin': 'Admin',
                         'fieldworker': 'Field Worker'
                     };
-                    document.getElementById('userRole').textContent = roleLabels[user.role] || 'Account';
+                    var _user = document.getElementById('userRole'); if(_user) _user.textContent = roleLabels[user.role] || 'Account';
 
                     // Initialize feature flags
                     await FC_FLAGS.init(user.role);
@@ -395,9 +395,9 @@
 
                     // Update nav links based on role
                     if (user.role === 'vendor') {
-                        document.getElementById('dashboardLink').href = 'vendor-dashboard.html';
-                        document.getElementById('invoicesLink').href = 'invoices.html';
-                        document.getElementById('createJobLink').style.display = 'none';
+                        var _dash = document.getElementById('dashboardLink'); if(_dash) _dash.href = 'vendor-dashboard.html';
+                        var _invo = document.getElementById('invoicesLink'); if(_invo) _invo.href = 'invoices.html';
+                        var _crea = document.getElementById('createJobLink'); if(_crea) _crea.style.display = 'none';
                     }
                 }
             }
@@ -464,7 +464,7 @@
 
         function renderDay() {
             const dateKey = getDateKey(currentDate);
-            document.getElementById('currentDate').textContent = formatDate(currentDate);
+            var _curr = document.getElementById('currentDate'); if(_curr) _curr.textContent = formatDate(currentDate);
 
             // Filter deliveries for this day
             const dayDeliveries = allDeliveries.filter(d => {
@@ -494,10 +494,10 @@
                 });
             });
 
-            document.getElementById('statDeliveries').textContent = dayDeliveries.length;
-            document.getElementById('statDiesel').textContent = totalDiesel.toFixed(1);
-            document.getElementById('statDEF').textContent = totalDEF.toFixed(1);
-            document.getElementById('statHours').textContent = totalHours.toFixed(1);
+            var _stat = document.getElementById('statDeliveries'); if(_stat) _stat.textContent = dayDeliveries.length;
+            var _stat = document.getElementById('statDiesel'); if(_stat) _stat.textContent = totalDiesel.toFixed(1);
+            var _stat = document.getElementById('statDEF'); if(_stat) _stat.textContent = totalDEF.toFixed(1);
+            var _stat = document.getElementById('statHours'); if(_stat) _stat.textContent = totalHours.toFixed(1);
 
             // Render job groups
             const container = document.getElementById('jobGroupsContainer');
@@ -562,10 +562,10 @@
             }
 
             // Update grand totals
-            document.getElementById('gtDeliveries').textContent = dayDeliveries.length;
-            document.getElementById('gtDiesel').textContent = totalDiesel.toFixed(1);
-            document.getElementById('gtDEF').textContent = totalDEF.toFixed(1);
-            document.getElementById('gtHours').textContent = totalHours.toFixed(1);
+            var _gtDe = document.getElementById('gtDeliveries'); if(_gtDe) _gtDe.textContent = dayDeliveries.length;
+            var _gtDi = document.getElementById('gtDiesel'); if(_gtDi) _gtDi.textContent = totalDiesel.toFixed(1);
+            var _gtDE = document.getElementById('gtDEF'); if(_gtDE) _gtDE.textContent = totalDEF.toFixed(1);
+            var _gtHo = document.getElementById('gtHours'); if(_gtHo) _gtHo.textContent = totalHours.toFixed(1);
         }
 
         function renderWeekSummary() {
@@ -606,7 +606,7 @@
                     </div>
                 `;
             });
-            document.getElementById('weekChart').innerHTML = html;
+            var _week = document.getElementById('weekChart'); if(_week) _week.innerHTML = html;
         }
 
         function exportToExcel() {

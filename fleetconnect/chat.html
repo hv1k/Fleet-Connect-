@@ -365,15 +365,15 @@
 
         function selectConversation(jobId, jobName) {
             selectedJobId = jobId;
-            document.getElementById('chatHeader').style.display = 'block';
-            document.getElementById('chatInputArea').style.display = 'flex';
-            document.getElementById('chatTitle').textContent = safe(jobName);
-            document.getElementById('chatHeaderContent').textContent = safe(jobName);
-            document.getElementById('chatMessages').innerHTML = '<div class="loading"><div class="spinner"></div>Loading messages...</div>';
+            var _chat = document.getElementById('chatHeader'); if(_chat) _chat.style.display = 'block';
+            var _chat = document.getElementById('chatInputArea'); if(_chat) _chat.style.display = 'flex';
+            var _chat = document.getElementById('chatTitle'); if(_chat) _chat.textContent = safe(jobName);
+            var _chat = document.getElementById('chatHeaderContent'); if(_chat) _chat.textContent = safe(jobName);
+            var _chat = document.getElementById('chatMessages'); if(_chat) _chat.innerHTML = '<div class="loading"><div class="spinner"></div>Loading messages...</div>';
 
             // Close conversations panel on mobile
             if (window.innerWidth <= 768) {
-                document.getElementById('conversationsPanel').classList.remove('open');
+                var _conv = document.getElementById('conversationsPanel'); if(_conv) _conv.classList.remove('open');
             }
 
             renderConversations();
@@ -500,9 +500,9 @@
 
         function closeMobileChat() {
             selectedJobId = null;
-            document.getElementById('chatHeader').style.display = 'none';
-            document.getElementById('chatInputArea').style.display = 'none';
-            document.getElementById('chatMessages').innerHTML = '<div class="chat-empty" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;"><div style="font-size:3rem;margin-bottom:16px;opacity:0.5;">👈</div><h3 style="font-size:1.2rem;font-weight:600;color:var(--text-primary,#e8e0d8);margin-bottom:8px;">Select a conversation</h3><p style="font-size:0.9rem;color:var(--text-secondary,#b8b0a8);">Choose a conversation from the sidebar to start chatting</p></div>';
+            var _chat = document.getElementById('chatHeader'); if(_chat) _chat.style.display = 'none';
+            var _chat = document.getElementById('chatInputArea'); if(_chat) _chat.style.display = 'none';
+            var _chat = document.getElementById('chatMessages'); if(_chat) _chat.innerHTML = '<div class="chat-empty" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;"><div style="font-size:3rem;margin-bottom:16px;opacity:0.5;">👈</div><h3 style="font-size:1.2rem;font-weight:600;color:var(--text-primary,#e8e0d8);margin-bottom:8px;">Select a conversation</h3><p style="font-size:0.9rem;color:var(--text-secondary,#b8b0a8);">Choose a conversation from the sidebar to start chatting</p></div>';
             if (messageSubscription) {
                 messageSubscription.unsubscribe();
                 messageSubscription = null;
@@ -510,7 +510,7 @@
         }
 
         // Search conversations
-        document.getElementById('searchInput').addEventListener('input', (e) => {
+        var _sear = document.getElementById('searchInput'); if(_sear) _sear.addEventListener('input', (e) => {
             const query = e.target.value;
             if (!query) {
                 renderConversations();
@@ -537,7 +537,7 @@
         // Mobile menu toggle
         window.addEventListener('resize', () => {
             if (window.innerWidth > 768) {
-                document.getElementById('conversationsPanel').classList.remove('open');
+                var _conv = document.getElementById('conversationsPanel'); if(_conv) _conv.classList.remove('open');
                 var _sb = document.querySelector('.admin-sidebar'); if(_sb) _sb.classList.remove('open');
             }
         });

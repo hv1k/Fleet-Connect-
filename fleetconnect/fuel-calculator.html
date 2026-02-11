@@ -378,10 +378,10 @@
 
         function switchMode(mode) {
             currentMode = mode;
-            document.getElementById('gallonsMode').style.display = mode === 'gallons' ? 'block' : 'none';
-            document.getElementById('percentMode').style.display = mode === 'percent' ? 'block' : 'none';
-            document.getElementById('gallonsToggle').classList.toggle('active', mode === 'gallons');
-            document.getElementById('percentToggle').classList.toggle('active', mode === 'percent');
+            var _gall = document.getElementById('gallonsMode'); if(_gall) _gall.style.display = mode === 'gallons' ? 'block' : 'none';
+            var _perc = document.getElementById('percentMode'); if(_perc) _perc.style.display = mode === 'percent' ? 'block' : 'none';
+            var _gall = document.getElementById('gallonsToggle'); if(_gall) _gall.classList.toggle('active', mode === 'gallons');
+            var _perc = document.getElementById('percentToggle'); if(_perc) _perc.classList.toggle('active', mode === 'percent');
             calculateFuel();
         }
 
@@ -412,7 +412,7 @@
 
         function updateFromSlider() {
             const slider = document.getElementById('levelSlider');
-            document.getElementById('sliderPercent').textContent = slider.value;
+            var _slid = document.getElementById('sliderPercent'); if(_slid) _slid.textContent = slider.value;
             calculateFuel();
         }
 
@@ -440,12 +440,12 @@
             const fillTime = Math.ceil(gallonsNeeded / 50);
 
             // Update display
-            document.getElementById('gallonsNeeded').textContent = gallonsNeeded.toFixed(0);
-            document.getElementById('estimatedCost').textContent = '$' + cost.toFixed(2);
-            document.getElementById('fillPercent').textContent = fillPercent;
-            document.getElementById('fillPercentBar').style.width = fillPercent + '%';
-            document.getElementById('fillTime').textContent = fillTime + ' min';
-            document.getElementById('sliderPercent').textContent = fillPercent;
+            var _gall = document.getElementById('gallonsNeeded'); if(_gall) _gall.textContent = gallonsNeeded.toFixed(0);
+            var _esti = document.getElementById('estimatedCost'); if(_esti) _esti.textContent = '$' + cost.toFixed(2);
+            var _fill = document.getElementById('fillPercent'); if(_fill) _fill.textContent = fillPercent;
+            var _fill = document.getElementById('fillPercentBar'); if(_fill) _fill.style.width = fillPercent + '%';
+            var _fill = document.getElementById('fillTime'); if(_fill) _fill.textContent = fillTime + ' min';
+            var _slid = document.getElementById('sliderPercent'); if(_slid) _slid.textContent = fillPercent;
             document.getElementById('levelSlider').value = fillPercent;
 
             // Update tank visual
@@ -465,7 +465,7 @@
             else fill.classList.add('green');
 
             // Update percent display (outside fill for visibility)
-            document.getElementById('tankPercent').textContent = fillPercent + '%';
+            var _tank = document.getElementById('tankPercent'); if(_tank) _tank.textContent = fillPercent + '%';
         }
 
         function clearCalculator() {
@@ -513,7 +513,7 @@
             calculations = saved ? JSON.parse(saved) : [];
 
             if (calculations.length > 0) {
-                document.getElementById('historyCard').style.display = 'block';
+                var _hist = document.getElementById('historyCard'); if(_hist) _hist.style.display = 'block';
                 const list = document.getElementById('historyList');
                 list.innerHTML = calculations.map((calc, idx) => `
                     <div class="history-item">

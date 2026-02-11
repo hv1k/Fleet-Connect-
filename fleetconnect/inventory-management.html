@@ -482,8 +482,8 @@
 
             const currentUser = checkAuth(['vendor']);
             if (currentUser) {
-                document.getElementById('userName').textContent = currentUser.name;
-                document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+                var _user = document.getElementById('userName'); if(_user) _user.textContent = currentUser.name;
+                var _user = document.getElementById('userAvatar'); if(_user) _user.textContent = currentUser.name.charAt(0).toUpperCase();
             }
 
             await FC_FLAGS.init('vendor');
@@ -535,18 +535,18 @@
         }
 
         function updateStats() {
-            document.getElementById('statDiesel').textContent = dieselLevel.toLocaleString();
-            document.getElementById('statDEF').textContent = defLevel.toLocaleString();
+            var _stat = document.getElementById('statDiesel'); if(_stat) _stat.textContent = dieselLevel.toLocaleString();
+            var _stat = document.getElementById('statDEF'); if(_stat) _stat.textContent = defLevel.toLocaleString();
 
             const avgDaily = 45;
             const daysLeftDiesel = Math.floor(dieselLevel / avgDaily);
             const avgDefDaily = 5;
             const daysLeftDef = Math.floor(defLevel / avgDefDaily);
 
-            document.getElementById('statDaysLeft').textContent = Math.min(daysLeftDiesel, daysLeftDef) + ' days';
+            var _stat = document.getElementById('statDaysLeft'); if(_stat) _stat.textContent = Math.min(daysLeftDiesel, daysLeftDef) + ' days';
 
             const lastEntry = inventoryHistory[0];
-            document.getElementById('statLastResupply').textContent = lastEntry ? new Date(lastEntry.date).toLocaleDateString() : '—';
+            var _stat = document.getElementById('statLastResupply'); if(_stat) _stat.textContent = lastEntry ? new Date(lastEntry.date).toLocaleDateString() : '—';
         }
 
         function updateGauges() {
@@ -555,8 +555,8 @@
 
             const circumference = 283;
 
-            document.getElementById('dieselPercent').textContent = Math.round(dieselPercent) + '%';
-            document.getElementById('dieselGallons').textContent = dieselLevel;
+            var _dies = document.getElementById('dieselPercent'); if(_dies) _dies.textContent = Math.round(dieselPercent) + '%';
+            var _dies = document.getElementById('dieselGallons'); if(_dies) _dies.textContent = dieselLevel;
             document.getElementById('dieselGauge').setAttribute('stroke-dasharray', (dieselPercent / 100 * circumference) + ' ' + circumference);
 
             let dieselStatusEl = document.getElementById('dieselStatus');
@@ -571,8 +571,8 @@
                 dieselStatusEl.className = 'gauge-status green';
             }
 
-            document.getElementById('defPercent').textContent = Math.round(defPercent) + '%';
-            document.getElementById('defGallons').textContent = defLevel;
+            var _defP = document.getElementById('defPercent'); if(_defP) _defP.textContent = Math.round(defPercent) + '%';
+            var _defG = document.getElementById('defGallons'); if(_defG) _defG.textContent = defLevel;
             document.getElementById('defGauge').setAttribute('stroke-dasharray', (defPercent / 100 * circumference) + ' ' + circumference);
 
             let defStatusEl = document.getElementById('defStatus');
@@ -616,10 +616,10 @@
             const emptyDiesel = new Date(now.getTime() + daysLeftDiesel * 24 * 60 * 60 * 1000);
             const emptyDef = new Date(now.getTime() + daysLeftDef * 24 * 60 * 60 * 1000);
 
-            document.getElementById('forecastDiesel').textContent = emptyDiesel.toLocaleDateString();
-            document.getElementById('forecastDef').textContent = emptyDef.toLocaleDateString();
-            document.getElementById('avgDiesel').textContent = avgDaily + ' gal';
-            document.getElementById('avgDef').textContent = avgDefDaily + ' gal';
+            var _fore = document.getElementById('forecastDiesel'); if(_fore) _fore.textContent = emptyDiesel.toLocaleDateString();
+            var _fore = document.getElementById('forecastDef'); if(_fore) _fore.textContent = emptyDef.toLocaleDateString();
+            var _avgD = document.getElementById('avgDiesel'); if(_avgD) _avgD.textContent = avgDaily + ' gal';
+            var _avgD = document.getElementById('avgDef'); if(_avgD) _avgD.textContent = avgDefDaily + ' gal';
         }
 
         function updateHistoryTable() {
@@ -643,11 +643,11 @@
         }
 
         function openLogDeliveryModal() {
-            document.getElementById('logDeliveryModal').classList.add('show');
+            var _logD = document.getElementById('logDeliveryModal'); if(_logD) _logD.classList.add('show');
         }
 
         function closeLogDeliveryModal() {
-            document.getElementById('logDeliveryModal').classList.remove('show');
+            var _logD = document.getElementById('logDeliveryModal'); if(_logD) _logD.classList.remove('show');
         }
 
         function submitLogDelivery() {

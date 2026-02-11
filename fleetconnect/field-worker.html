@@ -423,7 +423,7 @@
         var roleEl = document.querySelector('.admin-sidebar-role'); if (roleEl) roleEl.textContent = currentUser.role === 'fieldworker' ? 'Field Worker' : currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1);
         const hour = new Date().getHours();
         const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
-        document.getElementById('headerGreeting').textContent = `${greeting}, ${currentUser.name.split(' ')[0]}!`;
+        var _head = document.getElementById('headerGreeting'); if(_head) _head.textContent = `${greeting}, ${currentUser.name.split(' ')[0]}!`;
 
         // Sidebar nav
         let allJobs = [];
@@ -452,7 +452,7 @@
                 renderJobs();
             } catch (err) {
                 console.error('Load error:', err);
-                document.getElementById('jobsList').innerHTML = '<div class="empty"><h3>Error loading data</h3><p>' + (err.message || 'Please try refreshing the page.') + '</p></div>';
+                var _jobs = document.getElementById('jobsList'); if(_jobs) _jobs.innerHTML = '<div class="empty"><h3>Error loading data</h3><p>' + (err.message || 'Please try refreshing the page.') + '</p></div>';
             }
         }
 
@@ -478,13 +478,13 @@
             const renderedActive = document.querySelectorAll('.job-card').length;
             const displayActiveCount = currentTab === 'active' ? renderedActive : activeJobs.length;
 
-            document.getElementById('statActive').textContent = activeJobs.length;
-            document.getElementById('statCompleted').textContent = completedJobs.length;
+            var _stat = document.getElementById('statActive'); if(_stat) _stat.textContent = activeJobs.length;
+            var _stat = document.getElementById('statCompleted'); if(_stat) _stat.textContent = completedJobs.length;
 
             // Only count invoices actually created today
             const today = new Date().toDateString();
             const todayInvoices = allInvoices.filter(inv => new Date(inv.created_at).toDateString() === today);
-            document.getElementById('statInvoices').textContent = todayInvoices.length;
+            var _stat = document.getElementById('statInvoices'); if(_stat) _stat.textContent = todayInvoices.length;
         }
 
         function getEquipmentForJob(jobId) {
@@ -558,13 +558,13 @@
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                     <p>No ${currentTab} jobs${currentTab === 'active' ? ' assigned to you' : ''}</p>
                 </div>`;
-                document.getElementById('statActive').textContent = 0;
+                var _stat = document.getElementById('statActive'); if(_stat) _stat.textContent = 0;
                 return;
             }
 
             // Update active jobs count after rendering
             if (currentTab === 'active') {
-                document.getElementById('statActive').textContent = filtered.length;
+                var _stat = document.getElementById('statActive'); if(_stat) _stat.textContent = filtered.length;
             }
 
             container.innerHTML = filtered.map(job => {
@@ -962,7 +962,7 @@
             const r = sigCanvas.getBoundingClientRect();
             sigCtx.beginPath();
             sigCtx.moveTo(e.clientX - r.left, e.clientY - r.top);
-            document.getElementById('sigPlaceholder').style.display = 'none';
+            var _sigP = document.getElementById('sigPlaceholder'); if(_sigP) _sigP.style.display = 'none';
         }
         function sigMove(e) {
             if (!sigDrawing) return;
@@ -974,15 +974,15 @@
             if (sigDrawing) {
                 sigDrawing = false;
                 signatureData = sigCanvas.toDataURL('image/png');
-                document.getElementById('sigStatus').classList.add('show');
+                var _sigS = document.getElementById('sigStatus'); if(_sigS) _sigS.classList.add('show');
             }
         }
         function clearSignature() {
             if (!sigCanvas) return;
             sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
             signatureData = null;
-            document.getElementById('sigPlaceholder').style.display = 'block';
-            document.getElementById('sigStatus').classList.remove('show');
+            var _sigP = document.getElementById('sigPlaceholder'); if(_sigP) _sigP.style.display = 'block';
+            var _sigS = document.getElementById('sigStatus'); if(_sigS) _sigS.classList.remove('show');
         }
 
         function toggleUnit(unitId) {
@@ -1005,9 +1005,9 @@
                 totalDef += parseFloat(document.getElementById(`def-${unitId}`)?.value) || 0;
                 unitCount++;
             });
-            document.getElementById('summaryUnits').textContent = unitCount;
-            document.getElementById('summaryDiesel').textContent = `${totalDiesel.toFixed(1)} gal`;
-            document.getElementById('summaryDef').textContent = `${totalDef.toFixed(1)} gal`;
+            var _summ = document.getElementById('summaryUnits'); if(_summ) _summ.textContent = unitCount;
+            var _summ = document.getElementById('summaryDiesel'); if(_summ) _summ.textContent = `${totalDiesel.toFixed(1)} gal`;
+            var _summ = document.getElementById('summaryDef'); if(_summ) _summ.textContent = `${totalDef.toFixed(1)} gal`;
         }
 
         document.addEventListener('input', function(e) {

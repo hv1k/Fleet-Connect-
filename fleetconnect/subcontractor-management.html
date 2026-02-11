@@ -430,8 +430,8 @@
         document.addEventListener('DOMContentLoaded', async () => {
             const user = checkAuth(['vendor']);
             if (user) {
-                document.getElementById('userName').textContent = user.name;
-                document.getElementById('userAvatar').textContent = user.name.charAt(0).toUpperCase();
+                var _user = document.getElementById('userName'); if(_user) _user.textContent = user.name;
+                var _user = document.getElementById('userAvatar'); if(_user) _user.textContent = user.name.charAt(0).toUpperCase();
 
                 await FC_FLAGS.init('vendor');
                 loadData();
@@ -564,17 +564,17 @@
             });
 
             content += '</tbody></table>';
-            document.getElementById('complianceContent').innerHTML = content;
-            document.getElementById('complianceModal').classList.add('show');
+            var _comp = document.getElementById('complianceContent'); if(_comp) _comp.innerHTML = content;
+            var _comp = document.getElementById('complianceModal'); if(_comp) _comp.classList.add('show');
         }
 
         function updateBillingSummary() {
             const pending = allInvoices.filter(i => i.status === 'pending');
             const totalOwed = pending.reduce((sum, i) => sum + i.amount, 0);
 
-            document.getElementById('totalOwed').textContent = '$' + totalOwed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            document.getElementById('pendingInvoices').textContent = pending.length;
-            document.getElementById('activeCount').textContent = allSubcontractors.filter(s => s.active).length;
+            var _tota = document.getElementById('totalOwed'); if(_tota) _tota.textContent = '$' + totalOwed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            var _pend = document.getElementById('pendingInvoices'); if(_pend) _pend.textContent = pending.length;
+            var _acti = document.getElementById('activeCount'); if(_acti) _acti.textContent = allSubcontractors.filter(s => s.active).length;
         }
 
         function renderBillingTab() {
@@ -597,15 +597,15 @@
 
         function openAddModal() {
             clearForm();
-            document.getElementById('subcontractorModal').classList.add('show');
+            var _subc = document.getElementById('subcontractorModal'); if(_subc) _subc.classList.add('show');
         }
 
         function closeModal() {
-            document.getElementById('subcontractorModal').classList.remove('show');
+            var _subc = document.getElementById('subcontractorModal'); if(_subc) _subc.classList.remove('show');
         }
 
         function closeComplianceModal() {
-            document.getElementById('complianceModal').classList.remove('show');
+            var _comp = document.getElementById('complianceModal'); if(_comp) _comp.classList.remove('show');
         }
 
         function clearForm() {
@@ -656,7 +656,7 @@
             document.getElementById('contactPhone').value = sc.phone;
             document.getElementById('serviceAreas').value = sc.areas;
             document.getElementById('ratePerGallon').value = sc.rate;
-            document.getElementById('subcontractorModal').classList.add('show');
+            var _subc = document.getElementById('subcontractorModal'); if(_subc) _subc.classList.add('show');
         }
 
         function toggleActive(id) {

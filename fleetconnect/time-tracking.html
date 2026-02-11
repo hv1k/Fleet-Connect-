@@ -415,7 +415,7 @@
                 currentLocationData = null;
                 clearInterval(timerInterval);
                 updateStatusBanner();
-                document.getElementById('timerDisplay').textContent = '00:00:00';
+                var _time = document.getElementById('timerDisplay'); if(_time) _time.textContent = '00:00:00';
                 showToast('Clocked out successfully', 'success');
                 loadEntries();
             } catch (err) {
@@ -429,7 +429,7 @@
             timerInterval = setInterval(() => {
                 if (sessionStartTime && clockedIn) {
                     const elapsed = Math.floor((new Date() - sessionStartTime) / 1000);
-                    document.getElementById('timerDisplay').textContent = formatDuration(elapsed);
+                    var _time = document.getElementById('timerDisplay'); if(_time) _time.textContent = formatDuration(elapsed);
                 }
             }, 1000);
         }
@@ -537,8 +537,8 @@
             const totalHours = (totalSeconds / 3600).toFixed(1);
             const onSiteHours = (onSiteSeconds / 3600).toFixed(1);
 
-            document.getElementById('totalHours').textContent = totalHours;
-            document.getElementById('onSiteTime').textContent = onSiteHours;
+            var _tota = document.getElementById('totalHours'); if(_tota) _tota.textContent = totalHours;
+            var _onSi = document.getElementById('onSiteTime'); if(_onSi) _onSi.textContent = onSiteHours;
         }
 
         function renderWeeklyChart() {

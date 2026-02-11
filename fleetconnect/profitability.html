@@ -364,8 +364,8 @@
             if (typeof checkAuth !== 'undefined') {
                 const user = checkAuth(['vendor']);
                 if (user) {
-                    document.getElementById('userName').textContent = user.name;
-                    document.getElementById('userAvatar').textContent = user.name.charAt(0).toUpperCase();
+                    var _user = document.getElementById('userName'); if(_user) _user.textContent = user.name;
+                    var _user = document.getElementById('userAvatar'); if(_user) _user.textContent = user.name.charAt(0).toUpperCase();
 
                     await FC_FLAGS.init('vendor');
                     FC_FLAGS.gatePage('page.profitability', 'vendor-dashboard.html');
@@ -435,10 +435,10 @@
             const grossMargin = totalRevenue - totalCost;
             const avgRevenue = filteredJobs.length > 0 ? totalRevenue / filteredJobs.length : 0;
 
-            document.getElementById('totalRevenue').textContent = '$' + Math.round(totalRevenue).toLocaleString();
-            document.getElementById('totalCost').textContent = '$' + Math.round(totalCost).toLocaleString();
-            document.getElementById('grossMargin').textContent = '$' + Math.round(grossMargin).toLocaleString();
-            document.getElementById('avgRevenuePerJob').textContent = '$' + Math.round(avgRevenue);
+            var _tota = document.getElementById('totalRevenue'); if(_tota) _tota.textContent = '$' + Math.round(totalRevenue).toLocaleString();
+            var _tota = document.getElementById('totalCost'); if(_tota) _tota.textContent = '$' + Math.round(totalCost).toLocaleString();
+            var _gros = document.getElementById('grossMargin'); if(_gros) _gros.textContent = '$' + Math.round(grossMargin).toLocaleString();
+            var _avgR = document.getElementById('avgRevenuePerJob'); if(_avgR) _avgR.textContent = '$' + Math.round(avgRevenue);
         }
 
         function renderRevenuChart(filteredJobs) {
@@ -602,7 +602,7 @@
                 `;
             }).join('');
 
-            document.getElementById('marginByType').innerHTML = html || '<div class="empty-state" style="padding:20px;">No data</div>';
+            var _marg = document.getElementById('marginByType'); if(_marg) _marg.innerHTML = html || '<div class="empty-state" style="padding:20px;">No data</div>';
         }
 
         function sortTable(column) {

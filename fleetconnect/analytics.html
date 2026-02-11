@@ -456,17 +456,17 @@
             }
 
             // Update KPI cards
-            document.getElementById('kpiTotalJobs').textContent = totalJobs.toLocaleString();
-            document.getElementById('kpiJobsChange').innerHTML = trendHtml(jobsChange);
+            var _kpiT = document.getElementById('kpiTotalJobs'); if(_kpiT) _kpiT.textContent = totalJobs.toLocaleString();
+            var _kpiJ = document.getElementById('kpiJobsChange'); if(_kpiJ) _kpiJ.innerHTML = trendHtml(jobsChange);
 
-            document.getElementById('kpiActiveUsers').textContent = activeUsers;
-            document.getElementById('kpiUsersChange').innerHTML = trendHtml(usersChange);
+            var _kpiA = document.getElementById('kpiActiveUsers'); if(_kpiA) _kpiA.textContent = activeUsers;
+            var _kpiU = document.getElementById('kpiUsersChange'); if(_kpiU) _kpiU.innerHTML = trendHtml(usersChange);
 
-            document.getElementById('kpiGallons').textContent = totalGallons.toLocaleString('en-US', { maximumFractionDigits: 0 });
-            document.getElementById('kpiGallonsChange').innerHTML = trendHtml(gallonsChange);
+            var _kpiG = document.getElementById('kpiGallons'); if(_kpiG) _kpiG.textContent = totalGallons.toLocaleString('en-US', { maximumFractionDigits: 0 });
+            var _kpiG = document.getElementById('kpiGallonsChange'); if(_kpiG) _kpiG.innerHTML = trendHtml(gallonsChange);
 
-            document.getElementById('kpiRevenue').textContent = '$' + totalRevenue.toLocaleString('en-US', { maximumFractionDigits: 0 });
-            document.getElementById('kpiRevenueChange').innerHTML = trendHtml(revenueChange);
+            var _kpiR = document.getElementById('kpiRevenue'); if(_kpiR) _kpiR.textContent = '$' + totalRevenue.toLocaleString('en-US', { maximumFractionDigits: 0 });
+            var _kpiR = document.getElementById('kpiRevenueChange'); if(_kpiR) _kpiR.innerHTML = trendHtml(revenueChange);
 
             // Render charts
             renderJobsChart(jobsInRange, start, end);

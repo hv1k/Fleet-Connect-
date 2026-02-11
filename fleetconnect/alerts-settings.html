@@ -535,8 +535,8 @@
 
                 // Fuel Alert
                 if (settings.fuel_alert) {
-                    document.getElementById('toggleFuel').classList.toggle('active', settings.fuel_alert.enabled);
-                    document.getElementById('fuelConfig').style.display = settings.fuel_alert.enabled ? '' : 'none';
+                    var _togg = document.getElementById('toggleFuel'); if(_togg) _togg.classList.toggle('active', settings.fuel_alert.enabled);
+                    var _fuel = document.getElementById('fuelConfig'); if(_fuel) _fuel.style.display = settings.fuel_alert.enabled ? '' : 'none';
                     document.getElementById('fuelThreshold').value = settings.fuel_alert.threshold || 25;
                     document.getElementById('fuelEmail').checked = settings.fuel_alert.channels?.email ?? true;
                     document.getElementById('fuelSms').checked = settings.fuel_alert.channels?.sms ?? true;
@@ -545,8 +545,8 @@
 
                 // Maintenance Alert
                 if (settings.maintenance_alert) {
-                    document.getElementById('toggleMaint').classList.toggle('active', settings.maintenance_alert.enabled);
-                    document.getElementById('maintConfig').style.display = settings.maintenance_alert.enabled ? '' : 'none';
+                    var _togg = document.getElementById('toggleMaint'); if(_togg) _togg.classList.toggle('active', settings.maintenance_alert.enabled);
+                    var _main = document.getElementById('maintConfig'); if(_main) _main.style.display = settings.maintenance_alert.enabled ? '' : 'none';
                     document.getElementById('maintDays').value = settings.maintenance_alert.days_before || 7;
                     document.getElementById('maintEmail').checked = settings.maintenance_alert.channels?.email ?? true;
                     document.getElementById('maintSms').checked = settings.maintenance_alert.channels?.sms ?? true;
@@ -555,8 +555,8 @@
 
                 // Contract Alert
                 if (settings.contract_alert) {
-                    document.getElementById('toggleContract').classList.toggle('active', settings.contract_alert.enabled);
-                    document.getElementById('contractConfig').style.display = settings.contract_alert.enabled ? '' : 'none';
+                    var _togg = document.getElementById('toggleContract'); if(_togg) _togg.classList.toggle('active', settings.contract_alert.enabled);
+                    var _cont = document.getElementById('contractConfig'); if(_cont) _cont.style.display = settings.contract_alert.enabled ? '' : 'none';
                     document.getElementById('contractDays').value = settings.contract_alert.days_before || 14;
                     document.getElementById('contractEmail').checked = settings.contract_alert.channels?.email ?? true;
                     document.getElementById('contractSms').checked = settings.contract_alert.channels?.sms ?? true;
@@ -565,8 +565,8 @@
 
                 // Status Alert
                 if (settings.status_alert) {
-                    document.getElementById('toggleStatus').classList.toggle('active', settings.status_alert.enabled);
-                    document.getElementById('statusConfig').style.display = settings.status_alert.enabled ? '' : 'none';
+                    var _togg = document.getElementById('toggleStatus'); if(_togg) _togg.classList.toggle('active', settings.status_alert.enabled);
+                    var _stat = document.getElementById('statusConfig'); if(_stat) _stat.style.display = settings.status_alert.enabled ? '' : 'none';
                     document.getElementById('statusEmail').checked = settings.status_alert.channels?.email ?? true;
                     document.getElementById('statusSms').checked = settings.status_alert.channels?.sms ?? true;
                     document.getElementById('statusApp').checked = settings.status_alert.channels?.app ?? true;
@@ -574,8 +574,8 @@
 
                 // Invoice Alert
                 if (settings.invoice_alert) {
-                    document.getElementById('toggleInvoice').classList.toggle('active', settings.invoice_alert.enabled);
-                    document.getElementById('invoiceConfig').style.display = settings.invoice_alert.enabled ? '' : 'none';
+                    var _togg = document.getElementById('toggleInvoice'); if(_togg) _togg.classList.toggle('active', settings.invoice_alert.enabled);
+                    var _invo = document.getElementById('invoiceConfig'); if(_invo) _invo.style.display = settings.invoice_alert.enabled ? '' : 'none';
                     document.getElementById('invoiceEmail').checked = settings.invoice_alert.channels?.email ?? true;
                     document.getElementById('invoiceSms').checked = settings.invoice_alert.channels?.sms ?? true;
                     document.getElementById('invoiceApp').checked = settings.invoice_alert.channels?.app ?? true;

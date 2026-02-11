@@ -567,10 +567,10 @@
                 avgDays = Math.round(totalDays / paidDates.length);
             }
 
-            document.getElementById('statOutstanding').textContent = formatCurrency(totalOutstanding);
-            document.getElementById('statPaidMonth').textContent = formatCurrency(paidThisMonth);
-            document.getElementById('statPending').textContent = pendingCount;
-            document.getElementById('statAvgDays').textContent = avgDays;
+            var _stat = document.getElementById('statOutstanding'); if(_stat) _stat.textContent = formatCurrency(totalOutstanding);
+            var _stat = document.getElementById('statPaidMonth'); if(_stat) _stat.textContent = formatCurrency(paidThisMonth);
+            var _stat = document.getElementById('statPending'); if(_stat) _stat.textContent = pendingCount;
+            var _stat = document.getElementById('statAvgDays'); if(_stat) _stat.textContent = avgDays;
 
             updateStatusOverview();
         }
@@ -582,9 +582,9 @@
             const overdueCount = allDeliveries.filter(d => getInvoiceStatus(d) === 'overdue').length;
             const total = allDeliveries.length;
 
-            document.getElementById('legendPaid').textContent = paidCount;
-            document.getElementById('legendPending').textContent = pendingCount;
-            document.getElementById('legendOverdue').textContent = overdueCount;
+            var _lege = document.getElementById('legendPaid'); if(_lege) _lege.textContent = paidCount;
+            var _lege = document.getElementById('legendPending'); if(_lege) _lege.textContent = pendingCount;
+            var _lege = document.getElementById('legendOverdue'); if(_lege) _lege.textContent = overdueCount;
 
             const paidPercent = total > 0 ? (paidCount / total) * 100 : 0;
             const pendingPercent = total > 0 ? (pendingCount / total) * 100 : 0;
@@ -621,7 +621,7 @@
             const filtered = getFilteredInvoices();
             const tbody = document.getElementById('invoicesTableBody');
 
-            document.getElementById('resultCount').textContent = filtered.length;
+            var _resu = document.getElementById('resultCount'); if(_resu) _resu.textContent = filtered.length;
 
             if (filtered.length === 0) {
                 tbody.innerHTML = '<div class="empty-state">No invoices found</div>';
@@ -665,7 +665,7 @@
         }
 
         // Select all checkbox
-        document.getElementById('selectAllCheckbox').addEventListener('change', function() {
+        var _sele = document.getElementById('selectAllCheckbox'); if(_sele) _sele.addEventListener('change', function() {
             const checkboxes = document.querySelectorAll('.table-checkbox');
             checkboxes.forEach(cb => {
                 cb.checked = this.checked;
@@ -686,7 +686,7 @@
         }
 
         // Mark selected as paid
-        document.getElementById('markPaidBtn').addEventListener('click', async function() {
+        var _mark = document.getElementById('markPaidBtn'); if(_mark) _mark.addEventListener('click', async function() {
             if (selectedInvoices.size === 0) return;
 
             const ids = Array.from(selectedInvoices);
@@ -841,12 +841,12 @@
                 markPaidBtn.textContent = 'Mark as Paid';
             }
 
-            document.getElementById('detailsModal').classList.add('show');
+            var _deta = document.getElementById('detailsModal'); if(_deta) _deta.classList.add('show');
         }
 
         // Close modal
         function closeModal() {
-            document.getElementById('detailsModal').classList.remove('show');
+            var _deta = document.getElementById('detailsModal'); if(_deta) _deta.classList.remove('show');
             currentDetailId = null;
         }
 
@@ -905,14 +905,14 @@
         }
 
         // Search and filter event listeners
-        document.getElementById('searchInput').addEventListener('input', () => {
+        var _sear = document.getElementById('searchInput'); if(_sear) _sear.addEventListener('input', () => {
             selectedInvoices.clear();
             document.getElementById('selectAllCheckbox').checked = false;
             renderInvoices();
             updateBulkActionsButton();
         });
 
-        document.getElementById('statusFilter').addEventListener('change', () => {
+        var _stat = document.getElementById('statusFilter'); if(_stat) _stat.addEventListener('change', () => {
             selectedInvoices.clear();
             document.getElementById('selectAllCheckbox').checked = false;
             renderInvoices();

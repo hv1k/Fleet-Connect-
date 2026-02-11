@@ -443,8 +443,8 @@
     <script>
         const currentUser = checkAuth(['rental']);
         if (currentUser) {
-            document.getElementById('userName').textContent = currentUser.name;
-            document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+            var _user = document.getElementById('userName'); if(_user) _user.textContent = currentUser.name;
+            var _user = document.getElementById('userAvatar'); if(_user) _user.textContent = currentUser.name.charAt(0).toUpperCase();
         }
 
         FC_FLAGS.init('rental');
@@ -516,7 +516,7 @@
 
         function openCreateModal() {
             editingScheduleId = null;
-            document.getElementById('modalTitle').textContent = 'Create Recurring Schedule';
+            var _moda = document.getElementById('modalTitle'); if(_moda) _moda.textContent = 'Create Recurring Schedule';
             document.getElementById('custName').value = '';
             document.getElementById('siteName').value = '';
             document.getElementById('siteAddress').value = '';
@@ -533,7 +533,7 @@
             selectedDays = [];
             updateDaySelector();
             updateCostEstimate();
-            document.getElementById('scheduleModal').classList.add('show');
+            var _sche = document.getElementById('scheduleModal'); if(_sche) _sche.classList.add('show');
         }
 
         function editSchedule(scheduleId) {
@@ -541,7 +541,7 @@
             if (!schedule) return;
 
             editingScheduleId = scheduleId;
-            document.getElementById('modalTitle').textContent = 'Edit Recurring Schedule';
+            var _moda = document.getElementById('modalTitle'); if(_moda) _moda.textContent = 'Edit Recurring Schedule';
             document.getElementById('custName').value = schedule.customer;
             document.getElementById('siteName').value = schedule.site;
             document.getElementById('equipment').value = schedule.equipment;
@@ -553,11 +553,11 @@
             selectedDays = schedule.daysOfWeek || [];
             updateDaySelector();
             updateCostEstimate();
-            document.getElementById('scheduleModal').classList.add('show');
+            var _sche = document.getElementById('scheduleModal'); if(_sche) _sche.classList.add('show');
         }
 
         function closeModal() {
-            document.getElementById('scheduleModal').classList.remove('show');
+            var _sche = document.getElementById('scheduleModal'); if(_sche) _sche.classList.remove('show');
         }
 
         function updateDaySelector() {
@@ -583,7 +583,7 @@
             const gallons = parseFloat(document.getElementById('estGallons').value) || 0;
             const pricePerGal = 3.50; // Mock average price
             const estimate = (gallons * pricePerGal).toFixed(2);
-            document.getElementById('costEstimate').textContent = '$' + estimate;
+            var _cost = document.getElementById('costEstimate'); if(_cost) _cost.textContent = '$' + estimate;
         }
 
         function saveSchedule() {

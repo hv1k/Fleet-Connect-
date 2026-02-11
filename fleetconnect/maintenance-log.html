@@ -398,8 +398,8 @@
         document.addEventListener('DOMContentLoaded', async () => {
             const user = checkAuth(['rental']);
             if (user) {
-                document.getElementById('userName').textContent = user.name;
-                document.getElementById('userAvatar').textContent = user.name.charAt(0).toUpperCase();
+                var _user = document.getElementById('userName'); if(_user) _user.textContent = user.name;
+                var _user = document.getElementById('userAvatar'); if(_user) _user.textContent = user.name.charAt(0).toUpperCase();
             }
             FC_FLAGS.init('rental');
             FC_FLAGS.hideNav('maintenance_log', 'maintenance-log.html');
@@ -434,10 +434,10 @@
             const overdue = allEquipment.filter(e => new Date(e.next_service_date) < now).length;
             const completed = allMaintenance.filter(m => new Date(m.service_date) >= monthStart).length;
 
-            document.getElementById('statTotal').textContent = total;
-            document.getElementById('statDue').textContent = due;
-            document.getElementById('statOverdue').textContent = overdue;
-            document.getElementById('statCompleted').textContent = completed;
+            var _stat = document.getElementById('statTotal'); if(_stat) _stat.textContent = total;
+            var _stat = document.getElementById('statDue'); if(_stat) _stat.textContent = due;
+            var _stat = document.getElementById('statOverdue'); if(_stat) _stat.textContent = overdue;
+            var _stat = document.getElementById('statCompleted'); if(_stat) _stat.textContent = completed;
         }
 
         function getEquipmentStatus(equipment) {
@@ -545,7 +545,7 @@
             selectedEquipmentId = equipmentId;
             const equipment = allEquipment.find(e => e.id === equipmentId);
 
-            document.getElementById('serviceModalTitle').textContent = 'Add Service Record - ' + safe(equipment.equipment_number);
+            var _serv = document.getElementById('serviceModalTitle'); if(_serv) _serv.textContent = 'Add Service Record - ' + safe(equipment.equipment_number);
             document.getElementById('serviceModalBody').innerHTML = `
                 <div class="form-group">
                     <label class="form-label">Service Type</label>
@@ -577,7 +577,7 @@
                 </div>
             `;
 
-            document.getElementById('serviceModal').classList.add('show');
+            var _serv = document.getElementById('serviceModal'); if(_serv) _serv.classList.add('show');
         }
 
         async function saveServiceRecord() {
@@ -628,7 +628,7 @@
             const serviceHistory = allMaintenance.filter(m => m.equipment_id === equipmentId).sort((a, b) => new Date(b.service_date) - new Date(a.service_date));
             const status = getEquipmentStatus(equipment);
 
-            document.getElementById('detailTitle').textContent = safe(equipment.equipment_number) + ' - ' + safe(equipment.type);
+            var _deta = document.getElementById('detailTitle'); if(_deta) _deta.textContent = safe(equipment.equipment_number) + ' - ' + safe(equipment.type);
             document.getElementById('detailBody').innerHTML = `
                 <div class="detail-grid">
                     <div class="detail-item">
@@ -673,7 +673,7 @@
                 </div>
             `;
 
-            document.getElementById('detailModal').classList.add('show');
+            var _deta = document.getElementById('detailModal'); if(_deta) _deta.classList.add('show');
         }
 
         function addServiceToSelected() {
@@ -682,12 +682,12 @@
         }
 
         function closeServiceModal() {
-            document.getElementById('serviceModal').classList.remove('show');
+            var _serv = document.getElementById('serviceModal'); if(_serv) _serv.classList.remove('show');
             selectedEquipmentId = null;
         }
 
         function closeDetailModal() {
-            document.getElementById('detailModal').classList.remove('show');
+            var _deta = document.getElementById('detailModal'); if(_deta) _deta.classList.remove('show');
         }
 
         function toggleMobileSidebar() {

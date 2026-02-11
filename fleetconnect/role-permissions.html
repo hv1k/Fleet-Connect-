@@ -464,14 +464,14 @@
         }
 
         async function updateStats() {
-            document.getElementById('statRoles').textContent = ROLES.length + customRoles.length;
-            document.getElementById('statCustom').textContent = customRoles.length;
+            var _stat = document.getElementById('statRoles'); if(_stat) _stat.textContent = ROLES.length + customRoles.length;
+            var _stat = document.getElementById('statCustom'); if(_stat) _stat.textContent = customRoles.length;
             // Query real user count from Supabase
             try {
                 const { count, error } = await db.from('users').select('id', { count: 'exact', head: true });
-                document.getElementById('statUsers').textContent = error ? '-' : (count ?? '-');
+                var _stat = document.getElementById('statUsers'); if(_stat) _stat.textContent = error ? '-' : (count ?? '-');
             } catch (e) {
-                document.getElementById('statUsers').textContent = '-';
+                var _stat = document.getElementById('statUsers'); if(_stat) _stat.textContent = '-';
             }
         }
 
@@ -532,11 +532,11 @@
 
         function openAddRoleModal() {
             document.getElementById('addRoleForm').reset();
-            document.getElementById('addRoleModal').classList.add('show');
+            var _addR = document.getElementById('addRoleModal'); if(_addR) _addR.classList.add('show');
         }
 
         function closeAddRoleModal() {
-            document.getElementById('addRoleModal').classList.remove('show');
+            var _addR = document.getElementById('addRoleModal'); if(_addR) _addR.classList.remove('show');
         }
 
         async function saveNewRole() {
@@ -576,12 +576,12 @@
                 showToast('No changes to save', 'error');
                 return;
             }
-            document.getElementById('changesSummary').innerHTML = `<li>${changedCells.size} permission setting(s) changed</li>`;
-            document.getElementById('confirmSaveModal').classList.add('show');
+            var _chan = document.getElementById('changesSummary'); if(_chan) _chan.innerHTML = `<li>${changedCells.size} permission setting(s) changed</li>`;
+            var _conf = document.getElementById('confirmSaveModal'); if(_conf) _conf.classList.add('show');
         }
 
         function closeConfirmSaveModal() {
-            document.getElementById('confirmSaveModal').classList.remove('show');
+            var _conf = document.getElementById('confirmSaveModal'); if(_conf) _conf.classList.remove('show');
         }
 
         async function confirmSavePermissions() {

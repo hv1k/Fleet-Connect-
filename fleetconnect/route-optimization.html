@@ -307,8 +307,8 @@
             if (typeof checkAuth !== 'undefined') {
                 const user = checkAuth(['vendor']);
                 if (user) {
-                    document.getElementById('userName').textContent = user.name;
-                    document.getElementById('userAvatar').textContent = user.name.charAt(0).toUpperCase();
+                    var _user = document.getElementById('userName'); if(_user) _user.textContent = user.name;
+                    var _user = document.getElementById('userAvatar'); if(_user) _user.textContent = user.name.charAt(0).toUpperCase();
 
                     await FC_FLAGS.init('vendor');
                     FC_FLAGS.gatePage('page.route_optimization', 'vendor-dashboard.html');
@@ -338,7 +338,7 @@
                 await loadJobsForWorker();
             } catch (err) {
                 console.error('Error loading data:', err);
-                document.getElementById('jobListContainer').innerHTML = '<div class="empty-state">Error loading jobs</div>';
+                var _jobL = document.getElementById('jobListContainer'); if(_jobL) _jobL.innerHTML = '<div class="empty-state">Error loading jobs</div>';
             }
         }
 
@@ -482,9 +482,9 @@
             const avgMinutesPerMile = 1.2;
             const estMinutes = Math.round(estMiles * avgMinutesPerMile);
 
-            document.getElementById('totalStops').textContent = stops;
-            document.getElementById('estMiles').textContent = Math.round(estMiles);
-            document.getElementById('estTime').textContent = estMinutes + ' min';
+            var _tota = document.getElementById('totalStops'); if(_tota) _tota.textContent = stops;
+            var _estM = document.getElementById('estMiles'); if(_estM) _estM.textContent = Math.round(estMiles);
+            var _estT = document.getElementById('estTime'); if(_estT) _estT.textContent = estMinutes + ' min';
         }
 
         function optimizeRoute() {

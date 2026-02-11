@@ -252,9 +252,9 @@
                 const { data, error } = await db.from('jobs').select('*').eq('id', jobId).single();
                 if (error) throw error;
 
-                document.getElementById('jobNumber').textContent = data.job_site_name || 'N/A';
-                document.getElementById('customerName').textContent = data.customer_name || 'N/A';
-                document.getElementById('jobAddress').textContent = data.address_street ? `${data.address_street}, ${data.address_city}, ${data.address_state}` : 'No address';
+                var _jobN = document.getElementById('jobNumber'); if(_jobN) _jobN.textContent = data.job_site_name || 'N/A';
+                var _cust = document.getElementById('customerName'); if(_cust) _cust.textContent = data.customer_name || 'N/A';
+                var _jobA = document.getElementById('jobAddress'); if(_jobA) _jobA.textContent = data.address_street ? `${data.address_street}, ${data.address_city}, ${data.address_state}` : 'No address';
 
                 // Load existing checklist if available
                 await loadExistingChecklist();
@@ -324,8 +324,8 @@
             const checkedItems = Object.values(checklistState).filter(v => v).length;
             const percentage = (checkedItems / allItems) * 100;
 
-            document.getElementById('progressText').textContent = `${checkedItems}/${allItems}`;
-            document.getElementById('progressFill').style.width = `${percentage}%`;
+            var _prog = document.getElementById('progressText'); if(_prog) _prog.textContent = `${checkedItems}/${allItems}`;
+            var _prog = document.getElementById('progressFill'); if(_prog) _prog.style.width = `${percentage}%`;
 
             // Enable submit only if all items checked
             const submitBtn = document.getElementById('submitBtn');
@@ -369,7 +369,7 @@
                 console.error('Error submitting checklist:', err);
                 showToast('Error submitting checklist', 'error');
                 document.getElementById('submitBtn').disabled = false;
-                document.getElementById('submitBtn').textContent = 'Submit Checklist';
+                var _subm = document.getElementById('submitBtn'); if(_subm) _subm.textContent = 'Submit Checklist';
             }
         }
 

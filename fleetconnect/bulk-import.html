@@ -363,18 +363,18 @@
         function handleDragOver(e) {
             e.preventDefault();
             e.stopPropagation();
-            document.getElementById('uploadArea').classList.add('drag-over');
+            var _uplo = document.getElementById('uploadArea'); if(_uplo) _uplo.classList.add('drag-over');
         }
 
         function handleDragLeave(e) {
             e.preventDefault();
-            document.getElementById('uploadArea').classList.remove('drag-over');
+            var _uplo = document.getElementById('uploadArea'); if(_uplo) _uplo.classList.remove('drag-over');
         }
 
         function handleDrop(e) {
             e.preventDefault();
             e.stopPropagation();
-            document.getElementById('uploadArea').classList.remove('drag-over');
+            var _uplo = document.getElementById('uploadArea'); if(_uplo) _uplo.classList.remove('drag-over');
             const files = e.dataTransfer.files;
             if (files.length > 0) {
                 handleFile(files[0]);
@@ -431,8 +431,8 @@
                 columnMap[col] = selectedIdx >= 0 ? selectedIdx : null;
             });
 
-            document.getElementById('mapperGrid').innerHTML = html;
-            document.getElementById('mapperCard').style.display = 'block';
+            var _mapp = document.getElementById('mapperGrid'); if(_mapp) _mapp.innerHTML = html;
+            var _mapp = document.getElementById('mapperCard'); if(_mapp) _mapp.style.display = 'block';
         }
 
         function previewData() {
@@ -475,10 +475,10 @@
                 bodyHtml += '</tr>';
             });
 
-            document.getElementById('previewHead').innerHTML = headHtml;
-            document.getElementById('previewBody').innerHTML = bodyHtml;
-            document.getElementById('previewRowCount').textContent = rows.length;
-            document.getElementById('previewCard').style.display = 'block';
+            var _prev = document.getElementById('previewHead'); if(_prev) _prev.innerHTML = headHtml;
+            var _prev = document.getElementById('previewBody'); if(_prev) _prev.innerHTML = bodyHtml;
+            var _prev = document.getElementById('previewRowCount'); if(_prev) _prev.textContent = rows.length;
+            var _prev = document.getElementById('previewCard'); if(_prev) _prev.style.display = 'block';
             document.getElementById('previewCard').scrollIntoView({ behavior: 'smooth' });
         }
 
@@ -552,14 +552,14 @@
         }
 
         function showSummary(created, skipped, errors) {
-            document.getElementById('previewCard').style.display = 'none';
-            document.getElementById('mapperCard').style.display = 'none';
+            var _prev = document.getElementById('previewCard'); if(_prev) _prev.style.display = 'none';
+            var _mapp = document.getElementById('mapperCard'); if(_mapp) _mapp.style.display = 'none';
 
-            document.getElementById('summaryCreated').textContent = created;
-            document.getElementById('summarySkipped').textContent = skipped;
-            document.getElementById('summaryErrors').textContent = errors;
+            var _summ = document.getElementById('summaryCreated'); if(_summ) _summ.textContent = created;
+            var _summ = document.getElementById('summarySkipped'); if(_summ) _summ.textContent = skipped;
+            var _summ = document.getElementById('summaryErrors'); if(_summ) _summ.textContent = errors;
 
-            document.getElementById('summaryCard').style.display = 'block';
+            var _summ = document.getElementById('summaryCard'); if(_summ) _summ.style.display = 'block';
             document.getElementById('summaryCard').scrollIntoView({ behavior: 'smooth' });
         }
 
@@ -569,10 +569,10 @@
             columnMap = {};
 
             document.getElementById('fileInput').value = '';
-            document.getElementById('uploadArea').classList.remove('drag-over');
-            document.getElementById('mapperCard').style.display = 'none';
-            document.getElementById('previewCard').style.display = 'none';
-            document.getElementById('summaryCard').style.display = 'none';
+            var _uplo = document.getElementById('uploadArea'); if(_uplo) _uplo.classList.remove('drag-over');
+            var _mapp = document.getElementById('mapperCard'); if(_mapp) _mapp.style.display = 'none';
+            var _prev = document.getElementById('previewCard'); if(_prev) _prev.style.display = 'none';
+            var _summ = document.getElementById('summaryCard'); if(_summ) _summ.style.display = 'none';
         }
     </script>
     

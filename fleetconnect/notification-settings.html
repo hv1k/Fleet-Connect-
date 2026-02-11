@@ -422,7 +422,7 @@
     <script>
         const currentUser = checkAuth(['admin']);
         if (currentUser) {
-            document.getElementById('adminUserName').textContent = currentUser.name;
+            var _admi = document.getElementById('adminUserName'); if(_admi) _admi.textContent = currentUser.name;
         }
 
         let rules = [];
@@ -444,7 +444,7 @@
                 renderRules();
             } catch (err) {
                 console.error('Error loading rules:', err);
-                document.getElementById('rulesContainer').innerHTML = '<div class="loading">Error loading notification rules</div>';
+                var _rule = document.getElementById('rulesContainer'); if(_rule) _rule.innerHTML = '<div class="loading">Error loading notification rules</div>';
             }
         }
 
@@ -542,10 +542,10 @@
         }
 
         function updateStats() {
-            document.getElementById('statRules').textContent = rules.filter(r => r.enabled).length;
+            var _stat = document.getElementById('statRules'); if(_stat) _stat.textContent = rules.filter(r => r.enabled).length;
             const channels = new Set();
             rules.forEach(r => (r.channels || []).forEach(ch => channels.add(ch)));
-            document.getElementById('statChannels').textContent = channels.size;
+            var _stat = document.getElementById('statChannels'); if(_stat) _stat.textContent = channels.size;
             document.getElementById('statSentToday').textContent = activityLog.filter(a => {
                 const date = new Date(a.created_at);
                 const today = new Date();
@@ -555,19 +555,19 @@
 
         function openAddRuleModal() {
             document.getElementById('addRuleForm').reset();
-            document.getElementById('addRuleModal').classList.add('show');
+            var _addR = document.getElementById('addRuleModal'); if(_addR) _addR.classList.add('show');
         }
 
         function closeAddRuleModal() {
-            document.getElementById('addRuleModal').classList.remove('show');
+            var _addR = document.getElementById('addRuleModal'); if(_addR) _addR.classList.remove('show');
         }
 
         function openEditTemplateModal() {
-            document.getElementById('editTemplateModal').classList.add('show');
+            var _edit = document.getElementById('editTemplateModal'); if(_edit) _edit.classList.add('show');
         }
 
         function closeEditTemplateModal() {
-            document.getElementById('editTemplateModal').classList.remove('show');
+            var _edit = document.getElementById('editTemplateModal'); if(_edit) _edit.classList.remove('show');
         }
 
         async function saveNotificationRule() {

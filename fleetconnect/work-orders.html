@@ -489,7 +489,7 @@
                 renderJobs();
             } catch (err) {
                 console.error('Load error:', err);
-                document.getElementById('jobsList').innerHTML = '<div class="empty-state"><h3>Error loading data</h3><p>' + err.message + '</p></div>';
+                var _jobs = document.getElementById('jobsList'); if(_jobs) _jobs.innerHTML = '<div class="empty-state"><h3>Error loading data</h3><p>' + err.message + '</p></div>';
             }
         }
 
@@ -497,10 +497,10 @@
             const active = allJobs.filter(j => ['accepted', 'assigned', 'in-progress'].includes(j.status)).length;
             const pending = allJobs.filter(j => ['pending', 'open'].includes(j.status)).length;
             const completed = allJobs.filter(j => j.status === 'completed').length;
-            document.getElementById('statTotal').textContent = allJobs.length;
-            document.getElementById('statActive').textContent = active;
-            document.getElementById('statPending').textContent = pending;
-            document.getElementById('statCompleted').textContent = completed;
+            var _stat = document.getElementById('statTotal'); if(_stat) _stat.textContent = allJobs.length;
+            var _stat = document.getElementById('statActive'); if(_stat) _stat.textContent = active;
+            var _stat = document.getElementById('statPending'); if(_stat) _stat.textContent = pending;
+            var _stat = document.getElementById('statCompleted'); if(_stat) _stat.textContent = completed;
         }
 
         // ===== RENDER =====
@@ -527,7 +527,7 @@
             if (status) filtered = filtered.filter(j => j.status === status);
             if (type) filtered = filtered.filter(j => j.job_type === type);
 
-            document.getElementById('resultsCount').textContent = filtered.length + ' order' + (filtered.length !== 1 ? 's' : '');
+            var _resu = document.getElementById('resultsCount'); if(_resu) _resu.textContent = filtered.length + ' order' + (filtered.length !== 1 ? 's' : '');
 
             const container = document.getElementById('jobsList');
             if (filtered.length === 0) {
@@ -589,7 +589,7 @@
             const vendor = job.assigned_vendor ? allVendors.find(v => v.id === job.assigned_vendor) : null;
             const vendorName = vendor ? (vendor.company_name || vendor.name) : '—';
 
-            document.getElementById('modalTitle').textContent = job.job_site_name || 'Work Order Details';
+            var _moda = document.getElementById('modalTitle'); if(_moda) _moda.textContent = job.job_site_name || 'Work Order Details';
             document.getElementById('modalBody').innerHTML = `
                 <div class="detail-section">
                     <div class="detail-section-title">Order Information</div>
@@ -706,7 +706,7 @@
                 <button class="btn btn-secondary" onclick="closeModal()">Close</button>
                 ${deliveries.length > 0 ? '<button class="btn btn-primary" onclick="closeModal(); openDeliveries(\'' + jobId + '\')">View Deliveries</button>' : ''}
             `;
-            document.getElementById('jobModal').classList.add('show');
+            var _jobM = document.getElementById('jobModal'); if(_jobM) _jobM.classList.add('show');
         }
 
         // ===== DELIVERIES MODAL =====
@@ -716,10 +716,10 @@
             const total = deliveries.reduce((s, d) => s + (parseFloat(d.gallons) || 0), 0);
             const totalDef = deliveries.reduce((s, d) => s + (parseFloat(d.def_gallons) || 0), 0);
 
-            document.getElementById('modalTitle').textContent = 'Deliveries — ' + (job ? job.job_site_name : 'Order');
+            var _moda = document.getElementById('modalTitle'); if(_moda) _moda.textContent = 'Deliveries — ' + (job ? job.job_site_name : 'Order');
 
             if (deliveries.length === 0) {
-                document.getElementById('modalBody').innerHTML = '<div class="empty-state" style="padding:30px;">No deliveries recorded</div>';
+                var _moda = document.getElementById('modalBody'); if(_moda) _moda.innerHTML = '<div class="empty-state" style="padding:30px;">No deliveries recorded</div>';
             } else {
                 document.getElementById('modalBody').innerHTML = deliveries.map(d => `
                     <div class="delivery-item">
@@ -739,27 +739,27 @@
                     </div>
                 `;
             }
-            document.getElementById('modalFooter').innerHTML = '<button class="btn btn-secondary" onclick="closeModal()">Close</button>';
-            document.getElementById('jobModal').classList.add('show');
+            var _moda = document.getElementById('modalFooter'); if(_moda) _moda.innerHTML = '<button class="btn btn-secondary" onclick="closeModal()">Close</button>';
+            var _jobM = document.getElementById('jobModal'); if(_jobM) _jobM.classList.add('show');
         }
 
         // ===== IMAGE VIEWER =====
         function viewImage(url) {
-            document.getElementById('invoiceImage').src = url;
-            document.getElementById('imageViewer').classList.add('show');
+            var _invo = document.getElementById('invoiceImage'); if(_invo) _invo.src = url;
+            var _imag = document.getElementById('imageViewer'); if(_imag) _imag.classList.add('show');
         }
         function closeImageViewer() {
-            document.getElementById('imageViewer').classList.remove('show');
+            var _imag = document.getElementById('imageViewer'); if(_imag) _imag.classList.remove('show');
         }
 
         // ===== MODAL =====
-        function closeModal() { document.getElementById('jobModal').classList.remove('show'); }
+ var _jobM = document.getElementById('jobModal'); if(_jobM) _jobM.classList.remove('show');
         document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeImageViewer(); closeModal(); closeConfirmDecline(); closeAssignWorkerModal(); } });
 
         // ===== FILTER LISTENERS =====
-        document.getElementById('searchInput').addEventListener('input', renderJobs);
-        document.getElementById('statusFilter').addEventListener('change', renderJobs);
-        document.getElementById('typeFilter').addEventListener('change', renderJobs);
+        var _sear = document.getElementById('searchInput'); if(_sear) _sear.addEventListener('input', renderJobs);
+        var _stat = document.getElementById('statusFilter'); if(_stat) _stat.addEventListener('change', renderJobs);
+        var _type = document.getElementById('typeFilter'); if(_type) _type.addEventListener('change', renderJobs);
 
         // ===== ACCEPT / DECLINE =====
         // The users table has a vendor_id field that links to the vendors table.
@@ -831,10 +831,10 @@
         let pendingDeclineJobId = null;
         function declineJob(jobId) {
             pendingDeclineJobId = jobId;
-            document.getElementById('confirmDecline').classList.add('show');
+            var _conf = document.getElementById('confirmDecline'); if(_conf) _conf.classList.add('show');
         }
         function closeConfirmDecline() {
-            document.getElementById('confirmDecline').classList.remove('show');
+            var _conf = document.getElementById('confirmDecline'); if(_conf) _conf.classList.remove('show');
             pendingDeclineJobId = null;
         }
         async function confirmDeclineJob() {
@@ -871,7 +871,7 @@
                 '<option value="' + v.id + '">' + (v.company_name || v.name || v.email) + '</option>'
             ).join('');
             closeModal();
-            document.getElementById('modalTitle').textContent = 'Assign Vendor';
+            var _moda = document.getElementById('modalTitle'); if(_moda) _moda.textContent = 'Assign Vendor';
             document.getElementById('modalBody').innerHTML = `
                 <div class="detail-section">
                     <div class="detail-section-title">Select a vendor for this job</div>
@@ -885,7 +885,7 @@
                 <button class="btn btn-primary" onclick="assignVendorToJob('${jobId}')">Assign Vendor</button>
                 <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
             `;
-            document.getElementById('jobModal').classList.add('show');
+            var _jobM = document.getElementById('jobModal'); if(_jobM) _jobM.classList.add('show');
         }
 
         async function assignVendorToJob(jobId) {
@@ -915,7 +915,7 @@
             const job = allJobs.find(j => j.id === jobId);
             if (!job) return;
 
-            document.getElementById('modalTitle').textContent = 'Edit: ' + (job.job_site_name || 'Work Order');
+            var _moda = document.getElementById('modalTitle'); if(_moda) _moda.textContent = 'Edit: ' + (job.job_site_name || 'Work Order');
             document.getElementById('modalBody').innerHTML = `
                 <div class="detail-section">
                     <div class="detail-section-title">Order Information</div>
@@ -1067,7 +1067,7 @@
                 ? fieldWorkers.map(w => `<div class="worker-option" onclick="selectAssignWorker('${w.id}',this)"><div class="worker-option-avatar">${w.name.charAt(0)}</div><div class="worker-option-info"><div class="worker-option-name">${w.name}</div><div class="worker-option-email">${w.email}</div></div><div class="worker-option-check"></div></div>`).join('')
                 : '<div class="empty-state" style="padding:30px;">No field workers available</div>';
             document.getElementById('assignWorkerBtn').disabled = true;
-            document.getElementById('assignWorkerModal').classList.add('show');
+            var _assi = document.getElementById('assignWorkerModal'); if(_assi) _assi.classList.add('show');
         }
 
         function selectAssignWorker(id, el) {
@@ -1078,7 +1078,7 @@
         }
 
         function closeAssignWorkerModal() {
-            document.getElementById('assignWorkerModal').classList.remove('show');
+            var _assi = document.getElementById('assignWorkerModal'); if(_assi) _assi.classList.remove('show');
         }
 
         async function confirmAssignWorker() {

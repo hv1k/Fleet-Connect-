@@ -357,8 +357,8 @@
 
             const currentUser = checkAuth(['vendor']);
             if (currentUser) {
-                document.getElementById('userName').textContent = currentUser.name;
-                document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+                var _user = document.getElementById('userName'); if(_user) _user.textContent = currentUser.name;
+                var _user = document.getElementById('userAvatar'); if(_user) _user.textContent = currentUser.name.charAt(0).toUpperCase();
             }
 
             await FC_FLAGS.init('vendor');
@@ -377,7 +377,7 @@
             try {
                 const user = getCurrentUser();
                 if (!user || !user.vendor_id) {
-                    document.getElementById('workersContainer').innerHTML = '<div class="empty-state">No vendor profile found</div>';
+                    var _work = document.getElementById('workersContainer'); if(_work) _work.innerHTML = '<div class="empty-state">No vendor profile found</div>';
                     return;
                 }
 
@@ -394,7 +394,7 @@
                 renderWorkers();
             } catch (err) {
                 console.error('Error loading data:', err);
-                document.getElementById('workersContainer').innerHTML = '<div class="empty-state">Error loading data</div>';
+                var _work = document.getElementById('workersContainer'); if(_work) _work.innerHTML = '<div class="empty-state">Error loading data</div>';
             }
         }
 
@@ -438,10 +438,10 @@
             const topWorker = allWorkers.reduce((prev, current) => (prev.completionRate > current.completionRate) ? prev : current, allWorkers[0]);
             const totalIncidents = allWorkers.reduce((s, w) => s + w.incidents, 0);
 
-            document.getElementById('statTotalWorkers').textContent = total;
-            document.getElementById('statAvgCompletion').textContent = avgCompletion.toFixed(1) + '%';
-            document.getElementById('statTopPerformer').textContent = topWorker?.name?.split(' ')[0] || '—';
-            document.getElementById('statIncidents').textContent = totalIncidents;
+            var _stat = document.getElementById('statTotalWorkers'); if(_stat) _stat.textContent = total;
+            var _stat = document.getElementById('statAvgCompletion'); if(_stat) _stat.textContent = avgCompletion.toFixed(1) + '%';
+            var _stat = document.getElementById('statTopPerformer'); if(_stat) _stat.textContent = topWorker?.name?.split(' ')[0] || '—';
+            var _stat = document.getElementById('statIncidents'); if(_stat) _stat.textContent = totalIncidents;
         }
 
         function renderWorkers() {
@@ -517,7 +517,7 @@
             const worker = allWorkers.find(w => w.id === workerId);
             if (!worker) return;
 
-            document.getElementById('modalWorkerName').textContent = worker.name;
+            var _moda = document.getElementById('modalWorkerName'); if(_moda) _moda.textContent = worker.name;
 
             const trendData = worker.monthlyTrend;
             const maxTrend = Math.max(...trendData);
@@ -596,11 +596,11 @@
                 </div>
             `;
 
-            document.getElementById('detailModal').classList.add('show');
+            var _deta = document.getElementById('detailModal'); if(_deta) _deta.classList.add('show');
         }
 
         function closeDetailModal() {
-            document.getElementById('detailModal').classList.remove('show');
+            var _deta = document.getElementById('detailModal'); if(_deta) _deta.classList.remove('show');
         }
 
         function exportMetrics() {

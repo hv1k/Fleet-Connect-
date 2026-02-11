@@ -388,12 +388,12 @@
         // Dark mode
         function toggleDarkMode() {
             document.body.classList.toggle('dark');
-            document.getElementById('darkModeToggle').classList.toggle('active');
+            var _dark = document.getElementById('darkModeToggle'); if(_dark) _dark.classList.toggle('active');
             localStorage.setItem('darkMode', document.body.classList.contains('dark'));
         }
         if (localStorage.getItem('darkMode') === 'true') {
             document.body.classList.add('dark');
-            document.getElementById('darkModeToggle').classList.add('active');
+            var _dark = document.getElementById('darkModeToggle'); if(_dark) _dark.classList.add('active');
         }
 
         // Mobile sidebar
@@ -542,8 +542,8 @@
         } else {
             const currentUser = checkAuth(['admin','vendor','rental']);
             if (currentUser) {
-                document.getElementById('userName').textContent = currentUser.name;
-                document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+                var _user = document.getElementById('userName'); if(_user) _user.textContent = currentUser.name;
+                var _user = document.getElementById('userAvatar'); if(_user) _user.textContent = currentUser.name.charAt(0).toUpperCase();
 
                 // Set up navigation based on role
                 setupNavigation(currentUser.role);
@@ -565,7 +565,7 @@
                 '30days': 'Last 30 Days',
                 custom: 'Custom'
             };
-            document.getElementById('dateRangeText').textContent = labels[range];
+            var _date = document.getElementById('dateRangeText'); if(_date) _date.textContent = labels[range];
 
             renderChart();
             renderTopSites();
@@ -612,10 +612,10 @@
             const totalDEF = rangedDeliveries.reduce((s, d) => s + parseFloat(d.def_gallons || 0), 0);
             const activeJobs = rangedJobs.filter(j => ['pending', 'assigned', 'accepted', 'in-progress', 'open'].includes(j.status)).length;
 
-            document.getElementById('totalDeliveries').textContent = rangedDeliveries.length;
-            document.getElementById('totalDiesel').textContent = totalDiesel.toFixed(0);
-            document.getElementById('totalDEF').textContent = totalDEF.toFixed(0);
-            document.getElementById('activeJobs').textContent = activeJobs;
+            var _tota = document.getElementById('totalDeliveries'); if(_tota) _tota.textContent = rangedDeliveries.length;
+            var _tota = document.getElementById('totalDiesel'); if(_tota) _tota.textContent = totalDiesel.toFixed(0);
+            var _tota = document.getElementById('totalDEF'); if(_tota) _tota.textContent = totalDEF.toFixed(0);
+            var _acti = document.getElementById('activeJobs'); if(_acti) _acti.textContent = activeJobs;
         }
 
         function renderChart() {
@@ -742,7 +742,7 @@
 
             if (filtered.length === 0) {
                 container.innerHTML = '<div class="empty-state" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;"><div style="font-size:3rem;margin-bottom:16px;opacity:0.5;">🔍</div><h3 style="font-size:1.2rem;font-weight:600;color:var(--text-primary,#e8e0d8);margin-bottom:8px;">No deliveries found</h3><p style="font-size:0.9rem;color:var(--text-secondary,#b8b0a8);">Try adjusting your search or filters</p></div>';
-                document.getElementById('tableFooter').style.display = 'none';
+                var _tabl = document.getElementById('tableFooter'); if(_tabl) _tabl.style.display = 'none';
                 return;
             }
 
@@ -762,8 +762,8 @@
                     `;
                 }).join('') + '</tbody></table>';
 
-            document.getElementById('tableFooter').style.display = filtered.length > 50 ? 'flex' : 'none';
-            document.getElementById('paginationInfo').textContent = 'Showing 1-' + Math.min(50, filtered.length) + ' of ' + filtered.length;
+            var _tabl = document.getElementById('tableFooter'); if(_tabl) _tabl.style.display = filtered.length > 50 ? 'flex' : 'none';
+            var _pagi = document.getElementById('paginationInfo'); if(_pagi) _pagi.textContent = 'Showing 1-' + Math.min(50, filtered.length) + ' of ' + filtered.length;
         }
 
         function sortTable(column) {

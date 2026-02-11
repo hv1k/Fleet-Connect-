@@ -337,8 +337,8 @@
         document.addEventListener('DOMContentLoaded', async () => {
             const user = checkAuth(['rental']);
             if (user) {
-                document.getElementById('userName').textContent = user.name;
-                document.getElementById('userAvatar').textContent = user.name.charAt(0).toUpperCase();
+                var _user = document.getElementById('userName'); if(_user) _user.textContent = user.name;
+                var _user = document.getElementById('userAvatar'); if(_user) _user.textContent = user.name.charAt(0).toUpperCase();
             }
             FC_FLAGS.init('rental');
             FC_FLAGS.hideNav('invoice_pdf', 'invoice-pdf.html');
@@ -377,9 +377,9 @@
             const totalAmount = allInvoices.reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
             const pending = allInvoices.filter(i => i.status === 'pending').length;
 
-            document.getElementById('statMonth').textContent = thisMonth;
-            document.getElementById('statTotal').textContent = '$' + totalAmount.toLocaleString('en-US', { maximumFractionDigits: 0 });
-            document.getElementById('statPending').textContent = pending;
+            var _stat = document.getElementById('statMonth'); if(_stat) _stat.textContent = thisMonth;
+            var _stat = document.getElementById('statTotal'); if(_stat) _stat.textContent = '$' + totalAmount.toLocaleString('en-US', { maximumFractionDigits: 0 });
+            var _stat = document.getElementById('statPending'); if(_stat) _stat.textContent = pending;
         }
 
         function renderInvoices() {
@@ -425,8 +425,8 @@
             selectedInvoiceData = invoice;
             const invoiceHTML = generateInvoiceHTML(invoice);
 
-            document.getElementById('previewBody').innerHTML = `<div class="invoice-preview">${invoiceHTML}</div>`;
-            document.getElementById('previewModal').classList.add('show');
+            var _prev = document.getElementById('previewBody'); if(_prev) _prev.innerHTML = `<div class="invoice-preview">${invoiceHTML}</div>`;
+            var _prev = document.getElementById('previewModal'); if(_prev) _prev.classList.add('show');
         }
 
         function generateInvoiceHTML(invoice) {
@@ -551,7 +551,7 @@
         }
 
         function closePreviewModal() {
-            document.getElementById('previewModal').classList.remove('show');
+            var _prev = document.getElementById('previewModal'); if(_prev) _prev.classList.remove('show');
             selectedInvoiceData = null;
         }
 

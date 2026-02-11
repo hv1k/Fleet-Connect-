@@ -367,10 +367,10 @@
 
         function updateStats() {
             if (allLogs.length === 0) {
-                document.getElementById('statTodayEvents').textContent = '0';
-                document.getElementById('statUniqueUsers').textContent = '0';
-                document.getElementById('statMostActive').textContent = '-';
-                document.getElementById('statLastEvent').textContent = '-';
+                var _stat = document.getElementById('statTodayEvents'); if(_stat) _stat.textContent = '0';
+                var _stat = document.getElementById('statUniqueUsers'); if(_stat) _stat.textContent = '0';
+                var _stat = document.getElementById('statMostActive'); if(_stat) _stat.textContent = '-';
+                var _stat = document.getElementById('statLastEvent'); if(_stat) _stat.textContent = '-';
                 return;
             }
 
@@ -395,10 +395,10 @@
 
             const lastEvent = allLogs[0] ? formatTime(allLogs[0].created_at || allLogs[0].timestamp) : '-';
 
-            document.getElementById('statTodayEvents').textContent = todayLogs.length;
-            document.getElementById('statUniqueUsers').textContent = uniqueUsers;
-            document.getElementById('statMostActive').textContent = mostActiveUser !== '-' ? mostActiveUser.split('@')[0] : '-';
-            document.getElementById('statLastEvent').textContent = lastEvent;
+            var _stat = document.getElementById('statTodayEvents'); if(_stat) _stat.textContent = todayLogs.length;
+            var _stat = document.getElementById('statUniqueUsers'); if(_stat) _stat.textContent = uniqueUsers;
+            var _stat = document.getElementById('statMostActive'); if(_stat) _stat.textContent = mostActiveUser !== '-' ? mostActiveUser.split('@')[0] : '-';
+            var _stat = document.getElementById('statLastEvent'); if(_stat) _stat.textContent = lastEvent;
         }
 
         function formatTime(dateStr) {
@@ -503,9 +503,9 @@
 
         function updatePagination() {
             const totalPages = Math.ceil(filteredLogs.length / recordsPerPage);
-            document.getElementById('currentPage').textContent = currentPage;
-            document.getElementById('totalPages').textContent = totalPages || 1;
-            document.getElementById('recordsInfo').textContent = recordsPerPage;
+            var _curr = document.getElementById('currentPage'); if(_curr) _curr.textContent = currentPage;
+            var _tota = document.getElementById('totalPages'); if(_tota) _tota.textContent = totalPages || 1;
+            var _reco = document.getElementById('recordsInfo'); if(_reco) _reco.textContent = recordsPerPage;
 
             document.getElementById('prevBtn').disabled = currentPage <= 1;
             document.getElementById('nextBtn').disabled = currentPage >= totalPages;

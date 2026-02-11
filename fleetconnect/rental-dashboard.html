@@ -512,12 +512,12 @@
         // Dark mode
         function toggleDarkMode() {
             document.body.classList.toggle('dark');
-            document.getElementById('darkModeToggle').classList.toggle('active');
+            var _dark = document.getElementById('darkModeToggle'); if(_dark) _dark.classList.toggle('active');
             localStorage.setItem('darkMode', document.body.classList.contains('dark'));
         }
         if (localStorage.getItem('darkMode') === 'true') {
             document.body.classList.add('dark');
-            document.getElementById('darkModeToggle').classList.add('active');
+            var _dark = document.getElementById('darkModeToggle'); if(_dark) _dark.classList.add('active');
         }
         
         // Mobile sidebar
@@ -544,7 +544,7 @@
 
                 const hour = new Date().getHours();
                 const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
-                document.getElementById('welcomeMsg').textContent = greeting + ', ' + currentUser.name + '!';
+                var _welc = document.getElementById('welcomeMsg'); if(_welc) _welc.textContent = greeting + ', ' + currentUser.name + '!';
             }
             // Initialize feature flags for rental role
             FC_FLAGS.init('rental');
@@ -590,24 +590,24 @@
             const completed = allJobs.filter(j => j.status === 'completed').length;
             const totalGallons = allDeliveries.reduce((s, d) => s + parseFloat(d.gallons || 0), 0);
             
-            document.getElementById('statActive').textContent = active;
-            document.getElementById('statPending').textContent = pending;
-            document.getElementById('statGallons').textContent = totalGallons.toFixed(0);
-            document.getElementById('statCompleted').textContent = completed;
+            var _stat = document.getElementById('statActive'); if(_stat) _stat.textContent = active;
+            var _stat = document.getElementById('statPending'); if(_stat) _stat.textContent = pending;
+            var _stat = document.getElementById('statGallons'); if(_stat) _stat.textContent = totalGallons.toFixed(0);
+            var _stat = document.getElementById('statCompleted'); if(_stat) _stat.textContent = completed;
             const activeOnlyCount = allJobs.filter(j => ['pending', 'open', 'assigned', 'accepted', 'in-progress'].includes(j.status)).length;
-            document.getElementById('totalBadge').textContent = activeOnlyCount;
+            var _tota = document.getElementById('totalBadge'); if(_tota) _tota.textContent = activeOnlyCount;
         }
         
         let ordersChartRange = 'week';
 
         function updateOrdersChart(range) {
             ordersChartRange = range;
-            document.getElementById('ordersToggleWeek').style.background = range === 'week' ? '#60a5fa' : '#2a2a2a';
-            document.getElementById('ordersToggleWeek').style.color = range === 'week' ? '#fff' : '#f5f0e8';
-            document.getElementById('ordersToggleMonth').style.background = range === 'month' ? '#60a5fa' : '#2a2a2a';
-            document.getElementById('ordersToggleMonth').style.color = range === 'month' ? '#fff' : '#f5f0e8';
-            document.getElementById('ordersToggle30Days').style.background = range === '30days' ? '#60a5fa' : '#2a2a2a';
-            document.getElementById('ordersToggle30Days').style.color = range === '30days' ? '#fff' : '#f5f0e8';
+            var _orde = document.getElementById('ordersToggleWeek'); if(_orde) _orde.style.background = range === 'week' ? '#60a5fa' : '#2a2a2a';
+            var _orde = document.getElementById('ordersToggleWeek'); if(_orde) _orde.style.color = range === 'week' ? '#fff' : '#f5f0e8';
+            var _orde = document.getElementById('ordersToggleMonth'); if(_orde) _orde.style.background = range === 'month' ? '#60a5fa' : '#2a2a2a';
+            var _orde = document.getElementById('ordersToggleMonth'); if(_orde) _orde.style.color = range === 'month' ? '#fff' : '#f5f0e8';
+            var _orde = document.getElementById('ordersToggle30Days'); if(_orde) _orde.style.background = range === '30days' ? '#60a5fa' : '#2a2a2a';
+            var _orde = document.getElementById('ordersToggle30Days'); if(_orde) _orde.style.color = range === '30days' ? '#fff' : '#f5f0e8';
             renderChart();
         }
 
@@ -651,10 +651,10 @@
             const pending = allJobs.filter(j => ['pending','assigned','open'].includes(j.status)).length;
             const total = allJobs.length || 1;
             
-            document.getElementById('donutTotal').textContent = total;
-            document.getElementById('legendCompleted').textContent = completed;
-            document.getElementById('legendActive').textContent = active;
-            document.getElementById('legendPending').textContent = pending;
+            var _donu = document.getElementById('donutTotal'); if(_donu) _donu.textContent = total;
+            var _lege = document.getElementById('legendCompleted'); if(_lege) _lege.textContent = completed;
+            var _lege = document.getElementById('legendActive'); if(_lege) _lege.textContent = active;
+            var _lege = document.getElementById('legendPending'); if(_lege) _lege.textContent = pending;
             
             const c = 2 * Math.PI * 40;
             document.getElementById('donutCompleted').setAttribute('stroke-dasharray', (completed/total)*c + ' ' + c);
@@ -709,7 +709,7 @@
             activities.sort((a, b) => new Date(b.time) - new Date(a.time));
             
             const newCount = activities.filter(a => a.isNew).length;
-            document.getElementById('activityBadge').textContent = newCount + ' new';
+            var _acti = document.getElementById('activityBadge'); if(_acti) _acti.textContent = newCount + ' new';
             
             const container = document.getElementById('activityList');
             
@@ -788,7 +788,7 @@
             const container = document.getElementById('jobsTable');
             if (!filtered.length) {
                 container.innerHTML = '<div class="empty-state" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;"><div style="font-size:3rem;margin-bottom:16px;opacity:0.5;">📋</div><h3 style="font-size:1.2rem;font-weight:600;color:var(--text-primary,#e8e0d8);margin-bottom:8px;">No orders found</h3><p style="font-size:0.9rem;color:var(--text-secondary,#b8b0a8);margin-bottom:24px;">Create your first work order to get started</p><a href="create-job.html" class="btn btn-primary" style="text-decoration:none;">+ Create Work Order</a></div>';
-                document.getElementById('tableFooter').style.display = 'none';
+                var _tabl = document.getElementById('tableFooter'); if(_tabl) _tabl.style.display = 'none';
                 return;
             }
             
@@ -809,8 +809,8 @@
                     '</tr>';
                 }).join('') + '</tbody></table>';
             
-            document.getElementById('tableFooter').style.display = filtered.length > 15 ? 'flex' : 'none';
-            document.getElementById('paginationInfo').textContent = 'Showing 1-' + Math.min(15, filtered.length) + ' of ' + filtered.length;
+            var _tabl = document.getElementById('tableFooter'); if(_tabl) _tabl.style.display = filtered.length > 15 ? 'flex' : 'none';
+            var _pagi = document.getElementById('paginationInfo'); if(_pagi) _pagi.textContent = 'Showing 1-' + Math.min(15, filtered.length) + ' of ' + filtered.length;
         }
         
         function getStatusTimeline(jobStatus) {
@@ -858,7 +858,7 @@
             const jobDeliveries = allDeliveries.filter(d => d.job_id === jobId);
             const totalGal = jobDeliveries.reduce((s, d) => s + parseFloat(d.gallons || 0), 0);
             
-            document.getElementById('modalTitle').textContent = job.job_site_name || 'Order Details';
+            var _moda = document.getElementById('modalTitle'); if(_moda) _moda.textContent = job.job_site_name || 'Order Details';
             document.getElementById('modalBody').innerHTML = `
                 ${getStatusTimeline(job.status)}
                 <div class="detail-grid">
@@ -882,7 +882,7 @@
             footer.innerHTML = '<button class="btn btn-secondary" onclick="closeModal()">Close</button>' +
                 (job.status !== 'completed' ? '<button class="btn btn-primary" onclick="closeModal(); viewDeliveries(\'' + jobId + '\')">View Deliveries</button>' : '');
             
-            document.getElementById('jobModal').classList.add('show');
+            var _jobM = document.getElementById('jobModal'); if(_jobM) _jobM.classList.add('show');
         }
         
         async function viewDeliveries(jobId) {
@@ -891,7 +891,7 @@
             const total = deliveries.reduce((s, d) => s + parseFloat(d.gallons || 0), 0);
             const totalDef = deliveries.reduce((s, d) => s + parseFloat(d.def_gallons || 0), 0);
             
-            document.getElementById('modalTitle').textContent = 'Deliveries — ' + (job ? job.job_site_name : 'Order');
+            var _moda = document.getElementById('modalTitle'); if(_moda) _moda.textContent = 'Deliveries — ' + (job ? job.job_site_name : 'Order');
             
             let html = '';
             if (deliveries.length === 0) {
@@ -916,12 +916,12 @@
                 </div>`;
             }
             
-            document.getElementById('modalBody').innerHTML = html;
-            document.getElementById('modalFooter').innerHTML = '<button class="btn btn-secondary" onclick="closeModal()">Close</button>';
-            document.getElementById('jobModal').classList.add('show');
+            var _moda = document.getElementById('modalBody'); if(_moda) _moda.innerHTML = html;
+            var _moda = document.getElementById('modalFooter'); if(_moda) _moda.innerHTML = '<button class="btn btn-secondary" onclick="closeModal()">Close</button>';
+            var _jobM = document.getElementById('jobModal'); if(_jobM) _jobM.classList.add('show');
         }
         
-        function closeModal() { document.getElementById('jobModal').classList.remove('show'); }
+ var _jobM = document.getElementById('jobModal'); if(_jobM) _jobM.classList.remove('show');
 
         document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
     </script>

@@ -323,13 +323,13 @@
 
         function renderShiftData(deliveries) {
             if (deliveries.length === 0) {
-                document.getElementById('jobsCard').style.display = 'none';
-                document.getElementById('fuelCard').style.display = 'none';
-                document.getElementById('timelineCard').style.display = 'none';
-                document.getElementById('jobsCount').textContent = '0';
-                document.getElementById('gallonsTotal').textContent = '0';
-                document.getElementById('hoursWorked').textContent = '0';
-                document.getElementById('milesDriven').textContent = '0';
+                var _jobs = document.getElementById('jobsCard'); if(_jobs) _jobs.style.display = 'none';
+                var _fuel = document.getElementById('fuelCard'); if(_fuel) _fuel.style.display = 'none';
+                var _time = document.getElementById('timelineCard'); if(_time) _time.style.display = 'none';
+                var _jobs = document.getElementById('jobsCount'); if(_jobs) _jobs.textContent = '0';
+                var _gall = document.getElementById('gallonsTotal'); if(_gall) _gall.textContent = '0';
+                var _hour = document.getElementById('hoursWorked'); if(_hour) _hour.textContent = '0';
+                var _mile = document.getElementById('milesDriven'); if(_mile) _mile.textContent = '0';
                 return;
             }
 
@@ -349,19 +349,19 @@
             const estimatedMiles = Math.round((deliveries.length * 10) + (hoursWorked * 12));
 
             // Update stats
-            document.getElementById('jobsCount').textContent = jobsCount;
-            document.getElementById('gallonsTotal').textContent = totalGallons.toFixed(0);
-            document.getElementById('hoursWorked').textContent = hoursWorked;
-            document.getElementById('milesDriven').textContent = estimatedMiles;
+            var _jobs = document.getElementById('jobsCount'); if(_jobs) _jobs.textContent = jobsCount;
+            var _gall = document.getElementById('gallonsTotal'); if(_gall) _gall.textContent = totalGallons.toFixed(0);
+            var _hour = document.getElementById('hoursWorked'); if(_hour) _hour.textContent = hoursWorked;
+            var _mile = document.getElementById('milesDriven'); if(_mile) _mile.textContent = estimatedMiles;
 
             // Fuel breakdown
-            document.getElementById('dieselTotal').textContent = dieselGallons.toFixed(0) + ' gal';
-            document.getElementById('defTotal').textContent = defGallons.toFixed(0) + ' gal';
-            document.getElementById('gasolineTotal').textContent = gasolineGallons.toFixed(0) + ' gal';
-            document.getElementById('totalGallons').textContent = totalGallons.toFixed(0) + ' gal';
+            var _dies = document.getElementById('dieselTotal'); if(_dies) _dies.textContent = dieselGallons.toFixed(0) + ' gal';
+            var _defT = document.getElementById('defTotal'); if(_defT) _defT.textContent = defGallons.toFixed(0) + ' gal';
+            var _gaso = document.getElementById('gasolineTotal'); if(_gaso) _gaso.textContent = gasolineGallons.toFixed(0) + ' gal';
+            var _tota = document.getElementById('totalGallons'); if(_tota) _tota.textContent = totalGallons.toFixed(0) + ' gal';
 
             // Job list
-            document.getElementById('jobsCard').style.display = 'block';
+            var _jobs = document.getElementById('jobsCard'); if(_jobs) _jobs.style.display = 'block';
             const jobList = document.getElementById('jobList');
             jobList.innerHTML = deliveries.map((d, idx) => {
                 const time = new Date(d.timestamp).toLocaleTimeString();
@@ -383,8 +383,8 @@
 
             // Timeline
             renderTimeline(deliveries);
-            document.getElementById('fuelCard').style.display = 'block';
-            document.getElementById('timelineCard').style.display = 'block';
+            var _fuel = document.getElementById('fuelCard'); if(_fuel) _fuel.style.display = 'block';
+            var _time = document.getElementById('timelineCard'); if(_time) _time.style.display = 'block';
         }
 
         function renderTimeline(deliveries) {
@@ -486,15 +486,15 @@ Please review this summary.`;
                     </div>
                 `;
 
-                document.getElementById('comparisonContent').innerHTML = html;
-                document.getElementById('comparisonModal').classList.add('show');
+                var _comp = document.getElementById('comparisonContent'); if(_comp) _comp.innerHTML = html;
+                var _comp = document.getElementById('comparisonModal'); if(_comp) _comp.classList.add('show');
             } catch (err) {
                 console.error('Comparison error:', err);
             }
         }
 
         function closeComparison() {
-            document.getElementById('comparisonModal').classList.remove('show');
+            var _comp = document.getElementById('comparisonModal'); if(_comp) _comp.classList.remove('show');
         }
     </script>
     

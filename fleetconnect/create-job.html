@@ -546,17 +546,17 @@
 
         // Success link based on role
         const dashLinks = { admin: 'work-orders.html', rental: 'rental-dashboard.html', vendor: 'vendor-dashboard.html', fieldworker: 'field-worker.html' };
-        document.getElementById('successLink').href = dashLinks[currentUser.role] || 'work-orders.html';
+        var _succ = document.getElementById('successLink'); if(_succ) _succ.href = dashLinks[currentUser.role] || 'work-orders.html';
 
         // Default date
         document.getElementById('dateOut').value = new Date().toISOString().split('T')[0];
 
         // Toggle Power Plus sections based on document source
-        document.getElementById('documentSource').addEventListener('change', function() {
+        var _docu = document.getElementById('documentSource'); if(_docu) _docu.addEventListener('change', function() {
             const isPP = this.value === 'powerplus';
-            document.getElementById('ticketInfoSection').style.display = isPP ? '' : 'none';
-            document.getElementById('generatorSection').style.display = isPP ? '' : 'none';
-            document.getElementById('billableSection').style.display = isPP ? '' : 'none';
+            var _tick = document.getElementById('ticketInfoSection'); if(_tick) _tick.style.display = isPP ? '' : 'none';
+            var _gene = document.getElementById('generatorSection'); if(_gene) _gene.style.display = isPP ? '' : 'none';
+            var _bill = document.getElementById('billableSection'); if(_bill) _bill.style.display = isPP ? '' : 'none';
         });
 
         // ===== INVOICE SCANNING =====
@@ -627,9 +627,9 @@
 
             // Show/hide Power Plus sections
             if (isPowerPlus) {
-                document.getElementById('ticketInfoSection').style.display = '';
-                document.getElementById('generatorSection').style.display = '';
-                document.getElementById('billableSection').style.display = '';
+                var _tick = document.getElementById('ticketInfoSection'); if(_tick) _tick.style.display = '';
+                var _gene = document.getElementById('generatorSection'); if(_gene) _gene.style.display = '';
+                var _bill = document.getElementById('billableSection'); if(_bill) _bill.style.display = '';
                 document.getElementById('documentSource').value = 'powerplus';
             }
 
@@ -688,8 +688,8 @@
             else { alert('Could not extract data. Please fill the form manually.'); }
         }
 
-        function dismissExtracted() { document.getElementById('extractedPreview').classList.remove('show'); extractedData = {}; }
-        function cancelScan() { document.getElementById('scanModal').classList.remove('show'); }
+ var _extr = document.getElementById('extractedPreview'); if(_extr) _extr.classList.remove('show');
+ var _scan = document.getElementById('scanModal'); if(_scan) _scan.classList.remove('show');
 
         function applyExtracted() {
             // Common fields (Sunbelt + Power Plus)
@@ -778,15 +778,15 @@
 
             // Show Power Plus sections if applicable
             if (extractedData.documentType === 'powerplus') {
-                document.getElementById('ticketInfoSection').style.display = '';
-                document.getElementById('generatorSection').style.display = '';
-                document.getElementById('billableSection').style.display = '';
+                var _tick = document.getElementById('ticketInfoSection'); if(_tick) _tick.style.display = '';
+                var _gene = document.getElementById('generatorSection'); if(_gene) _gene.style.display = '';
+                var _bill = document.getElementById('billableSection'); if(_bill) _bill.style.display = '';
                 document.getElementById('documentSource').value = 'powerplus';
             } else if (extractedData.documentType === 'sunbelt') {
                 document.getElementById('documentSource').value = 'sunbelt';
             }
 
-            document.getElementById('extractedPreview').classList.remove('show');
+            var _extr = document.getElementById('extractedPreview'); if(_extr) _extr.classList.remove('show');
             document.getElementById('formCard').scrollIntoView({ behavior: 'smooth' });
         }
 
@@ -825,7 +825,7 @@
         }
         function updateCount() {
             const valid = equipmentItems.filter(e => e.unitNumber.trim() || e.description.trim());
-            document.getElementById('equipmentCount').textContent = valid.length + ' unit' + (valid.length !== 1 ? 's' : '') + ' added';
+            var _equi = document.getElementById('equipmentCount'); if(_equi) _equi.textContent = valid.length + ' unit' + (valid.length !== 1 ? 's' : '') + ' added';
         }
         addEquipment();
 
@@ -846,7 +846,7 @@
         })();
 
         // ===== FORM SUBMIT =====
-        document.getElementById('workOrderForm').addEventListener('submit', async function(e) {
+        var _work = document.getElementById('workOrderForm'); if(_work) _work.addEventListener('submit', async function(e) {
             e.preventDefault();
             const validEquipment = equipmentItems.filter(e => e.unitNumber.trim() || e.description.trim());
             if (validEquipment.length === 0) { alert('Please add at least one equipment unit.'); return; }
@@ -947,11 +947,11 @@
                 const result = await createJob(jobData, equipmentList);
 
                 if (result.success) {
-                    document.getElementById('formCard').style.display = 'none';
-                    document.getElementById('scanSection').style.display = 'none';
+                    var _form = document.getElementById('formCard'); if(_form) _form.style.display = 'none';
+                    var _scan = document.getElementById('scanSection'); if(_scan) _scan.style.display = 'none';
                     document.querySelector('.or-divider').style.display = 'none';
-                    document.getElementById('extractedPreview').style.display = 'none';
-                    document.getElementById('successMessage').classList.add('show');
+                    var _extr = document.getElementById('extractedPreview'); if(_extr) _extr.style.display = 'none';
+                    var _succ = document.getElementById('successMessage'); if(_succ) _succ.classList.add('show');
                 } else {
                     alert('Error creating work order: ' + (result.error || 'Unknown error. Please try again.'));
                     btn.disabled = false;

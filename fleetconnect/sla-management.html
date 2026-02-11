@@ -363,8 +363,8 @@
         document.addEventListener('DOMContentLoaded', async () => {
             const user = checkAuth(['vendor']);
             if (user) {
-                document.getElementById('userName').textContent = user.name;
-                document.getElementById('userAvatar').textContent = user.name.charAt(0).toUpperCase();
+                var _user = document.getElementById('userName'); if(_user) _user.textContent = user.name;
+                var _user = document.getElementById('userAvatar'); if(_user) _user.textContent = user.name.charAt(0).toUpperCase();
 
                 await FC_FLAGS.init('vendor');
                 loadData();
@@ -406,7 +406,7 @@
 
             // Update completion rate display
             document.getElementById('slaCompletionRate').oninput = function() {
-                document.getElementById('completionRateDisplay').textContent = this.value + '%';
+                var _comp = document.getElementById('completionRateDisplay'); if(_comp) _comp.textContent = this.value + '%';
             };
         }
 
@@ -473,9 +473,9 @@
 
             const compliance = total > 0 ? Math.round((meeting / total) * 100) : 0;
 
-            document.getElementById('overallCompliance').textContent = compliance + '%';
-            document.getElementById('atRiskCount').textContent = atRisk;
-            document.getElementById('breachedCount').textContent = breached;
+            var _over = document.getElementById('overallCompliance'); if(_over) _over.textContent = compliance + '%';
+            var _atRi = document.getElementById('atRiskCount'); if(_atRi) _atRi.textContent = atRisk;
+            var _brea = document.getElementById('breachedCount'); if(_brea) _brea.textContent = breached;
         }
 
         function renderTrendChart() {
@@ -498,14 +498,14 @@
             document.getElementById('slaWindowStart').value = '06:00';
             document.getElementById('slaWindowEnd').value = '14:00';
             document.getElementById('slaCompletionRate').value = '95';
-            document.getElementById('completionRateDisplay').textContent = '95%';
+            var _comp = document.getElementById('completionRateDisplay'); if(_comp) _comp.textContent = '95%';
             document.getElementById('slaPenalty').value = '';
             document.getElementById('slaReviewDate').value = new Date(Date.now() + 30 * 24 * 3600000).toISOString().split('T')[0];
-            document.getElementById('slaModal').classList.add('show');
+            var _slaM = document.getElementById('slaModal'); if(_slaM) _slaM.classList.add('show');
         }
 
         function closeSLAModal() {
-            document.getElementById('slaModal').classList.remove('show');
+            var _slaM = document.getElementById('slaModal'); if(_slaM) _slaM.classList.remove('show');
         }
 
         function editSLA(id) {
@@ -517,9 +517,9 @@
             document.getElementById('slaWindowStart').value = sla.window_start;
             document.getElementById('slaWindowEnd').value = sla.window_end;
             document.getElementById('slaCompletionRate').value = sla.completion_target;
-            document.getElementById('completionRateDisplay').textContent = sla.completion_target + '%';
+            var _comp = document.getElementById('completionRateDisplay'); if(_comp) _comp.textContent = sla.completion_target + '%';
             document.getElementById('slaPenalty').value = sla.penalty || '';
-            document.getElementById('slaModal').classList.add('show');
+            var _slaM = document.getElementById('slaModal'); if(_slaM) _slaM.classList.add('show');
         }
 
         function saveSLA() {

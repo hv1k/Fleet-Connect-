@@ -343,7 +343,7 @@
 
         function renderEquipmentList() {
             const filtered = getFilteredEquipment();
-            document.getElementById('equipmentCount').textContent = filtered.length;
+            var _equi = document.getElementById('equipmentCount'); if(_equi) _equi.textContent = filtered.length;
 
             const html = filtered.map(eq => `
                 <div class="equipment-item ${eq.id === selectedEquipmentId ? 'active' : ''}" onclick="selectEquipment('${eq.id}')">
@@ -355,7 +355,7 @@
                 </div>
             `).join('');
 
-            document.getElementById('equipmentList').innerHTML = html || '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center;"><div style="font-size:2.5rem;margin-bottom:12px;opacity:0.5;">🚜</div><h3 style="font-size:1.1rem;font-weight:600;color:var(--text-primary,#e8e0d8);margin-bottom:6px;">No equipment</h3><p style="font-size:0.85rem;color:var(--text-secondary,#b8b0a8);">Add equipment to track it here</p></div>';
+            var _equi = document.getElementById('equipmentList'); if(_equi) _equi.innerHTML = html || '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center;"><div style="font-size:2.5rem;margin-bottom:12px;opacity:0.5;">🚜</div><h3 style="font-size:1.1rem;font-weight:600;color:var(--text-primary,#e8e0d8);margin-bottom:6px;">No equipment</h3><p style="font-size:0.85rem;color:var(--text-secondary,#b8b0a8);">Add equipment to track it here</p></div>';
         }
 
         function renderListView() {
@@ -387,7 +387,7 @@
                 </div>
             `).join('');
 
-            document.getElementById('listView').innerHTML = html || '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;"><div style="font-size:3rem;margin-bottom:16px;opacity:0.5;">🚜</div><h3 style="font-size:1.2rem;font-weight:600;color:var(--text-primary,#e8e0d8);margin-bottom:8px;">No equipment tracked yet</h3><p style="font-size:0.9rem;color:var(--text-secondary,#b8b0a8);margin-bottom:24px;">Add your first piece of equipment to start tracking</p></div>';
+            var _list = document.getElementById('listView'); if(_list) _list.innerHTML = html || '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;"><div style="font-size:3rem;margin-bottom:16px;opacity:0.5;">🚜</div><h3 style="font-size:1.2rem;font-weight:600;color:var(--text-primary,#e8e0d8);margin-bottom:8px;">No equipment tracked yet</h3><p style="font-size:0.9rem;color:var(--text-secondary,#b8b0a8);margin-bottom:24px;">Add your first piece of equipment to start tracking</p></div>';
         }
 
         let selectedEquipmentId = null;
@@ -412,11 +412,11 @@
 
         function switchView(view) {
             if (view === 'map') {
-                document.getElementById('map').style.display = 'block';
-                document.getElementById('listView').classList.remove('active');
+                var _map = document.getElementById('map'); if(_map) _map.style.display = 'block';
+                var _list = document.getElementById('listView'); if(_list) _list.classList.remove('active');
             } else {
-                document.getElementById('map').style.display = 'none';
-                document.getElementById('listView').classList.add('active');
+                var _map = document.getElementById('map'); if(_map) _map.style.display = 'none';
+                var _list = document.getElementById('listView'); if(_list) _list.classList.add('active');
                 renderListView();
             }
 

@@ -378,8 +378,8 @@
         document.addEventListener('DOMContentLoaded', async () => {
             const user = checkAuth(['vendor']);
             if (user) {
-                document.getElementById('userName').textContent = user.name;
-                document.getElementById('userAvatar').textContent = user.name.charAt(0).toUpperCase();
+                var _user = document.getElementById('userName'); if(_user) _user.textContent = user.name;
+                var _user = document.getElementById('userAvatar'); if(_user) _user.textContent = user.name.charAt(0).toUpperCase();
 
                 await FC_FLAGS.init('vendor');
                 loadData();
@@ -430,9 +430,9 @@
             const winRate = totalBids > 0 ? Math.round((wonBids / totalBids) * 100) : 0;
             const avgPrice = totalBids > 0 ? (myBids.reduce((sum, b) => sum + b.price_per_gal, 0) / totalBids).toFixed(2) : 0;
 
-            document.getElementById('statTotalBids').textContent = totalBids;
-            document.getElementById('statWinRate').textContent = winRate + '%';
-            document.getElementById('statAvgPrice').textContent = '$' + parseFloat(avgPrice).toFixed(2);
+            var _stat = document.getElementById('statTotalBids'); if(_stat) _stat.textContent = totalBids;
+            var _stat = document.getElementById('statWinRate'); if(_stat) _stat.textContent = winRate + '%';
+            var _stat = document.getElementById('statAvgPrice'); if(_stat) _stat.textContent = '$' + parseFloat(avgPrice).toFixed(2);
         }
 
         function renderOpenBids() {
@@ -517,17 +517,17 @@
 
         function openBidModal(jobId, jobName, gallons) {
             currentBidJobId = jobId;
-            document.getElementById('bidJobName').textContent = jobName;
-            document.getElementById('bidGallons').textContent = gallons;
+            var _bidJ = document.getElementById('bidJobName'); if(_bidJ) _bidJ.textContent = jobName;
+            var _bidG = document.getElementById('bidGallons'); if(_bidG) _bidG.textContent = gallons;
             document.getElementById('bidPrice').value = '';
             document.getElementById('bidCompletion').value = 'next-day';
             document.getElementById('bidNotes').value = '';
-            document.getElementById('bidTotalCost').textContent = '$0.00';
-            document.getElementById('bidModal').classList.add('show');
+            var _bidT = document.getElementById('bidTotalCost'); if(_bidT) _bidT.textContent = '$0.00';
+            var _bidM = document.getElementById('bidModal'); if(_bidM) _bidM.classList.add('show');
         }
 
         function closeBidModal() {
-            document.getElementById('bidModal').classList.remove('show');
+            var _bidM = document.getElementById('bidModal'); if(_bidM) _bidM.classList.remove('show');
             currentBidJobId = null;
         }
 
@@ -535,7 +535,7 @@
             const price = parseFloat(document.getElementById('bidPrice').value) || 0;
             const gallons = parseInt(document.getElementById('bidGallons').textContent) || 0;
             const total = price * gallons;
-            document.getElementById('bidTotalCost').textContent = '$' + total.toFixed(2);
+            var _bidT = document.getElementById('bidTotalCost'); if(_bidT) _bidT.textContent = '$' + total.toFixed(2);
         }
 
         function submitBid() {

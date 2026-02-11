@@ -510,24 +510,24 @@
                 renderInvoices();
             } catch (err) {
                 console.error('Error loading data:', err);
-                document.getElementById('fuelHistoryBody').innerHTML = '<tr><td colspan="7" class="empty-state"><h3>Error loading data</h3><p>' + (err.message || 'Please try refreshing the page.') + '</p></td></tr>';
-                document.getElementById('invoiceTableBody').innerHTML = '<tr><td colspan="7" class="empty-state"><h3>Error loading data</h3><p>' + (err.message || 'Please try refreshing the page.') + '</p></td></tr>';
+                var _fuel = document.getElementById('fuelHistoryBody'); if(_fuel) _fuel.innerHTML = '<tr><td colspan="7" class="empty-state"><h3>Error loading data</h3><p>' + (err.message || 'Please try refreshing the page.') + '</p></td></tr>';
+                var _invo = document.getElementById('invoiceTableBody'); if(_invo) _invo.innerHTML = '<tr><td colspan="7" class="empty-state"><h3>Error loading data</h3><p>' + (err.message || 'Please try refreshing the page.') + '</p></td></tr>';
             }
         }
 
         function updateStats() {
             const totalGallons = allDeliveries.reduce((s, d) => s + (parseFloat(d.gallons) || 0), 0);
             const needsMatch = allInvoices.filter(i => i.match_status !== 'matched').length;
-            document.getElementById('statCompletedJobs').textContent = completedJobs.length;
-            document.getElementById('statTotalGallons').textContent = totalGallons.toLocaleString('en-US', { maximumFractionDigits: 0 });
-            document.getElementById('statQBInvoices').textContent = allInvoices.length;
-            document.getElementById('statNeedsMatch').textContent = needsMatch;
-            document.getElementById('fuelHistoryBadge').textContent = completedJobs.length;
-            document.getElementById('qbInvoicesBadge').textContent = allInvoices.length;
-            document.getElementById('tabAll').textContent = allInvoices.length;
-            document.getElementById('tabMatched').textContent = allInvoices.filter(i => i.match_status === 'matched').length;
-            document.getElementById('tabPending').textContent = allInvoices.filter(i => i.match_status === 'pending_review').length;
-            document.getElementById('tabUnmatched').textContent = allInvoices.filter(i => i.match_status === 'unmatched').length;
+            var _stat = document.getElementById('statCompletedJobs'); if(_stat) _stat.textContent = completedJobs.length;
+            var _stat = document.getElementById('statTotalGallons'); if(_stat) _stat.textContent = totalGallons.toLocaleString('en-US', { maximumFractionDigits: 0 });
+            var _stat = document.getElementById('statQBInvoices'); if(_stat) _stat.textContent = allInvoices.length;
+            var _stat = document.getElementById('statNeedsMatch'); if(_stat) _stat.textContent = needsMatch;
+            var _fuel = document.getElementById('fuelHistoryBadge'); if(_fuel) _fuel.textContent = completedJobs.length;
+            var _qbIn = document.getElementById('qbInvoicesBadge'); if(_qbIn) _qbIn.textContent = allInvoices.length;
+            var _tabA = document.getElementById('tabAll'); if(_tabA) _tabA.textContent = allInvoices.length;
+            var _tabM = document.getElementById('tabMatched'); if(_tabM) _tabM.textContent = allInvoices.filter(i => i.match_status === 'matched').length;
+            var _tabP = document.getElementById('tabPending'); if(_tabP) _tabP.textContent = allInvoices.filter(i => i.match_status === 'pending_review').length;
+            var _tabU = document.getElementById('tabUnmatched'); if(_tabU) _tabU.textContent = allInvoices.filter(i => i.match_status === 'unmatched').length;
         }
 
         function switchPageTab(tab, btn) {
@@ -553,8 +553,8 @@
             const tbody = document.getElementById('fuelHistoryBody');
             if (filtered.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="7" class="empty-state"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg><h3>No completed deliveries yet</h3><p>Completed fuel delivery jobs will appear here as your full fuel history.</p></td></tr>';
-                document.getElementById('fuelHistoryCount').textContent = '0 deliveries';
-                document.getElementById('fuelHistoryTotal').textContent = '';
+                var _fuel = document.getElementById('fuelHistoryCount'); if(_fuel) _fuel.textContent = '0 deliveries';
+                var _fuel = document.getElementById('fuelHistoryTotal'); if(_fuel) _fuel.textContent = '';
                 return;
             }
             let totalDiesel = 0, totalDef = 0;
@@ -586,8 +586,8 @@
                     <td>${invBadge}</td>
                 </tr>`;
             }).join('');
-            document.getElementById('fuelHistoryCount').textContent = `${filtered.length} completed job${filtered.length !== 1 ? 's' : ''}`;
-            document.getElementById('fuelHistoryTotal').textContent = `Total: ${totalDiesel.toLocaleString('en-US', {maximumFractionDigits: 0})} gal diesel` + (totalDef > 0 ? ` · ${totalDef.toLocaleString('en-US', {maximumFractionDigits: 0})} gal DEF` : '');
+            var _fuel = document.getElementById('fuelHistoryCount'); if(_fuel) _fuel.textContent = `${filtered.length} completed job${filtered.length !== 1 ? 's' : ''}`;
+            var _fuel = document.getElementById('fuelHistoryTotal'); if(_fuel) _fuel.textContent = `Total: ${totalDiesel.toLocaleString('en-US', {maximumFractionDigits: 0})} gal diesel` + (totalDef > 0 ? ` · ${totalDef.toLocaleString('en-US', {maximumFractionDigits: 0})} gal DEF` : '');
         }
 
         // ===== QB INVOICES =====
@@ -622,14 +622,14 @@
                     </tr>`;
                 }).join('');
             }
-            document.getElementById('invoiceCount').textContent = `${filtered.length} invoice${filtered.length !== 1 ? 's' : ''}`;
+            var _invo = document.getElementById('invoiceCount'); if(_invo) _invo.textContent = `${filtered.length} invoice${filtered.length !== 1 ? 's' : ''}`;
         }
 
         // ===== MODAL =====
         async function viewInvoice(id) {
             const inv = allInvoices.find(i => i.id === id); if (!inv) return;
             const mj = inv.matched_job_id ? allJobs.find(j => j.id === inv.matched_job_id) : null;
-            document.getElementById('modalTitle').textContent = `Invoice ${inv.invoice_number || 'Details'}`;
+            var _moda = document.getElementById('modalTitle'); if(_moda) _moda.textContent = `Invoice ${inv.invoice_number || 'Details'}`;
             document.getElementById('modalBody').innerHTML = `
                 <div class="detail-grid">
                     <div class="detail-section"><div class="detail-section-title">Invoice Info</div><div class="detail-row"><span class="detail-label">Invoice #</span><span class="detail-value">${inv.invoice_number||'N/A'}</span></div><div class="detail-row"><span class="detail-label">Date</span><span class="detail-value">${inv.invoice_date?new Date(inv.invoice_date).toLocaleDateString():'-'}</span></div><div class="detail-row"><span class="detail-label">Due Date</span><span class="detail-value">${inv.due_date?new Date(inv.due_date).toLocaleDateString():'-'}</span></div><div class="detail-row"><span class="detail-label">Terms</span><span class="detail-value">${inv.payment_terms||'-'}</span></div><div class="detail-row"><span class="detail-label">From</span><span class="detail-value">${inv.vendor_name||'-'}</span></div></div>
@@ -641,18 +641,18 @@
                 ${inv.pdf_base64?`<div style="margin-top:16px;"><div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;color:#666;margin-bottom:8px;">PDF Preview</div><iframe class="pdf-viewer" src="data:application/pdf;base64,${inv.pdf_base64}"></iframe></div>`:''}`;
             const footer = document.getElementById('modalFooter');
             footer.innerHTML = inv.match_status !== 'matched' ? `<button class="btn btn-secondary" onclick="closeModal()">Close</button><button class="btn btn-primary" onclick="closeModal(); matchInvoice('${inv.id}')">Match to Job</button>` : `<button class="btn btn-secondary" onclick="closeModal()">Close</button>`;
-            document.getElementById('invoiceModal').classList.add('show');
+            var _invo = document.getElementById('invoiceModal'); if(_invo) _invo.classList.add('show');
         }
 
         async function matchInvoice(id) {
             const inv = allInvoices.find(i => i.id === id); if (!inv) return;
             const available = completedJobs.filter(j => !allInvoices.some(i => i.matched_job_id === j.id && i.match_status === 'matched'));
-            document.getElementById('modalTitle').textContent = `Match Invoice ${inv.invoice_number || ''}`;
+            var _moda = document.getElementById('modalTitle'); if(_moda) _moda.textContent = `Match Invoice ${inv.invoice_number || ''}`;
             document.getElementById('modalBody').innerHTML = `
                 <div style="margin-bottom:16px;"><div style="font-size:0.85rem;color:#888;margin-bottom:4px;">Invoice: <strong style="color:#f5f0e8;">${inv.invoice_number}</strong> · ${inv.ship_to_name||inv.customer_name||'Unknown'}</div><div style="font-size:0.8rem;color:#666;">${inv.ship_to_address||''}, ${inv.ship_to_city||''} ${inv.ship_to_state||''}</div></div>
                 <div class="match-section"><div class="match-section-title">Select a job to match:</div>${available.length===0?'<p style="color:#666;font-size:0.85rem;">No available completed jobs to match.</p>':available.map(j=>`<div class="match-job-card" onclick="selectJobForMatch(this,'${j.id}')"><div class="match-job-name">${safe(j.job_site_name||'Unnamed')}</div><div class="match-job-detail">${safe(j.address_street||'')}, ${safe(j.address_city||'')} ${safe(j.address_state||'')} · ${safe(j.customer_name||'')} · Completed ${j.completed_at?new Date(j.completed_at).toLocaleDateString():''}</div></div>`).join('')}</div>`;
-            document.getElementById('modalFooter').innerHTML = `<button class="btn btn-secondary" onclick="closeModal()">Cancel</button><button class="btn btn-primary" id="confirmMatchBtn" onclick="confirmMatch('${id}')" disabled>Confirm Match</button>`;
-            document.getElementById('invoiceModal').classList.add('show');
+            var _moda = document.getElementById('modalFooter'); if(_moda) _moda.innerHTML = `<button class="btn btn-secondary" onclick="closeModal()">Cancel</button><button class="btn btn-primary" id="confirmMatchBtn" onclick="confirmMatch('${id}')" disabled>Confirm Match</button>`;
+            var _invo = document.getElementById('invoiceModal'); if(_invo) _invo.classList.add('show');
         }
 
         let selectedJobId = null;
@@ -667,11 +667,11 @@
             } catch (err) { alert('Error: ' + err.message); }
         }
 
-        function closeModal() { document.getElementById('invoiceModal').classList.remove('show'); selectedJobId = null; }
+ var _invo = document.getElementById('invoiceModal'); if(_invo) _invo.classList.remove('show');
         function copyBccEmail() {
             navigator.clipboard.writeText('flashfuels.invoices' + '@' + 'gmail.com').then(() => {
-                document.getElementById('copyToast').classList.add('show');
-                setTimeout(() => document.getElementById('copyToast').classList.remove('show'), 2000);
+                var _copy = document.getElementById('copyToast'); if(_copy) _copy.classList.add('show');
+ var _copy = document.getElementById('copyToast'); if(_copy) _copy.classList.remove('show'), 2000);
             });
         }
 
@@ -681,11 +681,11 @@
             const sites = [...new Set(allJobs.map(j => j.job_site_name).filter(Boolean))].sort();
             select.innerHTML = '<option value="all">All Job Sites</option>' +
                 sites.map(s => '<option value="' + s.replace(/"/g, '&quot;') + '">' + s + '</option>').join('');
-            document.getElementById('exportPreview').innerHTML = 'Select a job site and date range, then click Export.';
-            document.getElementById('exportPreview').style.color = '#888';
-            document.getElementById('exportModal').classList.add('show');
+            var _expo = document.getElementById('exportPreview'); if(_expo) _expo.innerHTML = 'Select a job site and date range, then click Export.';
+            var _expo = document.getElementById('exportPreview'); if(_expo) _expo.style.color = '#888';
+            var _expo = document.getElementById('exportModal'); if(_expo) _expo.classList.add('show');
         }
-        function closeExportModal() { document.getElementById('exportModal').classList.remove('show'); }
+ var _expo = document.getElementById('exportModal'); if(_expo) _expo.classList.remove('show');
         function toggleCustomDates() {
             document.getElementById('customDateRange').style.display =
                 document.getElementById('exportDateRange').value === 'custom' ? 'block' : 'none';

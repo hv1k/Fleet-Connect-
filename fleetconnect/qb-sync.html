@@ -471,8 +471,8 @@
 
             const currentUser = checkAuth(['vendor']);
             if (currentUser) {
-                document.getElementById('userName').textContent = currentUser.name;
-                document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+                var _user = document.getElementById('userName'); if(_user) _user.textContent = currentUser.name;
+                var _user = document.getElementById('userAvatar'); if(_user) _user.textContent = currentUser.name.charAt(0).toUpperCase();
             }
 
             await FC_FLAGS.init('vendor');
@@ -577,11 +577,11 @@
         }
 
         function openConnectModal() {
-            document.getElementById('connectModal').classList.add('show');
+            var _conn = document.getElementById('connectModal'); if(_conn) _conn.classList.add('show');
         }
 
         function closeConnectModal() {
-            document.getElementById('connectModal').classList.remove('show');
+            var _conn = document.getElementById('connectModal'); if(_conn) _conn.classList.remove('show');
         }
 
         function initiateOAuthFlow() {

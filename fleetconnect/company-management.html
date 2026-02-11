@@ -468,7 +468,7 @@
                 applyFilters();
             } catch (err) {
                 console.error('Error loading companies:', err);
-                document.getElementById('companiesGrid').innerHTML = '<div class="empty-state" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;"><div style="font-size:3rem;margin-bottom:16px;opacity:0.5;">⚠️</div><h3 style="font-size:1.2rem;font-weight:600;color:var(--text-primary,#e8e0d8);margin-bottom:8px;">Error loading companies</h3><p style="font-size:0.9rem;color:var(--text-secondary,#b8b0a8);margin-bottom:24px;">Please check your connection and try again</p><button onclick="location.reload()" class="btn btn-primary">Retry</button></div>';
+                var _comp = document.getElementById('companiesGrid'); if(_comp) _comp.innerHTML = '<div class="empty-state" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;"><div style="font-size:3rem;margin-bottom:16px;opacity:0.5;">⚠️</div><h3 style="font-size:1.2rem;font-weight:600;color:var(--text-primary,#e8e0d8);margin-bottom:8px;">Error loading companies</h3><p style="font-size:0.9rem;color:var(--text-secondary,#b8b0a8);margin-bottom:24px;">Please check your connection and try again</p><button onclick="location.reload()" class="btn btn-primary">Retry</button></div>';
             }
         }
 
@@ -539,18 +539,18 @@
             const company = allCompanies.find(c => c.id === companyId);
             if (!company) return;
 
-            document.getElementById('panelTitle').textContent = company.name || 'Company Details';
-            document.getElementById('panelName').textContent = safe(company.name || '-');
-            document.getElementById('panelType').textContent = company.type === 'rental' ? 'Rental Company' : 'Vendor';
-            document.getElementById('panelStatus').textContent = (company.status || 'active').toUpperCase();
-            document.getElementById('panelEmail').textContent = safe(company.email || '-');
-            document.getElementById('panelPhone').textContent = safe(company.phone || '-');
-            document.getElementById('panelAddress').textContent = safe((company.address || '') + ' ' + (company.city || ''));
-            document.getElementById('panelWebsite').textContent = company.website ? safe(company.website) : '-';
-            document.getElementById('panelTaxId').textContent = safe(company.tax_id || '-');
-            document.getElementById('panelPaymentTerms').textContent = safe(company.payment_terms || '-');
-            document.getElementById('panelActiveJobs').textContent = company.active_jobs || 0;
-            document.getElementById('panelTotalUsers').textContent = (company.users || []).length;
+            var _pane = document.getElementById('panelTitle'); if(_pane) _pane.textContent = company.name || 'Company Details';
+            var _pane = document.getElementById('panelName'); if(_pane) _pane.textContent = safe(company.name || '-');
+            var _pane = document.getElementById('panelType'); if(_pane) _pane.textContent = company.type === 'rental' ? 'Rental Company' : 'Vendor';
+            var _pane = document.getElementById('panelStatus'); if(_pane) _pane.textContent = (company.status || 'active').toUpperCase();
+            var _pane = document.getElementById('panelEmail'); if(_pane) _pane.textContent = safe(company.email || '-');
+            var _pane = document.getElementById('panelPhone'); if(_pane) _pane.textContent = safe(company.phone || '-');
+            var _pane = document.getElementById('panelAddress'); if(_pane) _pane.textContent = safe((company.address || '') + ' ' + (company.city || ''));
+            var _pane = document.getElementById('panelWebsite'); if(_pane) _pane.textContent = company.website ? safe(company.website) : '-';
+            var _pane = document.getElementById('panelTaxId'); if(_pane) _pane.textContent = safe(company.tax_id || '-');
+            var _pane = document.getElementById('panelPaymentTerms'); if(_pane) _pane.textContent = safe(company.payment_terms || '-');
+            var _pane = document.getElementById('panelActiveJobs'); if(_pane) _pane.textContent = company.active_jobs || 0;
+            var _pane = document.getElementById('panelTotalUsers'); if(_pane) _pane.textContent = (company.users || []).length;
 
             const usersList = document.getElementById('panelUsersList');
             if ((company.users || []).length === 0) {
@@ -567,11 +567,11 @@
                 `).join('');
             }
 
-            document.getElementById('sidePanel').classList.add('open');
+            var _side = document.getElementById('sidePanel'); if(_side) _side.classList.add('open');
         }
 
         function closeSidePanel() {
-            document.getElementById('sidePanel').classList.remove('open');
+            var _side = document.getElementById('sidePanel'); if(_side) _side.classList.remove('open');
             selectedCompanyId = null;
         }
 
@@ -580,8 +580,8 @@
             if (company) {
                 editingCompanyId = company.id;
                 populateCompanyForm(company);
-                document.getElementById('modalTitle').textContent = 'Edit Company';
-                document.getElementById('companyModal').classList.add('show');
+                var _moda = document.getElementById('modalTitle'); if(_moda) _moda.textContent = 'Edit Company';
+                var _comp = document.getElementById('companyModal'); if(_comp) _comp.classList.add('show');
                 closeSidePanel();
             }
         }
@@ -594,12 +594,12 @@
         function openAddCompanyModal() {
             editingCompanyId = null;
             document.getElementById('companyForm').reset();
-            document.getElementById('modalTitle').textContent = 'Add Company';
-            document.getElementById('companyModal').classList.add('show');
+            var _moda = document.getElementById('modalTitle'); if(_moda) _moda.textContent = 'Add Company';
+            var _comp = document.getElementById('companyModal'); if(_comp) _comp.classList.add('show');
         }
 
         function closeCompanyModal() {
-            document.getElementById('companyModal').classList.remove('show');
+            var _comp = document.getElementById('companyModal'); if(_comp) _comp.classList.remove('show');
         }
 
         function populateCompanyForm(company) {
