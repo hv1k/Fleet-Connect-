@@ -31,28 +31,64 @@ function verifyToken(req) {
 
 // Default feature flags — used to seed the table if empty
 const DEFAULT_FLAGS = [
-    // Vendor flags
-    { role: 'vendor', feature_key: 'page.invoices', label: 'Invoices Page', description: 'Access to the Invoices page for viewing fuel history and QB invoice matching', category: 'pages', enabled: true },
-    { role: 'vendor', feature_key: 'page.daily_log', label: 'Daily Log Page', description: 'Access to the Daily Log page for viewing deliveries by date', category: 'pages', enabled: true },
+    // ===== VENDOR PAGE FLAGS =====
+    { role: 'vendor', feature_key: 'page.work_orders', label: 'Work Orders', description: 'Work orders list and management', category: 'pages', enabled: true },
+    { role: 'vendor', feature_key: 'page.create_job', label: 'Create Work Order', description: 'Create new work orders', category: 'pages', enabled: true },
+    { role: 'vendor', feature_key: 'page.daily_log', label: 'Daily Log', description: 'Daily delivery log and tracking', category: 'pages', enabled: true },
+    { role: 'vendor', feature_key: 'page.dispatch', label: 'Dispatch Board', description: 'Kanban-style job dispatch management', category: 'pages', enabled: true },
+    { role: 'vendor', feature_key: 'page.route_optimization', label: 'Route Optimization', description: 'Map-based route planning and optimization', category: 'pages', enabled: true },
+    { role: 'vendor', feature_key: 'page.worker_metrics', label: 'Worker Metrics', description: 'Field worker performance tracking', category: 'pages', enabled: true },
+    { role: 'vendor', feature_key: 'page.inventory', label: 'Inventory', description: 'Fuel and equipment inventory management', category: 'pages', enabled: true },
+    { role: 'vendor', feature_key: 'page.invoices', label: 'Invoices', description: 'Invoice management and QB matching', category: 'pages', enabled: true },
+    { role: 'vendor', feature_key: 'page.payments', label: 'Payments', description: 'Payment tracking and history', category: 'pages', enabled: true },
+    { role: 'vendor', feature_key: 'page.profitability', label: 'Profitability', description: 'Revenue and margin analytics', category: 'pages', enabled: true },
+    { role: 'vendor', feature_key: 'page.subcontractors', label: 'Subcontractors', description: 'Subcontractor management', category: 'pages', enabled: true },
+    { role: 'vendor', feature_key: 'page.job_bidding', label: 'Job Bidding', description: 'Bid on available jobs', category: 'pages', enabled: true },
+    { role: 'vendor', feature_key: 'page.sla', label: 'SLA Management', description: 'Service level agreement tracking', category: 'pages', enabled: true },
+    { role: 'vendor', feature_key: 'page.messages', label: 'Messages', description: 'In-app messaging and chat', category: 'pages', enabled: true },
+    { role: 'vendor', feature_key: 'page.documents', label: 'Documents', description: 'Document storage and management', category: 'pages', enabled: true },
+    { role: 'vendor', feature_key: 'page.fuel_calculator', label: 'Fuel Calculator', description: 'Fuel cost and volume calculator', category: 'pages', enabled: true },
+    { role: 'vendor', feature_key: 'page.equipment', label: 'Equipment Tracking', description: 'Equipment location and status tracking', category: 'pages', enabled: true },
+    { role: 'vendor', feature_key: 'page.alerts', label: 'Alerts', description: 'Alert configuration and notifications', category: 'pages', enabled: true },
+    // Vendor analytics/features
     { role: 'vendor', feature_key: 'charts.fuel', label: 'Fuel Delivery Chart', description: 'Bar chart showing diesel and DEF deliveries by day of week', category: 'analytics', enabled: true },
     { role: 'vendor', feature_key: 'charts.jobs', label: 'Job Status Chart', description: 'Donut chart showing job completion breakdown', category: 'analytics', enabled: true },
     { role: 'vendor', feature_key: 'activity_feed', label: 'Activity Feed', description: 'Real-time activity feed showing recent invoices, completions, and alerts', category: 'analytics', enabled: true },
+    { role: 'vendor', feature_key: 'stats.revenue', label: 'Revenue Stats', description: 'Show revenue and financial metrics on dashboard (premium)', category: 'analytics', enabled: false },
+    { role: 'vendor', feature_key: 'worker_stats', label: 'Worker Performance', description: 'Field worker completion stats and performance metrics (premium)', category: 'analytics', enabled: false },
     { role: 'vendor', feature_key: 'invoices.qb', label: 'QuickBooks Integration', description: 'QuickBooks invoice import and matching on Invoices page', category: 'features', enabled: false },
     { role: 'vendor', feature_key: 'invoices.export', label: 'Invoice Export', description: 'Export invoice data to Excel spreadsheets', category: 'features', enabled: true },
     { role: 'vendor', feature_key: 'daily_log.export', label: 'Daily Log Export', description: 'Export daily log data to Excel and PDF', category: 'features', enabled: true },
     { role: 'vendor', feature_key: 'onboarding', label: 'Onboarding Tutorial', description: 'Interactive welcome tutorial for new users', category: 'features', enabled: true },
-    { role: 'vendor', feature_key: 'stats.revenue', label: 'Revenue Stats', description: 'Show revenue and financial metrics on dashboard (premium)', category: 'analytics', enabled: false },
     { role: 'vendor', feature_key: 'map_view', label: 'Map View', description: 'View job locations on a map from work orders', category: 'features', enabled: true },
-    { role: 'vendor', feature_key: 'worker_stats', label: 'Worker Performance', description: 'Field worker completion stats and performance metrics (premium)', category: 'analytics', enabled: false },
 
-    // Rental flags
-    { role: 'rental', feature_key: 'page.invoices', label: 'Invoices Page', description: 'Access to the Invoices page for reviewing vendor invoices', category: 'pages', enabled: true },
+    // ===== RENTAL PAGE FLAGS =====
+    { role: 'rental', feature_key: 'page.create_job', label: 'Create Work Order', description: 'Create new work orders', category: 'pages', enabled: true },
+    { role: 'rental', feature_key: 'page.work_orders', label: 'Work Orders', description: 'Work orders list and management', category: 'pages', enabled: true },
+    { role: 'rental', feature_key: 'page.invoices', label: 'Invoices', description: 'Invoice and fuel history review', category: 'pages', enabled: true },
+    { role: 'rental', feature_key: 'page.contracts', label: 'Contracts', description: 'Contract management and tracking', category: 'pages', enabled: true },
+    { role: 'rental', feature_key: 'page.equipment', label: 'Equipment Tracking', description: 'Equipment location and status tracking', category: 'pages', enabled: true },
+    { role: 'rental', feature_key: 'page.vendor_comparison', label: 'Vendor Comparison', description: 'Compare and search vendors', category: 'pages', enabled: true },
+    { role: 'rental', feature_key: 'page.recurring_jobs', label: 'Recurring Jobs', description: 'Manage recurring job schedules', category: 'pages', enabled: true },
+    { role: 'rental', feature_key: 'page.reports', label: 'Reports', description: 'Reports and analytics', category: 'pages', enabled: true },
+    { role: 'rental', feature_key: 'page.daily_log', label: 'Daily Log', description: 'Daily delivery log', category: 'pages', enabled: true },
+    { role: 'rental', feature_key: 'page.documents', label: 'Documents', description: 'Document storage', category: 'pages', enabled: true },
+    { role: 'rental', feature_key: 'page.bulk_import', label: 'Bulk Import', description: 'CSV/Excel bulk job import', category: 'pages', enabled: true },
+    { role: 'rental', feature_key: 'page.messages', label: 'Messages', description: 'In-app messaging', category: 'pages', enabled: true },
+    { role: 'rental', feature_key: 'page.alerts', label: 'Alerts', description: 'Alert configuration', category: 'pages', enabled: true },
+    // Rental analytics/features
     { role: 'rental', feature_key: 'charts.overview', label: 'Dashboard Charts', description: 'Overview charts showing orders and completion trends', category: 'analytics', enabled: true },
     { role: 'rental', feature_key: 'activity_feed', label: 'Activity Feed', description: 'Real-time activity feed on dashboard', category: 'analytics', enabled: true },
     { role: 'rental', feature_key: 'reporting.export', label: 'Report Export', description: 'Export reports and data to spreadsheets', category: 'features', enabled: true },
     { role: 'rental', feature_key: 'onboarding', label: 'Onboarding Tutorial', description: 'Interactive welcome tutorial for new users', category: 'features', enabled: true },
 
-    // Field Worker flags
+    // ===== FIELD WORKER PAGE FLAGS =====
+    { role: 'fieldworker', feature_key: 'page.work_orders', label: 'Work Orders', description: 'Work orders list', category: 'pages', enabled: true },
+    { role: 'fieldworker', feature_key: 'page.time_tracking', label: 'Time Tracking', description: 'Clock in/out and time logging', category: 'pages', enabled: true },
+    { role: 'fieldworker', feature_key: 'page.messages', label: 'Messages', description: 'In-app messaging', category: 'pages', enabled: true },
+    { role: 'fieldworker', feature_key: 'page.documents', label: 'Documents', description: 'Document storage', category: 'pages', enabled: true },
+    { role: 'fieldworker', feature_key: 'page.fuel_calculator', label: 'Fuel Calculator', description: 'Fuel cost calculator', category: 'pages', enabled: true },
+    // Field Worker features
     { role: 'fieldworker', feature_key: 'invoice_creation', label: 'Create Invoices', description: 'Ability to create and submit invoices from job cards', category: 'features', enabled: true },
     { role: 'fieldworker', feature_key: 'navigation', label: 'Turn-by-Turn Navigation', description: 'Navigate button on job cards for directions to job sites', category: 'features', enabled: true },
     { role: 'fieldworker', feature_key: 'signature', label: 'Digital Signature', description: 'Site contact signature capture on invoice submission', category: 'features', enabled: true },

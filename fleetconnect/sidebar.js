@@ -36,8 +36,9 @@
         auditLog: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>'
     };
 
-    function item(icon, label, href) {
-        return `<a class="admin-nav-item" href="${href}">${icon}${label}</a>`;
+    function item(icon, label, href, flagKey) {
+        var extra = flagKey ? ` data-flag="${flagKey}"` : '';
+        return `<a class="admin-nav-item" href="${href}"${extra}>${icon}${label}</a>`;
     }
 
     function section(title, items) {
@@ -48,13 +49,13 @@
         fieldworker:
             section('MAIN',
                 item(ICONS.dashboard, 'My Jobs', 'field-worker.html') +
-                item(ICONS.workOrders, 'Work Orders', 'work-orders.html') +
-                item(ICONS.timeTracking, 'Time Tracking', 'time-tracking.html')
+                item(ICONS.workOrders, 'Work Orders', 'work-orders.html', 'page.work_orders') +
+                item(ICONS.timeTracking, 'Time Tracking', 'time-tracking.html', 'page.time_tracking')
             ) +
             section('TOOLS',
-                item(ICONS.chat, 'Messages', 'chat.html') +
-                item(ICONS.documents, 'Documents', 'document-storage.html') +
-                item(ICONS.fuel, 'Fuel Calculator', 'fuel-calculator.html')
+                item(ICONS.chat, 'Messages', 'chat.html', 'page.messages') +
+                item(ICONS.documents, 'Documents', 'document-storage.html', 'page.documents') +
+                item(ICONS.fuel, 'Fuel Calculator', 'fuel-calculator.html', 'page.fuel_calculator')
             ) +
             section('SETTINGS',
                 item(ICONS.settings, 'Settings', 'settings.html')
@@ -63,57 +64,57 @@
         rental:
             section('MAIN',
                 item(ICONS.dashboard, 'Dashboard', 'rental-dashboard.html') +
-                item(ICONS.createJob, 'Create Work Order', 'create-job.html') +
-                item(ICONS.workOrders, 'Work Orders', 'work-orders.html')
+                item(ICONS.createJob, 'Create Work Order', 'create-job.html', 'page.create_job') +
+                item(ICONS.workOrders, 'Work Orders', 'work-orders.html', 'page.work_orders')
             ) +
             section('MANAGEMENT',
-                item(ICONS.invoices, 'Invoices', 'rental-invoices.html') +
-                item(ICONS.contracts, 'Contracts', 'contract-management.html') +
-                item(ICONS.equipment, 'Equipment', 'equipment-tracking.html') +
-                item(ICONS.vendorComparison, 'Vendor Comparison', 'vendor-comparison.html') +
-                item(ICONS.recurring, 'Recurring Jobs', 'recurring-jobs.html')
+                item(ICONS.invoices, 'Invoices', 'rental-invoices.html', 'page.invoices') +
+                item(ICONS.contracts, 'Contracts', 'contract-management.html', 'page.contracts') +
+                item(ICONS.equipment, 'Equipment', 'equipment-tracking.html', 'page.equipment') +
+                item(ICONS.vendorComparison, 'Vendor Comparison', 'vendor-comparison.html', 'page.vendor_comparison') +
+                item(ICONS.recurring, 'Recurring Jobs', 'recurring-jobs.html', 'page.recurring_jobs')
             ) +
             section('TOOLS',
-                item(ICONS.reports, 'Reports', 'reports.html') +
-                item(ICONS.dailyLog, 'Daily Log', 'daily-log.html') +
-                item(ICONS.documentsAlt, 'Documents', 'document-storage.html') +
-                item(ICONS.bulkImport, 'Bulk Import', 'bulk-import.html') +
-                item(ICONS.chat, 'Messages', 'chat.html')
+                item(ICONS.reports, 'Reports', 'reports.html', 'page.reports') +
+                item(ICONS.dailyLog, 'Daily Log', 'daily-log.html', 'page.daily_log') +
+                item(ICONS.documentsAlt, 'Documents', 'document-storage.html', 'page.documents') +
+                item(ICONS.bulkImport, 'Bulk Import', 'bulk-import.html', 'page.bulk_import') +
+                item(ICONS.chat, 'Messages', 'chat.html', 'page.messages')
             ) +
             section('SETTINGS',
-                item(ICONS.alerts, 'Alerts', 'alerts-settings.html') +
+                item(ICONS.alerts, 'Alerts', 'alerts-settings.html', 'page.alerts') +
                 item(ICONS.settings, 'Settings', 'settings.html')
             ),
 
         vendor:
             section('MAIN',
                 item(ICONS.dashboard, 'Dashboard', 'vendor-dashboard.html') +
-                item(ICONS.workOrders, 'Work Orders', 'work-orders.html') +
-                item(ICONS.createJob, 'Create Work Order', 'create-job.html') +
-                item(ICONS.dailyLog, 'Daily Log', 'daily-log.html')
+                item(ICONS.workOrders, 'Work Orders', 'work-orders.html', 'page.work_orders') +
+                item(ICONS.createJob, 'Create Work Order', 'create-job.html', 'page.create_job') +
+                item(ICONS.dailyLog, 'Daily Log', 'daily-log.html', 'page.daily_log')
             ) +
             section('OPERATIONS',
-                item(ICONS.dispatch, 'Dispatch Board', 'dispatch-board.html') +
-                item(ICONS.route, 'Route Optimization', 'route-optimization.html') +
-                item(ICONS.workers, 'Worker Metrics', 'worker-metrics.html') +
-                item(ICONS.inventory, 'Inventory', 'inventory-management.html')
+                item(ICONS.dispatch, 'Dispatch Board', 'dispatch-board.html', 'page.dispatch') +
+                item(ICONS.route, 'Route Optimization', 'route-optimization.html', 'page.route_optimization') +
+                item(ICONS.workers, 'Worker Metrics', 'worker-metrics.html', 'page.worker_metrics') +
+                item(ICONS.inventory, 'Inventory', 'inventory-management.html', 'page.inventory')
             ) +
             section('BUSINESS',
-                item(ICONS.vendorInvoices, 'Invoices', 'invoices.html') +
-                item(ICONS.payments, 'Payments', 'payments.html') +
-                item(ICONS.profitability, 'Profitability', 'profitability.html') +
-                item(ICONS.subcontractors, 'Subcontractors', 'subcontractor-management.html') +
-                item(ICONS.jobBidding, 'Job Bidding', 'job-bidding.html') +
-                item(ICONS.sla, 'SLA Management', 'sla-management.html')
+                item(ICONS.vendorInvoices, 'Invoices', 'invoices.html', 'page.invoices') +
+                item(ICONS.payments, 'Payments', 'payments.html', 'page.payments') +
+                item(ICONS.profitability, 'Profitability', 'profitability.html', 'page.profitability') +
+                item(ICONS.subcontractors, 'Subcontractors', 'subcontractor-management.html', 'page.subcontractors') +
+                item(ICONS.jobBidding, 'Job Bidding', 'job-bidding.html', 'page.job_bidding') +
+                item(ICONS.sla, 'SLA Management', 'sla-management.html', 'page.sla')
             ) +
             section('TOOLS',
-                item(ICONS.chat, 'Messages', 'chat.html') +
-                item(ICONS.documents, 'Documents', 'document-storage.html') +
-                item(ICONS.fuel, 'Fuel Calculator', 'fuel-calculator.html') +
-                item(ICONS.equipment, 'Equipment', 'equipment-tracking.html')
+                item(ICONS.chat, 'Messages', 'chat.html', 'page.messages') +
+                item(ICONS.documents, 'Documents', 'document-storage.html', 'page.documents') +
+                item(ICONS.fuel, 'Fuel Calculator', 'fuel-calculator.html', 'page.fuel_calculator') +
+                item(ICONS.equipment, 'Equipment', 'equipment-tracking.html', 'page.equipment')
             ) +
             section('SETTINGS',
-                item(ICONS.alerts, 'Alerts', 'alerts-settings.html') +
+                item(ICONS.alerts, 'Alerts', 'alerts-settings.html', 'page.alerts') +
                 item(ICONS.settings, 'Settings', 'settings.html')
             ),
 
@@ -162,6 +163,28 @@
             var href = links[i].getAttribute('href');
             if (href === currentPage) {
                 links[i].classList.add('active');
+            }
+        }
+
+        // Apply feature flags to hide disabled nav items
+        if (role !== 'admin' && typeof FC_FLAGS !== 'undefined') {
+            applyFeatureFlags(nav);
+        }
+    }
+
+    function applyFeatureFlags(nav) {
+        if (!FC_FLAGS || !FC_FLAGS._loaded) {
+            // Flags not loaded yet — wait and retry once
+            setTimeout(function() {
+                if (FC_FLAGS && FC_FLAGS._loaded) applyFeatureFlags(nav);
+            }, 1500);
+            return;
+        }
+        var flagged = nav.querySelectorAll('[data-flag]');
+        for (var i = 0; i < flagged.length; i++) {
+            var key = flagged[i].getAttribute('data-flag');
+            if (FC_FLAGS.isOff(key)) {
+                flagged[i].style.display = 'none';
             }
         }
     }
