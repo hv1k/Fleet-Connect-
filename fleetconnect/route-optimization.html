@@ -36,7 +36,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: #06060b; color: #f5f0e8; min-height: 100vh;  display: flex;}
 
-        .layout { display: flex; min-height: 100vh; }
+        .layout { display: flex; min-height: 100vh; width: 100%; }
 
         /* Sidebar */
         .sidebar { width: 240px; background: #0a0a12; border-right: 1px solid #1a1a2e; padding: 24px 16px; position: fixed; left: 0; height: 100vh; z-index: 100; display: flex; flex-direction: column; overflow-y: auto; }
@@ -66,7 +66,7 @@
 
         /* Split View */
         .split-container { display: flex; gap: 24px; height: 100%; }
-        .left-panel { flex: 0 0 35%; background: #0f0f1a; border-radius: 16px; border: 1px solid #1a1a2e; padding: 24px; display: flex; flex-direction: column; overflow: hidden; }
+        .left-panel { flex: 0 0 320px; background: #0f0f1a; border-radius: 16px; border: 1px solid #1a1a2e; padding: 24px; display: flex; flex-direction: column; overflow: hidden; }
         .right-panel { flex: 1; background: #0f0f1a; border-radius: 16px; border: 1px solid #1a1a2e; overflow: hidden; }
 
         /* Panel Headers */
