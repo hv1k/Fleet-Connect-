@@ -77,10 +77,8 @@
         .search-input:focus { outline: none; border-color: #60a5fa; }
 
         /* Content Container */
-        .content-container { flex: 1; display: flex; gap: 0; }
-
         /* Map */
-        #map { flex: 1; }
+        #map { flex: 1; min-height: 400px; }
 
         /* Sidebar Panel */
         .sidebar-panel { width: 300px; background: #242424; border-left: 1px solid #333; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; }
@@ -204,7 +202,8 @@
         .admin-nav-item.active { background: rgba(96, 165, 250, 0.15); color: var(--admin, #60a5fa); }
         .admin-nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
         .admin-sidebar-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border, #333); }
-        .main-content { flex: 1; margin-left: 260px; }
+        .main-content { flex: 1; margin-left: 260px; min-height: 100vh; display: flex; flex-direction: column; }
+        .content-container { flex: 1; display: flex; gap: 0; min-height: 0; }
             /* Mobile */
         .hamburger-menu { display: none; position: fixed; top: 20px; left: 20px; z-index: 100; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 8px; cursor: pointer; width: 40px; height: 40px; }
         @media (max-width: 768px) {
