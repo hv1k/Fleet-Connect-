@@ -78,12 +78,12 @@
 
         /* Content Container */
         /* Map */
-        #map { flex: 1; min-height: 400px; }
+        #map { width: 100%; height: 450px; min-height: 400px; }
 
-        /* Sidebar Panel */
-        .sidebar-panel { width: 300px; background: #242424; border-left: 1px solid #333; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; }
+        /* Equipment Panel (below map) */
+        .sidebar-panel { width: 100%; background: #242424; border-top: 1px solid #333; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; max-height: 400px; }
         .panel-title { font-size: 0.9rem; font-weight: 600; color: #f5f0e8; margin-bottom: 16px; }
-        .equipment-list { flex: 1; overflow-y: auto; }
+        .equipment-list { flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 8px; }
         .equipment-item { padding: 12px; background: #2a2a2a; border: 1px solid #333; border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 10px; }
         .equipment-item:hover { background: #333; border-color: #60a5fa; }
         .equipment-item.active { border-color: #60a5fa; background: rgba(96, 165, 250, 0.1); }
@@ -203,7 +203,7 @@
         .admin-nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
         .admin-sidebar-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border, #333); }
         .main-content { flex: 1; margin-left: 260px; min-height: 100vh; display: flex; flex-direction: column; }
-        .content-container { flex: 1; display: flex; gap: 0; min-height: 0; }
+        .content-container { flex: 1; display: flex; flex-direction: column; gap: 0; min-height: 0; }
             /* Mobile */
         .hamburger-menu { display: none; position: fixed; top: 20px; left: 20px; z-index: 100; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 8px; cursor: pointer; width: 40px; height: 40px; }
         @media (max-width: 768px) {
