@@ -401,8 +401,9 @@
                 const duration = Math.floor((endTime - sessionStartTime) / 1000);
                 const locationType = currentLocationData ? 'on-site' : 'transit';
 
-                // Save to database
-                const { error } = await db.from('time_entries').insert([{
+                // Save to database (fallback to localStorage if table doesn't exist)
+                const entry = {
+                    id: crypto.randomUUID(),
                     worker_id: currentUser.id,
                     job_id: currentJobId,
                     clock_in: sessionStartTime.toISOString(),
@@ -412,9 +413,16 @@
                     type: locationType,
                     notes: null,
                     created_at: new Date().toISOString()
-                }]);
+                };
 
-                if (error) throw error;
+                const { error } = await db.from('time_entries').insert([entry]);
+                if (error) {
+                    // Fallback: save locally
+                    const stored = JSON.parse(localStorage.getItem('fc_time_entries') || '[]');
+                    stored.push(entry);
+                    localStorage.setItem('fc_time_entries', JSON.stringify(stored));
+                    console.warn('Supabase time_entries failed, saved locally:', error.message);
+                }
 
                 clockedIn = false;
                 sessionStartTime = null;
@@ -478,14 +486,31 @@
                     .gte('created_at', today)
                     .order('clock_in', { ascending: false });
 
-                if (error) throw error;
+                if (error) {
+                    // Fallback: load from localStorage
+                    const stored = JSON.parse(localStorage.getItem('fc_time_entries') || '[]');
+                    allEntries = stored.filter(e => e.worker_id === currentUser.id && e.created_at >= today);
+                } else {
+                    allEntries = data || [];
+                    // Merge any localStorage entries
+                    const stored = JSON.parse(localStorage.getItem('fc_time_entries') || '[]');
+                    const localToday = stored.filter(e => e.worker_id === currentUser.id && e.created_at >= today);
+                    if (localToday.length) allEntries = [...allEntries, ...localToday];
+                }
 
-                allEntries = data || [];
+                allEntries.sort((a, b) => new Date(b.clock_in) - new Date(a.clock_in));
                 renderEntries();
                 updateSummary();
                 renderWeeklyChart();
             } catch (err) {
                 console.error('Error loading entries:', err);
+                // Last resort: load from localStorage
+                const today = new Date().toISOString().split('T')[0];
+                const stored = JSON.parse(localStorage.getItem('fc_time_entries') || '[]');
+                allEntries = stored.filter(e => e.worker_id === currentUser.id && e.created_at >= today);
+                renderEntries();
+                updateSummary();
+                renderWeeklyChart();
             }
         }
 
