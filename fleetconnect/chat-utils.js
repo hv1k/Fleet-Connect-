@@ -102,7 +102,7 @@ async function getConversations(userId, role) {
 
     // Get last message for each job
     const { data: jobs } = await db.from('jobs')
-      .select('id, job_site_name, customer_name, status')
+      .select('id, job_site_name, customer_name, status, created_at')
       .in('id', jobIds.slice(0, 50)) // Limit to first 50 for performance
       .order('created_at', { ascending: false });
 
