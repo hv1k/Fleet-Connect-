@@ -747,8 +747,8 @@
                             </div>
                             <div class="detail-group">
                                 <label>Photos</label>
-                                <div class="file-upload" onclick="document.getElementById('photoInput').click()">
-                                    <input type="file" id="photoInput" accept="image/*" multiple onchange="handlePhotos(event)">
+                                <div class="file-upload" onclick="document.getElementById('incidentPhotoInput').click()">
+                                    <input type="file" id="incidentPhotoInput" accept="image/*" multiple onchange="handlePhotos(event)">
                                     <div class="file-upload-text">📷 Tap to add photos</div>
                                 </div>
                                 <div class="file-preview" id="photoPreview"></div>
@@ -1053,92 +1053,6 @@
             if (error) return null;
             const { data } = db.storage.from('incidents').getPublicUrl(filePath);
             return data.publicUrl;
-        }
-
-        async function submitInvoice(jobId) {
-            const unitIds = Object.keys(activeUnits);
-            if (unitIds.length === 0) { showToast('Please select at least one unit', 'error'); return; }
-
-            for (const unitId of unitIds) {
-                const hours = document.getElementById(`hours-${unitId}`).value;
-                const diesel = document.getElementById(`diesel-${unitId}`).value;
-                const def = document.getElementById(`def-${unitId}`).value;
-                if (!hours || !diesel || !def) { showToast('Fill in hours, diesel, and DEF for all selected units', 'error'); return; }
-            }
-
-            const btn = document.getElementById('submitBtn');
-            btn.disabled = true;
-            btn.textContent = 'Creating...';
-
-            let uploadedPhotos = [], uploadedVideos = [];
-            const hasIncident = document.getElementById('hasIncident').checked;
-
-            if (hasIncident) {
-                btn.textContent = 'Uploading files...';
-                for (const photo of selectedPhotos) { const url = await uploadFile(photo, 'photos'); if (url) uploadedPhotos.push(url); }
-                for (const video of selectedVideos) { const url = await uploadFile(video, 'videos'); if (url) uploadedVideos.push(url); }
-            }
-
-            btn.textContent = 'Saving...';
-
-            const equipment = getEquipmentForJob(jobId);
-            const unitsData = unitIds.map(unitId => {
-                const eq = equipment.find(e => e.id === unitId);
-                return {
-                    unit_id: unitId,
-                    unit_number: eq?.equipment_number || '',
-                    unit_description: eq?.description || '',
-                    unit_hours: parseFloat(document.getElementById(`hours-${unitId}`).value),
-                    diesel_gallons: parseFloat(document.getElementById(`diesel-${unitId}`).value),
-                    def_gallons: parseFloat(document.getElementById(`def-${unitId}`).value)
-                };
-            });
-
-            const totalDiesel = unitsData.reduce((sum, u) => sum + u.diesel_gallons, 0);
-            const totalDef = unitsData.reduce((sum, u) => sum + u.def_gallons, 0);
-            const date = document.getElementById('invoiceDate').value;
-            const time = document.getElementById('invoiceTime').value;
-
-            let notes = document.getElementById('invoiceNotes').value;
-            const signerName = document.getElementById('signerName')?.value || '';
-            if (capturedGPS) {
-                const gpsString = `GPS: ${capturedGPS.latitude.toFixed(6)}, ${capturedGPS.longitude.toFixed(6)} | `;
-                notes = gpsString + (notes || '');
-            }
-            if (signerName) {
-                notes = (notes || '') + ` | Signed by: ${signerName}`;
-            }
-
-            const { data, error } = await db.from('invoices').insert([{
-                job_id: jobId,
-                worker_id: currentUser.id,
-                worker_name: document.getElementById('workerName').value,
-                invoice_date: date,
-                invoice_time: time,
-                notes: notes,
-                units_data: unitsData,
-                total_diesel: totalDiesel,
-                total_def: totalDef,
-                has_incident: hasIncident,
-                incident_description: hasIncident ? document.getElementById('incidentDescription').value : null,
-                incident_photos: uploadedPhotos,
-                incident_videos: uploadedVideos,
-                latitude: capturedGPS?.latitude || null,
-                longitude: capturedGPS?.longitude || null,
-                location_accuracy: capturedGPS?.accuracy || null
-            }]).select().single();
-
-            if (error) {
-                console.error('Error:', error);
-                showToast('Error creating invoice: ' + error.message, 'error');
-                btn.disabled = false;
-                btn.textContent = 'Create Invoice';
-                return;
-            }
-
-            closeInvoiceModal();
-            showToast('Invoice created successfully!');
-            loadData();
         }
 
         function viewHistory(jobId) {
@@ -1519,11 +1433,10 @@
           sigModalCtx = null;
         }
 
-        // ===== UPDATE SUBMIT INVOICE =====
-        const originalSubmitInvoice = submitInvoice;
+        // ===== SUBMIT INVOICE =====
         async function submitInvoice(jobId) {
-          // Always validate photos since the form shows them as required
-          if (!validatePhotos()) return;
+          // Validate photos if feature enabled
+          if (FC_FLAGS.isOn('photo_invoice') && !validatePhotos()) return;
 
           // Validate signature if feature enabled
           if (FC_FLAGS.isOn('signature') && !signatureData) {
@@ -1531,14 +1444,7 @@
             return;
           }
 
-          // Call original submit with photo data
           try {
-            // Store photos temporarily for submission
-            const invoiceWithPhotos = {
-              photos: capturedPhotos
-            };
-
-            // Merge with existing submitInvoice logic
             const unitIds = Object.keys(activeUnits);
             if (unitIds.length === 0) { showToast('Please select at least one unit', 'error'); return; }
 
