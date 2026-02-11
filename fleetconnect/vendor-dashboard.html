@@ -571,15 +571,24 @@
         
         async function loadData() {
             try {
+                console.log('[loadData] fetching jobs...');
                 allJobs = await getJobsForCurrentUser();
+                console.log('[loadData] got', allJobs.length, 'jobs');
                 // Only load invoices for the current vendor's jobs
                 let invoicesQuery = db.from('invoices').select('*');
                 const jobIds = allJobs.map(j => j.id);
                 if (jobIds.length > 0) {
                     invoicesQuery = invoicesQuery.in('job_id', jobIds);
+                } else {
+                    // No jobs = no invoices to show
+                    allInvoices = [];
                 }
-                const { data: invoices } = await invoicesQuery.order('created_at', { ascending: false });
-                allInvoices = invoices || [];
+                if (jobIds.length > 0) {
+                    const { data: invoices, error: invErr } = await invoicesQuery.order('created_at', { ascending: false });
+                    if (invErr) console.error('[loadData] invoices error:', invErr);
+                    allInvoices = invoices || [];
+                }
+                console.log('[loadData] got', allInvoices.length, 'invoices');
                 updateStats(); renderChart(); renderDonut(); renderJobs(); renderActivityFeed();
 
                 // BUG-008: Add 10-second timeout with fallback messages for Activity Feed and Jobs Table
@@ -595,7 +604,7 @@
                 }, 10000);
             } catch (err) {
                 console.error('Failed to load data:', err);
-                document.querySelector('.main-content, .content, main').innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-secondary)"><h2>Unable to load data</h2><p>Please check your connection and try again.</p><button onclick="location.reload()" class="btn btn-primary" style="margin-top:16px">Retry</button></div>';
+                document.querySelector('.main-content, .content, main').innerHTML = `<div style="padding:40px;text-align:center;color:var(--text-secondary)"><h2>Unable to load data</h2><p>${err.message || 'Please check your connection and try again.'}</p><button onclick="location.reload()" class="btn btn-primary" style="margin-top:16px">Retry</button></div>`;
             }
         }
         
