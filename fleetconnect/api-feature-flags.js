@@ -99,17 +99,15 @@ async function ensureTable() {
     // Check if table has data
     const { data, error } = await supabase
         .from('feature_flags')
-        .select('id')
-        .limit(1);
+        .select('role, feature_key')
+        .limit(500);
 
     if (error) {
-        // Table might not exist — try to create it via raw insert
-        // If this also fails, the table doesn't exist and we need to create it
         console.warn('[FeatureFlags] Table check failed:', error.message);
         return false;
     }
 
-    // If empty, seed with defaults
+    // If empty, seed all defaults
     if (!data || data.length === 0) {
         const { error: seedError } = await supabase
             .from('feature_flags')
@@ -120,6 +118,20 @@ async function ensureTable() {
             return false;
         }
         console.log('[FeatureFlags] Seeded default flags');
+    } else {
+        // Insert any missing flags (new ones added in updates)
+        const existing = new Set(data.map(f => f.role + '::' + f.feature_key));
+        const missing = DEFAULT_FLAGS.filter(f => !existing.has(f.role + '::' + f.feature_key));
+        if (missing.length > 0) {
+            const { error: insertError } = await supabase
+                .from('feature_flags')
+                .insert(missing);
+            if (insertError) {
+                console.warn('[FeatureFlags] Failed to insert missing flags:', insertError.message);
+            } else {
+                console.log('[FeatureFlags] Inserted', missing.length, 'new flags');
+            }
+        }
     }
 
     return true;
