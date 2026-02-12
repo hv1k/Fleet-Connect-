@@ -673,7 +673,7 @@
         function copyBccEmail() {
             navigator.clipboard.writeText('flashfuels.invoices' + '@' + 'gmail.com').then(() => {
                 var _copy = document.getElementById('copyToast'); if(_copy) _copy.classList.add('show');
- var _copy = document.getElementById('copyToast'); if(_copy) _copy.classList.remove('show'), 2000);
+ setTimeout(() => { var _copy = document.getElementById('copyToast'); if(_copy) _copy.classList.remove('show'); }, 2000);
             });
         }
 
