@@ -464,7 +464,7 @@
     <script src="notifications.js"></script>
     <script src="realtime.js"></script>
     <script>
-        let allInvoices = [], allJobs = [], completedJobs = [], allDeliveries = [], allUsers = [];
+        let allInvoices = [], allJobs = [], completedJobs = [], allDeliveries = [], allUsers = [], allJobInvoices = [];
         let currentFilter = 'all', searchTerm = '', fuelSearchTerm = '';
 
         document.addEventListener('DOMContentLoaded', async () => {
@@ -490,20 +490,20 @@
 
         async function loadData() {
             try {
-                const [invRes, jobRes, delRes, userRes] = await Promise.all([
+                const [invRes, jobRes, delRes, userRes, jobInvRes] = await Promise.all([
                     db.from('qb_invoices').select('*').order('created_at', { ascending: false }).then(r => r).catch(() => ({ data: [], error: null })),
                     db.from('jobs').select('*').order('completed_at', { ascending: false }),
                     db.from('deliveries').select('*').order('timestamp', { ascending: false }).then(r => r).catch(() => ({ data: [], error: null })),
-                    db.from('users').select('id, name, role').eq('role', 'fieldworker')
+                    db.from('users').select('id, name, role').eq('role', 'fieldworker'),
+                    db.from('invoices').select('*').order('created_at', { ascending: false })
                 ]);
-                // Only throw on critical tables (jobs, users)
                 if (jobRes.error) throw jobRes.error;
-                if (userRes.error) throw userRes.error;
                 allInvoices = invRes.data || [];
                 allJobs = jobRes.data || [];
                 completedJobs = allJobs.filter(j => j.status === 'completed');
                 allDeliveries = delRes.data || [];
                 allUsers = userRes.data || [];
+                allJobInvoices = jobInvRes.data || [];
 
                 updateStats();
                 renderFuelHistory();
@@ -516,7 +516,7 @@
         }
 
         function updateStats() {
-            const totalGallons = allDeliveries.reduce((s, d) => s + (parseFloat(d.gallons) || 0), 0);
+            const totalGallons = allDeliveries.reduce((s, d) => s + (parseFloat(d.gallons) || 0), 0) + allJobInvoices.reduce((s, i) => s + (parseFloat(i.total_diesel) || 0), 0);
             const needsMatch = allInvoices.filter(i => i.match_status !== 'matched').length;
             var _stat = document.getElementById('statCompletedJobs'); if(_stat) _stat.textContent = completedJobs.length;
             var _stat = document.getElementById('statTotalGallons'); if(_stat) _stat.textContent = totalGallons.toLocaleString('en-US', { maximumFractionDigits: 0 });
@@ -560,8 +560,9 @@
             let totalDiesel = 0, totalDef = 0;
             tbody.innerHTML = filtered.map(job => {
                 const jobDel = allDeliveries.filter(d => d.job_id === job.id);
-                const diesel = jobDel.reduce((s, d) => s + (parseFloat(d.gallons) || 0), 0);
-                const def = jobDel.reduce((s, d) => s + (parseFloat(d.def_gallons) || 0), 0);
+                const jobInv = allJobInvoices.filter(i => i.job_id === job.id);
+                const diesel = jobDel.reduce((s, d) => s + (parseFloat(d.gallons) || 0), 0) + jobInv.reduce((s, i) => s + (parseFloat(i.total_diesel) || 0), 0);
+                const def = jobDel.reduce((s, d) => s + (parseFloat(d.def_gallons) || 0), 0) + jobInv.reduce((s, i) => s + (parseFloat(i.total_def) || 0), 0);
                 totalDiesel += diesel; totalDef += def;
                 const worker = job.assigned_worker ? allUsers.find(u => u.id === job.assigned_worker) : null;
                 const workerName = worker ? worker.name : (jobDel[0]?.delivered_by_name || '—');
@@ -571,15 +572,16 @@
                 if (matchedInv) invBadge = `<span class="match-badge matched"><span class="match-dot"></span>${matchedInv.invoice_number || 'Matched'}</span>`;
                 else if (pendingInv) invBadge = `<span class="match-badge pending"><span class="match-dot"></span>Pending</span>`;
                 else invBadge = `<span class="match-badge no-invoice"><span class="match-dot"></span>No Invoice</span>`;
-                const hasDeliveryData = jobDel.length > 0;
+                const hasFuelData = jobDel.length > 0 || jobInv.length > 0;
+                const invWorker = jobInv.length > 0 ? jobInv[0].worker_name : null;
                 return `<tr>
                     <td><div class="job-name">${safe(job.job_site_name || 'Untitled')}</div><div class="job-location">${safe([job.address_street, job.address_city, job.address_state].filter(Boolean).join(', '))}</div></td>
                     <td>${job.customer_name || '—'}</td>
                     <td>${job.completed_at ? new Date(job.completed_at).toLocaleDateString() : (job.date_out ? new Date(job.date_out).toLocaleDateString() : '—')}</td>
-                    ${hasDeliveryData ? `
+                    ${hasFuelData ? `
                         <td><div class="fuel-amount">${diesel > 0 ? diesel.toLocaleString('en-US', {maximumFractionDigits: 1}) + ' gal' : '—'}</div></td>
                         <td><div class="fuel-amount">${def > 0 ? def.toLocaleString('en-US', {maximumFractionDigits: 1}) + ' gal' : '—'}</div></td>
-                        <td>${workerName}</td>
+                        <td>${workerName !== '—' ? workerName : (invWorker || '—')}</td>
                     ` : `
                         <td colspan="3" style="text-align:center;color:#666;font-style:italic;font-size:0.8rem;">No delivery data recorded</td>
                     `}
