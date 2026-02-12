@@ -449,26 +449,24 @@
 
         async function loadCompanies() {
             try {
-                const token = getAuthToken();
-                const response = await fetch('/api/companies', {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
+                const { data, error } = await db.from('companies')
+                    .select('*')
+                    .order('created_at', { ascending: false });
 
-                const data = await response.json();
-                if (!response.ok || !data.success) {
-                    console.error('Error loading companies:', data.error);
+                if (error) {
+                    // Table might not exist yet — show empty state
+                    console.warn('Companies table not available:', error.message);
+                    allCompanies = [];
+                    applyFilters();
                     return;
                 }
 
-                allCompanies = data.companies || [];
+                allCompanies = data || [];
                 applyFilters();
             } catch (err) {
                 console.error('Error loading companies:', err);
-                var _comp = document.getElementById('companiesGrid'); if(_comp) _comp.innerHTML = '<div class="empty-state" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;"><div style="font-size:3rem;margin-bottom:16px;opacity:0.5;">⚠️</div><h3 style="font-size:1.2rem;font-weight:600;color:var(--text-primary,#e8e0d8);margin-bottom:8px;">Error loading companies</h3><p style="font-size:0.9rem;color:var(--text-secondary,#b8b0a8);margin-bottom:24px;">Please check your connection and try again</p><button onclick="location.reload()" class="btn btn-primary">Retry</button></div>';
+                allCompanies = [];
+                applyFilters();
             }
         }
 
@@ -639,22 +637,16 @@
             }
 
             try {
-                const token = getAuthToken();
-                const method = editingCompanyId ? 'PUT' : 'POST';
-                const body = editingCompanyId ? { id: editingCompanyId, ...companyData } : companyData;
+                let result;
+                if (editingCompanyId) {
+                    result = await db.from('companies').update(companyData).eq('id', editingCompanyId).select().single();
+                } else {
+                    companyData.status = 'active';
+                    result = await db.from('companies').insert([companyData]).select().single();
+                }
 
-                const response = await fetch('/api/companies', {
-                    method,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify(body)
-                });
-
-                const data = await response.json();
-                if (!response.ok || !data.success) {
-                    alert('Error: ' + (data.error || 'Failed to save company'));
+                if (result.error) {
+                    alert('Error: ' + result.error.message);
                     return;
                 }
 
@@ -669,19 +661,10 @@
 
         async function deactivateCompany(companyId) {
             try {
-                const token = getAuthToken();
-                const response = await fetch('/api/companies', {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ id: companyId })
-                });
+                const { error } = await db.from('companies').update({ status: 'inactive' }).eq('id', companyId);
 
-                const data = await response.json();
-                if (!response.ok || !data.success) {
-                    alert('Error: ' + (data.error || 'Failed to deactivate company'));
+                if (error) {
+                    alert('Error: ' + error.message);
                     return;
                 }
 
