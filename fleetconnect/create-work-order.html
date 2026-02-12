@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Create Work Order — FleetConnect</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="sidebar"></div>
+<div class="main">
+
+<h1 class="page-title">Create Work Order</h1>
+<div class="card" style="max-width:600px">
+  <div class="form-group"><label>Job Site</label><input id="jobSite" placeholder="e.g. Downtown Construction"></div>
+  <div class="form-group"><label>Customer</label><input id="customer" placeholder="e.g. ABC Corp"></div>
+  <div class="form-group"><label>Equipment</label><input id="equipment" placeholder="e.g. CAT 320 Excavator"></div>
+  <div class="form-group"><label>Notes</label><textarea id="notes" placeholder="Additional details..."></textarea></div>
+  <button class="btn btn-primary" onclick="createJob()">Create Work Order</button>
+  <span id="msg" style="margin-left:12px;color:var(--success)"></span>
+</div>
+
+</div>
+<script src="store.js"></script>
+<script src="sidebar.js"></script>
+<script>
+requireAuth(['rental']);
+function createJob() {
+  const fields = ['jobSite','customer','equipment','notes'];
+  const vals = {};
+  for(const f of fields) { vals[f] = document.getElementById(f).value.trim(); }
+  if(!vals.jobSite || !vals.customer) return alert('Job site and customer are required');
+  Store.addJob(vals);
+  fields.forEach(f => document.getElementById(f).value = '');
+  document.getElementById('msg').textContent = '✓ Work order created!';
+  setTimeout(()=>document.getElementById('msg').textContent='', 3000);
+}
+</script>
+</body>
+</html>

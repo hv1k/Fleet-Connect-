@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>My Dashboard — FleetConnect</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="sidebar"></div>
+<div class="main">
+
+<h1 class="page-title">My Dashboard</h1>
+<div class="stats-grid" id="stats"></div>
+<div class="card">
+  <div class="card-title">Quick Actions</div>
+  <a href="worker-jobs.html" class="btn btn-primary" style="margin-right:8px">🔧 My Jobs</a>
+  <a href="submit-invoice.html" class="btn btn-primary" style="margin-right:8px;background:var(--success)">💰 Submit Invoice</a>
+  <a href="time-clock.html" class="btn btn-primary" style="background:var(--warning)">⏰ Time Clock</a>
+</div>
+
+</div>
+<script src="store.js"></script>
+<script src="sidebar.js"></script>
+<script>
+requireAuth(['fieldworker']);
+const user = Store.getUser();
+const myJobs = Store.getJobsForWorker(user);
+const myInvs = Store.getInvoices().filter(i=>i.worker===user);
+const clocked = Store.isClockedIn(user);
+document.getElementById('stats').innerHTML = [
+  {v:myJobs.length,l:'Assigned Jobs'},{v:myJobs.filter(j=>j.status==='assigned').length,l:'Active'},{v:myInvs.length,l:'Invoices Submitted'},{v:clocked?'🟢 IN':'🔴 OUT',l:'Clock Status'}
+].map(x=>'<div class="stat-card"><div class="stat-value">'+x.v+'</div><div class="stat-label">'+x.l+'</div></div>').join('');
+</script>
+</body>
+</html>

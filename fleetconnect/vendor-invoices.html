@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Invoices — FleetConnect</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="sidebar"></div>
+<div class="main">
+
+<h1 class="page-title">Invoices</h1>
+<div class="card">
+  <table><thead><tr><th>Job</th><th>Worker</th><th>Hours</th><th>Diesel</th><th>DEF</th><th>Total</th><th>Status</th><th>Date</th></tr></thead><tbody id="body"></tbody></table>
+</div>
+
+</div>
+<script src="store.js"></script>
+<script src="sidebar.js"></script>
+<script>
+requireAuth(['vendor']);
+const jobs = Store.getJobs();
+document.getElementById('body').innerHTML = Store.getInvoices().slice().reverse().map(i => {
+  const job = jobs.find(j=>j.id===i.jobId);
+  return '<tr><td>'+(job?job.jobSite:'-')+'</td><td>'+i.worker+'</td><td>'+i.hours+'</td><td>$'+(parseFloat(i.diesel)||0).toFixed(2)+'</td><td>$'+(parseFloat(i.def)||0).toFixed(2)+'</td><td>$'+parseFloat(i.total).toFixed(2)+'</td><td><span class="badge badge-'+i.status+'">'+i.status+'</span></td><td>'+new Date(i.createdAt).toLocaleDateString()+'</td></tr>';
+}).join('') || '<tr><td colspan="8" class="empty-state">No invoices yet</td></tr>';
+</script>
+</body>
+</html>

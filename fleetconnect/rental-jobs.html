@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Jobs — FleetConnect</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="sidebar"></div>
+<div class="main">
+
+<h1 class="page-title">All Jobs</h1>
+<div class="card">
+  <table><thead><tr><th>Job Site</th><th>Customer</th><th>Equipment</th><th>Status</th><th>Worker</th><th>Created</th></tr></thead><tbody id="body"></tbody></table>
+</div>
+
+</div>
+<script src="store.js"></script>
+<script src="sidebar.js"></script>
+<script>
+requireAuth(['rental']);
+document.getElementById('body').innerHTML = Store.getJobs().slice().reverse().map(j=>
+  '<tr><td>'+j.jobSite+'</td><td>'+j.customer+'</td><td>'+(j.equipment||'-')+'</td><td><span class="badge badge-'+j.status+'">'+j.status+'</span></td><td>'+(j.assignedWorker||'-')+'</td><td>'+new Date(j.createdAt).toLocaleDateString()+'</td></tr>'
+).join('') || '<tr><td colspan="6" class="empty-state">No jobs yet. <a href="create-work-order.html">Create one</a></td></tr>';
+</script>
+</body>
+</html>

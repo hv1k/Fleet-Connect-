@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Time Clock — FleetConnect</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="sidebar"></div>
+<div class="main">
+
+<h1 class="page-title">Time Clock</h1>
+<div class="card" style="max-width:500px;margin:0 auto;text-align:center;">
+  <div class="time-display" id="clock"></div>
+  <button id="clockBtn" class="clock-btn" onclick="toggleClock()"></button>
+</div>
+<div class="card" style="max-width:500px;margin:20px auto;">
+  <div class="card-title">Today's Log</div>
+  <table><thead><tr><th>Clock In</th><th>Clock Out</th><th>Duration</th></tr></thead><tbody id="logBody"></tbody></table>
+</div>
+
+</div>
+<script src="store.js"></script>
+<script src="sidebar.js"></script>
+<script>
+requireAuth(['fieldworker']);
+const user = Store.getUser();
+
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent = now.toLocaleTimeString();
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+function renderBtn() {
+  const btn = document.getElementById('clockBtn');
+  if(Store.isClockedIn(user)) {
+    btn.className = 'clock-btn clock-out';
+    btn.textContent = '⏹ Clock Out';
+  } else {
+    btn.className = 'clock-btn clock-in';
+    btn.textContent = '▶ Clock In';
+  }
+}
+
+function toggleClock() {
+  if(Store.isClockedIn(user)) Store.clockOut(user);
+  else Store.clockIn(user);
+  renderBtn();
+  renderLog();
+}
+
+function renderLog() {
+  const today = new Date().toDateString();
+  const entries = Store.getTimeForUser(user).filter(e => new Date(e.clockIn).toDateString() === today);
+  document.getElementById('logBody').innerHTML = entries.map(e => {
+    const cin = new Date(e.clockIn);
+    const cout = e.clockOut ? new Date(e.clockOut) : null;
+    let dur = '-';
+    if(cout) { const mins = Math.round((cout - cin)/60000); dur = Math.floor(mins/60)+'h '+mins%60+'m'; }
+    return '<tr><td>'+cin.toLocaleTimeString()+'</td><td>'+(cout?cout.toLocaleTimeString():'— active —')+'</td><td>'+dur+'</td></tr>';
+  }).join('') || '<tr><td colspan="3" class="empty-state">No entries today</td></tr>';
+}
+
+renderBtn();
+renderLog();
+</script>
+</body>
+</html>
