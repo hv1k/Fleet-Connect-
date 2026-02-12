@@ -1,0 +1,667 @@
+/* ============================================
+   FleetConnect Glassmorphism Override
+   ============================================ */
+
+/* --- CSS Variable Overrides --- */
+:root,
+html.light-mode,
+body.dark,
+body.light-mode,
+.light-mode {
+  --bg-deep: #0f0c29 !important;
+  --bg-dark: #0f0c29 !important;
+  --bg-card: rgba(255, 255, 255, 0.05) !important;
+  --bg-card-hover: rgba(255, 255, 255, 0.08) !important;
+  --bg-input: rgba(255, 255, 255, 0.06) !important;
+  --bg-hover: rgba(255, 255, 255, 0.1) !important;
+  --border: rgba(255, 255, 255, 0.1) !important;
+  --border-focus: #7c3aed !important;
+  --text-primary: #ffffff !important;
+  --text-secondary: rgba(255, 255, 255, 0.65) !important;
+  --text-muted: rgba(255, 255, 255, 0.5) !important;
+  --accent: #7c3aed !important;
+  --accent-dim: #6d28d9 !important;
+  --accent-glow: rgba(124, 58, 237, 0.3) !important;
+  --accent-glow-strong: rgba(124, 58, 237, 0.5) !important;
+  --accent-blue: #06b6d4 !important;
+  --admin: #7c3aed !important;
+  --warning: #f59e0b !important;
+  --error: #ef4444 !important;
+  --success: #10b981 !important;
+  --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+  --shadow-glow: 0 0 40px rgba(124, 58, 237, 0.1) !important;
+}
+
+/* --- Body & Background --- */
+body {
+  background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%) !important;
+  background-attachment: fixed !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+  min-height: 100vh;
+  position: relative;
+}
+
+body::before,
+body::after {
+  content: '';
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.3;
+  z-index: 0;
+  pointer-events: none;
+  animation: floatOrb 20s ease-in-out infinite;
+}
+
+body::before {
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, #7c3aed 0%, transparent 70%);
+  top: -100px;
+  right: -100px;
+  animation-delay: 0s;
+}
+
+body::after {
+  width: 350px;
+  height: 350px;
+  background: radial-gradient(circle, #06b6d4 0%, transparent 70%);
+  bottom: -80px;
+  left: -80px;
+  animation-delay: -10s;
+}
+
+@keyframes floatOrb {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(40px, -30px) scale(1.1); }
+  50% { transform: translate(-20px, 40px) scale(0.95); }
+  75% { transform: translate(30px, 20px) scale(1.05); }
+}
+
+/* --- Glass Mixin via shared properties --- */
+
+/* --- Sidebar --- */
+.admin-sidebar {
+  background: rgba(255, 255, 255, 0.05) !important;
+  backdrop-filter: blur(30px) !important;
+  -webkit-backdrop-filter: blur(30px) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+  z-index: 99;
+}
+
+.admin-sidebar-logo {
+  color: #7c3aed !important;
+}
+
+.admin-nav-section-title {
+  text-transform: uppercase !important;
+  letter-spacing: 1.2px !important;
+  color: rgba(255, 255, 255, 0.4) !important;
+  font-size: 0.65rem !important;
+}
+
+.admin-nav-item {
+  background: transparent !important;
+  color: rgba(255, 255, 255, 0.6) !important;
+  border-radius: 10px !important;
+  transition: all 0.3s ease !important;
+}
+
+.admin-nav-item:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+.admin-nav-item.active {
+  background: rgba(124, 58, 237, 0.15) !important;
+  color: #7c3aed !important;
+  box-shadow: 0 0 20px rgba(124, 58, 237, 0.15) !important;
+}
+
+.admin-sidebar-footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.admin-sidebar-user {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* --- Main Content --- */
+.main-content {
+  position: relative;
+  z-index: 1;
+}
+
+.main-content > .container {
+  animation: fadeInContent 0.5s ease-out;
+}
+
+@keyframes fadeInContent {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Cards & Panels --- */
+.stat-card,
+.card,
+.activity-card,
+.status-card,
+.form-card,
+.detail-card,
+.info-card,
+.summary-card,
+.metric-card,
+.chart-card,
+.report-card,
+.widget,
+.panel {
+  background: rgba(255, 255, 255, 0.05) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+  transition: all 0.3s ease !important;
+}
+
+.stat-card:hover,
+.card:hover,
+.activity-card:hover,
+.status-card:hover,
+.metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+/* --- Nav bar --- */
+.nav {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.nav-links a {
+  color: rgba(255, 255, 255, 0.6) !important;
+  transition: color 0.3s ease !important;
+}
+
+.nav-links a:hover,
+.nav-links a.active {
+  color: #7c3aed !important;
+}
+
+.logo {
+  color: #7c3aed !important;
+}
+
+/* --- Typography --- */
+h1, h2, h3, h4, h5, h6,
+.header h1, .header h2 {
+  color: #ffffff !important;
+  text-shadow: 0 0 30px rgba(124, 58, 237, 0.15);
+}
+
+p, span, div, li, td, th, label, a {
+  /* Let inheritance handle most color; only override where needed */
+}
+
+.header p,
+.text-secondary,
+.text-muted,
+.user-name {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+/* --- Buttons --- */
+.btn-primary,
+button[type="submit"],
+.save-btn,
+.primary-btn {
+  background: linear-gradient(135deg, #7c3aed, #06b6d4) !important;
+  border: none !important;
+  color: #ffffff !important;
+  border-radius: 10px !important;
+  box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3) !important;
+  transition: all 0.3s ease !important;
+}
+
+.btn-primary:hover,
+button[type="submit"]:hover,
+.save-btn:hover,
+.primary-btn:hover {
+  transform: scale(1.02);
+  box-shadow: 0 6px 25px rgba(124, 58, 237, 0.5) !important;
+}
+
+.btn-secondary,
+.secondary-btn,
+.cancel-btn {
+  background: rgba(255, 255, 255, 0.06) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+  border-radius: 10px !important;
+  transition: all 0.3s ease !important;
+}
+
+.btn-secondary:hover,
+.secondary-btn:hover,
+.cancel-btn:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  transform: scale(1.02);
+}
+
+.btn {
+  border-radius: 10px !important;
+  transition: all 0.3s ease !important;
+}
+
+.logout-btn {
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: rgba(255, 255, 255, 0.6) !important;
+  background: transparent !important;
+}
+
+.logout-btn:hover {
+  border-color: #ef4444 !important;
+  color: #ef4444 !important;
+}
+
+.admin-badge {
+  background: linear-gradient(135deg, #7c3aed, #06b6d4) !important;
+  color: #ffffff !important;
+}
+
+/* --- Forms --- */
+input,
+textarea,
+select,
+.form-control,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="search"],
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"],
+input[type="url"],
+input[type="tel"] {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #ffffff !important;
+  border-radius: 10px !important;
+  transition: all 0.3s ease !important;
+}
+
+input:focus,
+textarea:focus,
+select:focus,
+.form-control:focus {
+  border-color: #7c3aed !important;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2), 0 0 20px rgba(124, 58, 237, 0.1) !important;
+  outline: none !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: rgba(255, 255, 255, 0.3) !important;
+}
+
+.form-group label,
+label {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* --- Tables --- */
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+table, .table-container, .table-wrapper {
+  background: rgba(255, 255, 255, 0.03) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 16px !important;
+  overflow: hidden;
+}
+
+thead, thead tr, th {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+tbody tr {
+  background: transparent !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+  transition: background 0.2s ease;
+}
+
+tbody tr:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+th {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* --- Status Badges --- */
+.badge,
+.status-badge {
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+  transition: all 0.3s ease !important;
+}
+
+.badge.success, .status-badge.success,
+.badge.active, .status-badge.active,
+.badge.completed, .status-badge.completed,
+.badge[class*="success"], .status-badge[class*="success"],
+.badge[class*="active"], .status-badge[class*="active"],
+.badge[class*="complete"], .status-badge[class*="complete"] {
+  background: rgba(16, 185, 129, 0.15) !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+  color: #10b981 !important;
+}
+
+.badge.warning, .status-badge.warning,
+.badge.pending, .status-badge.pending,
+.badge[class*="warning"], .status-badge[class*="warning"],
+.badge[class*="pending"], .status-badge[class*="pending"] {
+  background: rgba(245, 158, 11, 0.15) !important;
+  border: 1px solid rgba(245, 158, 11, 0.3) !important;
+  color: #f59e0b !important;
+}
+
+.badge.error, .status-badge.error,
+.badge.danger, .status-badge.danger,
+.badge.critical, .status-badge.critical,
+.badge[class*="error"], .status-badge[class*="error"],
+.badge[class*="danger"], .status-badge[class*="danger"],
+.badge[class*="critical"], .status-badge[class*="critical"] {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border: 1px solid rgba(239, 68, 68, 0.3) !important;
+  color: #ef4444 !important;
+}
+
+.badge.info, .status-badge.info,
+.badge[class*="info"] {
+  background: rgba(6, 182, 212, 0.15) !important;
+  border: 1px solid rgba(6, 182, 212, 0.3) !important;
+  color: #06b6d4 !important;
+}
+
+/* --- Modals --- */
+.modal,
+.modal-content,
+.modal-container,
+[class*="modal"] > div {
+  background: rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(30px) !important;
+  -webkit-backdrop-filter: blur(30px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5) !important;
+}
+
+.modal-overlay,
+.modal-backdrop {
+  background: rgba(0, 0, 0, 0.6) !important;
+  backdrop-filter: blur(4px) !important;
+}
+
+/* --- Scrollbar --- */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* --- Login Page --- */
+.login-container,
+.login-card,
+.login-box,
+.auth-card,
+.auth-container {
+  background: rgba(255, 255, 255, 0.07) !important;
+  backdrop-filter: blur(40px) !important;
+  -webkit-backdrop-filter: blur(40px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 24px !important;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5), 0 0 80px rgba(124, 58, 237, 0.08) !important;
+}
+
+.login-container h1,
+.login-card h1,
+.auth-card h1,
+.login-container .logo-text,
+.auth-container h1 {
+  background: linear-gradient(135deg, #7c3aed, #06b6d4) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+}
+
+/* --- Hamburger menu --- */
+.hamburger-menu {
+  background: rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 10px !important;
+}
+
+/* --- Stats Grid --- */
+.stats-grid {
+  position: relative;
+  z-index: 1;
+}
+
+/* --- Section containers, filter bars, action bars --- */
+.filters,
+.filter-bar,
+.action-bar,
+.toolbar,
+.search-bar,
+.controls,
+.tabs,
+.tab-bar {
+  background: rgba(255, 255, 255, 0.04) !important;
+  backdrop-filter: blur(15px) !important;
+  -webkit-backdrop-filter: blur(15px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 12px !important;
+}
+
+/* --- Tabs --- */
+.tab, .tab-item {
+  color: rgba(255, 255, 255, 0.6) !important;
+  transition: all 0.3s ease !important;
+}
+
+.tab.active, .tab-item.active {
+  color: #7c3aed !important;
+  border-color: #7c3aed !important;
+}
+
+/* --- Dropdown / Select menus --- */
+.dropdown-menu,
+.dropdown-content,
+[class*="dropdown"] ul,
+.select-dropdown {
+  background: rgba(30, 20, 60, 0.95) !important;
+  backdrop-filter: blur(30px) !important;
+  -webkit-backdrop-filter: blur(30px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* --- Tooltips --- */
+.tooltip,
+[class*="tooltip"] {
+  background: rgba(30, 20, 60, 0.95) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 8px !important;
+}
+
+/* --- Charts area --- */
+.chart-container,
+.chart-wrapper {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border-radius: 16px !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* --- Light mode overrides (force glass everywhere) --- */
+html.light-mode body,
+body.light-mode,
+.light-mode .admin-sidebar,
+.light-mode .main-content,
+.light-mode .stat-card,
+.light-mode .card,
+.light-mode table,
+.light-mode thead,
+.light-mode tbody tr,
+.light-mode input,
+.light-mode textarea,
+.light-mode select {
+  /* Variables already overridden above; this ensures cascade */
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+html.light-mode body {
+  background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%) !important;
+  background-attachment: fixed !important;
+}
+
+/* --- Links --- */
+a {
+  color: #7c3aed;
+  transition: color 0.3s ease;
+}
+
+a:hover {
+  color: #06b6d4;
+}
+
+/* --- Pagination --- */
+.pagination a,
+.pagination button,
+.page-btn {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+  border-radius: 8px !important;
+  transition: all 0.3s ease !important;
+}
+
+.pagination a:hover,
+.pagination button:hover,
+.page-btn:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+}
+
+.pagination a.active,
+.pagination button.active,
+.page-btn.active {
+  background: linear-gradient(135deg, #7c3aed, #06b6d4) !important;
+  color: #fff !important;
+  border-color: transparent !important;
+}
+
+/* --- Alerts / Notifications --- */
+.alert,
+.notification,
+.toast {
+  background: rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 12px !important;
+}
+
+/* --- Progress bars --- */
+.progress-bar,
+.progress {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-radius: 8px !important;
+  overflow: hidden;
+}
+
+.progress-fill,
+.progress-bar-fill {
+  background: linear-gradient(135deg, #7c3aed, #06b6d4) !important;
+  border-radius: 8px !important;
+}
+
+/* --- Ensure all text stays readable --- */
+.container,
+.main-content {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+/* --- SVG icons in nav inherit color --- */
+.admin-nav-item svg {
+  opacity: 0.7;
+  transition: opacity 0.3s ease;
+}
+
+.admin-nav-item:hover svg,
+.admin-nav-item.active svg {
+  opacity: 1;
+}
+
+/* --- Mobile --- */
+@media (max-width: 768px) {
+  .admin-sidebar {
+    border-right: none !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .stat-card, .card {
+    border-radius: 12px !important;
+  }
+
+  body::before, body::after {
+    width: 200px;
+    height: 200px;
+    opacity: 0.2;
+  }
+}
+
+/* --- Smooth transitions globally --- */
+*, *::before, *::after {
+  transition-property: background-color, border-color, color, box-shadow, opacity, transform;
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
+}
+
+/* Reset transition for things that shouldn't animate */
+input, textarea, .admin-sidebar, .modal, .modal-overlay {
+  transition-property: background-color, border-color, color, box-shadow, opacity !important;
+}
