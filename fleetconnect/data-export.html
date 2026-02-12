@@ -529,7 +529,7 @@ Content-Type: application/json</div>
     <script src="sidebar.js"></script>
     <script src="feature-flags.js"></script>
     <script>
-        const currentUser = checkAuth(['admin']);
+        const currentUser = checkAuth(['admin', 'rental']);
         if (currentUser) {
             var _admi = document.getElementById('adminUserName'); if(_admi) _admi.textContent = currentUser.name;
         }
