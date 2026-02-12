@@ -568,6 +568,7 @@
                             ${!isFieldworkerReadonly && job.invoice_image ? '<button class="btn btn-invoice" onclick="viewImage(\'' + job.invoice_image + '\')">📄 Invoice</button>' : ''}
                             ${!isFieldworkerReadonly && canRespondToJob(job) ? '<button class="btn btn-accept" onclick="acceptJob(\'' + job.id + '\')">✓ Accept</button><button class="btn btn-decline" onclick="declineJob(\'' + job.id + '\')">✗ Decline</button>' : ''}
                             ${!isFieldworkerReadonly && currentUser.role === 'vendor' && job.status !== 'completed' ? '<button class="btn btn-assign" onclick="openAssignWorkerModal(\'' + job.id + '\')">' + (job.assigned_worker ? '↻ Reassign Worker' : '👷 Assign Worker') + '</button>' : ''}
+                            ${!isFieldworkerReadonly && (currentUser.role === 'vendor' || currentUser.role === 'admin') && job.status === 'in-progress' ? '<button class="btn btn-complete" style="background:rgba(96,165,250,0.15);color:#60a5fa;border:1px solid rgba(96,165,250,0.3);" onclick="completeJob(\'' + job.id + '\')">✅ Complete</button>' : ''}
                         </div>
                     </div>
                 `;
@@ -678,6 +679,11 @@
                     </div>
                 ` : ''}
 
+                <div class="detail-section" id="invoiceSummarySection" style="display:none;">
+                    <div class="detail-section-title">📋 Invoice Summary</div>
+                    <div id="invoiceSummaryContent">Loading...</div>
+                </div>
+
                 ${job.instructions ? `
                     <div class="detail-section">
                         <div class="detail-section-title">Instructions</div>
@@ -704,6 +710,57 @@
                 ${deliveries.length > 0 ? '<button class="btn btn-primary" onclick="closeModal(); openDeliveries(\'' + jobId + '\')">View Deliveries</button>' : ''}
             `;
             var _jobM = document.getElementById('jobModal'); if(_jobM) _jobM.classList.add('show');
+
+            // Load invoice summary
+            loadJobInvoices(jobId);
+        }
+
+        async function loadJobInvoices(jobId) {
+            const section = document.getElementById('invoiceSummarySection');
+            const content = document.getElementById('invoiceSummaryContent');
+            if (!section || !content) return;
+            try {
+                const { data: invoices, error } = await db.from('invoices').select('*').eq('job_id', jobId).order('created_at', { ascending: false });
+                if (error || !invoices || invoices.length === 0) {
+                    section.style.display = 'none';
+                    return;
+                }
+                section.style.display = 'block';
+                const totalDiesel = invoices.reduce((s, i) => s + (parseFloat(i.total_diesel) || 0), 0);
+                const totalDef = invoices.reduce((s, i) => s + (parseFloat(i.total_def) || 0), 0);
+                content.innerHTML = `
+                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;">
+                        <div style="background:#2a2a2a;padding:12px;border-radius:8px;text-align:center;">
+                            <div style="font-size:1.3rem;font-weight:700;color:#22c55e;">${invoices.length}</div>
+                            <div style="font-size:0.75rem;color:#888;">Invoices</div>
+                        </div>
+                        <div style="background:#2a2a2a;padding:12px;border-radius:8px;text-align:center;">
+                            <div style="font-size:1.3rem;font-weight:700;color:#f59e0b;">${totalDiesel.toFixed(1)}</div>
+                            <div style="font-size:0.75rem;color:#888;">Total Diesel (gal)</div>
+                        </div>
+                        <div style="background:#2a2a2a;padding:12px;border-radius:8px;text-align:center;">
+                            <div style="font-size:1.3rem;font-weight:700;color:#60a5fa;">${totalDef.toFixed(1)}</div>
+                            <div style="font-size:0.75rem;color:#888;">Total DEF (gal)</div>
+                        </div>
+                    </div>
+                    ${invoices.map(inv => {
+                        const units = inv.units_data || [];
+                        return `<div style="background:#2a2a2a;border-radius:8px;padding:12px;margin-bottom:8px;border:1px solid #333;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                                <span style="font-weight:600;color:#f5f0e8;">${inv.worker_name || 'Unknown'}</span>
+                                <span style="font-size:0.8rem;color:#888;">${inv.invoice_date || ''} ${inv.invoice_time || ''}</span>
+                            </div>
+                            ${units.map(u => `<div style="display:flex;justify-content:space-between;font-size:0.85rem;padding:4px 0;border-top:1px solid #3a3a3a;">
+                                <span style="color:#ccc;">${u.unit_number || '—'} ${u.unit_description || ''}</span>
+                                <span style="color:#888;">⏱${u.unit_hours}h ⛽${u.diesel_gallons}gal 💧${u.def_gallons}gal</span>
+                            </div>`).join('')}
+                            ${inv.notes ? '<div style="font-size:0.8rem;color:#888;margin-top:8px;padding-top:8px;border-top:1px solid #3a3a3a;">📝 ' + safe(inv.notes) + '</div>' : ''}
+                        </div>`;
+                    }).join('')}
+                `;
+            } catch (err) {
+                section.style.display = 'none';
+            }
         }
 
         // ===== DELIVERIES MODAL =====
@@ -822,6 +879,25 @@
             } catch (err) {
                 console.error('Accept error:', err);
                 showToast('Failed to accept job: ' + err.message, 'error');
+            }
+        }
+
+        async function completeJob(jobId) {
+            if (!confirm('Mark this job as completed? This will finalize all invoices.')) return;
+            try {
+                const { error } = await db.from('jobs').update({
+                    status: 'completed',
+                    completed_at: new Date().toISOString()
+                }).eq('id', jobId);
+                if (error) throw error;
+                const job = allJobs.find(j => j.id === jobId);
+                if (job) { job.status = 'completed'; job.completed_at = new Date().toISOString(); }
+                updateStats();
+                renderJobs();
+                showToast('Job completed! View the summary in Invoices.', 'success');
+            } catch (err) {
+                console.error('Complete error:', err);
+                showToast('Failed to complete job: ' + err.message, 'error');
             }
         }
 
