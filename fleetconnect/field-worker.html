@@ -1436,14 +1436,7 @@
 
         // ===== SUBMIT INVOICE =====
         async function submitInvoice(jobId) {
-          // Validate photos if feature enabled
-          if (FC_FLAGS.isOn('photo_invoice') && !validatePhotos()) return;
-
-          // Validate signature if feature enabled
-          if (FC_FLAGS.isOn('signature') && !signatureData) {
-            showToast('Please capture a signature before submitting', 'error');
-            return;
-          }
+          // Photos and signature are optional — don't block submission
 
           try {
             const unitIds = Object.keys(activeUnits);
