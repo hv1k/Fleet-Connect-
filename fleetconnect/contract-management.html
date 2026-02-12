@@ -392,8 +392,8 @@
         async function loadData() {
             try {
                 // Try to load from Supabase
-                const { data } = await db.from('contracts').select('*').order('created_at', { ascending: false });
-                allContracts = data && data.length > 0 ? data : mockContracts;
+                const { data, error } = await db.from('contracts').select('*').order('created_at', { ascending: false });
+                allContracts = !error && data && data.length > 0 ? data : mockContracts;
             } catch (err) {
                 console.log('Using mock contracts:', err);
                 allContracts = mockContracts;

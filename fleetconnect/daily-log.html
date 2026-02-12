@@ -416,8 +416,10 @@
 
                 const jobIds = allJobs.map(j => j.id);
                 if (jobIds.length > 0) {
-                    const { data } = await db.from('deliveries').select('*').in('job_id', jobIds).order('timestamp', { ascending: true });
-                    allDeliveries = data || [];
+                    try {
+                        const { data } = await db.from('deliveries').select('*').in('job_id', jobIds).order('timestamp', { ascending: true });
+                        allDeliveries = data || [];
+                    } catch(e) { allDeliveries = []; }
                 } else {
                     allDeliveries = [];
                 }
