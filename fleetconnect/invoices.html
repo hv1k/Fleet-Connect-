@@ -491,14 +491,13 @@
         async function loadData() {
             try {
                 const [invRes, jobRes, delRes, userRes] = await Promise.all([
-                    db.from('qb_invoices').select('*').order('created_at', { ascending: false }),
+                    db.from('qb_invoices').select('*').order('created_at', { ascending: false }).then(r => r).catch(() => ({ data: [], error: null })),
                     db.from('jobs').select('*').order('completed_at', { ascending: false }),
-                    db.from('deliveries').select('*').order('timestamp', { ascending: false }),
+                    db.from('deliveries').select('*').order('timestamp', { ascending: false }).then(r => r).catch(() => ({ data: [], error: null })),
                     db.from('users').select('id, name, role').eq('role', 'fieldworker')
                 ]);
-                if (invRes.error) throw invRes.error;
+                // Only throw on critical tables (jobs, users)
                 if (jobRes.error) throw jobRes.error;
-                if (delRes.error) throw delRes.error;
                 if (userRes.error) throw userRes.error;
                 allInvoices = invRes.data || [];
                 allJobs = jobRes.data || [];
