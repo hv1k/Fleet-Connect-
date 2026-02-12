@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <script>
+      // Theme init - prevent flash of wrong theme
+      (function(){
+        var t = localStorage.getItem('fleetconnect-theme');
+        if(t === 'light') document.documentElement.classList.add('light-mode');
+      })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dispatch Board | FleetConnect</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg-dark: #1a1a1a;
+            --bg-card: #242424;
+            --bg-hover: #333;
+            --border: #333;
+            --text-primary: #e8e0d8;
+            --text-secondary: #b8b0a8;
+            --text-muted: #888;
+            --accent: #3b82f6;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --admin: #60a5fa;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #06060b; color: #f5f0e8; min-height: 100vh;  display: flex;}
+
+        .layout { display: flex; min-height: 100vh; }
+
+        /* Sidebar */
+        .sidebar { width: 240px; background: #0a0a12; border-right: 1px solid #1a1a2e; padding: 24px 16px; position: fixed; left: 0; height: 100vh; z-index: 100; display: flex; flex-direction: column; overflow-y: auto; }
+        .sidebar-header { display: flex; align-items: center; gap: 10px; margin-bottom: 32px; padding: 20px 20px 12px; }
+        .sidebar-logo { font-size: 1.2rem; font-weight: 700; color: #60a5fa; }
+        .nav-section { margin-bottom: 24px; }
+        .nav-section-title { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: #4a5568; padding: 0 12px; margin-bottom: 8px; letter-spacing: 0.5px; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; color: #a0aec0; text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: all 0.2s; cursor: pointer; }
+        .nav-item:hover { background: #1a1a2e; color: #f5f0e8; }
+        .nav-item.active { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
+        .nav-item svg { width: 20px; height: 20px; }
+        .sidebar-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid #1a1a2e; }
+        .user-menu { display: flex; align-items: center; gap: 12px; padding: 12px; margin-top: 12px; border-radius: 10px; background: #1a1a2e; }
+        .user-avatar-lg { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #60a5fa, #3b82f6); display: flex; align-items: center; justify-content: center; color: #06060b; font-weight: 600; font-size: 0.85rem; }
+        .user-info { flex: 1; }
+        .user-name { font-size: 0.85rem; font-weight: 600; color: #f5f0e8; }
+        .user-role { font-size: 0.7rem; color: #718096; }
+        .logout-btn { color: #718096; cursor: pointer; padding: 6px; border-radius: 6px; background: none; border: none; }
+        .logout-btn:hover { background: #1a1a2e; color: #f5f0e8; }
+
+        /* Main */
+        .main { flex: 1; margin-left: 240px; min-height: 100vh; }
+        .header { background: #0a0a12; padding: 20px 32px; border-bottom: 1px solid #1a1a2e; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50; }
+        .header h1 { font-size: 1.4rem; font-weight: 700; color: #f5f0e8; }
+        .header-subtitle { font-size: 0.85rem; color: #718096; }
+        .content { padding: 32px; }
+
+        /* Stats Row */
+        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
+        .stat-card { background: #0f0f1a; border-radius: 12px; border: 1px solid #1a1a2e; padding: 16px 20px; }
+        .stat-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: #718096; margin-bottom: 8px; }
+        .stat-value { font-size: 1.6rem; font-weight: 700; color: #60a5fa; }
+
+        /* Filters */
+        .filters { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+        .filter-group { display: flex; gap: 8px; align-items: center; }
+        .filter-label { font-size: 0.85rem; font-weight: 500; color: #a0aec0; }
+        .filter-input, .filter-select { padding: 8px 12px; border: 1px solid #1a1a2e; border-radius: 8px; background: #06060b; color: #f5f0e8; font-size: 0.85rem; }
+        .filter-input:focus, .filter-select:focus { outline: none; border-color: #60a5fa; }
+
+        /* Kanban Board */
+        .kanban-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+        .kanban-column { background: #0f0f1a; border-radius: 12px; border: 1px solid #1a1a2e; display: flex; flex-direction: column; min-height: 600px; }
+        .column-header { padding: 16px 20px; border-bottom: 1px solid #1a1a2e; }
+        .column-title { font-size: 0.9rem; font-weight: 600; color: #f5f0e8; }
+        .column-count { font-size: 0.75rem; color: #718096; margin-top: 4px; }
+        .column-content { flex: 1; padding: 16px; overflow-y: auto; }
+        .column-drop-zone { min-height: 100px; background: rgba(96, 165, 250, 0.05); border: 2px dashed transparent; border-radius: 8px; transition: all 0.2s; }
+        .column-drop-zone.drag-over { border-color: #60a5fa; background: rgba(96, 165, 250, 0.1); }
+
+        /* Job Card */
+        .job-card { background: #1a1a2e; border: 1px solid #2a2a3e; border-radius: 10px; padding: 14px; margin-bottom: 12px; cursor: grab; transition: all 0.2s; }
+        .job-card:hover { background: #252540; border-color: #60a5fa; }
+        .job-card.dragging { opacity: 0.5; }
+        .job-card-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px; }
+        .job-card-customer { font-size: 0.9rem; font-weight: 600; color: #f5f0e8; }
+        .job-card-priority { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 6px; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; }
+        .job-card-priority.high { background: rgba(248, 113, 113, 0.15); color: #f87171; }
+        .job-card-priority.medium { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
+        .job-card-priority.low { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
+        .job-card-address { font-size: 0.75rem; color: #a0aec0; margin-top: 6px; }
+        .job-card-equipment { font-size: 0.75rem; color: #718096; margin-top: 4px; }
+        .job-card-worker { font-size: 0.75rem; color: #60a5fa; margin-top: 6px; padding-top: 6px; border-top: 1px solid #2a2a3e; }
+        .job-card-time { font-size: 0.7rem; color: #718096; margin-top: 4px; }
+
+        /* Detail Slide Panel */
+        .slide-panel { position: fixed; right: -400px; top: 0; width: 400px; height: 100vh; background: #0a0a12; border-left: 1px solid #1a1a2e; z-index: 200; transition: right 0.3s ease; overflow-y: auto; }
+        .slide-panel.open { right: 0; }
+        .panel-header { padding: 20px; border-bottom: 1px solid #1a1a2e; display: flex; justify-content: space-between; align-items: center; }
+        .panel-title { font-size: 1rem; font-weight: 600; color: #f5f0e8; }
+        .panel-close { background: none; border: none; color: #a0aec0; cursor: pointer; font-size: 1.5rem; }
+        .panel-body { padding: 20px; }
+        .detail-section { margin-bottom: 20px; }
+        .detail-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: #718096; margin-bottom: 6px; }
+        .detail-value { font-size: 0.9rem; color: #f5f0e8; }
+        .panel-actions { padding: 20px; border-top: 1px solid #1a1a2e; display: flex; gap: 12px; }
+
+        /* Mobile */
+        .mobile-toggle { display: none; width: 40px; height: 40px; border: 1px solid #1a1a2e; border-radius: 8px; background: #1a1a2e; color: #f5f0e8; align-items: center; justify-content: center; cursor: pointer; }
+        .admin-sidebar { width: 260px; background: var(--bg-card); border-right: 1px solid var(--border); padding: 24px 16px; position: fixed; left: 0; top: 0; height: 100vh; overflow-y: auto; z-index: 99; display: flex; flex-direction: column; }
+        .admin-sidebar-logo { font-size: 1.1rem; font-weight: 700; color: var(--admin, #60a5fa); margin-bottom: 16px; }
+        .admin-nav-section { margin-bottom: 24px; }
+        .admin-nav-section-title { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted, #888); padding: 0 12px; margin-bottom: 8px; letter-spacing: 0.5px; }
+        .admin-nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; color: #b8b0a8; text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: all 0.2s; cursor: pointer; margin-bottom: 4px; }
+        .admin-nav-item:hover { background: var(--bg-hover, #333); color: var(--text-primary, #e8e0d8); }
+        .admin-nav-item.active { background: rgba(96, 165, 250, 0.15); color: var(--admin, #60a5fa); }
+        .admin-nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+        .admin-sidebar-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border, #333); }
+        .main-content { flex: 1; margin-left: 260px; }
+
+        @media (max-width: 1400px) { .kanban-container { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 900px) {
+            .sidebar { display: none; }
+            .sidebar.open { display: flex; position: fixed; z-index: 100; }
+            .main { margin-left: 0; }
+            .mobile-toggle { display: flex; }
+            .kanban-container { grid-template-columns: 1fr; }
+            .slide-panel { width: 100%; }
+        }
+
+        .loading { text-align: center; padding: 40px; color: #718096; }
+        .spinner { width: 36px; height: 36px; border: 3px solid #1a1a2e; border-top-color: #60a5fa; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    
+        /* Light Mode */
+        .light-mode { --bg-dark: #f5f5f5; --bg-card: #ffffff; --bg-input: #e8e8e8; --bg-hover: #e8e8e8; --border: #d0d0d0; --text-primary: #1a1a1a; --text-secondary: #555555; --text-muted: #888888; }
+        .light-mode .sidebar, .light-mode .admin-sidebar { background: #ffffff !important; border-color: #d0d0d0 !important; }
+        .light-mode .sidebar-logo, .light-mode .admin-sidebar-logo { color: #3b82f6 !important; }
+        .light-mode .nav-item, .light-mode .admin-nav-item { color: #555555 !important; }
+        .light-mode .nav-item:hover, .light-mode .admin-nav-item:hover { background: #e8e8e8 !important; color: #1a1a1a !important; }
+        .light-mode .nav-item.active, .light-mode .admin-nav-item.active { background: #dbeafe !important; color: #2563eb !important; }
+        .light-mode .nav-section-title, .light-mode .admin-nav-section { color: #888888 !important; }
+        .light-mode .user-menu { background: #e8e8e8 !important; }
+        .light-mode .user-name { color: #1a1a1a !important; }
+        .light-mode .header { background: #ffffff !important; border-color: #d0d0d0 !important; }
+        .light-mode .header h1 { color: #1a1a1a !important; }
+        .light-mode .header-subtitle { color: #555555 !important; }
+        .light-mode .main, .light-mode .content, .light-mode .admin-main { background: #f5f5f5 !important; }
+        .light-mode .card, .light-mode .stat-card, .light-mode .metric-card, .light-mode .admin-card { background: #ffffff !important; border-color: #d0d0d0 !important; }
+        .light-mode .card-title, .light-mode .stat-label { color: #1a1a1a !important; }
+        .light-mode .card-subtitle { color: #555555 !important; }
+        .light-mode input, .light-mode textarea, .light-mode select { background: #e8e8e8 !important; border-color: #d0d0d0 !important; color: #1a1a1a !important; }
+        .light-mode input::placeholder, .light-mode textarea::placeholder { color: #888888 !important; }
+        .light-mode .form-label, .light-mode label { color: #1a1a1a !important; }
+        .light-mode .badge { background: #dbeafe !important; color: #2563eb !important; }
+        .light-mode .btn-secondary { background: #e8e8e8 !important; color: #1a1a1a !important; border-color: #d0d0d0 !important; }
+        .light-mode .btn-secondary:hover { background: #d0d0d0 !important; }
+        .light-mode .sidebar-footer, .light-mode .admin-sidebar-footer { border-color: #d0d0d0 !important; }
+        .light-mode .logout-btn:hover { background: #e8e8e8 !important; }
+        .light-mode table th { background: #e8e8e8 !important; color: #1a1a1a !important; border-color: #d0d0d0 !important; }
+        .light-mode table td { border-color: #d0d0d0 !important; color: #1a1a1a !important; }
+        .light-mode table tr:hover { background: #e8e8e8 !important; }
+        .light-mode .modal-overlay { background: rgba(0,0,0,0.3) !important; }
+        .light-mode .modal, .light-mode .modal-content { background: #ffffff !important; border-color: #d0d0d0 !important; color: #1a1a1a !important; }
+        .light-mode.light-mode .search-box, .light-mode .search-input { background: #e8e8e8 !important; border-color: #d0d0d0 !important; color: #1a1a1a !important; }
+        .light-mode .tab, .light-mode .tab-btn { color: #555555 !important; }
+        .light-mode .tab.active, .light-mode .tab-btn.active { color: #3b82f6 !important; border-color: #3b82f6 !important; }
+        .light-mode .dropdown, .light-mode .dropdown-menu { background: #ffffff !important; border-color: #d0d0d0 !important; }
+        .light-mode .dropdown-item:hover { background: #e8e8e8 !important; }
+        .light-mode .toggle-switch { background: #d0d0d0 !important; }
+        .light-mode .toggle-switch.active { background: #2563eb !important; }
+        .light-mode .tooltip { background: #1a1a1a !important; color: #ffffff !important; }
+        .light-mode .progress-bar { background: #e8e8e8 !important; }
+        .light-mode .empty-state { color: #555555 !important; }
+        .light-mode .filter-bar, .light-mode .toolbar { background: #ffffff !important; border-color: #d0d0d0 !important; }
+        .light-mode .chip { background: #e8e8e8 !important; color: #1a1a1a !important; }
+        .light-mode pre, .light-mode code { background: #e8e8e8 !important; color: #1a1a1a !important; }
+        .light-mode .status-badge { border-color: #d0d0d0 !important; }
+        .light-mode ::selection { background: #3b82f6; color: #ffffff; }
+        .light-mode ::-webkit-scrollbar-track { background: #f5f5f5; }
+        .light-mode ::-webkit-scrollbar-thumb { background: #d0d0d0; }
+        .light-mode ::-webkit-scrollbar-thumb:hover { background: #bbbbbb; }
+
+/* Light Mode */
+        html.light-mode { --bg-dark: #f5f0e8; --bg-card: #ffffff; --bg-input: #f0ebe3; --bg-hover: #e8e4dc; --border: #d0d0d0; --text-primary: #1a1a1a; --text-secondary: #5c5c5c; --text-muted: #8c8c8c; }
+        html.light-mode .admin-sidebar { background: #ffffff !important; border-color: #d0d0d0 !important; }
+        html.light-mode .admin-nav-item { color: #5c5c5c; }
+        html.light-mode .admin-nav-item:hover { background: #f0ebe3; color: #1a1a1a; }
+        html.light-mode .admin-nav-item.active { background: #dbeafe; color: #3b82f6; }
+        html.light-mode .admin-nav-section-title { color: #8c8c8c; }
+        html.light-mode .admin-sidebar-footer { border-color: #d0d0d0; }
+        html.light-mode .stat-card, html.light-mode .card, html.light-mode .table-card { background: #ffffff; border-color: #d0d0d0; }
+        html.light-mode .search-input, html.light-mode .filter-select { background: #ffffff; border-color: #d0d0d0; color: #1a1a1a; }
+        html.light-mode th { background: #f0ebe3; color: #8c8c8c; border-color: #d0d0d0; }
+        html.light-mode td { border-color: #d0d0d0; color: #5c5c5c; }
+        html.light-mode tr:hover { background: #f0ebe3; }
+        html.light-mode .modal { background: #ffffff; }
+        html.light-mode .modal-header { border-color: #d0d0d0; }
+        html.light-mode .btn-secondary { background: #ffffff; border-color: #d0d0d0; color: #5c5c5c; }
+    
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .admin-sidebar { width: 100%; height: auto; position: relative; left: auto; top: auto; border-right: none; border-bottom: 1px solid var(--border, #333); padding: 12px; }
+            .main-content { margin-left: 0; }
+        }
+    
+        /* Sidebar actions (bell + theme toggle) */
+        /* Sidebar layout fix */
+        .admin-sidebar { display: flex; flex-direction: column; }
+        .admin-sidebar nav { flex: 1; overflow-y: auto; }
+</style>
+</head>
+<body>
+    <aside class="admin-sidebar" id="adminSidebar">
+        <div class="admin-sidebar-logo">FLEETCONNECT</div>
+<nav id="sidebarNav"></nav>
+        <div class="admin-sidebar-footer">
+            <div style="padding: 12px; background: var(--bg-hover, #333); border-radius: 8px;">
+                <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary, #f5f0e8); margin-bottom: 4px;" id="adminUserName">Vendor</div>
+                <div class="admin-sidebar-role" style="font-size: 0.75rem; color: var(--text-secondary, #888);">Vendor Account</div>
+                <button onclick="logout()" style="margin-top: 8px; width: 100%; padding: 6px; background: transparent; border: 1px solid #333; color: #888; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 0.75rem; cursor: pointer; transition: all 0.2s;">Logout</button>
+            </div>
+        </div>
+    </aside>
+
+        <div class="main-content">
+            <header class="header">
+                <div>
+                    <button class="mobile-toggle" onclick="toggleMobileSidebar()"><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+                    <h1>Dispatch Board</h1>
+                    <p class="header-subtitle">Manage job assignments and workflow</p>
+                </div>
+            </header>
+
+            <div class="content">
+                <!-- Stats Row -->
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="stat-label">New/Unassigned</div>
+                        <div class="stat-value" id="statNew">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Assigned</div>
+                        <div class="stat-value" id="statAssigned">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">In Progress</div>
+                        <div class="stat-value" id="statInProgress">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Completed</div>
+                        <div class="stat-value" id="statCompleted">0</div>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="filters">
+                    <div class="filter-group">
+                        <label class="filter-label">Date Range:</label>
+                        <select class="filter-select" id="dateRangeFilter" onchange="refreshBoard()">
+                            <option value="today">Today</option>
+                            <option value="week">This Week</option>
+                            <option value="month">This Month</option>
+                            <option value="all">All</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Worker:</label>
+                        <select class="filter-select" id="workerFilter" onchange="refreshBoard()">
+                            <option value="">All Workers</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Priority:</label>
+                        <select class="filter-select" id="priorityFilter" onchange="refreshBoard()">
+                            <option value="">All</option>
+                            <option value="high">High</option>
+                            <option value="medium">Medium</option>
+                            <option value="low">Low</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Kanban Board -->
+                <div class="kanban-container">
+                    <div class="kanban-column">
+                        <div class="column-header">
+                            <div class="column-title">New/Unassigned</div>
+                            <div class="column-count" id="newCount">0 jobs</div>
+                        </div>
+                        <div class="column-content" id="columnNew" ondragover="dragOver(event)" ondrop="dropCard(event, 'new')" ondragleave="dragLeave(event)">
+                            <div class="column-drop-zone"></div>
+                        </div>
+                    </div>
+
+                    <div class="kanban-column">
+                        <div class="column-header">
+                            <div class="column-title">Assigned</div>
+                            <div class="column-count" id="assignedCount">0 jobs</div>
+                        </div>
+                        <div class="column-content" id="columnAssigned" ondragover="dragOver(event)" ondrop="dropCard(event, 'assigned')" ondragleave="dragLeave(event)">
+                            <div class="column-drop-zone"></div>
+                        </div>
+                    </div>
+
+                    <div class="kanban-column">
+                        <div class="column-header">
+                            <div class="column-title">In Progress</div>
+                            <div class="column-count" id="inProgressCount">0 jobs</div>
+                        </div>
+                        <div class="column-content" id="columnInProgress" ondragover="dragOver(event)" ondrop="dropCard(event, 'in-progress')" ondragleave="dragLeave(event)">
+                            <div class="column-drop-zone"></div>
+                        </div>
+                    </div>
+
+                    <div class="kanban-column">
+                        <div class="column-header">
+                            <div class="column-title">Completed</div>
+                            <div class="column-count" id="completedCount">0 jobs</div>
+                        </div>
+                        <div class="column-content" id="columnCompleted" ondragover="dragOver(event)" ondrop="dropCard(event, 'completed')" ondragleave="dragLeave(event)">
+                            <div class="column-drop-zone"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detail Slide Panel -->
+    <div class="slide-panel" id="detailPanel">
+        <div class="panel-header">
+            <div class="panel-title" id="detailTitle">Job Details</div>
+            <button class="panel-close" onclick="closeDetail()" aria-label="Close">×</button>
+        </div>
+        <div class="panel-body" id="detailContent"></div>
+        <div class="panel-actions">
+            <button class="btn btn-secondary" onclick="closeDetail()" style="flex:1;padding:10px;border:1px solid #1a1a2e;border-radius:8px;background:#1a1a2e;color:#f5f0e8;cursor:pointer;">Close</button>
+        </div>
+    </div>
+
+    <script src="supabase-client.js"></script>
+    <script src="sidebar.js"></script>
+    <script src="feature-flags.js"></script>
+    <script src="realtime.js"></script>
+    <script>
+        let allJobs = [];
+        let workers = [];
+        let draggedCard = null;
+        let currentDetailJob = null;
+
+        function toggleMobileSidebar() {
+            document.querySelector('.sidebar').classList.toggle('open');
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (typeof checkAuth !== 'undefined') {
+                const user = checkAuth(['vendor']);
+                if (user) {
+                    var _user = document.getElementById('userName'); if(_user) _user.textContent = user.name;
+                    var _user = document.getElementById('userAvatar'); if(_user) _user.textContent = user.name.charAt(0).toUpperCase();
+
+                    await FC_FLAGS.init('vendor');
+                    FC_FLAGS.gatePage('page.dispatch_board', 'vendor-dashboard.html');
+
+                    await loadData();
+                    populateFilters();
+                    refreshBoard();
+                }
+            }
+        });
+
+        async function loadData() {
+            try {
+                allJobs = await getJobsForCurrentUser();
+                const { data: workersData } = await db.from('users').select('id, name').eq('role', 'fieldworker');
+                workers = workersData || [];
+            } catch (err) {
+                console.error('Error loading data:', err);
+            }
+        }
+
+        function populateFilters() {
+            const workerSelect = document.getElementById('workerFilter');
+            workers.forEach(w => {
+                const option = document.createElement('option');
+                option.value = w.id;
+                option.textContent = w.name;
+                workerSelect.appendChild(option);
+            });
+        }
+
+        function refreshBoard() {
+            const dateRange = document.getElementById('dateRangeFilter').value;
+            const workerId = document.getElementById('workerFilter').value;
+            const priority = document.getElementById('priorityFilter').value;
+
+            let filtered = allJobs;
+
+            if (workerId) {
+                filtered = filtered.filter(j => j.assigned_worker === workerId);
+            }
+
+            if (priority) {
+                filtered = filtered.filter(j => j.priority === priority);
+            }
+
+            const now = new Date();
+            if (dateRange === 'today') {
+                const today = new Date(now).toISOString().split('T')[0];
+                filtered = filtered.filter(j => j.date_out && j.date_out.startsWith(today));
+            } else if (dateRange === 'week') {
+                const weekAgo = new Date(now.getTime() - 7 * 86400000);
+                filtered = filtered.filter(j => j.date_out && new Date(j.date_out) >= weekAgo);
+            } else if (dateRange === 'month') {
+                const monthAgo = new Date(now.getTime() - 30 * 86400000);
+                filtered = filtered.filter(j => j.date_out && new Date(j.date_out) >= monthAgo);
+            }
+
+            renderBoard(filtered);
+        }
+
+        function renderBoard(filteredJobs) {
+            const statuses = ['new', 'assigned', 'in-progress', 'completed'];
+            const statusMap = {
+                'new': ['pending', 'open'],
+                'assigned': ['assigned', 'accepted'],
+                'in-progress': ['in-progress'],
+                'completed': ['completed']
+            };
+
+            statuses.forEach(status => {
+                const jobs = filteredJobs.filter(j => statusMap[status].includes(j.status));
+                const column = document.getElementById(`column${status.charAt(0).toUpperCase() + status.slice(1).replace('-', '')}`);
+                const count = document.getElementById(`${status.replace('-', '')}Count`);
+                const statEl = document.getElementById(`stat${status.charAt(0).toUpperCase() + status.slice(1).replace('-', '')}`);
+
+                count.textContent = `${jobs.length} job${jobs.length !== 1 ? 's' : ''}`;
+                if (statEl) statEl.textContent = jobs.length;
+
+                column.innerHTML = jobs.map(job => `
+                    <div class="job-card" draggable="true" data-job-id="${job.id}" ondragstart="dragStart(event)" ondragend="dragEnd(event)" onclick="showDetail(event, '${job.id}')">
+                        <div class="job-card-header">
+                            <div class="job-card-customer">${safe(job.customer_name || 'Unknown')}</div>
+                            ${job.priority ? `<span class="job-card-priority ${job.priority}">${job.priority}</span>` : ''}
+                        </div>
+                        <div class="job-card-address">${safe(job.address_city || '')}, ${safe(job.address_state || '')}</div>
+                        <div class="job-card-equipment">Equipment: ${job.equipment_count || 0}</div>
+                        ${job.assigned_worker ? `<div class="job-card-worker">Assigned</div>` : ''}
+                        <div class="job-card-time">${job.date_out ? new Date(job.date_out).toLocaleDateString() : 'No date'}</div>
+                    </div>
+                `).join('');
+            });
+        }
+
+        function dragStart(e) {
+            draggedCard = e.target.closest('.job-card');
+            draggedCard.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function dragEnd(e) {
+            draggedCard.classList.remove('dragging');
+            draggedCard = null;
+            document.querySelectorAll('.column-drop-zone').forEach(z => z.classList.remove('drag-over'));
+        }
+
+        function dragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            e.currentTarget.closest('.column-content').querySelector('.column-drop-zone').classList.add('drag-over');
+        }
+
+        function dragLeave(e) {
+            e.currentTarget.closest('.column-content').querySelector('.column-drop-zone').classList.remove('drag-over');
+        }
+
+        async function dropCard(e, newStatus) {
+            e.preventDefault();
+            if (!draggedCard) return;
+
+            const jobId = draggedCard.dataset.jobId;
+            const statusMap = {
+                'new': 'pending',
+                'assigned': 'assigned',
+                'in-progress': 'in-progress',
+                'completed': 'completed'
+            };
+
+            try {
+                await db.from('jobs').update({ status: statusMap[newStatus] }).eq('id', jobId);
+                await loadData();
+                refreshBoard();
+            } catch (err) {
+                console.error('Error updating job:', err);
+            }
+
+            e.currentTarget.querySelector('.column-drop-zone').classList.remove('drag-over');
+        }
+
+        function showDetail(e, jobId) {
+            e.stopPropagation();
+            const job = allJobs.find(j => j.id === jobId);
+            if (!job) return;
+
+            currentDetailJob = job;
+            const worker = job.assigned_worker ? workers.find(w => w.id === job.assigned_worker) : null;
+
+            var _deta = document.getElementById('detailTitle'); if(_deta) _deta.textContent = `${safe(job.job_site_name)}`;
+            document.getElementById('detailContent').innerHTML = `
+                <div class="detail-section">
+                    <div class="detail-label">Customer</div>
+                    <div class="detail-value">${safe(job.customer_name || '-')}</div>
+                </div>
+                <div class="detail-section">
+                    <div class="detail-label">Address</div>
+                    <div class="detail-value">${safe([job.address_street, job.address_city, job.address_state, job.address_zip].filter(Boolean).join(', '))}</div>
+                </div>
+                <div class="detail-section">
+                    <div class="detail-label">Equipment Count</div>
+                    <div class="detail-value">${job.equipment_count || 0}</div>
+                </div>
+                <div class="detail-section">
+                    <div class="detail-label">Assigned Worker</div>
+                    <div class="detail-value">${worker ? worker.name : 'Unassigned'}</div>
+                </div>
+                <div class="detail-section">
+                    <div class="detail-label">Status</div>
+                    <div class="detail-value" style="text-transform:capitalize;">${job.status}</div>
+                </div>
+                <div class="detail-section">
+                    <div class="detail-label">Date</div>
+                    <div class="detail-value">${job.date_out ? new Date(job.date_out).toLocaleString() : '-'}</div>
+                </div>
+                <div class="detail-section">
+                    <div class="detail-label">Instructions</div>
+                    <div class="detail-value">${safe(job.instructions || 'None')}</div>
+                </div>
+            `;
+
+            var _deta = document.getElementById('detailPanel'); if(_deta) _deta.classList.add('open');
+        }
+
+        function closeDetail() {
+            var _deta = document.getElementById('detailPanel'); if(_deta) _deta.classList.remove('open');
+            currentDetailJob = null;
+        }
+
+        // Update window.loadData for realtime
+        window.loadData = async () => {
+            await loadData();
+            refreshBoard();
+        };
+    </script>
+    
+<script src="hamburger-menu.js"></script>
+<script src="global-search.js"></script>
+<script src="notification-center.js"></script>
+</body>
+</html>

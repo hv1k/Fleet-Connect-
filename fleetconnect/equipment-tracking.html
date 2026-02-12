@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <script>
+      // Theme init - prevent flash of wrong theme
+      (function(){
+        var t = localStorage.getItem('fleetconnect-theme');
+        if(t === 'light') document.documentElement.classList.add('light-mode');
+      })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Equipment Tracking | FleetConnect</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <style>
+        :root {
+            --bg-dark: #1a1a1a;
+            --bg-card: #242424;
+            --bg-input: #2a2a2a;
+            --bg-hover: #333;
+            --border: #333;
+            --text-primary: #f5f0e8;
+            --text-secondary: #888;
+            --text-muted: #666;
+            --accent: #60a5fa;
+            --accent-glow: rgba(96, 165, 250, 0.3);
+            --accent-blue: #60a5fa;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --success: #22c55e;
+            --admin: #60a5fa;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #1a1a1a; color: #f5f0e8; min-height: 100vh; display: flex; }
+
+        .dark .sidebar { background: #ffffff; border-color: #e8e4dc; }
+        .layout { display: flex; min-height: 100vh; width: 100%; }
+
+        /* Sidebar */
+        .sidebar { width: 240px; background: #242424; border-right: 1px solid #333; padding: 24px 16px; position: fixed; left: 0; height: 100vh; z-index: 100; display: flex; flex-direction: column; }
+        .sidebar-header { display: flex; align-items: center; gap: 10px; margin-bottom: 32px; padding: 20px 20px 12px; }
+        .sidebar-logo { font-size: 1.2rem; font-weight: 700; color: #60a5fa; }
+        .nav-section { margin-bottom: 24px; }
+        .nav-section-title { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: #666; padding: 0 12px; margin-bottom: 8px; letter-spacing: 0.5px; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; color: #b8b0a8; text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: all 0.2s; cursor: pointer; }
+        .nav-item:hover { background: #333; color: #f5f0e8; }
+        .nav-item.active { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
+        .nav-item svg { width: 20px; height: 20px; }
+
+        .sidebar-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid #333; }
+        .user-menu { display: flex; align-items: center; gap: 12px; padding: 12px; background: #333; border-radius: 10px; }
+        .user-avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #60a5fa, #3b82f6); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 0.85rem; }
+        .user-name { font-size: 0.85rem; font-weight: 600; color: #f5f0e8; }
+        .user-role { font-size: 0.7rem; color: #888; }
+        .user-info { flex: 1; min-width: 0; }
+        .logout-btn { background: none; border: none; color: #888; cursor: pointer; padding: 6px; border-radius: 6px; }
+        .logout-btn:hover { background: #444; color: #f5f0e8; }
+
+        /* Main */
+        /* .main removed — using .main-content instead */
+        .header { background: #242424; padding: 20px 32px; border-bottom: 1px solid #333; display: flex; justify-content: center; align-items: center; position: sticky; top: 0; z-index: 50; }
+        .header h1 { font-size: 1.4rem; font-weight: 700; color: #f5f0e8; }
+
+        /* Controls */
+        .controls { padding: 16px 32px; background: #242424; border-bottom: 1px solid #333; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        .view-toggle { display: flex; gap: 8px; }
+        .toggle-btn { padding: 8px 16px; background: #333; color: #b8b0a8; border: 1px solid #444; border-radius: 8px; cursor: pointer; font-size: 0.85rem; font-weight: 500; transition: all 0.2s; }
+        .toggle-btn.active { background: #60a5fa; color: #fff; border-color: #60a5fa; }
+
+        .search-input { padding: 8px 12px 8px 36px; border: 1px solid #444; border-radius: 8px; font-size: 0.85rem; width: 220px; background: #2a2a2a url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23666'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'/%3E%3C/svg%3E") 10px center no-repeat; background-size: 16px; color: #f5f0e8; }
+        .search-input:focus { outline: none; border-color: #60a5fa; }
+
+        /* Content Container */
+        /* Map */
+        #map { flex: 1; min-width: 0; height: 100%; min-height: 500px; }
+
+        /* Equipment Panel (right side) */
+        .sidebar-panel { width: 300px; min-width: 300px; max-width: 300px; flex-shrink: 0; background: #242424; border-left: 1px solid #333; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; height: 100%; }
+        .panel-title { font-size: 0.9rem; font-weight: 600; color: #f5f0e8; margin-bottom: 16px; }
+        .equipment-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+        .equipment-item { padding: 12px; background: #2a2a2a; border: 1px solid #333; border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 10px; }
+        .equipment-item:hover { background: #333; border-color: #60a5fa; }
+        .equipment-item.active { border-color: #60a5fa; background: rgba(96, 165, 250, 0.1); }
+
+        .status-indicator { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; border: 2px solid #333; }
+        .status-indicator.active { background: #22c55e; border-color: #22c55e; }
+        .status-indicator.idle { background: #fbbf24; border-color: #fbbf24; }
+        .status-indicator.offline { background: #f87171; border-color: #f87171; }
+
+        .equipment-item-name { font-size: 0.85rem; font-weight: 600; color: #f5f0e8; }
+        .equipment-item-status { font-size: 0.75rem; color: #888; margin-top: 2px; }
+
+        /* Popup */
+        .leaflet-popup-content { font-family: 'Inter', sans-serif; color: #1a1a1a; }
+        .popup-title { font-size: 0.95rem; font-weight: 600; margin-bottom: 8px; }
+        .popup-detail { font-size: 0.8rem; margin: 4px 0; }
+        .popup-detail-label { color: #666; }
+
+        .mobile-toggle { display: none; width: 40px; height: 40px; border: 1px solid #444; border-radius: 8px; background: #2a2a2a; color: #f5f0e8; align-items: center; justify-content: center; cursor: pointer; }
+
+        @media (max-width: 900px) {
+            .sidebar { display: none; }
+            .sidebar.open { display: flex; position: fixed; z-index: 100; }
+            .main { margin-left: 0; }
+            .mobile-toggle { display: flex; }
+            .content-container { flex-direction: column; }
+            .sidebar-panel { width: 100%; max-height: 300px; border-left: none; border-top: 1px solid #333; }
+            .header { padding: 16px 20px; }
+            .controls { padding: 12px 20px; }
+        }
+
+        /* List View */
+        .list-view-container { display: none; flex: 1; overflow-y: auto; padding: 20px; }
+        .list-view-container.active { display: block; }
+
+        .list-item { background: #2a2a2a; border: 1px solid #333; border-radius: 10px; padding: 16px; margin-bottom: 12px; }
+        .list-item-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px; }
+        .list-item-title { font-size: 0.95rem; font-weight: 600; color: #f5f0e8; }
+        .list-item-status { font-size: 0.75rem; padding: 4px 10px; border-radius: 20px; font-weight: 600; background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+        .list-item-details { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 0.85rem; }
+        .list-detail { }
+        .list-detail-label { color: #888; margin-bottom: 2px; }
+        .list-detail-value { color: #f5f0e8; font-weight: 500; }
+    
+        /* Light Mode */
+        .light-mode { --bg-dark: #f5f5f5; --bg-card: #ffffff; --bg-input: #e8e8e8; --bg-hover: #e8e8e8; --border: #d0d0d0; --text-primary: #1a1a1a; --text-secondary: #555555; --text-muted: #888888; }
+        .light-mode .sidebar, .light-mode .admin-sidebar { background: #ffffff !important; border-color: #d0d0d0 !important; }
+        .light-mode .sidebar-logo, .light-mode .admin-sidebar-logo { color: #3b82f6 !important; }
+        .light-mode .nav-item, .light-mode .admin-nav-item { color: #555555 !important; }
+        .light-mode .nav-item:hover, .light-mode .admin-nav-item:hover { background: #e8e8e8 !important; color: #1a1a1a !important; }
+        .light-mode .nav-item.active, .light-mode .admin-nav-item.active { background: #dbeafe !important; color: #2563eb !important; }
+        .light-mode .nav-section-title, .light-mode .admin-nav-section { color: #888888 !important; }
+        .light-mode .user-menu { background: #e8e8e8 !important; }
+        .light-mode .user-name { color: #1a1a1a !important; }
+        .light-mode .header { background: #ffffff !important; border-color: #d0d0d0 !important; }
+        .light-mode .header h1 { color: #1a1a1a !important; }
+        .light-mode .header-subtitle { color: #555555 !important; }
+        .light-mode .main, .light-mode .content, .light-mode .admin-main { background: #f5f5f5 !important; }
+        .light-mode .card, .light-mode .stat-card, .light-mode .metric-card, .light-mode .admin-card { background: #ffffff !important; border-color: #d0d0d0 !important; }
+        .light-mode .card-title, .light-mode .stat-label { color: #1a1a1a !important; }
+        .light-mode .card-subtitle { color: #555555 !important; }
+        .light-mode input, .light-mode textarea, .light-mode select { background: #e8e8e8 !important; border-color: #d0d0d0 !important; color: #1a1a1a !important; }
+        .light-mode input::placeholder, .light-mode textarea::placeholder { color: #888888 !important; }
+        .light-mode .form-label, .light-mode label { color: #1a1a1a !important; }
+        .light-mode .badge { background: #dbeafe !important; color: #2563eb !important; }
+        .light-mode .btn-secondary { background: #e8e8e8 !important; color: #1a1a1a !important; border-color: #d0d0d0 !important; }
+        .light-mode .btn-secondary:hover { background: #d0d0d0 !important; }
+        .light-mode .sidebar-footer, .light-mode .admin-sidebar-footer { border-color: #d0d0d0 !important; }
+        .light-mode .logout-btn:hover { background: #e8e8e8 !important; }
+        .light-mode table th { background: #e8e8e8 !important; color: #1a1a1a !important; border-color: #d0d0d0 !important; }
+        .light-mode table td { border-color: #d0d0d0 !important; color: #1a1a1a !important; }
+        .light-mode table tr:hover { background: #e8e8e8 !important; }
+        .light-mode .modal-overlay { background: rgba(0,0,0,0.3) !important; }
+        .light-mode .modal, .light-mode .modal-content { background: #ffffff !important; border-color: #d0d0d0 !important; color: #1a1a1a !important; }
+        .light-mode.light-mode .search-box, .light-mode .search-input { background: #e8e8e8 !important; border-color: #d0d0d0 !important; color: #1a1a1a !important; }
+        .light-mode .tab, .light-mode .tab-btn { color: #555555 !important; }
+        .light-mode .tab.active, .light-mode .tab-btn.active { color: #3b82f6 !important; border-color: #3b82f6 !important; }
+        .light-mode .dropdown, .light-mode .dropdown-menu { background: #ffffff !important; border-color: #d0d0d0 !important; }
+        .light-mode .dropdown-item:hover { background: #e8e8e8 !important; }
+        .light-mode .toggle-switch { background: #d0d0d0 !important; }
+        .light-mode .toggle-switch.active { background: #2563eb !important; }
+        .light-mode .tooltip { background: #1a1a1a !important; color: #ffffff !important; }
+        .light-mode .progress-bar { background: #e8e8e8 !important; }
+        .light-mode .empty-state { color: #555555 !important; }
+        .light-mode .filter-bar, .light-mode .toolbar { background: #ffffff !important; border-color: #d0d0d0 !important; }
+        .light-mode .chip { background: #e8e8e8 !important; color: #1a1a1a !important; }
+        .light-mode pre, .light-mode code { background: #e8e8e8 !important; color: #1a1a1a !important; }
+        .light-mode .status-badge { border-color: #d0d0d0 !important; }
+        .light-mode ::selection { background: #3b82f6; color: #ffffff; }
+        .light-mode ::-webkit-scrollbar-track { background: #f5f5f5; }
+        .light-mode ::-webkit-scrollbar-thumb { background: #d0d0d0; }
+        .light-mode ::-webkit-scrollbar-thumb:hover { background: #bbbbbb; }
+
+/* Light Mode */
+        html.light-mode { --bg-dark: #f5f0e8; --bg-card: #ffffff; --bg-input: #f0ebe3; --bg-hover: #e8e4dc; --border: #d0d0d0; --text-primary: #1a1a1a; --text-secondary: #5c5c5c; --text-muted: #8c8c8c; }
+        html.light-mode .admin-sidebar { background: #ffffff !important; border-color: #d0d0d0 !important; }
+        html.light-mode .admin-nav-item { color: #5c5c5c; }
+        html.light-mode .admin-nav-item:hover { background: #f0ebe3; color: #1a1a1a; }
+        html.light-mode .admin-nav-item.active { background: #dbeafe; color: #3b82f6; }
+        html.light-mode .admin-nav-section-title { color: #8c8c8c; }
+        html.light-mode .admin-sidebar-footer { border-color: #d0d0d0; }
+        html.light-mode .stat-card, html.light-mode .card, html.light-mode .table-card, html.light-mode .analytics-card { background: #ffffff; border-color: #d0d0d0; }
+        html.light-mode .search-input, html.light-mode .filter-select { background: #ffffff; border-color: #d0d0d0; color: #1a1a1a; }
+        html.light-mode th { background: #f0ebe3; color: #8c8c8c; border-color: #d0d0d0; }
+        html.light-mode td { border-color: #d0d0d0; color: #5c5c5c; }
+        html.light-mode tr:hover { background: #f0ebe3; }
+        html.light-mode .modal { background: #ffffff; }
+        html.light-mode .modal-header { border-color: #d0d0d0; }
+        html.light-mode .btn-secondary { background: #ffffff; border-color: #d0d0d0; color: #5c5c5c; }
+        .admin-sidebar { width: 260px; background: var(--bg-card); border-right: 1px solid var(--border); padding: 24px 16px; position: fixed; left: 0; top: 0; height: 100vh; overflow-y: auto; z-index: 99; display: flex; flex-direction: column; }
+        .admin-sidebar-logo { font-size: 1.1rem; font-weight: 700; color: var(--admin, #60a5fa); margin-bottom: 16px; }
+        .admin-nav-section { margin-bottom: 24px; }
+        .admin-nav-section-title { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted, #888); padding: 0 12px; margin-bottom: 8px; letter-spacing: 0.5px; }
+        .admin-nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; color: #b8b0a8; text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: all 0.2s; cursor: pointer; margin-bottom: 4px; }
+        .admin-nav-item:hover { background: var(--bg-hover, #333); color: var(--text-primary, #e8e0d8); }
+        .admin-nav-item.active { background: rgba(96, 165, 250, 0.15); color: var(--admin, #60a5fa); }
+        .admin-nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+        .admin-sidebar-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border, #333); }
+        .main-content { flex: 1; margin-left: 260px; min-height: 100vh; display: flex; flex-direction: column; }
+        .content-container { flex: 1; display: flex; flex-direction: row; gap: 0; min-height: 0; height: calc(100vh - 140px); }
+            /* Mobile */
+        .hamburger-menu { display: none; position: fixed; top: 20px; left: 20px; z-index: 100; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 8px; cursor: pointer; width: 40px; height: 40px; }
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .admin-sidebar { width: 100%; height: auto; position: relative; left: auto; top: auto; border-right: none; border-bottom: 1px solid var(--border); padding: 12px; margin-bottom: 20px; }
+            .main-content { margin-left: 0 !important; }
+        }
+    
+        /* Sidebar actions (bell + theme toggle) */
+        /* Sidebar layout fix */
+        .admin-sidebar { display: flex; flex-direction: column; }
+        .admin-sidebar nav { flex: 1; overflow-y: auto; }
+</style>
+</head>
+<body>
+    <div class="layout">
+            <aside class="admin-sidebar" id="adminSidebar">
+        <div class="admin-sidebar-logo">FLEETCONNECT</div>
+<nav id="sidebarNav"></nav>
+        <div class="admin-sidebar-footer">
+            <div style="padding: 12px; background: var(--bg-hover, #333); border-radius: 8px;">
+                <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary, #f5f0e8); margin-bottom: 4px;" id="adminUserName">Rental User</div>
+                <div class="admin-sidebar-role" style="font-size: 0.75rem; color: var(--text-secondary, #888);">Rental Account</div>
+                <button onclick="logout()" style="margin-top: 8px; width: 100%; padding: 6px; background: transparent; border: 1px solid #333; color: #888; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 0.75rem; cursor: pointer; transition: all 0.2s;">Logout</button>
+            </div>
+        </div>
+    </aside>
+
+        <div class="main-content">
+            <header class="header">
+                <div>
+                    <button class="mobile-toggle" onclick="document.querySelector('.admin-sidebar').classList.toggle('open')"><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+                </div>
+                <h1>Equipment Tracking</h1>
+            </header>
+
+            <div class="controls">
+                <input type="text" class="search-input" id="searchInput" placeholder="Search equipment..." onkeyup="filterEquipment()">
+                <div class="view-toggle">
+                    <button class="toggle-btn active" onclick="switchView('map')">Map View</button>
+                    <button class="toggle-btn" onclick="switchView('list')">List View</button>
+                </div>
+            </div>
+
+            <div class="content-container">
+                <!-- Map -->
+                <div id="map"></div>
+
+                <!-- Sidebar Panel -->
+                <div class="sidebar-panel">
+                    <div class="panel-title">Equipment (<span id="equipmentCount">0</span>)</div>
+                    <div class="equipment-list" id="equipmentList"></div>
+                </div>
+
+                <!-- List View -->
+                <div class="list-view-container" id="listView"></div>
+            </div>
+        </div><!-- end main-content -->
+    </div>
+
+    <script src="supabase-client.js"></script>
+    <script src="sidebar.js"></script>
+    <script src="feature-flags.js"></script>
+    <script>
+        // Auth Check
+        const currentUser = checkAuth(['rental', 'vendor', 'admin']);
+        if (currentUser) {
+            var _un = document.getElementById('adminUserName'); if(_un) _un.textContent = currentUser.name;
+        }
+
+        // Feature Flags
+        FC_FLAGS.init('rental').then(() => {
+            FC_FLAGS.gatePage('feature.equipment_tracking', '/rental-dashboard.html');
+        });
+
+        // Navigation
+        const icons = {
+            grid: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>',
+            map: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 003 16.382V5.618a1 1 0 011.553-.894L9 7.382m0 0l6-3.724m-6 3.724v12.252m6-3.724l5.447 2.724A1 1 0 0021 16.382V5.618a1 1 0 00-1.553-.894L15 7.382m0 0V19.63"/>',
+            settings: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>'
+        };
+
+        // Map Setup
+        let map;
+        let markers = {};
+        let allEquipment = [];
+
+        function initMap() {
+            map = L.map('map').setView([40, -95], 4);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(map);
+
+            loadEquipmentData();
+        }
+
+        async function loadEquipmentData() {
+            try {
+                const jobs = await getJobsForCurrentUser();
+                allEquipment = jobs.map((job, idx) => ({
+                    id: job.id,
+                    name: job.job_site_name || 'Untitled Job',
+                    location: [40 + Math.random() * 10 - 5, -95 + Math.random() * 20 - 10],
+                    status: job.status === 'completed' ? 'offline' : job.status === 'in-progress' ? 'active' : 'idle',
+                    fuel: Math.floor(Math.random() * 100),
+                    lastDelivery: job.updated_at,
+                    customer: job.customer_name
+                }));
+
+                renderMap();
+                renderEquipmentList();
+            } catch (err) {
+                console.error('Error loading equipment:', err);
+            }
+        }
+
+        function renderMap() {
+            allEquipment.forEach(eq => {
+                if (markers[eq.id]) map.removeLayer(markers[eq.id]);
+
+                const color = eq.status === 'active' ? '#22c55e' : eq.status === 'idle' ? '#fbbf24' : '#f87171';
+                const html = `<div style="width:30px;height:30px;background:${color};border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:14px;">📦</div>`;
+                const icon = L.divIcon({ html, className: '', iconSize: [30, 30] });
+
+                markers[eq.id] = L.marker(eq.location, { icon }).addTo(map)
+                    .bindPopup(`
+                        <div class="popup-title">${safe(eq.name)}</div>
+                        <div class="popup-detail"><span class="popup-detail-label">Status:</span> ${eq.status}</div>
+                        <div class="popup-detail"><span class="popup-detail-label">Fuel:</span> ${eq.fuel}%</div>
+                        <div class="popup-detail"><span class="popup-detail-label">Customer:</span> ${safe(eq.customer)}</div>
+                    `)
+                    .on('click', () => selectEquipment(eq.id));
+            });
+        }
+
+        function renderEquipmentList() {
+            const filtered = getFilteredEquipment();
+            var _equi = document.getElementById('equipmentCount'); if(_equi) _equi.textContent = filtered.length;
+
+            const html = filtered.map(eq => `
+                <div class="equipment-item ${eq.id === selectedEquipmentId ? 'active' : ''}" onclick="selectEquipment('${eq.id}')">
+                    <div class="status-indicator ${eq.status}"></div>
+                    <div>
+                        <div class="equipment-item-name">${safe(eq.name)}</div>
+                        <div class="equipment-item-status">${eq.status} • ${eq.fuel}% fuel</div>
+                    </div>
+                </div>
+            `).join('');
+
+            var _equi = document.getElementById('equipmentList'); if(_equi) _equi.innerHTML = html || '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center;"><div style="font-size:2.5rem;margin-bottom:12px;opacity:0.5;">🚜</div><h3 style="font-size:1.1rem;font-weight:600;color:var(--text-primary,#e8e0d8);margin-bottom:6px;">No equipment</h3><p style="font-size:0.85rem;color:var(--text-secondary,#b8b0a8);">Add equipment to track it here</p></div>';
+        }
+
+        function renderListView() {
+            const filtered = getFilteredEquipment();
+            const html = filtered.map(eq => `
+                <div class="list-item">
+                    <div class="list-item-header">
+                        <div class="list-item-title">${safe(eq.name)}</div>
+                        <div class="list-item-status">${eq.status}</div>
+                    </div>
+                    <div class="list-item-details">
+                        <div class="list-detail">
+                            <div class="list-detail-label">Status</div>
+                            <div class="list-detail-value">${eq.status}</div>
+                        </div>
+                        <div class="list-detail">
+                            <div class="list-detail-label">Fuel Level</div>
+                            <div class="list-detail-value">${eq.fuel}%</div>
+                        </div>
+                        <div class="list-detail">
+                            <div class="list-detail-label">Customer</div>
+                            <div class="list-detail-value">${safe(eq.customer)}</div>
+                        </div>
+                        <div class="list-detail">
+                            <div class="list-detail-label">Last Delivery</div>
+                            <div class="list-detail-value">${formatDate(eq.lastDelivery)}</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            var _list = document.getElementById('listView'); if(_list) _list.innerHTML = html || '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;"><div style="font-size:3rem;margin-bottom:16px;opacity:0.5;">🚜</div><h3 style="font-size:1.2rem;font-weight:600;color:var(--text-primary,#e8e0d8);margin-bottom:8px;">No equipment tracked yet</h3><p style="font-size:0.9rem;color:var(--text-secondary,#b8b0a8);margin-bottom:24px;">Add your first piece of equipment to start tracking</p></div>';
+        }
+
+        let selectedEquipmentId = null;
+
+        function selectEquipment(id) {
+            selectedEquipmentId = id;
+            renderEquipmentList();
+        }
+
+        function getFilteredEquipment() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            return allEquipment.filter(eq =>
+                (eq.name || '').toLowerCase().includes(search) ||
+                (eq.customer || '').toLowerCase().includes(search)
+            );
+        }
+
+        function filterEquipment() {
+            renderEquipmentList();
+            renderListView();
+        }
+
+        function switchView(view) {
+            if (view === 'map') {
+                var _map = document.getElementById('map'); if(_map) _map.style.display = 'block';
+                var _list = document.getElementById('listView'); if(_list) _list.classList.remove('active');
+            } else {
+                var _map = document.getElementById('map'); if(_map) _map.style.display = 'none';
+                var _list = document.getElementById('listView'); if(_list) _list.classList.add('active');
+                renderListView();
+            }
+
+            document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+
+        // Initialize
+        initMap();
+    </script>
+    
+<script src="hamburger-menu.js"></script>
+<script src="global-search.js"></script>
+<script src="notification-center.js"></script>
+    <script src="realtime.js"></script>
+</body>
+</html>

@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <script>
+      // Theme init - prevent flash of wrong theme
+      (function(){
+        var t = localStorage.getItem('fleetconnect-theme');
+        if(t === 'light') document.documentElement.classList.add('light-mode');
+      })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Tracking | FleetConnect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg-dark: #1a1a1a;
+            --bg-card: #242424;
+            --bg-input: #2a2a2a;
+            --bg-hover: #333;
+            --border: #333;
+            --text-primary: #f5f0e8;
+            --text-secondary: #888;
+            --text-muted: #666;
+            --accent: #60a5fa;
+            --admin: #60a5fa;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #1a1a1a; color: #f5f0e8; min-height: 100vh; display: flex; }
+
+        /* Sidebar */
+        .admin-sidebar { width: 260px; background: var(--bg-card); border-right: 1px solid var(--border); padding: 24px 16px; position: fixed; left: 0; top: 0; height: 100vh; overflow-y: auto; z-index: 99; display: flex; flex-direction: column; }
+        .admin-sidebar-logo { font-size: 1.1rem; font-weight: 700; color: var(--admin); margin-bottom: 16px; }
+        .admin-sidebar-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border); }
+        .admin-sidebar nav { flex: 1; overflow-y: auto; }
+        .admin-nav-section { margin-bottom: 24px; }
+        .admin-nav-section-title { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted, #888); padding: 0 12px; margin-bottom: 8px; letter-spacing: 0.5px; }
+        .admin-nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; color: #b8b0a8; text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: all 0.2s; cursor: pointer; margin-bottom: 4px; }
+        .admin-nav-item:hover { background: var(--bg-hover, #333); color: var(--text-primary, #e8e0d8); }
+        .admin-nav-item.active { background: rgba(96, 165, 250, 0.15); color: var(--admin, #60a5fa); }
+        .admin-nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+        .main-content { flex: 1; margin-left: 260px; }
+        .hamburger-menu { display: none; position: fixed; top: 20px; left: 20px; z-index: 100; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 8px; cursor: pointer; width: 40px; height: 40px; }
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .admin-sidebar { width: 100%; height: auto; position: relative; left: auto; top: auto; border-right: none; border-bottom: 1px solid var(--border); padding: 12px; margin-bottom: 20px; }
+            .main-content { margin-left: 0 !important; }
+        }
+
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+
+        /* Header */
+        .header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+        .header-back { background: none; border: none; color: #60a5fa; font-size: 1.5rem; cursor: pointer; padding: 0; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 8px; }
+        .header-back:hover { background: #333; }
+        .header h1 { font-size: 1.2rem; font-weight: 700; }
+
+        /* Status Banner */
+        .status-banner { background: #242424; border-left: 4px solid #22c55e; border-radius: 8px; padding: 16px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; }
+        .status-banner.clocked-out { border-left-color: #888; }
+        .status-icon { font-size: 1.8rem; flex-shrink: 0; }
+        .status-text { flex: 1; }
+        .status-title { font-size: 0.9rem; font-weight: 600; color: #f5f0e8; }
+        .status-detail { font-size: 0.8rem; color: #888; margin-top: 2px; }
+
+        /* Clock Button */
+        .clock-button-container { display: flex; justify-content: center; margin-bottom: 20px; }
+        .clock-button { width: 100px; height: 100px; border-radius: 50%; border: none; font-size: 2rem; font-weight: 700; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        .clock-button.in { background: #ef4444; color: #fff; }
+        .clock-button.in:hover { background: #dc2626; transform: scale(1.05); }
+        .clock-button.out { background: #22c55e; color: #fff; }
+        .clock-button.out:hover { background: #16a34a; transform: scale(1.05); }
+        .clock-button:active { transform: scale(0.98); }
+
+        /* Timer */
+        .timer-display { text-align: center; margin-bottom: 20px; }
+        .timer-label { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; color: #666; margin-bottom: 6px; }
+        .timer { font-size: 2rem; font-weight: 700; color: #60a5fa; font-family: 'Courier New', monospace; }
+
+        /* Location Badge */
+        .location-badge { display: inline-block; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; margin-top: 8px; }
+        .location-badge.on-site { background: rgba(34, 197, 94, 0.15); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3); }
+        .location-badge.in-transit { background: rgba(96, 165, 250, 0.15); color: #60a5fa; border: 1px solid rgba(96, 165, 250, 0.3); }
+
+        /* Section */
+        .section { background: #242424; border: 1px solid #333; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+        .section-title { font-size: 0.9rem; font-weight: 700; color: #60a5fa; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+        .section-divider { height: 2px; background: #333; margin-bottom: 14px; }
+
+        /* Timesheet Entry */
+        .timesheet-entry { background: #1e1e1e; border: 1px solid #333; border-radius: 10px; padding: 12px; margin-bottom: 10px; }
+        .timesheet-entry:last-child { margin-bottom: 0; }
+        .entry-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+        .entry-row:last-child { margin-bottom: 0; }
+        .entry-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: #666; }
+        .entry-value { font-size: 0.9rem; font-weight: 600; color: #f5f0e8; }
+        .entry-duration { font-size: 1rem; font-weight: 700; color: #60a5fa; }
+        .entry-type-badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; margin-top: 6px; }
+        .entry-type-badge.on-site { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
+        .entry-type-badge.transit { background: rgba(96, 165, 250, 0.2); color: #60a5fa; }
+
+        /* Summary */
+        .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .summary-card { background: #1e1e1e; border: 1px solid #333; border-radius: 10px; padding: 12px; text-align: center; }
+        .summary-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: #666; }
+        .summary-value { font-size: 1.3rem; font-weight: 700; color: #60a5fa; margin-top: 4px; }
+
+        /* Bar Chart */
+        .chart-container { margin-bottom: 12px; }
+        .chart-header { display: flex; justify-content: space-between; font-size: 0.8rem; color: #888; margin-bottom: 8px; }
+        .chart-bars { display: flex; gap: 4px; height: 60px; align-items: flex-end; }
+        .chart-bar { flex: 1; background: #60a5fa; border-radius: 4px 4px 0 0; min-height: 4px; display: flex; align-items: flex-end; justify-content: center; font-size: 0.7rem; color: #f5f0e8; font-weight: 600; padding-top: 4px; }
+        .chart-bar.weekend { background: #666; }
+
+        /* Actions */
+        .actions { display: flex; gap: 10px; margin-bottom: 80px; }
+        .btn { flex: 1; padding: 14px; font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 600; border-radius: 8px; border: none; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: #60a5fa; color: #1a1a1a; }
+        .btn-primary:hover { background: #3b82f6; }
+        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-outline { background: transparent; color: #888; border: 1px solid #333; }
+        .btn-outline:hover { background: #333; color: #f5f0e8; }
+
+        /* Empty State */
+        .empty { text-align: center; padding: 20px; color: #666; font-size: 0.9rem; }
+
+        /* Toast */
+        .toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); padding: 12px 24px; border-radius: 10px; font-size: 0.85rem; font-weight: 500; z-index: 2000; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+        .toast.show { opacity: 1; }
+        .toast.success { background: #22c55e; color: #fff; }
+        .toast.error { background: #ef4444; color: #fff; }
+
+        /* Mobile */
+        @media (max-width: 600px) {
+            body { padding: 8px; }
+            .container { margin: 0; }
+            .clock-button { width: 80px; height: 80px; font-size: 1.8rem; }
+        }
+    
+        /* Light Mode */
+        .light-mode { --bg-dark: #f5f5f5; --bg-card: #ffffff; --bg-input: #e8e8e8; --bg-hover: #e8e8e8; --border: #d0d0d0; --text-primary: #1a1a1a; --text-secondary: #555555; --text-muted: #888888; }
+        .light-mode .sidebar, .light-mode .admin-sidebar { background: #ffffff !important; border-color: #d0d0d0 !important; }
+        .light-mode .sidebar-logo, .light-mode .admin-sidebar-logo { color: #3b82f6 !important; }
+        .light-mode .nav-item, .light-mode .admin-nav-item { color: #555555 !important; }
+        .light-mode .nav-item:hover, .light-mode .admin-nav-item:hover { background: #e8e8e8 !important; color: #1a1a1a !important; }
+        .light-mode .nav-item.active, .light-mode .admin-nav-item.active { background: #dbeafe !important; color: #2563eb !important; }
+        .light-mode .nav-section-title, .light-mode .admin-nav-section { color: #888888 !important; }
+        .light-mode .user-menu { background: #e8e8e8 !important; }
+        .light-mode .user-name { color: #1a1a1a !important; }
+        .light-mode .header { background: #ffffff !important; border-color: #d0d0d0 !important; }
+        .light-mode .header h1 { color: #1a1a1a !important; }
+        .light-mode .header-subtitle { color: #555555 !important; }
+        .light-mode .main, .light-mode .content, .light-mode .admin-main { background: #f5f5f5 !important; }
+        .light-mode .card, .light-mode .stat-card, .light-mode .metric-card, .light-mode .admin-card { background: #ffffff !important; border-color: #d0d0d0 !important; }
+        .light-mode .card-title, .light-mode .stat-label { color: #1a1a1a !important; }
+        .light-mode .card-subtitle { color: #555555 !important; }
+        .light-mode input, .light-mode textarea, .light-mode select { background: #e8e8e8 !important; border-color: #d0d0d0 !important; color: #1a1a1a !important; }
+        .light-mode input::placeholder, .light-mode textarea::placeholder { color: #888888 !important; }
+        .light-mode .form-label, .light-mode label { color: #1a1a1a !important; }
+        .light-mode .badge { background: #dbeafe !important; color: #2563eb !important; }
+        .light-mode .btn-secondary { background: #e8e8e8 !important; color: #1a1a1a !important; border-color: #d0d0d0 !important; }
+        .light-mode .btn-secondary:hover { background: #d0d0d0 !important; }
+        .light-mode .sidebar-footer, .light-mode .admin-sidebar-footer { border-color: #d0d0d0 !important; }
+        .light-mode .logout-btn:hover { background: #e8e8e8 !important; }
+        .light-mode table th { background: #e8e8e8 !important; color: #1a1a1a !important; border-color: #d0d0d0 !important; }
+        .light-mode table td { border-color: #d0d0d0 !important; color: #1a1a1a !important; }
+        .light-mode table tr:hover { background: #e8e8e8 !important; }
+        .light-mode .modal-overlay { background: rgba(0,0,0,0.3) !important; }
+        .light-mode .modal, .light-mode .modal-content { background: #ffffff !important; border-color: #d0d0d0 !important; color: #1a1a1a !important; }
+        .light-mode.light-mode .search-box, .light-mode .search-input { background: #e8e8e8 !important; border-color: #d0d0d0 !important; color: #1a1a1a !important; }
+        .light-mode .tab, .light-mode .tab-btn { color: #555555 !important; }
+        .light-mode .tab.active, .light-mode .tab-btn.active { color: #3b82f6 !important; border-color: #3b82f6 !important; }
+        .light-mode .dropdown, .light-mode .dropdown-menu { background: #ffffff !important; border-color: #d0d0d0 !important; }
+        .light-mode .dropdown-item:hover { background: #e8e8e8 !important; }
+        .light-mode .toggle-switch { background: #d0d0d0 !important; }
+        .light-mode .toggle-switch.active { background: #2563eb !important; }
+        .light-mode .tooltip { background: #1a1a1a !important; color: #ffffff !important; }
+        .light-mode .progress-bar { background: #e8e8e8 !important; }
+        .light-mode .empty-state { color: #555555 !important; }
+        .light-mode .filter-bar, .light-mode .toolbar { background: #ffffff !important; border-color: #d0d0d0 !important; }
+        .light-mode .chip { background: #e8e8e8 !important; color: #1a1a1a !important; }
+        .light-mode pre, .light-mode code { background: #e8e8e8 !important; color: #1a1a1a !important; }
+        .light-mode .status-badge { border-color: #d0d0d0 !important; }
+        .light-mode ::selection { background: #3b82f6; color: #ffffff; }
+        .light-mode ::-webkit-scrollbar-track { background: #f5f5f5; }
+        .light-mode ::-webkit-scrollbar-thumb { background: #d0d0d0; }
+        .light-mode ::-webkit-scrollbar-thumb:hover { background: #bbbbbb; }
+
+</style>
+</head>
+<body>
+    <aside class="admin-sidebar" id="adminSidebar">
+        <div class="admin-sidebar-logo">FLEETCONNECT</div>
+<nav id="sidebarNav"></nav>
+        <div class="admin-sidebar-footer">
+            <div style="padding: 12px; background: var(--bg-hover, #333); border-radius: 8px;">
+                <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary, #f5f0e8); margin-bottom: 4px;" id="adminUserName">Field Worker</div>
+                <div class="admin-sidebar-role" style="font-size: 0.75rem; color: var(--text-secondary, #888);">Field Worker</div>
+                <button onclick="logout()" style="margin-top: 8px; width: 100%; padding: 6px; background: transparent; border: 1px solid #333; color: #888; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 0.75rem; cursor: pointer; transition: all 0.2s;">Logout</button>
+            </div>
+        </div>
+    </aside>
+
+    <div class="main-content">
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <button class="header-back" onclick="goBack()">←</button>
+            <div>
+                <h1>Time Tracking</h1>
+            </div>
+        </div>
+
+        <!-- Status Banner -->
+        <div class="status-banner" id="statusBanner">
+            <div class="status-icon">⚪</div>
+            <div class="status-text">
+                <div class="status-title">Not Clocked In</div>
+                <div class="status-detail">Start tracking time for a job</div>
+            </div>
+        </div>
+
+        <!-- Timer Display -->
+        <div class="timer-display">
+            <div class="timer-label">Current Session</div>
+            <div class="timer" id="timerDisplay">00:00:00</div>
+            <div class="location-badge" id="locationBadge" style="display: none;">📍 Loading location...</div>
+        </div>
+
+        <!-- Clock In/Out Button -->
+        <div class="clock-button-container">
+            <button class="clock-button out" id="clockButton" onclick="toggleClock()">START</button>
+        </div>
+
+        <!-- Today's Entries -->
+        <div class="section">
+            <div class="section-title">📋 Today's Time Entries</div>
+            <div id="todaysEntries" class="empty">No entries yet</div>
+        </div>
+
+        <!-- Daily Summary -->
+        <div class="section">
+            <div class="section-title">📊 Daily Summary</div>
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <div class="summary-label">Total Hours</div>
+                    <div class="summary-value" id="totalHours">0.0</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">On-Site Time</div>
+                    <div class="summary-value" id="onSiteTime">0.0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Weekly Chart -->
+        <div class="section">
+            <div class="section-title">📈 Weekly Hours</div>
+            <div class="chart-container">
+                <div class="chart-header">
+                    <span>Mon</span>
+                    <span>Tue</span>
+                    <span>Wed</span>
+                    <span>Thu</span>
+                    <span>Fri</span>
+                    <span>Sat</span>
+                    <span>Sun</span>
+                </div>
+                <div class="chart-bars" id="weeklyChart"></div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="actions">
+            <button class="btn btn-outline" onclick="exportTimesheet()">📥 Export CSV</button>
+            <button class="btn btn-primary" onclick="sendToSupervisor()">📧 Send to Supervisor</button>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+    </div><!-- end main-content -->
+
+    <script src="supabase-client.js"></script>
+    <script src="sidebar.js"></script>
+    <script src="realtime.js"></script>
+    <script src="feature-flags.js"></script>
+    <script>
+        const currentUser = checkAuth(['fieldworker']);
+        if (!currentUser) throw new Error('Not authenticated');
+        if (document.getElementById('adminUserName')) document.getElementById('adminUserName').textContent = currentUser.name;
+        var roleEl = document.querySelector('.admin-sidebar-role'); if (roleEl) roleEl.textContent = currentUser.role === 'fieldworker' ? 'Field Worker' : currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1);
+
+        FC_FLAGS.init('fieldworker');
+
+        let clockedIn = false;
+        let sessionStartTime = null;
+        let currentJobId = null;
+        let currentLocationData = null;
+        let timerInterval = null;
+        let allEntries = [];
+
+        // Haversine formula to calculate distance between two coordinates
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371000; // Earth's radius in meters
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        function getLocationType(jobCoords, currentCoords) {
+            if (!jobCoords || !currentCoords) return 'unknown';
+            const distance = calculateDistance(jobCoords.lat, jobCoords.lng, currentCoords.lat, currentCoords.lng);
+            return distance <= 500 ? 'on-site' : 'transit';
+        }
+
+        async function getJobCoordinates(jobId) {
+            try {
+                const { data, error } = await db.from('jobs').select('id, address_street, address_city, address_state').eq('id', jobId).single();
+                if (error) throw error;
+                // In production, you'd geocode the address. For now, return null.
+                // This is a placeholder that assumes job has lat/lng stored
+                return null;
+            } catch (err) {
+                console.error('Error fetching job coords:', err);
+                return null;
+            }
+        }
+
+        async function captureGPSLocation() {
+            return new Promise((resolve) => {
+                if (!navigator.geolocation) {
+                    resolve(null);
+                    return;
+                }
+
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        resolve({
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude,
+                            accuracy: position.coords.accuracy
+                        });
+                    },
+                    () => resolve(null),
+                    { enableHighAccuracy: true, timeout: 10000 }
+                );
+            });
+        }
+
+        function formatTime(date) {
+            return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+
+        function formatDuration(seconds) {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+
+        async function toggleClock() {
+            const clockBtn = document.getElementById('clockButton');
+
+            if (clockedIn) {
+                // Clock Out
+                await clockOut();
+            } else {
+                // Clock In
+                await clockIn();
+            }
+        }
+
+        async function clockIn() {
+            try {
+                sessionStartTime = new Date();
+                currentLocationData = await captureGPSLocation();
+                currentJobId = 'job-' + Date.now(); // Mock job ID
+
+                clockedIn = true;
+                updateStatusBanner();
+                startTimer();
+                showToast('Clocked in successfully', 'success');
+                loadEntries();
+            } catch (err) {
+                console.error('Clock in error:', err);
+                showToast('Error clocking in', 'error');
+            }
+        }
+
+        async function clockOut() {
+            try {
+                if (!sessionStartTime) return;
+
+                const endTime = new Date();
+                const duration = Math.floor((endTime - sessionStartTime) / 1000);
+                const locationType = currentLocationData ? 'on-site' : 'transit';
+
+                // Save to database (fallback to localStorage if table doesn't exist)
+                const entry = {
+                    id: crypto.randomUUID(),
+                    worker_id: currentUser.id,
+                    job_id: currentJobId,
+                    clock_in: sessionStartTime.toISOString(),
+                    clock_out: endTime.toISOString(),
+                    latitude: currentLocationData?.lat || null,
+                    longitude: currentLocationData?.lng || null,
+                    type: locationType,
+                    notes: null,
+                    created_at: new Date().toISOString()
+                };
+
+                const { error } = await db.from('time_entries').insert([entry]);
+                if (error) {
+                    // Fallback: save locally
+                    const stored = JSON.parse(localStorage.getItem('fc_time_entries') || '[]');
+                    stored.push(entry);
+                    localStorage.setItem('fc_time_entries', JSON.stringify(stored));
+                    console.warn('Supabase time_entries failed, saved locally:', error.message);
+                }
+
+                clockedIn = false;
+                sessionStartTime = null;
+                currentLocationData = null;
+                clearInterval(timerInterval);
+                updateStatusBanner();
+                var _time = document.getElementById('timerDisplay'); if(_time) _time.textContent = '00:00:00';
+                showToast('Clocked out successfully', 'success');
+                loadEntries();
+            } catch (err) {
+                console.error('Clock out error:', err);
+                showToast('Error clocking out', 'error');
+            }
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                if (sessionStartTime && clockedIn) {
+                    const elapsed = Math.floor((new Date() - sessionStartTime) / 1000);
+                    var _time = document.getElementById('timerDisplay'); if(_time) _time.textContent = formatDuration(elapsed);
+                }
+            }, 1000);
+        }
+
+        function updateStatusBanner() {
+            const banner = document.getElementById('statusBanner');
+            const clockBtn = document.getElementById('clockButton');
+
+            if (clockedIn) {
+                banner.className = 'status-banner';
+                banner.innerHTML = `
+                    <div class="status-icon">🟢</div>
+                    <div class="status-text">
+                        <div class="status-title">Clocked In</div>
+                        <div class="status-detail">Session started at ${formatTime(sessionStartTime)}</div>
+                    </div>
+                `;
+                clockBtn.className = 'clock-button in';
+                clockBtn.textContent = 'STOP';
+            } else {
+                banner.className = 'status-banner clocked-out';
+                banner.innerHTML = `
+                    <div class="status-icon">⚪</div>
+                    <div class="status-text">
+                        <div class="status-title">Not Clocked In</div>
+                        <div class="status-detail">Start tracking time for a job</div>
+                    </div>
+                `;
+                clockBtn.className = 'clock-button out';
+                clockBtn.textContent = 'START';
+            }
+        }
+
+        async function loadEntries() {
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                const { data, error } = await db.from('time_entries')
+                    .select('*')
+                    .eq('worker_id', currentUser.id)
+                    .gte('created_at', today)
+                    .order('clock_in', { ascending: false });
+
+                if (error) {
+                    // Fallback: load from localStorage
+                    const stored = JSON.parse(localStorage.getItem('fc_time_entries') || '[]');
+                    allEntries = stored.filter(e => e.worker_id === currentUser.id && e.created_at >= today);
+                } else {
+                    allEntries = data || [];
+                    // Merge any localStorage entries
+                    const stored = JSON.parse(localStorage.getItem('fc_time_entries') || '[]');
+                    const localToday = stored.filter(e => e.worker_id === currentUser.id && e.created_at >= today);
+                    if (localToday.length) allEntries = [...allEntries, ...localToday];
+                }
+
+                allEntries.sort((a, b) => new Date(b.clock_in) - new Date(a.clock_in));
+                renderEntries();
+                updateSummary();
+                renderWeeklyChart();
+            } catch (err) {
+                console.error('Error loading entries:', err);
+                // Last resort: load from localStorage
+                const today = new Date().toISOString().split('T')[0];
+                const stored = JSON.parse(localStorage.getItem('fc_time_entries') || '[]');
+                allEntries = stored.filter(e => e.worker_id === currentUser.id && e.created_at >= today);
+                renderEntries();
+                updateSummary();
+                renderWeeklyChart();
+            }
+        }
+
+        function renderEntries() {
+            const container = document.getElementById('todaysEntries');
+
+            if (allEntries.length === 0) {
+                container.innerHTML = '<div class="empty">No entries yet</div>';
+                return;
+            }
+
+            container.innerHTML = allEntries.map(entry => {
+                const clockIn = new Date(entry.clock_in);
+                const clockOut = entry.clock_out ? new Date(entry.clock_out) : null;
+                const duration = clockOut ? Math.floor((clockOut - clockIn) / 1000) : 0;
+                const locationType = entry.type === 'on-site' ? '📍 On-Site' : '🚗 In Transit';
+
+                return `
+                    <div class="timesheet-entry">
+                        <div class="entry-row">
+                            <span class="entry-label">Clock In</span>
+                            <span class="entry-value">${formatTime(clockIn)}</span>
+                        </div>
+                        ${clockOut ? `
+                            <div class="entry-row">
+                                <span class="entry-label">Clock Out</span>
+                                <span class="entry-value">${formatTime(clockOut)}</span>
+                            </div>
+                            <div class="entry-row">
+                                <span class="entry-label">Duration</span>
+                                <span class="entry-duration">${formatDuration(duration)}</span>
+                            </div>
+                        ` : ''}
+                        <div style="margin-top: 6px;">
+                            <span class="entry-type-badge ${entry.type === 'on-site' ? 'on-site' : 'transit'}">${locationType}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateSummary() {
+            let totalSeconds = 0;
+            let onSiteSeconds = 0;
+
+            allEntries.forEach(entry => {
+                const clockIn = new Date(entry.clock_in);
+                const clockOut = entry.clock_out ? new Date(entry.clock_out) : new Date();
+                const duration = Math.floor((clockOut - clockIn) / 1000);
+
+                totalSeconds += duration;
+                if (entry.type === 'on-site') onSiteSeconds += duration;
+            });
+
+            const totalHours = (totalSeconds / 3600).toFixed(1);
+            const onSiteHours = (onSiteSeconds / 3600).toFixed(1);
+
+            var _tota = document.getElementById('totalHours'); if(_tota) _tota.textContent = totalHours;
+            var _onSi = document.getElementById('onSiteTime'); if(_onSi) _onSi.textContent = onSiteHours;
+        }
+
+        function renderWeeklyChart() {
+            const today = new Date();
+            const weekData = [0, 0, 0, 0, 0, 0, 0]; // Mon-Sun
+
+            allEntries.forEach(entry => {
+                const date = new Date(entry.clock_in);
+                const dayOfWeek = (date.getDay() + 6) % 7; // Convert to Mon=0, Sun=6
+                const clockIn = new Date(entry.clock_in);
+                const clockOut = entry.clock_out ? new Date(entry.clock_out) : new Date();
+                const duration = Math.floor((clockOut - clockIn) / 1000) / 3600;
+                weekData[dayOfWeek] += duration;
+            });
+
+            const maxHours = Math.max(...weekData, 8);
+            const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+            const chart = document.getElementById('weeklyChart');
+
+            chart.innerHTML = weekData.map((hours, idx) => {
+                const percentage = (hours / maxHours) * 100;
+                const isWeekend = idx >= 5;
+                return `
+                    <div class="chart-bar ${isWeekend ? 'weekend' : ''}" style="height: ${Math.max(10, percentage)}%;" title="${hours.toFixed(1)}h">
+                        ${hours > 0 ? hours.toFixed(1) : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function exportTimesheet() {
+            try {
+                let csv = 'Time Entry Export\n';
+                csv += `Worker: ${currentUser.name}\n`;
+                csv += `Date: ${new Date().toLocaleDateString()}\n\n`;
+                csv += 'Clock In,Clock Out,Duration,Type,Latitude,Longitude\n';
+
+                allEntries.forEach(entry => {
+                    const clockIn = new Date(entry.clock_in);
+                    const clockOut = entry.clock_out ? new Date(entry.clock_out) : new Date();
+                    const duration = formatDuration(Math.floor((clockOut - clockIn) / 1000));
+                    csv += `${clockIn.toLocaleString()},${clockOut.toLocaleString()},${duration},${entry.type},${entry.latitude || ''},${entry.longitude || ''}\n`;
+                });
+
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `timesheet-${new Date().toISOString().split('T')[0]}.csv`;
+                a.click();
+                showToast('Timesheet exported successfully', 'success');
+            } catch (err) {
+                console.error('Export error:', err);
+                showToast('Error exporting timesheet', 'error');
+            }
+        }
+
+        function sendToSupervisor() {
+            try {
+                let content = `Hi,\n\nPlease find my time tracking report for ${new Date().toLocaleDateString()} below:\n\n`;
+
+                allEntries.forEach(entry => {
+                    const clockIn = new Date(entry.clock_in);
+                    const clockOut = entry.clock_out ? new Date(entry.clock_out) : new Date();
+                    const duration = formatDuration(Math.floor((clockOut - clockIn) / 1000));
+                    content += `- ${clockIn.toLocaleTimeString()} to ${clockOut.toLocaleTimeString()}: ${duration} (${entry.type})\n`;
+                });
+
+                const subject = encodeURIComponent('Time Tracking Report - ' + new Date().toLocaleDateString());
+                const body = encodeURIComponent(content + '\n\nThank you!');
+                const supervisorEmail = 'supervisor@fleetconnect.com'; // Mock email
+
+                window.location.href = `mailto:${supervisorEmail}?subject=${subject}&body=${body}`;
+                showToast('Opening email client...', 'success');
+            } catch (err) {
+                console.error('Send error:', err);
+                showToast('Error preparing email', 'error');
+            }
+        }
+
+        function goBack() {
+            if (clockedIn) {
+                alert('You are currently clocked in. Please clock out before leaving.');
+                return;
+            }
+            window.history.back();
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast show ${type}`;
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // Initialize
+        loadEntries();
+        updateStatusBanner();
+    </script>
+    
+
+<script src="hamburger-menu.js"></script>
+<script src="global-search.js"></script>
+<script src="notification-center.js"></script>
+</body>
+</html>

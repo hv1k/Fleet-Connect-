@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <script>
+      // Theme init - prevent flash of wrong theme
+      (function(){
+        var t = localStorage.getItem('fleetconnect-theme');
+        if(t === 'light') document.documentElement.classList.add('light-mode');
+      })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Work Order | FleetConnect</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg-dark: #1a1a1a;
+            --bg-card: #242424;
+            --bg-hover: #333;
+            --border: #333;
+            --text-primary: #e8e0d8;
+            --text-secondary: #b8b0a8;
+            --text-muted: #888;
+            --accent: #3b82f6;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --admin: #60a5fa;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #1a1a1a; color: #f5f0e8; min-height: 100vh; display: flex; }
+        .layout { display: flex; min-height: 100vh; }
+
+        /* Sidebar */
+        nav { flex: 1; overflow-y: auto; }
+
+        /* Main */
+        .header { padding: 24px 32px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+        .header-left { display: flex; align-items: center; gap: 12px; }
+        .header h1 { font-size: 1.4rem; font-weight: 700; }
+        .header-subtitle { font-size: 0.85rem; color: #888; margin-top: 2px; }
+        .content { padding: 24px 32px; max-width: 960px; }
+
+        /* Scan Section */
+        .scan-card { background: linear-gradient(135deg, rgba(96,165,250,0.08), rgba(59,130,246,0.08)); border: 2px dashed rgba(96,165,250,0.4); border-radius: 14px; padding: 28px; margin-bottom: 24px; text-align: center; }
+        .scan-card h2 { font-size: 1.1rem; font-weight: 600; margin-bottom: 6px; }
+        .scan-card p { color: #888; font-size: 0.85rem; margin-bottom: 18px; }
+        .scan-buttons { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+        .scan-btn { padding: 12px 24px; font-family: inherit; font-size: 0.9rem; font-weight: 600; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.15s; }
+        .scan-btn-primary { background: #60a5fa; color: #1a1a1a; border: none; }
+        .scan-btn-primary:hover { background: #3b82f6; }
+        .scan-btn-secondary { background: transparent; color: #60a5fa; border: 2px solid rgba(96,165,250,0.4); }
+        .scan-btn-secondary:hover { border-color: #60a5fa; }
+        .scan-input { display: none; }
+
+        /* Scan Modal */
+        .scan-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
+        .scan-modal.show { display: flex; }
+        .scan-modal-content { background: #242424; border-radius: 16px; padding: 32px; max-width: 500px; width: 100%; text-align: center; border: 1px solid #333; }
+        .scan-preview { max-width: 100%; max-height: 280px; border-radius: 12px; margin: 16px 0; }
+        .progress-bar { height: 6px; background: #333; border-radius: 3px; overflow: hidden; margin: 16px 0 8px; }
+        .progress-fill { height: 100%; background: #60a5fa; transition: width 0.3s; }
+        .progress-text { font-size: 0.85rem; color: #888; }
+        .scan-status { font-size: 1rem; font-weight: 600; margin-bottom: 8px; }
+        .scan-cancel { margin-top: 16px; padding: 10px 20px; background: #333; border: none; color: #888; border-radius: 8px; cursor: pointer; font-family: inherit; }
+        .scan-cancel:hover { background: #444; color: #f5f0e8; }
+
+        /* Extracted Preview */
+        .extracted-card { display: none; background: #242424; border: 1px solid #60a5fa; border-radius: 14px; padding: 20px; margin-bottom: 24px; }
+        .extracted-card.show { display: block; }
+        .extracted-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+        .extracted-header h3 { color: #60a5fa; font-size: 0.95rem; }
+        .extracted-dismiss { background: none; border: none; color: #666; cursor: pointer; font-size: 1.2rem; padding: 4px; }
+        .extracted-dismiss:hover { color: #f5f0e8; }
+        .extracted-item { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid #333; font-size: 0.85rem; }
+        .extracted-item:last-child { border-bottom: none; }
+        .extracted-label { color: #666; }
+        .extracted-value { color: #f5f0e8; font-weight: 500; }
+        .apply-btn { width: 100%; padding: 11px; background: #60a5fa; color: #1a1a1a; border: none; border-radius: 8px; font-family: inherit; font-weight: 600; cursor: pointer; margin-top: 14px; font-size: 0.9rem; }
+        .apply-btn:hover { background: #3b82f6; }
+
+        .or-divider { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; color: #555; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        .or-divider::before, .or-divider::after { content: ''; flex: 1; height: 1px; background: #333; }
+
+        /* Form */
+        .form-card { background: #242424; border: 1px solid #333; border-radius: 14px; padding: 28px; }
+        .form-section { margin-bottom: 28px; padding-bottom: 28px; border-bottom: 1px solid #333; }
+        .form-section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .section-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #60a5fa; margin-bottom: 16px; }
+        .form-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 16px; }
+        .form-row-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 16px; }
+        .form-row-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 16px; }
+        .form-group { }
+        .form-group label { display: block; font-size: 0.8rem; font-weight: 500; color: #999; margin-bottom: 6px; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 10px 12px; font-family: inherit; font-size: 0.88rem;
+            background: #2a2a2a; border: 1px solid #444; border-radius: 8px; color: #f5f0e8;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #60a5fa; }
+        .form-group input.auto-filled { border-color: #60a5fa; background: rgba(96,165,250,0.08); }
+        .form-group textarea { min-height: 80px; resize: vertical; }
+        .required { color: #f87171; }
+
+        /* Equipment */
+        .eq-header { display: grid; grid-template-columns: 70px 140px 1fr 36px; gap: 10px; padding: 8px 12px; margin-bottom: 6px; }
+        .eq-header span { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: #666; letter-spacing: 0.3px; }
+        .eq-item { display: grid; grid-template-columns: 70px 140px 1fr 36px; gap: 10px; align-items: center; padding: 10px 12px; background: #2a2a2a; border-radius: 8px; margin-bottom: 6px; }
+        .eq-item input { padding: 9px 10px; font-size: 0.85rem; }
+        .eq-item input.auto-filled { border-color: #60a5fa; background: rgba(96,165,250,0.08); }
+        .eq-remove { width: 32px; height: 32px; background: transparent; border: 1px solid #dc2626; color: #dc2626; border-radius: 6px; cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; }
+        .eq-remove:hover { background: #dc2626; color: #fff; }
+        .add-eq-btn { padding: 11px; background: transparent; border: 1px dashed #444; color: #888; border-radius: 8px; cursor: pointer; width: 100%; font-family: inherit; font-size: 0.85rem; margin-top: 8px; }
+        .add-eq-btn:hover { border-color: #60a5fa; color: #60a5fa; }
+        .eq-count { font-size: 0.8rem; color: #555; margin-top: 8px; }
+
+        /* Submit */
+        .submit-btn { width: 100%; padding: 14px; font-family: inherit; font-size: 0.95rem; font-weight: 600; background: #60a5fa; color: #1a1a1a; border: none; border-radius: 10px; cursor: pointer; margin-top: 20px; }
+        .submit-btn:hover { background: #3b82f6; }
+        .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .success-message { display: none; text-align: center; padding: 60px 20px; }
+        .success-message.show { display: block; }
+        .success-icon { width: 64px; height: 64px; border-radius: 50%; background: rgba(34,197,94,0.15); color: #22c55e; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 1.8rem; }
+        .success-message h2 { font-size: 1.3rem; margin-bottom: 8px; }
+        .success-message p { color: #888; margin-bottom: 24px; }
+        .btn-outline { padding: 10px 24px; background: transparent; color: #60a5fa; border: 1px solid rgba(96,165,250,0.4); border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+        .btn-outline:hover { border-color: #60a5fa; background: rgba(96,165,250,0.08); }
+
+        .mobile-toggle { display: none; width: 40px; height: 40px; border: 1px solid #444; border-radius: 8px; background: #2a2a2a; color: #f5f0e8; align-items: center; justify-content: center; cursor: pointer; }
+
+        @media (max-width: 900px) {
+            .mobile-toggle { display: flex; }
+            .header { padding: 16px 20px; }
+            .content { padding: 16px 20px; }
+        }
+        @media (max-width: 600px) {
+            .form-row, .form-row-3, .form-row-4 { grid-template-columns: 1fr; }
+            .eq-header { display: none; }
+            .eq-item { grid-template-columns: 60px 1fr 36px; }
+            .eq-item input:nth-child(3) { grid-column: span 2; }
+        }
+    
+        /* Sidebar */
+        .admin-sidebar { width: 260px; background: var(--bg-card, #242424); border-right: 1px solid var(--border, #333); padding: 24px 16px; position: fixed; left: 0; top: 0; height: 100vh; overflow-y: auto; z-index: 99; display: flex; flex-direction: column; }
+        .admin-sidebar-logo { font-size: 1.1rem; font-weight: 700; color: var(--admin, #60a5fa); margin-bottom: 16px; }
+        .admin-nav-section { margin-bottom: 24px; }
+        .admin-nav-section-title { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted, #666); padding: 0 12px; margin-bottom: 8px; letter-spacing: 0.5px; }
+        .admin-nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; color: #b8b0a8; text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: all 0.2s; cursor: pointer; margin-bottom: 4px; }
+        .admin-nav-item:hover { background: var(--bg-hover, #333); color: var(--text-primary, #f5f0e8); }
+        .admin-nav-item.active { background: rgba(96, 165, 250, 0.15); color: var(--admin, #60a5fa); }
+        .admin-nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+        .admin-sidebar-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border, #333); }
+        .main-content { flex: 1; margin-left: 260px; }
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .admin-sidebar { width: 100%; height: auto; position: relative; left: auto; top: auto; border-right: none; border-bottom: 1px solid var(--border, #333); padding: 12px; }
+            .main-content { margin-left: 0; }
+        }
+    
+        /* Light Mode */
+        .light-mode { --bg-dark: #f5f5f5; --bg-card: #ffffff; --bg-input: #e8e8e8; --bg-hover: #e8e8e8; --border: #d0d0d0; --text-primary: #1a1a1a; --text-secondary: #555555; --text-muted: #888888; }
+        .light-mode .sidebar, .light-mode .admin-sidebar { background: #ffffff !important; border-color: #d0d0d0 !important; }
+        .light-mode .sidebar-logo, .light-mode .admin-sidebar-logo { color: #3b82f6 !important; }
+        .light-mode .nav-item, .light-mode .admin-nav-item { color: #555555 !important; }
+        .light-mode .nav-item:hover, .light-mode .admin-nav-item:hover { background: #e8e8e8 !important; color: #1a1a1a !important; }
+        .light-mode .nav-item.active, .light-mode .admin-nav-item.active { background: #dbeafe !important; color: #2563eb !important; }
+        .light-mode .nav-section-title, .light-mode .admin-nav-section { color: #888888 !important; }
+        .light-mode .user-menu { background: #e8e8e8 !important; }
+        .light-mode .user-name { color: #1a1a1a !important; }
+        .light-mode .header { background: #ffffff !important; border-color: #d0d0d0 !important; }
+        .light-mode .header h1 { color: #1a1a1a !important; }
+        .light-mode .header-subtitle { color: #555555 !important; }
+        .light-mode .main, .light-mode .content, .light-mode .admin-main { background: #f5f5f5 !important; }
+        .light-mode .card, .light-mode .stat-card, .light-mode .metric-card, .light-mode .admin-card { background: #ffffff !important; border-color: #d0d0d0 !important; }
+        .light-mode .card-title, .light-mode .stat-label { color: #1a1a1a !important; }
+        .light-mode .card-subtitle { color: #555555 !important; }
+        .light-mode input, .light-mode textarea, .light-mode select { background: #e8e8e8 !important; border-color: #d0d0d0 !important; color: #1a1a1a !important; }
+        .light-mode input::placeholder, .light-mode textarea::placeholder { color: #888888 !important; }
+        .light-mode .form-label, .light-mode label { color: #1a1a1a !important; }
+        .light-mode .badge { background: #dbeafe !important; color: #2563eb !important; }
+        .light-mode .btn-secondary { background: #e8e8e8 !important; color: #1a1a1a !important; border-color: #d0d0d0 !important; }
+        .light-mode .btn-secondary:hover { background: #d0d0d0 !important; }
+        .light-mode .sidebar-footer, .light-mode .admin-sidebar-footer { border-color: #d0d0d0 !important; }
+        .light-mode .logout-btn:hover { background: #e8e8e8 !important; }
+        .light-mode table th { background: #e8e8e8 !important; color: #1a1a1a !important; border-color: #d0d0d0 !important; }
+        .light-mode table td { border-color: #d0d0d0 !important; color: #1a1a1a !important; }
+        .light-mode table tr:hover { background: #e8e8e8 !important; }
+        .light-mode .modal-overlay { background: rgba(0,0,0,0.3) !important; }
+        .light-mode .modal, .light-mode .modal-content { background: #ffffff !important; border-color: #d0d0d0 !important; color: #1a1a1a !important; }
+        .light-mode .notification-bell { color: #555555 !important; }
+        .light-mode .search-box, .light-mode .search-input { background: #e8e8e8 !important; border-color: #d0d0d0 !important; color: #1a1a1a !important; }
+        .light-mode .tab, .light-mode .tab-btn { color: #555555 !important; }
+        .light-mode .tab.active, .light-mode .tab-btn.active { color: #3b82f6 !important; border-color: #3b82f6 !important; }
+        .light-mode .dropdown, .light-mode .dropdown-menu { background: #ffffff !important; border-color: #d0d0d0 !important; }
+        .light-mode .dropdown-item:hover { background: #e8e8e8 !important; }
+        .light-mode .toggle-switch { background: #d0d0d0 !important; }
+        .light-mode .toggle-switch.active { background: #2563eb !important; }
+        .light-mode .tooltip { background: #1a1a1a !important; color: #ffffff !important; }
+        .light-mode .progress-bar { background: #e8e8e8 !important; }
+        .light-mode .empty-state { color: #555555 !important; }
+        .light-mode .filter-bar, .light-mode .toolbar { background: #ffffff !important; border-color: #d0d0d0 !important; }
+        .light-mode .chip { background: #e8e8e8 !important; color: #1a1a1a !important; }
+        .light-mode pre, .light-mode code { background: #e8e8e8 !important; color: #1a1a1a !important; }
+        .light-mode .status-badge { border-color: #d0d0d0 !important; }
+        .light-mode ::selection { background: #3b82f6; color: #ffffff; }
+        .light-mode ::-webkit-scrollbar-track { background: #f5f5f5; }
+        .light-mode ::-webkit-scrollbar-thumb { background: #d0d0d0; }
+        .light-mode ::-webkit-scrollbar-thumb:hover { background: #bbbbbb; }
+
+
+                /* Light Mode */
+        html.light-mode { --bg-dark: #f5f0e8; --bg-card: #ffffff; --bg-input: #f0ebe3; --bg-hover: #e8e4dc; --border: #d0d0d0; --text-primary: #1a1a1a; --text-secondary: #5c5c5c; --text-muted: #8c8c8c; }
+        html.light-mode .admin-sidebar { background: #ffffff !important; border-color: #d0d0d0 !important; }
+        html.light-mode .admin-nav-item { color: #5c5c5c; }
+        html.light-mode .admin-nav-item:hover { background: #f0ebe3; color: #1a1a1a; }
+        html.light-mode .admin-nav-item.active { background: #dbeafe; color: #3b82f6; }
+        html.light-mode .admin-nav-section-title { color: #8c8c8c; }
+        html.light-mode .admin-sidebar-footer { border-color: #d0d0d0; }
+        html.light-mode .stat-card, html.light-mode .card, html.light-mode .table-card, html.light-mode .analytics-card { background: #ffffff; border-color: #d0d0d0; }
+        html.light-mode .search-input, html.light-mode .filter-select { background: #ffffff; border-color: #d0d0d0; color: #1a1a1a; }
+        html.light-mode th { background: #f0ebe3; color: #8c8c8c; border-color: #d0d0d0; }
+        html.light-mode td { border-color: #d0d0d0; color: #5c5c5c; }
+        html.light-mode tr:hover { background: #f0ebe3; }
+        html.light-mode .modal { background: #ffffff; }
+        html.light-mode .modal-header { border-color: #d0d0d0; }
+        html.light-mode .btn-secondary { background: #ffffff; border-color: #d0d0d0; color: #5c5c5c; }
+    
+        /* Sidebar actions (bell + theme toggle) */
+        /* Sidebar layout fix */
+        .admin-sidebar { display: flex; flex-direction: column; }
+        .admin-sidebar nav { flex: 1; overflow-y: auto; }
+</style>
+</head>
+<body>
+        <aside class="admin-sidebar" id="adminSidebar">
+        <div class="admin-sidebar-logo">FLEETCONNECT</div>
+        <nav id="sidebarNav"></nav>
+        <div class="admin-sidebar-footer">
+            <div style="padding: 12px; background: var(--bg-hover, #333); border-radius: 8px;">
+                <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary, #f5f0e8); margin-bottom: 4px;" id="adminUserName">System Admin</div>
+                <div class="admin-sidebar-role" style="font-size: 0.75rem; color: var(--text-secondary, #888);">Administrator</div>
+                <button onclick="logout()" style="margin-top: 8px; width: 100%; padding: 6px; background: transparent; border: 1px solid #333; color: #888; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 0.75rem; cursor: pointer; transition: all 0.2s;">Logout</button>
+            </div>
+        </div>
+    </aside>
+
+        <div class="main-content">
+            <header class="header">
+                <div class="header-left">
+                    <button class="mobile-toggle" onclick="document.querySelector('.admin-sidebar').classList.toggle('open')"><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+                    <div>
+                        <h1>Create Work Order</h1>
+                        <p class="header-subtitle">Submit a new service request</p>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content">
+                <!-- Scan Invoice -->
+                <div class="scan-card" id="scanSection">
+                    <h2>📄 Quick Entry — Scan Document</h2>
+                    <p>Take a photo of a Sunbelt invoice or Power Plus field ticket and AI will auto-fill the form</p>
+                    <div class="scan-buttons">
+                        <label class="scan-btn scan-btn-primary">
+                            <span>📷</span> Take Photo
+                            <input type="file" class="scan-input" id="cameraInput" accept="image/*" capture="environment" onchange="handleInvoiceScan(event)">
+                        </label>
+                        <label class="scan-btn scan-btn-secondary">
+                            <span>📁</span> Upload Image
+                            <input type="file" class="scan-input" id="fileInput" accept="image/*" onchange="handleInvoiceScan(event)">
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Scan Modal -->
+                <div class="scan-modal" id="scanModal">
+                    <div class="scan-modal-content">
+                        <div class="scan-status" id="scanStatus">Preparing...</div>
+                        <img id="scanPreview" class="scan-preview" style="display:none;">
+                        <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+                        <div class="progress-text" id="progressText">Starting...</div>
+                        <button class="scan-cancel" onclick="cancelScan()">Cancel</button>
+                    </div>
+                </div>
+
+                <!-- Extracted Preview -->
+                <div class="extracted-card" id="extractedPreview">
+                    <div class="extracted-header">
+                        <h3>✨ Extracted Data</h3>
+                        <button class="extracted-dismiss" onclick="dismissExtracted()">×</button>
+                    </div>
+                    <div id="extractedItems"></div>
+                    <button class="apply-btn" onclick="applyExtracted()">Apply to Form</button>
+                </div>
+
+                <div class="or-divider">or fill manually</div>
+
+                <!-- Form -->
+                <div class="form-card" id="formCard">
+                    <form id="workOrderForm">
+
+                        <!-- Job Site Info (matches Sunbelt top-left box) -->
+                        <div class="form-section">
+                            <div class="section-label">Job Site</div>
+                            <div class="form-group" style="margin-bottom:16px;">
+                                <label>Job Site Name<span class="required">*</span></label>
+                                <input type="text" id="jobSiteName" required placeholder="Enter job site name">
+                            </div>
+                            <div class="form-group" style="margin-bottom:16px;">
+                                <label>Street Address</label>
+                                <input type="text" id="addressStreet" placeholder="Enter street address">
+                            </div>
+                            <div class="form-row-3">
+                                <div class="form-group"><label>City</label><input type="text" id="addressCity" placeholder="City"></div>
+                                <div class="form-group"><label>State</label><input type="text" id="addressState" maxlength="2" style="text-transform:uppercase;" placeholder="CA"></div>
+                                <div class="form-group"><label>ZIP</label><input type="text" id="addressZip" placeholder="ZIP"></div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group"><label>Order ID #</label><input type="text" id="orderId" placeholder="Order ID"></div>
+                                <div class="form-group"><label>Job Number</label><input type="text" id="jobNumber" placeholder="Job number"></div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group"><label>C#</label><input type="text" id="cNumber" placeholder="C# number"></div>
+                                <div class="form-group"><label>J#</label><input type="text" id="jNumber" placeholder="J# number"></div>
+                            </div>
+                        </div>
+
+                        <!-- Customer Info (matches Sunbelt customer box) -->
+                        <div class="form-section">
+                            <div class="section-label">Customer</div>
+                            <div class="form-row">
+                                <div class="form-group"><label>Customer Name<span class="required">*</span></label><input type="text" id="customerName" required placeholder="Customer name"></div>
+                                <div class="form-group"><label>Customer #</label><input type="text" id="customerNumber" placeholder="Customer #"></div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group"><label>Vendor #</label><input type="text" id="vendorNumber" placeholder="Vendor #"></div>
+                            </div>
+                        </div>
+
+                        <!-- Contract & Schedule (matches Sunbelt top-right box) -->
+                        <div class="form-section">
+                            <div class="section-label">Contract & Schedule</div>
+                            <div class="form-row">
+                                <div class="form-group"><label>Contract #<span class="required">*</span></label><input type="text" id="contractNumber" required placeholder="Contract #"></div>
+                                <div class="form-group"><label>P.O. #<span class="required">*</span></label><input type="text" id="poNumber" required placeholder="P.O. #"></div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group"><label>Date Out</label><input type="date" id="dateOut"></div>
+                                <div class="form-group"><label>Time Out</label><input type="time" id="timeOut"></div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group"><label>Est. Return</label><input type="date" id="estReturn"></div>
+                                <div class="form-group"><label>Time Return</label><input type="time" id="timeReturn"></div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group"><label>Ordered By</label><input type="text" id="contactName" placeholder="Name"></div>
+                                <div class="form-group"><label>Contact Phone</label><input type="tel" id="contactPhone" placeholder="Phone number"></div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group"><label>Rental Company / PC#</label><input type="text" id="rentalCompany" placeholder="Company or PC#"></div>
+                                <div class="form-group"><label>Salesman</label><input type="text" id="salesman" placeholder="Salesman name"></div>
+                            </div>
+                        </div>
+
+                        <!-- Equipment with QTY + Unit # + Description -->
+                        <div class="form-section">
+                            <div class="section-label">Equipment / Units<span class="required">*</span></div>
+                            <p style="color:#888;font-size:0.82rem;margin-bottom:14px;">Add all equipment that needs fueling at this job site</p>
+                            <div class="eq-header">
+                                <span>Qty</span>
+                                <span>Unit #</span>
+                                <span>Description</span>
+                                <span></span>
+                            </div>
+                            <div id="equipmentList"></div>
+                            <button type="button" class="add-eq-btn" onclick="addEquipment()">+ Add Equipment</button>
+                            <div class="eq-count" id="equipmentCount">0 units added</div>
+                        </div>
+
+                        <!-- Service Details -->
+                        <div class="form-section">
+                            <div class="section-label">Service Details</div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Job Type<span class="required">*</span></label>
+                                    <select id="jobType" required>
+                                        <option value="fuel-delivery">Fuel Delivery</option>
+                                        <option value="equipment-tow">Equipment Tow</option>
+                                        <option value="emergency-fuel">Emergency Fuel</option>
+                                        <option value="pickup">Pickup</option>
+                                        <option value="delivery">Delivery</option>
+                                        <option value="swap">Swap</option>
+                                        <option value="service">Service</option>
+                                        <option value="mechanic-inspection">Mechanic Inspection</option>
+                                        <option value="mechanic-repair">Mechanic Repair</option>
+                                        <option value="hour-check">Hour Check</option>
+                                        <option value="emergency-response">Emergency Response</option>
+                                        <option value="unit-removal">Unit Removal</option>
+                                        <option value="on-site-relocation">On Site Relocation</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Priority</label>
+                                    <select id="priority">
+                                        <option value="normal">Normal</option>
+                                        <option value="urgent">Urgent</option>
+                                        <option value="emergency">Emergency</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Assign Vendor</label>
+                                    <select id="assignVendor">
+                                        <option value="">Unassigned — Available to all vendors</option>
+                                    </select>
+                                    <p style="color:#666;font-size:0.78rem;margin-top:4px;">Leave unassigned to let any vendor accept this job</p>
+                                </div>
+                                <div class="form-group">
+                                    <label>Document Source</label>
+                                    <select id="documentSource">
+                                        <option value="">None</option>
+                                        <option value="sunbelt">Sunbelt Rental Invoice</option>
+                                        <option value="powerplus">Power Plus Field Ticket</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Special Instructions</label>
+                                <textarea id="instructions" placeholder="Gate codes, access instructions, safety notes..."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Power Plus / Field Ticket Info (hidden by default, shown when Power Plus scanned) -->
+                        <div class="form-section" id="ticketInfoSection" style="display:none;">
+                            <div class="section-label">Field Ticket Info <span style="font-weight:400;text-transform:none;font-size:0.75rem;color:#888;">(Power Plus)</span></div>
+                            <div class="form-row-4">
+                                <div class="form-group"><label>Field Ticket ID</label><input type="text" id="fieldTicketId" placeholder="e.g. 1409099"></div>
+                                <div class="form-group"><label>Ticket Type</label><input type="text" id="ticketType" placeholder="e.g. SWAP"></div>
+                                <div class="form-group"><label>Area</label><input type="text" id="area" placeholder="e.g. SAN"></div>
+                                <div class="form-group"><label>Ticket Status</label><input type="text" id="ticketStatus" placeholder="e.g. TENTATIVE"></div>
+                            </div>
+                            <div class="form-row-3">
+                                <div class="form-group"><label>Old Gen Hour</label><input type="text" id="oldGenHour" placeholder="Hour reading"></div>
+                                <div class="form-group"><label>New Gen ID</label><input type="text" id="newGenId" placeholder="New generator ID"></div>
+                                <div class="form-group"><label>New Gen Hour</label><input type="text" id="newGenHour" placeholder="Hour reading"></div>
+                            </div>
+                            <div class="form-group">
+                                <label>Work Performed</label>
+                                <input type="text" id="workPerformed" placeholder="e.g. Fuel Delivery, Swap, Hour Check">
+                                <p style="color:#666;font-size:0.78rem;margin-top:4px;">Comma-separated list of work types performed</p>
+                            </div>
+                            <div class="form-group">
+                                <label>Technician Name</label>
+                                <input type="text" id="technicianName" placeholder="Field technician name">
+                            </div>
+                        </div>
+
+                        <!-- Generator / Unit Info (hidden by default) -->
+                        <div class="form-section" id="generatorSection" style="display:none;">
+                            <div class="section-label">Generator / Unit Information</div>
+                            <div class="form-row">
+                                <div class="form-group"><label>Generator Type</label><input type="text" id="genType" placeholder="e.g. 400 KVA GENERATOR"></div>
+                                <div class="form-group"><label>Tank Capacity</label><input type="text" id="tankCapacity" placeholder="e.g. 491"></div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group"><label>Last Service Date</label><input type="date" id="lastServiceDate"></div>
+                                <div class="form-group"><label>Last Service Hour</label><input type="text" id="lastServiceHour" placeholder="e.g. 1003"></div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group"><label>Dimensions</label><input type="text" id="unitDimensions" placeholder="e.g. 270L x 92W x 127H"></div>
+                                <div class="form-group"><label>Unit Notes</label><input type="text" id="unitNotes" placeholder="e.g. Def Tank holds 14.87 Gallons"></div>
+                            </div>
+                            <div class="form-group">
+                                <label>Mechanical Notes</label>
+                                <textarea id="mechanicalNotes" placeholder="Tires, battery info, air filter part numbers, etc."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Billable Services (hidden by default) -->
+                        <div class="form-section" id="billableSection" style="display:none;">
+                            <div class="section-label">Billable Services</div>
+                            <div class="form-row-3">
+                                <div class="form-group"><label>Fuel (gallons)</label><input type="text" id="fuelGallons" placeholder="Gallons"></div>
+                                <div class="form-group"><label>DEF (gallons)</label><input type="text" id="defGallons" placeholder="Gallons"></div>
+                                <div class="form-group"><label>Oil</label><input type="text" id="oil" placeholder="Amount"></div>
+                            </div>
+                            <div class="form-row-3">
+                                <div class="form-group"><label>Fuel Filter</label><input type="text" id="fuelFilter" placeholder="Part # / info"></div>
+                                <div class="form-group"><label>Oil Filter</label><input type="text" id="oilFilter" placeholder="Part # / info"></div>
+                                <div class="form-group"><label>Racor Filter</label><input type="text" id="racorFilter" placeholder="Part # / info"></div>
+                            </div>
+                            <div class="form-row-3">
+                                <div class="form-group"><label>Coolant Filter</label><input type="text" id="coolantFilter" placeholder="Part # / info"></div>
+                                <div class="form-group"><label>Air Filter (outer)</label><input type="text" id="airFilterOuter" placeholder="Part # / info"></div>
+                                <div class="form-group"><label>Air Filter (inner)</label><input type="text" id="airFilterInner" placeholder="Part # / info"></div>
+                            </div>
+                            <div class="form-group">
+                                <label>Other Billable Services</label>
+                                <input type="text" id="otherBillableServices" placeholder="Additional services">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="submit-btn" id="submitBtn">Create Work Order</button>
+                    </form>
+                </div>
+
+                <!-- Success -->
+                <div class="success-message" id="successMessage">
+                    <div class="success-icon">✓</div>
+                    <h2>Work Order Created!</h2>
+                    <p>Your order has been submitted and vendors will be notified.</p>
+                    <a href="index.html" class="btn-outline" id="successLink">Back to Dashboard</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="supabase-client.js"></script>
+    <script src="sidebar.js"></script>
+    <script src="notifications.js"></script>
+    <script src="realtime.js"></script>
+    <script>
+        // ===== AUTH & NAV =====
+        const currentUser = checkAuth(['admin', 'rental', 'vendor']);
+        if (!currentUser) throw new Error('Not authenticated');
+        var _un = document.getElementById('userName'); if(_un) _un.textContent = currentUser.name;
+        if (document.getElementById('adminUserName')) document.getElementById('adminUserName').textContent = currentUser.name;
+        var _ua = document.getElementById('userAvatar'); if(_ua) _ua.textContent = currentUser.name.charAt(0).toUpperCase();
+        const roleLabels = { admin: 'Admin', rental: 'Rental Company', vendor: 'Vendor', fieldworker: 'Field Worker' };
+        var _ur = document.getElementById('userRole'); if(_ur) _ur.textContent = roleLabels[currentUser.role] || currentUser.role;
+
+        // Update role label
+        const roleLabelsMap = { admin: 'Administrator', rental: 'Rental Account', vendor: 'Vendor Account', fieldworker: 'Field Worker' };
+        var _rl = document.querySelector('.admin-sidebar-role'); if(_rl) _rl.textContent = roleLabelsMap[currentUser.role] || currentUser.role;
+
+        // Success link based on role
+        const dashLinks = { admin: 'work-orders.html', rental: 'rental-dashboard.html', vendor: 'vendor-dashboard.html', fieldworker: 'field-worker.html' };
+        var _succ = document.getElementById('successLink'); if(_succ) _succ.href = dashLinks[currentUser.role] || 'work-orders.html';
+
+        // Default date
+        document.getElementById('dateOut').value = new Date().toISOString().split('T')[0];
+
+        // Toggle Power Plus sections based on document source
+        var _docu = document.getElementById('documentSource'); if(_docu) _docu.addEventListener('change', function() {
+            const isPP = this.value === 'powerplus';
+            var _tick = document.getElementById('ticketInfoSection'); if(_tick) _tick.style.display = isPP ? '' : 'none';
+            var _gene = document.getElementById('generatorSection'); if(_gene) _gene.style.display = isPP ? '' : 'none';
+            var _bill = document.getElementById('billableSection'); if(_bill) _bill.style.display = isPP ? '' : 'none';
+        });
+
+        // ===== INVOICE SCANNING =====
+        let extractedData = {};
+        let scannedInvoiceFile = null;
+
+        async function handleInvoiceScan(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            scannedInvoiceFile = file;
+
+            const modal = document.getElementById('scanModal');
+            const preview = document.getElementById('scanPreview');
+            const status = document.getElementById('scanStatus');
+            const fill = document.getElementById('progressFill');
+            const text = document.getElementById('progressText');
+
+            modal.classList.add('show');
+
+            const base64Image = await new Promise(r => {
+                const reader = new FileReader();
+                reader.onload = e => { preview.src = e.target.result; preview.style.display = 'block'; r(e.target.result.split(',')[1]); };
+                reader.readAsDataURL(file);
+            });
+
+            status.textContent = 'Analyzing invoice with AI...';
+            text.textContent = 'Sending to Claude...';
+            fill.style.width = '30%';
+
+            try {
+                const response = await fetch('/api/scan-invoice', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: base64Image, mediaType: file.type || 'image/jpeg' })
+                });
+                fill.style.width = '80%';
+                text.textContent = 'Processing response...';
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.error || 'API request failed');
+                }
+
+                const data = await response.json();
+                const content = data.content[0].text;
+                const jsonMatch = content.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                    extractedData = JSON.parse(jsonMatch[0]);
+                } else {
+                    throw new Error('Could not parse response');
+                }
+
+                fill.style.width = '100%';
+                setTimeout(() => { modal.classList.remove('show'); showExtractedData(); }, 500);
+            } catch (error) {
+                console.error('Scan error:', error);
+                status.textContent = 'Error analyzing invoice';
+                text.textContent = error.message;
+                setTimeout(() => { modal.classList.remove('show'); alert('Failed: ' + error.message + '\n\nPlease fill the form manually.'); }, 2000);
+            }
+            event.target.value = '';
+        }
+
+        function showExtractedData() {
+            const preview = document.getElementById('extractedPreview');
+            const items = document.getElementById('extractedItems');
+            const isPowerPlus = extractedData.documentType === 'powerplus';
+
+            // Show/hide Power Plus sections
+            if (isPowerPlus) {
+                var _tick = document.getElementById('ticketInfoSection'); if(_tick) _tick.style.display = '';
+                var _gene = document.getElementById('generatorSection'); if(_gene) _gene.style.display = '';
+                var _bill = document.getElementById('billableSection'); if(_bill) _bill.style.display = '';
+                document.getElementById('documentSource').value = 'powerplus';
+            }
+
+            // Common fields
+            const fields = [
+                { key: 'documentType', label: 'Document Type', format: v => v === 'powerplus' ? '⚡ Power Plus Field Ticket' : v === 'sunbelt' ? '🔶 Sunbelt Rental Invoice' : '📄 ' + v },
+                { key: 'fieldTicketId', label: 'Field Ticket ID' },
+                { key: 'ticketType', label: 'Ticket Type' },
+                { key: 'contractNumber', label: 'Contract #' },
+                { key: 'poNumber', label: 'P.O. #' },
+                { key: 'jobSiteName', label: 'Job Site' },
+                { key: 'addressStreet', label: 'Address' },
+                { key: 'addressCity', label: 'City' },
+                { key: 'addressState', label: 'State' },
+                { key: 'customerName', label: 'Customer' },
+                { key: 'customerNumber', label: 'Customer #' },
+                { key: 'contactName', label: 'Contact' },
+                { key: 'contactPhone', label: 'Phone' },
+                { key: 'dateOut', label: 'Scheduled Date' },
+                { key: 'area', label: 'Area' },
+                { key: 'ticketStatus', label: 'Status' },
+                { key: 'orderId', label: 'Order ID' },
+                { key: 'jobNumber', label: 'Job Number' },
+                { key: 'vendorNumber', label: 'Vendor #' },
+                { key: 'rentalCompany', label: 'Rental Company' },
+                { key: 'salesman', label: 'Salesman' },
+                { key: 'genType', label: 'Generator Type' },
+                { key: 'tankCapacity', label: 'Tank Capacity' },
+                { key: 'lastServiceDate', label: 'Last Service Date' },
+                { key: 'lastServiceHour', label: 'Last Service Hour' },
+                { key: 'fuelGallons', label: 'Fuel (gal)' },
+                { key: 'defGallons', label: 'DEF (gal)' },
+                { key: 'technicianName', label: 'Technician' }
+            ];
+
+            let html = '';
+            let found = false;
+            for (const f of fields) {
+                const val = extractedData[f.key];
+                if (val && val !== '') {
+                    found = true;
+                    const display = f.format ? f.format(val) : val;
+                    html += `<div class="extracted-item"><span class="extracted-label">${f.label}</span><span class="extracted-value">${display}</span></div>`;
+                }
+            }
+            if (extractedData.workPerformed && extractedData.workPerformed.length > 0) {
+                found = true;
+                const wp = Array.isArray(extractedData.workPerformed) ? extractedData.workPerformed.join(', ') : extractedData.workPerformed;
+                html += `<div class="extracted-item"><span class="extracted-label">Work Performed</span><span class="extracted-value">${wp}</span></div>`;
+            }
+            if (extractedData.equipment && extractedData.equipment.length > 0) {
+                found = true;
+                html += `<div class="extracted-item"><span class="extracted-label">Equipment</span><span class="extracted-value">${extractedData.equipment.length} unit(s) found</span></div>`;
+            }
+            if (found) { items.innerHTML = html; preview.classList.add('show'); }
+            else { alert('Could not extract data. Please fill the form manually.'); }
+        }
+
+ var _extr = document.getElementById('extractedPreview'); if(_extr) _extr.classList.remove('show');
+ var _scan = document.getElementById('scanModal'); if(_scan) _scan.classList.remove('show');
+
+        function applyExtracted() {
+            // Common fields (Sunbelt + Power Plus)
+            const commonFields = [
+                'contractNumber', 'poNumber', 'jobSiteName', 'addressStreet', 'addressCity',
+                'addressState', 'addressZip', 'contactName', 'contactPhone', 'orderId',
+                'jobNumber', 'customerName', 'customerNumber', 'vendorNumber',
+                'rentalCompany', 'salesman', 'cNumber', 'jNumber'
+            ];
+            // Power Plus specific fields
+            const powerPlusFields = [
+                'fieldTicketId', 'ticketType', 'area', 'ticketStatus',
+                'oldGenHour', 'newGenId', 'newGenHour', 'technicianName',
+                'genType', 'tankCapacity', 'lastServiceHour', 'unitDimensions', 'unitNotes',
+                'fuelGallons', 'defGallons', 'oil', 'fuelFilter', 'oilFilter',
+                'racorFilter', 'coolantFilter', 'airFilterOuter', 'airFilterInner',
+                'otherBillableServices'
+            ];
+
+            const allFields = [...commonFields, ...powerPlusFields];
+            for (const id of allFields) {
+                if (extractedData[id]) {
+                    const el = document.getElementById(id);
+                    if (el) { el.value = extractedData[id]; el.classList.add('auto-filled'); }
+                }
+            }
+
+            // Date/time fields
+            if (extractedData.dateOut) { document.getElementById('dateOut').value = extractedData.dateOut; }
+            if (extractedData.estReturn) { document.getElementById('estReturn').value = extractedData.estReturn; }
+            if (extractedData.timeOut) { document.getElementById('timeOut').value = extractedData.timeOut; }
+            if (extractedData.timeReturn) { document.getElementById('timeReturn').value = extractedData.timeReturn; }
+            if (extractedData.lastServiceDate) { document.getElementById('lastServiceDate').value = extractedData.lastServiceDate; }
+
+            // Work performed → text field + auto-set job type
+            if (extractedData.workPerformed && extractedData.workPerformed.length > 0) {
+                const wp = Array.isArray(extractedData.workPerformed) ? extractedData.workPerformed : [extractedData.workPerformed];
+                const wpEl = document.getElementById('workPerformed');
+                if (wpEl) { wpEl.value = wp.join(', '); wpEl.classList.add('auto-filled'); }
+
+                // Try to set job type from first work performed item
+                const typeMap = {
+                    'fuel delivery': 'fuel-delivery', 'swap': 'swap', 'service': 'service',
+                    'mechanic inspection': 'mechanic-inspection', 'mechanic repair': 'mechanic-repair',
+                    'hour check': 'hour-check', 'delivery': 'delivery', 'pickup': 'pickup',
+                    'emergency response': 'emergency-response', 'unit removal': 'unit-removal',
+                    'on site relocation': 'on-site-relocation'
+                };
+                for (const w of wp) {
+                    const mapped = typeMap[w.toLowerCase().trim()];
+                    if (mapped) { document.getElementById('jobType').value = mapped; break; }
+                }
+            }
+
+            // Mechanical notes → textarea
+            if (extractedData.mechanicalNotes) {
+                const mn = document.getElementById('mechanicalNotes');
+                if (mn) {
+                    let notes = extractedData.mechanicalNotes;
+                    // Append part numbers if available
+                    const parts = [];
+                    if (extractedData.fuelFilterParts) parts.push('Fuel Filter: ' + extractedData.fuelFilterParts);
+                    if (extractedData.oilFilterParts) parts.push('Oil Filter: ' + extractedData.oilFilterParts);
+                    if (extractedData.airFilterParts) parts.push('Air Filter: ' + extractedData.airFilterParts);
+                    if (extractedData.racorFilterParts) parts.push('Racor Filter: ' + extractedData.racorFilterParts);
+                    if (extractedData.coolantFilterParts) parts.push('Coolant Filter: ' + extractedData.coolantFilterParts);
+                    if (extractedData.beltPart) parts.push('Belt: ' + extractedData.beltPart);
+                    if (extractedData.otherPart) parts.push('Other: ' + extractedData.otherPart);
+                    if (parts.length > 0) notes += '\n\nPart Numbers:\n' + parts.join('\n');
+                    mn.value = notes;
+                    mn.classList.add('auto-filled');
+                }
+            }
+
+            // Equipment
+            if (extractedData.equipment && extractedData.equipment.length > 0) {
+                equipmentItems = extractedData.equipment.map(eq => ({
+                    id: Date.now() + Math.random(),
+                    qty: eq.qty || 1,
+                    unitNumber: eq.unitNumber || '',
+                    description: eq.description || '',
+                    autoFilled: true
+                }));
+                renderEquipment();
+            }
+
+            // Show Power Plus sections if applicable
+            if (extractedData.documentType === 'powerplus') {
+                var _tick = document.getElementById('ticketInfoSection'); if(_tick) _tick.style.display = '';
+                var _gene = document.getElementById('generatorSection'); if(_gene) _gene.style.display = '';
+                var _bill = document.getElementById('billableSection'); if(_bill) _bill.style.display = '';
+                document.getElementById('documentSource').value = 'powerplus';
+            } else if (extractedData.documentType === 'sunbelt') {
+                document.getElementById('documentSource').value = 'sunbelt';
+            }
+
+            var _extr = document.getElementById('extractedPreview'); if(_extr) _extr.classList.remove('show');
+            document.getElementById('formCard').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // ===== EQUIPMENT =====
+        let equipmentItems = [];
+
+        function addEquipment() {
+            equipmentItems.push({ id: Date.now(), qty: 1, unitNumber: '', description: '' });
+            renderEquipment();
+        }
+        function removeEquipment(id) {
+            equipmentItems = equipmentItems.filter(e => e.id !== id);
+            renderEquipment();
+        }
+        function updateEquipment(id, field, value) {
+            const item = equipmentItems.find(e => e.id === id);
+            if (item) item[field] = value;
+            updateCount();
+        }
+        function renderEquipment() {
+            document.getElementById('equipmentList').innerHTML = equipmentItems.map(item => `
+                <div class="eq-item">
+                    <input type="number" min="1" value="${item.qty || 1}" placeholder="1"
+                        onchange="updateEquipment(${item.id},'qty',this.value)"
+                        class="${item.autoFilled ? 'auto-filled' : ''}">
+                    <input type="text" value="${item.unitNumber}" placeholder="Unit #"
+                        onchange="updateEquipment(${item.id},'unitNumber',this.value)"
+                        class="${item.autoFilled ? 'auto-filled' : ''}">
+                    <input type="text" value="${item.description}" placeholder="Equipment description"
+                        onchange="updateEquipment(${item.id},'description',this.value)"
+                        class="${item.autoFilled ? 'auto-filled' : ''}">
+                    <button type="button" class="eq-remove" onclick="removeEquipment(${item.id})">×</button>
+                </div>
+            `).join('');
+            updateCount();
+        }
+        function updateCount() {
+            const valid = equipmentItems.filter(e => e.unitNumber.trim() || e.description.trim());
+            var _equi = document.getElementById('equipmentCount'); if(_equi) _equi.textContent = valid.length + ' unit' + (valid.length !== 1 ? 's' : '') + ' added';
+        }
+        addEquipment();
+
+        // ===== LOAD VENDORS FOR DROPDOWN =====
+        (async function loadVendorDropdown() {
+            try {
+                const vendors = await getAllVendors();
+                const sel = document.getElementById('assignVendor');
+                vendors.forEach(v => {
+                    const opt = document.createElement('option');
+                    opt.value = v.id;
+                    opt.textContent = v.company_name || v.name || v.email;
+                    sel.appendChild(opt);
+                });
+            } catch (err) {
+                console.error('Failed to load vendors:', err);
+            }
+        })();
+
+        // ===== FORM SUBMIT =====
+        var _work = document.getElementById('workOrderForm'); if(_work) _work.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const validEquipment = equipmentItems.filter(e => e.unitNumber.trim() || e.description.trim());
+            if (validEquipment.length === 0) { alert('Please add at least one equipment unit.'); return; }
+
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.textContent = 'Creating...';
+
+            // Upload invoice image if scanned
+            let invoiceImageUrl = null;
+            if (scannedInvoiceFile) {
+                btn.textContent = 'Uploading invoice...';
+                const fileName = `${Date.now()}_${Math.random().toString(36).substr(2,9)}_${scannedInvoiceFile.name}`;
+                const { error: uploadError } = await db.storage.from('incidents').upload('invoices/' + fileName, scannedInvoiceFile);
+                if (!uploadError) {
+                    const { data } = db.storage.from('incidents').getPublicUrl('invoices/' + fileName);
+                    invoiceImageUrl = data.publicUrl;
+                }
+                btn.textContent = 'Creating order...';
+            }
+
+            const jobData = {
+                contractNumber: document.getElementById('contractNumber').value,
+                poNumber: document.getElementById('poNumber').value,
+                jobSiteName: document.getElementById('jobSiteName').value,
+                address: {
+                    street: document.getElementById('addressStreet').value,
+                    city: document.getElementById('addressCity').value,
+                    state: document.getElementById('addressState').value.toUpperCase(),
+                    zip: document.getElementById('addressZip').value
+                },
+                orderId: document.getElementById('orderId').value,
+                jobNumber: document.getElementById('jobNumber').value,
+                customerName: document.getElementById('customerName').value,
+                customerNumber: document.getElementById('customerNumber').value,
+                vendorNumber: document.getElementById('vendorNumber').value,
+                cNumber: document.getElementById('cNumber').value,
+                jNumber: document.getElementById('jNumber').value,
+                contactName: document.getElementById('contactName').value,
+                contactPhone: document.getElementById('contactPhone').value,
+                rental_company: currentUser?.name || document.getElementById('rentalCompany')?.value || '',
+                rentalCompany: document.getElementById('rentalCompany').value,
+                salesman: document.getElementById('salesman').value,
+                dateOut: document.getElementById('dateOut').value,
+                timeOut: document.getElementById('timeOut').value,
+                estReturn: document.getElementById('estReturn').value,
+                timeReturn: document.getElementById('timeReturn').value,
+                jobType: document.getElementById('jobType').value,
+                priority: document.getElementById('priority').value,
+                instructions: document.getElementById('instructions').value,
+                assignedVendor: document.getElementById('assignVendor').value || null,
+                status: document.getElementById('assignVendor').value ? 'assigned' : 'pending',
+                createdBy: currentUser?.id,
+                invoiceImage: invoiceImageUrl,
+                documentSource: document.getElementById('documentSource').value || null,
+                // Power Plus / Field Ticket fields
+                fieldTicketId: document.getElementById('fieldTicketId').value || null,
+                ticketType: document.getElementById('ticketType').value || null,
+                area: document.getElementById('area').value || null,
+                ticketStatus: document.getElementById('ticketStatus').value || null,
+                oldGenHour: document.getElementById('oldGenHour').value || null,
+                newGenId: document.getElementById('newGenId').value || null,
+                newGenHour: document.getElementById('newGenHour').value || null,
+                workPerformed: document.getElementById('workPerformed').value || null,
+                technicianName: document.getElementById('technicianName').value || null,
+                // Generator info
+                generatorInfo: {
+                    genType: document.getElementById('genType').value || null,
+                    tankCapacity: document.getElementById('tankCapacity').value || null,
+                    lastServiceDate: document.getElementById('lastServiceDate').value || null,
+                    lastServiceHour: document.getElementById('lastServiceHour').value || null,
+                    dimensions: document.getElementById('unitDimensions').value || null,
+                    unitNotes: document.getElementById('unitNotes').value || null,
+                    mechanicalNotes: document.getElementById('mechanicalNotes').value || null
+                },
+                // Billable services
+                billableServices: {
+                    fuelGallons: document.getElementById('fuelGallons').value || null,
+                    defGallons: document.getElementById('defGallons').value || null,
+                    oil: document.getElementById('oil').value || null,
+                    fuelFilter: document.getElementById('fuelFilter').value || null,
+                    oilFilter: document.getElementById('oilFilter').value || null,
+                    racorFilter: document.getElementById('racorFilter').value || null,
+                    coolantFilter: document.getElementById('coolantFilter').value || null,
+                    airFilterOuter: document.getElementById('airFilterOuter').value || null,
+                    airFilterInner: document.getElementById('airFilterInner').value || null,
+                    otherBillableServices: document.getElementById('otherBillableServices').value || null
+                }
+            };
+
+            const equipmentList = validEquipment.map(e => ({
+                qty: parseInt(e.qty) || 1,
+                equipNum: e.unitNumber,
+                description: e.description
+            }));
+
+            try {
+                const result = await createJob(jobData, equipmentList);
+
+                if (result.success) {
+                    var _form = document.getElementById('formCard'); if(_form) _form.style.display = 'none';
+                    var _scan = document.getElementById('scanSection'); if(_scan) _scan.style.display = 'none';
+                    document.querySelector('.or-divider').style.display = 'none';
+                    var _extr = document.getElementById('extractedPreview'); if(_extr) _extr.style.display = 'none';
+                    var _succ = document.getElementById('successMessage'); if(_succ) _succ.classList.add('show');
+                } else {
+                    alert('Error creating work order: ' + (result.error || 'Unknown error. Please try again.'));
+                    btn.disabled = false;
+                    btn.textContent = 'Create Work Order';
+                }
+            } catch (err) {
+                console.error('Work order creation failed:', err);
+                alert('Error creating work order: ' + (err.message || 'Network error. Please check your connection and try again.'));
+                btn.disabled = false;
+                btn.textContent = 'Create Work Order';
+            }
+        });
+    </script>
+    
+<script src="feature-flags.js"></script>
+<script src="hamburger-menu.js"></script>
+<script src="global-search.js"></script>
+<script src="notification-center.js"></script>
+
+    <script>
+    // Role-aware sidebar
+    document.addEventListener('DOMContentLoaded', async () => {
+        if (typeof getCurrentUser === 'function') {
+            try {
+                const user = await getCurrentUser();
+                if (user && user.role === 'rental') {
+                    const nameEl = document.getElementById('adminUserName');
+                    if (nameEl) nameEl.textContent = user.name || 'Rental User';
+                    const roleEl = document.querySelector('.admin-sidebar-footer .admin-sidebar-role');
+                    if (roleEl) roleEl.textContent = 'Rental Account';
+                    // Update sidebar logo link behavior for rental
+                }
+            } catch(e) { console.warn('Role-aware sidebar:', e); }
+        }
+    });
+    </script>
+</body>
+</html>

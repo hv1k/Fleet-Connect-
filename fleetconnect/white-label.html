@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <script>
+      // Theme init - prevent flash of wrong theme
+      (function(){
+        var t = localStorage.getItem('fleetconnect-theme');
+        if(t === 'light') document.documentElement.classList.add('light-mode');
+      })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>White-Label Support | FleetConnect</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg-dark: #1a1a1a;
+            --bg-card: #242424;
+            --bg-input: #2a2a2a;
+            --bg-hover: #333;
+            --border: #333;
+            --text-primary: #f5f0e8;
+            --text-secondary: #888;
+            --text-muted: #666;
+            --accent: #60a5fa;
+            --accent-glow: rgba(96, 165, 250, 0.3);
+            --accent-blue: #60a5fa;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --success: #22c55e;
+            --admin: #60a5fa;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-dark); color: var(--text-primary); min-height: 100vh; line-height: 1.6; display: flex; }
+        .container { position: relative; z-index: 1; max-width: 1400px; margin: 0 auto; padding: 24px 32px; }
+
+        .nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+        .logo { font-family: 'Inter', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--accent); letter-spacing: -0.5px; text-decoration: none; }
+        .nav-right { display: flex; align-items: center; gap: 24px; }
+        .nav-links { display: flex; gap: 24px; }
+        .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: color 0.2s; }
+        .nav-links a:hover, .nav-links a.active { color: var(--admin); }
+.admin-badge { background: var(--admin); color: white; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; }
+        .user-info { display: flex; align-items: center; gap: 12px; }
+        .user-name { font-size: 0.9rem; color: var(--text-secondary); }
+        .logout-btn { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); padding: 8px 16px; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
+        .logout-btn:hover { border-color: var(--error); color: var(--error); }
+
+        .header { margin-bottom: 32px; }
+        .header h1 { font-size: 1.4rem; font-weight: 700; margin-bottom: 8px; }
+        .header p { color: var(--text-secondary); }
+
+        .main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+        @media (max-width: 1200px) { .main-grid { grid-template-columns: 1fr; } }
+
+        .section-title { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); margin-bottom: 16px; }
+
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+        .card-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .card-title { font-size: 1rem; font-weight: 600; }
+
+        .config-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; margin-bottom: 32px; }
+        .config-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+        .config-card-header { display: flex; align-items: start; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+        .config-logo { width: 48px; height: 48px; background: var(--bg-input); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; overflow: hidden; }
+        .config-logo img { width: 100%; height: 100%; object-fit: cover; }
+        .config-info { flex: 1; }
+        .config-name { font-weight: 600; color: var(--text-primary); }
+        .config-domain { font-size: 0.75rem; color: var(--text-secondary); }
+        .config-status { display: inline-flex; align-items: center; gap: 4px; font-size: 0.7rem; padding: 3px 8px; border-radius: 4px; font-weight: 600; text-transform: uppercase; background: rgba(34, 197, 94, 0.15); color: var(--success); }
+        .config-status.draft { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+        .config-colors { display: flex; gap: 4px; margin: 8px 0; }
+        .color-swatch { width: 20px; height: 20px; border-radius: 4px; border: 1px solid var(--border); }
+        .config-actions { display: flex; gap: 8px; }
+        .btn { padding: 8px 16px; font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 500; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+        .btn-small { padding: 6px 12px; font-size: 0.8rem; }
+        .btn-primary { background: var(--admin); color: white; border: none; }
+        .btn-primary:hover { background: #5a95e8; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); }
+        .btn-outline:hover { border-color: var(--text-primary); color: var(--text-primary); }
+        .btn-danger { background: transparent; border: 1px solid var(--error); color: var(--error); }
+        .btn-danger:hover { background: var(--error); color: white; }
+
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px 14px; font-family: 'Inter', sans-serif; font-size: 0.95rem; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); resize: vertical; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--admin); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .form-row.full { grid-template-columns: 1fr; }
+
+        .drop-zone { margin-bottom: 16px; padding: 20px; background: var(--bg-input); border: 2px dashed var(--border); border-radius: 8px; text-align: center; cursor: pointer; transition: all 0.2s; }
+        .drop-zone:hover { border-color: var(--accent); background: rgba(96, 165, 250, 0.05); }
+        .drop-zone.drag-over { border-color: var(--accent); background: rgba(96, 165, 250, 0.1); }
+        .drop-zone-icon { font-size: 2rem; margin-bottom: 8px; }
+        .drop-zone-text { font-size: 0.9rem; margin-bottom: 4px; }
+        .drop-zone-hint { font-size: 0.8rem; color: var(--text-secondary); }
+
+        .logo-preview { width: 60px; height: 60px; background: var(--bg-input); border-radius: 6px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid var(--border); }
+        .logo-preview img { width: 100%; height: 100%; object-fit: contain; }
+
+        .color-picker-group { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .color-input-wrapper { display: flex; gap: 8px; align-items: center; }
+        .color-input { width: 50px; height: 40px; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; padding: 2px; }
+        .color-input::-webkit-color-swatch-wrapper { padding: 0; }
+        .color-hex-input { flex: 1; padding: 10px 12px; font-family: monospace; font-size: 0.85rem; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; color: var(--text-primary); }
+        .color-hex-input:focus { outline: none; border-color: var(--admin); }
+
+        .preview-strip { display: flex; gap: 8px; margin: 16px 0; height: 40px; }
+        .preview-swatch { flex: 1; border-radius: 6px; border: 1px solid var(--border); }
+
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 100; justify-content: center; align-items: center; padding: 20px; }
+        .modal-overlay.show { display: flex; }
+        .modal { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 800px; max-height: 90vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 24px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg-card); z-index: 10; }
+        .modal-header h2 { font-size: 1.25rem; }
+        .modal-close { background: transparent; border: none; color: var(--text-secondary); font-size: 1.5rem; cursor: pointer; }
+        .modal-body { padding: 24px; }
+        .modal-footer { display: flex; gap: 12px; justify-content: flex-end; padding: 24px; border-top: 1px solid var(--border); background: var(--bg-input); }
+
+        .preview-panel { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+        .preview-section { margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+        .preview-section:last-child { border-bottom: none; }
+        .preview-title { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); font-weight: 600; margin-bottom: 12px; }
+
+        .preview-login { background: var(--bg-input); border-radius: 8px; padding: 16px; text-align: center; }
+        .preview-app-name { font-size: 1.2rem; font-weight: 700; margin-bottom: 4px; }
+        .preview-tagline { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 12px; }
+        .preview-logo { width: 40px; height: 40px; margin: 0 auto 12px; }
+        .preview-logo img { width: 100%; height: 100%; object-fit: contain; }
+
+        .preview-sidebar { background: var(--bg-input); border-radius: 8px; padding: 12px; margin-bottom: 12px; }
+        .preview-sidebar-item { padding: 8px 10px; border-radius: 6px; font-size: 0.8rem; margin-bottom: 4px; color: var(--text-secondary); }
+        .preview-sidebar-item.active { background: var(--bg-dark); }
+
+        .code-block { background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; padding: 12px; font-family: 'Courier New', monospace; font-size: 0.75rem; color: var(--accent); overflow-x: auto; white-space: pre; margin: 12px 0; }
+
+        .checkbox-label { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; cursor: pointer; }
+        .checkbox-label input { width: 18px; height: 18px; cursor: pointer; }
+
+        .loading { text-align: center; padding: 40px; color: var(--text-secondary); }
+
+        @media (max-width: 600px) {
+            .form-row { grid-template-columns: 1fr; }
+            .color-picker-group { grid-template-columns: 1fr; }
+        }
+    
+        /* Light Mode */
+        .light-mode { --bg-dark: #f5f5f5; --bg-card: #ffffff; --bg-input: #e8e8e8; --bg-hover: #e8e8e8; --border: #d0d0d0; --text-primary: #1a1a1a; --text-secondary: #555555; --text-muted: #888888; }
+        .light-mode .sidebar, .light-mode .admin-sidebar { background: #ffffff !important; border-color: #d0d0d0 !important; }
+        .light-mode .sidebar-logo, .light-mode .admin-sidebar-logo { color: #3b82f6 !important; }
+        .light-mode .nav-item, .light-mode .admin-nav-item { color: #555555 !important; }
+        .light-mode .nav-item:hover, .light-mode .admin-nav-item:hover { background: #e8e8e8 !important; color: #1a1a1a !important; }
+        .light-mode .nav-item.active, .light-mode .admin-nav-item.active { background: #dbeafe !important; color: #2563eb !important; }
+        .light-mode .nav-section-title, .light-mode .admin-nav-section { color: #888888 !important; }
+        .light-mode .user-menu { background: #e8e8e8 !important; }
+        .light-mode .user-name { color: #1a1a1a !important; }
+        .light-mode .header { background: #ffffff !important; border-color: #d0d0d0 !important; }
+        .light-mode .header h1 { color: #1a1a1a !important; }
+        .light-mode .header-subtitle { color: #555555 !important; }
+        .light-mode .main, .light-mode .content, .light-mode .admin-main { background: #f5f5f5 !important; }
+        .light-mode .card, .light-mode .stat-card, .light-mode .metric-card, .light-mode .admin-card { background: #ffffff !important; border-color: #d0d0d0 !important; }
+        .light-mode .card-title, .light-mode .stat-label { color: #1a1a1a !important; }
+        .light-mode .card-subtitle { color: #555555 !important; }
+        .light-mode input, .light-mode textarea, .light-mode select { background: #e8e8e8 !important; border-color: #d0d0d0 !important; color: #1a1a1a !important; }
+        .light-mode input::placeholder, .light-mode textarea::placeholder { color: #888888 !important; }
+        .light-mode .form-label, .light-mode label { color: #1a1a1a !important; }
+        .light-mode .badge { background: #dbeafe !important; color: #2563eb !important; }
+        .light-mode .btn-secondary { background: #e8e8e8 !important; color: #1a1a1a !important; border-color: #d0d0d0 !important; }
+        .light-mode .btn-secondary:hover { background: #d0d0d0 !important; }
+        .light-mode .sidebar-footer, .light-mode .admin-sidebar-footer { border-color: #d0d0d0 !important; }
+        .light-mode .logout-btn:hover { background: #e8e8e8 !important; }
+        .light-mode table th { background: #e8e8e8 !important; color: #1a1a1a !important; border-color: #d0d0d0 !important; }
+        .light-mode table td { border-color: #d0d0d0 !important; color: #1a1a1a !important; }
+        .light-mode table tr:hover { background: #e8e8e8 !important; }
+        .light-mode .modal-overlay { background: rgba(0,0,0,0.3) !important; }
+        .light-mode .modal, .light-mode .modal-content { background: #ffffff !important; border-color: #d0d0d0 !important; color: #1a1a1a !important; }
+        .light-mode.light-mode .search-box, .light-mode .search-input { background: #e8e8e8 !important; border-color: #d0d0d0 !important; color: #1a1a1a !important; }
+        .light-mode .tab, .light-mode .tab-btn { color: #555555 !important; }
+        .light-mode .tab.active, .light-mode .tab-btn.active { color: #3b82f6 !important; border-color: #3b82f6 !important; }
+        .light-mode .dropdown, .light-mode .dropdown-menu { background: #ffffff !important; border-color: #d0d0d0 !important; }
+        .light-mode .dropdown-item:hover { background: #e8e8e8 !important; }
+        .light-mode .toggle-switch { background: #d0d0d0 !important; }
+        .light-mode .toggle-switch.active { background: #2563eb !important; }
+        .light-mode .tooltip { background: #1a1a1a !important; color: #ffffff !important; }
+        .light-mode .progress-bar { background: #e8e8e8 !important; }
+        .light-mode .empty-state { color: #555555 !important; }
+        .light-mode .filter-bar, .light-mode .toolbar { background: #ffffff !important; border-color: #d0d0d0 !important; }
+        .light-mode .chip { background: #e8e8e8 !important; color: #1a1a1a !important; }
+        .light-mode pre, .light-mode code { background: #e8e8e8 !important; color: #1a1a1a !important; }
+        .light-mode .status-badge { border-color: #d0d0d0 !important; }
+        .light-mode ::selection { background: #3b82f6; color: #ffffff; }
+        .light-mode ::-webkit-scrollbar-track { background: #f5f5f5; }
+        .light-mode ::-webkit-scrollbar-thumb { background: #d0d0d0; }
+        .light-mode ::-webkit-scrollbar-thumb:hover { background: #bbbbbb; }
+
+/* Sidebar */
+        .admin-sidebar { width: 260px; background: var(--bg-card); border-right: 1px solid var(--border); padding: 24px 16px; position: fixed; left: 0; top: 0; height: 100vh; overflow-y: auto; z-index: 99; display: flex; flex-direction: column; }
+        .admin-sidebar-logo { font-size: 1.1rem; font-weight: 700; color: var(--admin); margin-bottom: 16px; }
+        .admin-nav-section { margin-bottom: 24px; }
+        .admin-nav-section-title { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); padding: 0 12px; margin-bottom: 8px; letter-spacing: 0.5px; }
+        .admin-nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; color: #b8b0a8; text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: all 0.2s; cursor: pointer; margin-bottom: 4px; }
+        .admin-nav-item:hover { background: var(--bg-hover); color: var(--text-primary); }
+        .admin-nav-item.active { background: rgba(96, 165, 250, 0.15); color: var(--admin); }
+        .admin-nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+        .admin-sidebar-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border); }
+        .admin-sidebar nav { flex: 1; overflow-y: auto; }
+        .main-content { flex: 1; margin-left: 260px; }
+
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .admin-sidebar { width: 100%; height: auto; position: relative; left: auto; top: auto; border-right: none; border-bottom: 1px solid var(--border); padding: 12px; margin-bottom: 20px; }
+            .main-content { margin-left: 0; }
+        }
+
+</style>
+</head>
+<body>
+        <aside class="admin-sidebar" id="adminSidebar">
+        <div class="admin-sidebar-logo">FLEETCONNECT</div>
+<nav id="sidebarNav"></nav>
+        <div class="admin-sidebar-footer">
+            <div style="padding: 12px; background: var(--bg-hover, #333); border-radius: 8px;">
+                <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary, #f5f0e8); margin-bottom: 4px;" id="adminUserName">System Admin</div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary, #888);">Administrator</div>
+                <button onclick="logout()" style="margin-top: 8px; width: 100%; padding: 6px; background: transparent; border: 1px solid #333; color: #888; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 0.75rem; cursor: pointer; transition: all 0.2s;">Logout</button>
+            </div>
+        </div>
+    </aside>
+
+    <div class="main-content">
+    <div class="container">
+
+        <header class="header">
+            <h1>White-Label Support</h1>
+            <p>Customize branding and allow rental companies to see FleetConnect as their own platform</p>
+        </header>
+
+        <!-- Existing Configurations -->
+        <div style="margin-bottom: 32px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h2 class="section-title">Brand Configurations</h2>
+                <button class="btn btn-primary" onclick="openCreateModal()">+ Create New</button>
+            </div>
+
+            <div class="config-list" id="configList">
+                <div class="loading">Loading configurations...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create/Edit Modal -->
+    <div class="modal-overlay" id="configModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="modalTitle">Create Brand Configuration</h2>
+                <button class="modal-close" onclick="closeModal()" aria-label="Close">×</button>
+            </div>
+
+            <div class="modal-body">
+                <div class="main-grid">
+                    <!-- Form -->
+                    <div>
+                        <div class="form-group">
+                            <label>Company Name *</label>
+                            <select id="formCompany" style="cursor: pointer;">
+                                <option value="">Select a rental company...</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>App Name (replaces "FleetConnect") *</label>
+                            <input type="text" id="formAppName" placeholder="e.g., PowerPlus Logistics">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Tagline</label>
+                            <input type="text" id="formTagline" placeholder="e.g., Fleet Management Made Simple">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Custom Domain (informational)</label>
+                            <input type="text" id="formDomain" placeholder="e.g., app.powerplus.com" readonly style="opacity: 0.6; cursor: not-allowed;">
+                        </div>
+
+                        <h3 class="section-title" style="margin-top: 24px;">Logo</h3>
+                        <div class="form-group">
+                            <label>Logo Upload (PNG/SVG, max 2MB)</label>
+                            <div class="drop-zone" id="logoDropZone">
+                                <div class="drop-zone-icon">📁</div>
+                                <div class="drop-zone-text">Drag & drop logo or click to select</div>
+                                <div class="drop-zone-hint">PNG or SVG, max 2MB</div>
+                                <input type="file" id="logoInput" accept=".png,.svg" style="display: none;" onchange="handleLogoUpload(event)">
+                            </div>
+                            <div style="display: flex; gap: 12px; align-items: center; margin-top: 12px;">
+                                <div class="logo-preview" id="logoPreview"></div>
+                                <span style="font-size: 0.8rem; color: var(--text-secondary);" id="logoName">No file selected</span>
+                            </div>
+                        </div>
+
+                        <h3 class="section-title" style="margin-top: 24px;">Color Scheme</h3>
+                        <div class="color-picker-group">
+                            <div class="form-group">
+                                <label>Primary Color</label>
+                                <div class="color-input-wrapper">
+                                    <input type="color" id="formPrimaryColor" class="color-input" onchange="updateColorPreview()">
+                                    <input type="text" id="formPrimaryHex" class="color-hex-input" placeholder="#60a5fa" onchange="updateColorPreview()">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Secondary Color</label>
+                                <div class="color-input-wrapper">
+                                    <input type="color" id="formSecondaryColor" class="color-input" onchange="updateColorPreview()">
+                                    <input type="text" id="formSecondaryHex" class="color-hex-input" placeholder="#3b82f6" onchange="updateColorPreview()">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Accent Color</label>
+                                <div class="color-input-wrapper">
+                                    <input type="color" id="formAccentColor" class="color-input" onchange="updateColorPreview()">
+                                    <input type="text" id="formAccentHex" class="color-hex-input" placeholder="#60a5fa" onchange="updateColorPreview()">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Text Color</label>
+                                <div class="color-input-wrapper">
+                                    <input type="color" id="formTextColor" class="color-input" onchange="updateColorPreview()">
+                                    <input type="text" id="formTextHex" class="color-hex-input" placeholder="#f5f0e8" onchange="updateColorPreview()">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Background Color</label>
+                            <div class="color-input-wrapper">
+                                <input type="color" id="formBgColor" class="color-input" onchange="updateColorPreview()">
+                                <input type="text" id="formBgHex" class="color-hex-input" placeholder="#1a1a1a" onchange="updateColorPreview()">
+                            </div>
+                        </div>
+
+                        <h3 class="section-title" style="margin-top: 24px;">Email Template</h3>
+                        <div class="form-group">
+                            <label>Header Color (emails)</label>
+                            <input type="color" id="formEmailHeaderColor" onchange="updateColorPreview()">
+                        </div>
+                        <div class="form-group">
+                            <label>Footer Text</label>
+                            <input type="text" id="formFooterText" placeholder="e.g., © 2026 PowerPlus Logistics">
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="formLogoInEmails">
+                                Include custom logo in emails
+                            </label>
+                        </div>
+
+                        <h3 class="section-title" style="margin-top: 24px;">Status</h3>
+                        <div class="form-group">
+                            <label>Configuration Status</label>
+                            <select id="formStatus">
+                                <option value="draft">Draft</option>
+                                <option value="active">Active</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Live Preview -->
+                    <div>
+                        <h3 class="section-title">Live Preview</h3>
+                        <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+                            <button class="btn btn-small btn-outline" onclick="switchPreviewMode('dark')" id="previewDarkBtn" style="flex: 1; background: var(--accent); color: white;">Dark Mode</button>
+                            <button class="btn btn-small btn-outline" onclick="switchPreviewMode('light')" id="previewLightBtn" style="flex: 1;">Light Mode</button>
+                        </div>
+
+                        <div class="preview-panel" id="previewPanel">
+                            <!-- Login Preview -->
+                            <div class="preview-section">
+                                <div class="preview-title">Login Page</div>
+                                <div class="preview-login" id="previewLogin">
+                                    <div class="preview-logo">
+                                        <div style="width: 100%; height: 100%; background: var(--accent); border-radius: 4px;"></div>
+                                    </div>
+                                    <div class="preview-app-name" id="previewAppName">FleetConnect</div>
+                                    <div class="preview-tagline" id="previewTagline">Fleet Management Platform</div>
+                                </div>
+                            </div>
+
+                            <!-- Sidebar Preview -->
+                            <div class="preview-section">
+                                <div class="preview-title">Sidebar</div>
+                                <div class="preview-sidebar">
+                                    <div class="preview-sidebar-item active">🏠 Dashboard</div>
+                                    <div class="preview-sidebar-item">📋 Work Orders</div>
+                                    <div class="preview-sidebar-item">📄 Invoices</div>
+                                    <div class="preview-sidebar-item">⚙️ Settings</div>
+                                </div>
+                            </div>
+
+                            <!-- Color Swatches -->
+                            <div class="preview-section">
+                                <div class="preview-title">Color Palette</div>
+                                <div class="preview-strip">
+                                    <div class="preview-swatch" id="swatchPrimary" style="background: #60a5fa;"></div>
+                                    <div class="preview-swatch" id="swatchSecondary" style="background: #3b82f6;"></div>
+                                    <div class="preview-swatch" id="swatchAccent" style="background: #60a5fa;"></div>
+                                    <div class="preview-swatch" id="swatchText" style="background: #f5f0e8;"></div>
+                                    <div class="preview-swatch" id="swatchBg" style="background: #1a1a1a;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CSS Variables Output -->
+                <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <h3 class="section-title" style="margin: 0;">Generated CSS Variables</h3>
+                        <button class="btn btn-small btn-outline" onclick="copyCSSVariables()">Copy CSS</button>
+                    </div>
+                    <div class="code-block" id="cssOutput">:root {
+  --brand-primary: #60a5fa;
+  --brand-secondary: #3b82f6;
+  --brand-accent: #60a5fa;
+  --brand-text: #f5f0e8;
+  --brand-bg: #1a1a1a;
+}</div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveConfig()">Save Configuration</button>
+            </div>
+        </div>
+    </div>
+
+    </div>
+
+    
+    <script src="supabase-client.js"></script>
+    <script src="sidebar.js"></script>
+    <script>
+        let editingConfigId = null;
+        let currentPreviewMode = 'dark';
+        let mockConfigurations = [
+            {
+                id: 1,
+                company: 'PowerPlus Logistics',
+                appName: 'PowerPlus Fleet',
+                logo: '🏢',
+                colors: { primary: '#ff6b35', secondary: '#f7931e', accent: '#ff6b35' },
+                domain: 'app.powerplus.com',
+                status: 'active'
+            },
+            {
+                id: 2,
+                company: 'GreenHaul Inc',
+                appName: 'GreenHaul Manager',
+                logo: '🌱',
+                colors: { primary: '#22c55e', secondary: '#16a34a', accent: '#22c55e' },
+                domain: 'fleet.greenhaul.io',
+                status: 'active'
+            },
+            {
+                id: 3,
+                company: 'AeroFleet Solutions',
+                appName: 'AeroFleet Pro',
+                logo: '✈️',
+                colors: { primary: '#3b82f6', secondary: '#1e40af', accent: '#0ea5e9' },
+                domain: 'manage.aerofleet.com',
+                status: 'draft'
+            },
+        ];
+
+        const currentUser = checkAuth(['admin']);
+        if (currentUser) {
+            var _admi = document.getElementById('adminUserName'); if(_admi) _admi.textContent = currentUser.name;
+        }
+
+        function loadConfigurations() {
+            renderConfigList();
+        }
+
+        function renderConfigList() {
+            const html = mockConfigurations.map(config => `
+                <div class="config-card">
+                    <div class="config-card-header">
+                        <div class="config-logo">${config.logo}</div>
+                        <div class="config-info" style="flex: 1;">
+                            <div class="config-name">${safe(config.company)}</div>
+                            <div class="config-domain">${safe(config.appName)}</div>
+                        </div>
+                        <div class="config-status ${config.status === 'draft' ? 'draft' : ''}">${config.status}</div>
+                    </div>
+                    <div class="config-colors">
+                        <div class="color-swatch" style="background: ${config.colors.primary};"></div>
+                        <div class="color-swatch" style="background: ${config.colors.secondary};"></div>
+                        <div class="color-swatch" style="background: ${config.colors.accent};"></div>
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 12px;">
+                        <strong>Domain:</strong> ${safe(config.domain)}
+                    </div>
+                    <div class="config-actions">
+                        <button class="btn btn-small btn-outline" onclick="editConfig(${config.id})">Edit</button>
+                        <button class="btn btn-small btn-outline" onclick="previewConfig(${config.id})">Preview</button>
+                        <button class="btn btn-small btn-danger" onclick="deleteConfig(${config.id})">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+
+            var _conf = document.getElementById('configList'); if(_conf) _conf.innerHTML = html || '<div class="loading">No configurations yet</div>';
+        }
+
+        function openCreateModal() {
+            editingConfigId = null;
+            var _moda = document.getElementById('modalTitle'); if(_moda) _moda.textContent = 'Create Brand Configuration';
+            resetForm();
+            var _conf = document.getElementById('configModal'); if(_conf) _conf.classList.add('show');
+        }
+
+        function editConfig(id) {
+            const config = mockConfigurations.find(c => c.id === id);
+            if (!config) return;
+
+            editingConfigId = id;
+            var _moda = document.getElementById('modalTitle'); if(_moda) _moda.textContent = 'Edit Brand Configuration';
+
+            document.getElementById('formCompany').value = config.company;
+            document.getElementById('formAppName').value = config.appName;
+            document.getElementById('formDomain').value = config.domain;
+            document.getElementById('formStatus').value = config.status;
+
+            document.getElementById('formPrimaryColor').value = config.colors.primary;
+            document.getElementById('formPrimaryHex').value = config.colors.primary;
+            document.getElementById('formSecondaryColor').value = config.colors.secondary;
+            document.getElementById('formSecondaryHex').value = config.colors.secondary;
+            document.getElementById('formAccentColor').value = config.colors.accent;
+            document.getElementById('formAccentHex').value = config.colors.accent;
+
+            updateColorPreview();
+            var _conf = document.getElementById('configModal'); if(_conf) _conf.classList.add('show');
+        }
+
+        function previewConfig(id) {
+            const config = mockConfigurations.find(c => c.id === id);
+            if (!config) return;
+
+            alert('Preview for ' + safe(config.appName) + ':\n\nDomain: ' + safe(config.domain) + '\nApp Name: ' + safe(config.appName) + '\nColors: ' + JSON.stringify(config.colors) + '\n\nIn production, this would show a live preview of the complete branded platform.');
+        }
+
+        function deleteConfig(id) {
+            if (!confirm('Delete this configuration? This cannot be undone.')) return;
+
+            mockConfigurations = mockConfigurations.filter(c => c.id !== id);
+            renderConfigList();
+        }
+
+        function handleLogoUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (file.size > 2 * 1024 * 1024) {
+                alert('File size must be less than 2MB');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                var _logo = document.getElementById('logoName'); if(_logo) _logo.textContent = file.name;
+                var _logo = document.getElementById('logoPreview'); if(_logo) _logo.innerHTML = `<img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: contain;">`;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function updateColorPreview() {
+            const primary = document.getElementById('formPrimaryColor').value;
+            const secondary = document.getElementById('formSecondaryColor').value;
+            const accent = document.getElementById('formAccentColor').value;
+            const text = document.getElementById('formTextColor').value;
+            const bg = document.getElementById('formBgColor').value;
+
+            var _swat = document.getElementById('swatchPrimary'); if(_swat) _swat.style.background = primary;
+            var _swat = document.getElementById('swatchSecondary'); if(_swat) _swat.style.background = secondary;
+            var _swat = document.getElementById('swatchAccent'); if(_swat) _swat.style.background = accent;
+            var _swat = document.getElementById('swatchText'); if(_swat) _swat.style.background = text;
+            var _swat = document.getElementById('swatchBg'); if(_swat) _swat.style.background = bg;
+
+            var _prev = document.getElementById('previewAppName'); if(_prev) _prev.style.color = text;
+            var _prev = document.getElementById('previewTagline'); if(_prev) _prev.style.color = text || 'rgba(255, 255, 255, 0.6)';
+
+            updateCSSOutput(primary, secondary, accent, text, bg);
+        }
+
+        function updateCSSOutput(primary, secondary, accent, text, bg) {
+            const css = `:root {
+  --brand-primary: ${primary};
+  --brand-secondary: ${secondary};
+  --brand-accent: ${accent};
+  --brand-text: ${text};
+  --brand-bg: ${bg};
+}`;
+            var _cssO = document.getElementById('cssOutput'); if(_cssO) _cssO.textContent = css;
+        }
+
+        function copyCSSVariables() {
+            const text = document.getElementById('cssOutput').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('CSS variables copied to clipboard!');
+            }).catch(() => {
+                alert('Failed to copy. Please copy manually.');
+            });
+        }
+
+        function switchPreviewMode(mode) {
+            currentPreviewMode = mode;
+            var _prev = document.getElementById('previewDarkBtn'); if(_prev) _prev.style.background = mode === 'dark' ? 'var(--accent)' : 'transparent';
+            var _prev = document.getElementById('previewDarkBtn'); if(_prev) _prev.style.color = mode === 'dark' ? 'white' : 'var(--text-secondary)';
+            var _prev = document.getElementById('previewLightBtn'); if(_prev) _prev.style.background = mode === 'light' ? 'var(--accent)' : 'transparent';
+            var _prev = document.getElementById('previewLightBtn'); if(_prev) _prev.style.color = mode === 'light' ? 'white' : 'var(--text-secondary)';
+
+            const panel = document.getElementById('previewPanel');
+            if (mode === 'light') {
+                panel.style.background = '#f5f0e8';
+                panel.style.color = '#1a1a1a';
+                var _prev = document.getElementById('previewLogin'); if(_prev) _prev.style.background = 'white';
+                document.getElementById('previewSidebar')?.style.background = '#f0ebe3';
+            } else {
+                panel.style.background = 'var(--bg-card)';
+                panel.style.color = 'var(--text-primary)';
+                var _prev = document.getElementById('previewLogin'); if(_prev) _prev.style.background = 'var(--bg-input)';
+            }
+        }
+
+        function saveConfig() {
+            const company = document.getElementById('formCompany').value;
+            const appName = document.getElementById('formAppName').value;
+
+            if (!company || !appName) {
+                alert('Please fill in all required fields');
+                return;
+            }
+
+            const colors = {
+                primary: document.getElementById('formPrimaryColor').value,
+                secondary: document.getElementById('formSecondaryColor').value,
+                accent: document.getElementById('formAccentColor').value
+            };
+
+            if (editingConfigId) {
+                const config = mockConfigurations.find(c => c.id === editingConfigId);
+                if (config) {
+                    config.company = company;
+                    config.appName = appName;
+                    config.colors = colors;
+                    config.status = document.getElementById('formStatus').value;
+                }
+            } else {
+                const newId = Math.max(...mockConfigurations.map(c => c.id), 0) + 1;
+                mockConfigurations.push({
+                    id: newId,
+                    company: company,
+                    appName: appName,
+                    logo: '🏷️',
+                    colors: colors,
+                    domain: 'app.' + company.toLowerCase().replace(/\s+/g, '') + '.com',
+                    status: document.getElementById('formStatus').value
+                });
+            }
+
+            closeModal();
+            renderConfigList();
+        }
+
+        function resetForm() {
+            document.getElementById('formCompany').value = '';
+            document.getElementById('formAppName').value = '';
+            document.getElementById('formTagline').value = '';
+            document.getElementById('formDomain').value = '';
+            document.getElementById('formStatus').value = 'draft';
+            document.getElementById('formPrimaryColor').value = '#60a5fa';
+            document.getElementById('formPrimaryHex').value = '#60a5fa';
+            document.getElementById('formSecondaryColor').value = '#3b82f6';
+            document.getElementById('formSecondaryHex').value = '#3b82f6';
+            document.getElementById('formAccentColor').value = '#60a5fa';
+            document.getElementById('formAccentHex').value = '#60a5fa';
+            document.getElementById('formTextColor').value = '#f5f0e8';
+            document.getElementById('formTextHex').value = '#f5f0e8';
+            document.getElementById('formBgColor').value = '#1a1a1a';
+            document.getElementById('formBgHex').value = '#1a1a1a';
+            var _logo = document.getElementById('logoName'); if(_logo) _logo.textContent = 'No file selected';
+            var _logo = document.getElementById('logoPreview'); if(_logo) _logo.innerHTML = '';
+            updateColorPreview();
+        }
+
+        function closeModal() {
+            var _conf = document.getElementById('configModal'); if(_conf) _conf.classList.remove('show');
+        }
+
+        // Drag and drop for logo
+        const dropZone = document.getElementById('logoDropZone');
+        if (dropZone) {
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('drag-over');
+            });
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('drag-over');
+            });
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('drag-over');
+                if (e.dataTransfer.files.length > 0) {
+                    document.getElementById('logoInput').files = e.dataTransfer.files;
+                    handleLogoUpload({ target: { files: e.dataTransfer.files } });
+                }
+            });
+            dropZone.addEventListener('click', () => {
+                document.getElementById('logoInput').click();
+            });
+        }
+
+        // Load companies for dropdown
+        function loadCompanies() {
+            const companies = mockConfigurations.map(c => c.company);
+            const select = document.getElementById('formCompany');
+            select.innerHTML = '<option value="">Select a rental company...</option>';
+            companies.forEach(comp => {
+                const option = document.createElement('option');
+                option.value = comp;
+                option.textContent = comp;
+                select.appendChild(option);
+            });
+        }
+
+        // Initial load
+        loadCompanies();
+        loadConfigurations();
+    </script>
+    
+<script src="hamburger-menu.js"></script>
+<script src="global-search.js"></script>
+<script src="notification-center.js"></script>
+</body>
+</html>

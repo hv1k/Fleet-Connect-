@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <script>
+      // Theme init - prevent flash of wrong theme
+      (function(){
+        var t = localStorage.getItem('fleetconnect-theme');
+        if(t === 'light') document.documentElement.classList.add('light-mode');
+      })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Work Orders | FleetConnect</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg-dark: #1a1a1a;
+            --bg-card: #242424;
+            --bg-hover: #333;
+            --border: #333;
+            --text-primary: #e8e0d8;
+            --text-secondary: #b8b0a8;
+            --text-muted: #888;
+            --accent: #3b82f6;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --admin: #60a5fa;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #1a1a1a; color: #f5f0e8; min-height: 100vh; display: flex; }
+        .layout { display: flex; min-height: 100vh; }
+
+        /* Sidebar */
+        nav { flex: 1; overflow-y: auto; }
+
+        /* Main */
+        .header { padding: 24px 32px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+        .header-left { display: flex; align-items: center; gap: 12px; }
+        .header h1 { font-size: 1.4rem; font-weight: 700; }
+        .header-subtitle { font-size: 0.85rem; color: #888; margin-top: 2px; }
+        .content { padding: 24px 32px; }
+
+        /* Stats row */
+        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: #242424; border: 1px solid #333; border-radius: 14px; padding: 18px 20px; }
+        .stat-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: #888; letter-spacing: 0.3px; display: flex; align-items: center; gap: 6px; }
+        .stat-label svg { width: 15px; height: 15px; }
+        .stat-value { font-size: 1.8rem; font-weight: 700; color: #f5f0e8; margin-top: 6px; }
+
+        /* Search & Filters */
+        .filters-card { background: #242424; border: 1px solid #333; border-radius: 14px; padding: 16px 20px; margin-bottom: 24px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+        .search-input { flex: 1; min-width: 220px; padding: 10px 14px 10px 38px; border: 1px solid #444; border-radius: 8px; font-size: 0.85rem; font-family: inherit; background: #2a2a2a url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23666'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'/%3E%3C/svg%3E") 12px center no-repeat; background-size: 16px; color: #f5f0e8; }
+        .search-input:focus { outline: none; border-color: #60a5fa; }
+        .search-input::placeholder { color: #666; }
+        .filter-select { padding: 10px 14px; border: 1px solid #444; border-radius: 8px; font-size: 0.85rem; font-family: inherit; background: #2a2a2a; color: #f5f0e8; cursor: pointer; }
+        .filter-select:focus { outline: none; border-color: #60a5fa; }
+        .results-count { font-size: 0.8rem; color: #888; margin-left: auto; white-space: nowrap; }
+
+        /* Jobs list */
+        .jobs-list { display: flex; flex-direction: column; gap: 12px; }
+        .job-card { background: #242424; border: 1px solid #333; border-radius: 14px; padding: 20px 24px; cursor: pointer; transition: all 0.15s; }
+        .job-card:hover { border-color: #60a5fa; background: #282828; }
+        .job-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+        .job-title { font-size: 1rem; font-weight: 600; color: #f5f0e8; margin-bottom: 3px; }
+        .job-meta { font-size: 0.8rem; color: #888; display: flex; gap: 12px; flex-wrap: wrap; }
+        .job-meta span { color: #60a5fa; font-weight: 500; }
+        .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; text-transform: capitalize; flex-shrink: 0; }
+        .status-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+        .status-badge.pending { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
+        .status-badge.assigned, .status-badge.accepted { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
+        .status-badge.in-progress { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+        .status-badge.completed { background: rgba(148, 163, 184, 0.15); color: #94a3b8; }
+        .status-badge.open { background: rgba(96, 165, 250, 0.1); color: #60a5fa; }
+        .job-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; padding: 14px 16px; background: #2a2a2a; border-radius: 10px; }
+        .job-grid-label { font-size: 0.65rem; font-weight: 600; text-transform: uppercase; color: #666; margin-bottom: 3px; letter-spacing: 0.3px; }
+        .job-grid-value { font-size: 0.85rem; color: #f5f0e8; }
+        .job-actions { display: flex; gap: 8px; margin-top: 14px; }
+        .btn { padding: 8px 16px; border-radius: 8px; font-size: 0.8rem; font-weight: 500; font-family: inherit; cursor: pointer; border: none; transition: all 0.15s; }
+        .btn-primary { background: #60a5fa; color: #1a1a1a; }
+        .btn-primary:hover { background: #3b82f6; }
+        .btn-secondary { background: #333; color: #f5f0e8; }
+        .btn-secondary:hover { background: #444; }
+        .btn-invoice { background: rgba(96, 165, 250, 0.1); color: #60a5fa; border: 1px solid rgba(96, 165, 250, 0.3); }
+        .btn-invoice:hover { background: rgba(96, 165, 250, 0.2); }
+        .btn-accept { background: #22c55e; color: #fff; }
+        .btn-accept:hover { background: #16a34a; }
+        .btn-decline { background: transparent; color: #f87171; border: 1px solid rgba(248,113,113,0.4); }
+        .btn-decline:hover { background: rgba(248,113,113,0.1); }
+        .btn-danger { background: #dc2626; color: #fff; }
+        .btn-danger:hover { background: #b91c1c; }
+
+        /* Confirm Modal */
+        .confirm-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 300; align-items: center; justify-content: center; padding: 20px; }
+        .confirm-overlay.show { display: flex; }
+        .confirm-box { background: #242424; border: 1px solid #333; border-radius: 16px; max-width: 440px; width: 100%; }
+        .confirm-header { padding: 20px 24px 0; display: flex; align-items: center; gap: 12px; }
+        .confirm-icon { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; }
+        .confirm-icon.warning { background: rgba(251,191,36,0.15); }
+        .confirm-body { padding: 16px 24px 24px; }
+        .confirm-title { font-size: 1.05rem; font-weight: 600; }
+        .confirm-text { font-size: 0.85rem; color: #999; line-height: 1.6; margin-top: 12px; }
+        .confirm-text strong { color: #fbbf24; font-weight: 600; }
+        .confirm-footer { padding: 16px 24px; border-top: 1px solid #333; display: flex; gap: 10px; justify-content: flex-end; background: #2a2a2a; border-radius: 0 0 16px 16px; }
+        .toast { position: fixed; bottom: 24px; right: 24px; padding: 14px 20px; border-radius: 10px; font-size: 0.85rem; font-weight: 500; z-index: 400; transform: translateY(100px); opacity: 0; transition: all 0.3s; }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.success { background: #16a34a; color: #fff; }
+        .toast.error { background: #dc2626; color: #fff; }
+
+        /* Modal */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 200; align-items: flex-start; justify-content: center; padding: 40px 20px; overflow-y: auto; }
+        .modal-overlay.show { display: flex; }
+        .modal { background: #242424; border-radius: 16px; width: 100%; max-width: 800px; border: 1px solid #333; }
+        .modal-header { padding: 20px 24px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { font-size: 1.1rem; font-weight: 600; }
+        .modal-close { width: 32px; height: 32px; border-radius: 8px; border: none; background: #333; color: #888; cursor: pointer; font-size: 1.1rem; }
+        .modal-close:hover { background: #444; color: #f5f0e8; }
+        .modal-body { padding: 24px; max-height: 70vh; overflow-y: auto; }
+        .modal-footer { padding: 16px 24px; border-top: 1px solid #333; display: flex; justify-content: flex-end; gap: 10px; background: #2a2a2a; border-radius: 0 0 16px 16px; }
+
+        .detail-section { margin-bottom: 20px; }
+        .detail-section-title { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: #60a5fa; margin-bottom: 10px; letter-spacing: 0.5px; }
+        .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .detail-item { padding: 12px 14px; background: #2a2a2a; border-radius: 8px; }
+        .detail-item.full { grid-column: span 2; }
+        .detail-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: #666; margin-bottom: 3px; letter-spacing: 0.3px; }
+        .detail-value { font-size: 0.9rem; color: #f5f0e8; }
+
+        .equipment-list { display: flex; flex-direction: column; gap: 6px; }
+        .equipment-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #2a2a2a; border-radius: 8px; }
+        .equipment-num { font-weight: 600; color: #60a5fa; }
+        .equipment-desc { font-size: 0.85rem; color: #888; }
+
+        .delivery-item { padding: 12px 16px; background: #2a2a2a; border-radius: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .delivery-gallons { font-size: 1.05rem; font-weight: 700; color: #60a5fa; }
+        .delivery-meta { font-size: 0.8rem; color: #888; }
+        .delivery-total { padding: 14px 16px; background: rgba(96,165,250,0.1); border: 1px solid rgba(96,165,250,0.25); border-radius: 10px; margin-top: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .delivery-total-label { font-size: 0.85rem; color: #888; }
+        .delivery-total-value { font-size: 1.2rem; font-weight: 700; color: #60a5fa; }
+
+        .invoice-btn { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: rgba(96,165,250,0.08); border: 1px solid rgba(96,165,250,0.25); border-radius: 10px; cursor: pointer; width: 100%; text-align: left; transition: all 0.15s; }
+        .invoice-btn:hover { background: rgba(96,165,250,0.15); }
+        .invoice-btn-icon { font-size: 1.3rem; }
+        .invoice-btn-text { flex: 1; }
+        .invoice-btn-title { font-weight: 600; color: #60a5fa; font-size: 0.85rem; }
+        .invoice-btn-sub { font-size: 0.8rem; color: #888; }
+        .no-data { padding: 16px; background: #2a2a2a; border-radius: 10px; text-align: center; color: #555; font-size: 0.85rem; }
+
+        /* Edit mode */
+        .edit-field { width: 100%; padding: 8px 10px; background: #1a1a1a; border: 1px solid #444; border-radius: 6px; color: #f5f0e8; font-family: inherit; font-size: 0.85rem; }
+        .edit-field:focus { outline: none; border-color: #60a5fa; }
+        .edit-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .edit-group { margin-bottom: 12px; }
+        .edit-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: #666; margin-bottom: 4px; letter-spacing: 0.3px; }
+        select.edit-field { cursor: pointer; }
+        textarea.edit-field { min-height: 80px; resize: vertical; }
+        .btn-edit { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); }
+        .btn-edit:hover { background: rgba(251,191,36,0.25); }
+        .btn-save { background: #22c55e; color: #fff; }
+        .btn-save:hover { background: #16a34a; }
+
+        /* Status Timeline */
+        .status-timeline { display: flex; align-items: center; justify-content: space-between; margin: 20px 0; position: relative; padding: 20px 0; }
+        .status-timeline::before { content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 2px; background: #333; z-index: 0; }
+        .timeline-step { flex: 1; display: flex; flex-direction: column; align-items: center; position: relative; z-index: 1; }
+        .timeline-step:not(:last-child) { margin-right: 0; }
+        .timeline-circle { width: 40px; height: 40px; border-radius: 50%; background: #2a2a2a; border: 2px solid #444; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; font-weight: 700; color: #888; font-size: 0.9rem; }
+        .timeline-circle.completed { background: #22c55e; border-color: #22c55e; color: #fff; }
+        .timeline-circle.active { background: #60a5fa; border-color: #60a5fa; color: #fff; }
+        .timeline-label { font-size: 0.75rem; text-align: center; color: #888; max-width: 80px; line-height: 1.3; white-space: normal; }
+        .timeline-label.completed { color: #22c55e; font-weight: 600; }
+        .timeline-label.active { color: #60a5fa; font-weight: 600; }
+
+        /* Image viewer */
+        .image-viewer { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 300; align-items: center; justify-content: center; padding: 20px; }
+        .image-viewer.show { display: flex; }
+        .image-viewer img { max-width: 100%; max-height: 90vh; border-radius: 8px; }
+        .image-viewer-close { position: absolute; top: 20px; right: 20px; background: #333; border: none; color: #fff; width: 40px; height: 40px; border-radius: 50%; font-size: 1.3rem; cursor: pointer; }
+        .image-viewer-close:hover { background: #444; }
+
+        /* Assign Worker Modal */
+        .worker-option { display: flex; align-items: center; gap: 12px; padding: 12px; border: 2px solid #333; border-radius: 10px; cursor: pointer; margin-bottom: 8px; }
+        .worker-option:hover { border-color: #60a5fa; background: #2a2a2a; }
+        .worker-option.selected { border-color: #60a5fa; background: rgba(96, 165, 250, 0.1); }
+        .worker-option-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #60a5fa, #3b82f6); display: flex; align-items: center; justify-content: center; color: #1a1a1a; font-weight: 600; }
+        .worker-option-info { flex: 1; }
+        .worker-option-name { font-weight: 600; color: #f5f0e8; }
+        .worker-option-email { font-size: 0.8rem; color: #888; }
+        .worker-option-check { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #444; }
+        .worker-option.selected .worker-option-check { background: #60a5fa; border-color: #60a5fa; }
+        .btn-assign { background: rgba(139, 92, 246, 0.15); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.3); }
+        .btn-assign:hover { background: rgba(139, 92, 246, 0.25); }
+
+        .empty-state { text-align: center; padding: 60px 20px; color: #666; }
+        .empty-state svg { width: 48px; height: 48px; margin-bottom: 16px; color: #444; }
+        .empty-state h3 { color: #888; font-size: 1rem; margin-bottom: 8px; }
+        .empty-state p { font-size: 0.85rem; }
+        .loading { text-align: center; padding: 60px; color: #888; }
+        .spinner { width: 36px; height: 36px; border: 3px solid #333; border-top-color: #60a5fa; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .mobile-toggle { display: none; width: 40px; height: 40px; border: 1px solid #444; border-radius: 8px; background: #2a2a2a; color: #f5f0e8; align-items: center; justify-content: center; cursor: pointer; }
+
+        @media (max-width: 1100px) { .stats-row { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 900px) {
+            .mobile-toggle { display: flex; }
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+            .job-grid { grid-template-columns: repeat(2, 1fr); }
+            .detail-grid { grid-template-columns: 1fr; }
+            .detail-item.full { grid-column: span 1; }
+            .header { padding: 16px 20px; }
+            .content { padding: 16px 20px; }
+        }
+        @media (max-width: 500px) {
+            .stats-row { grid-template-columns: 1fr 1fr; }
+            .filters-card { flex-direction: column; }
+            .search-input { min-width: unset; width: 100%; }
+            .results-count { margin-left: 0; }
+        }
+    
+        /* Sidebar */
+        .admin-sidebar { width: 260px; background: var(--bg-card, #242424); border-right: 1px solid var(--border, #333); padding: 24px 16px; position: fixed; left: 0; top: 0; height: 100vh; overflow-y: auto; z-index: 99; display: flex; flex-direction: column; }
+        .admin-sidebar-logo { font-size: 1.1rem; font-weight: 700; color: var(--admin, #60a5fa); margin-bottom: 16px; }
+        .admin-nav-section { margin-bottom: 24px; }
+        .admin-nav-section-title { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted, #666); padding: 0 12px; margin-bottom: 8px; letter-spacing: 0.5px; }
+        .admin-nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; color: #b8b0a8; text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: all 0.2s; cursor: pointer; margin-bottom: 4px; }
+        .admin-nav-item:hover { background: var(--bg-hover, #333); color: var(--text-primary, #f5f0e8); }
+        .admin-nav-item.active { background: rgba(96, 165, 250, 0.15); color: var(--admin, #60a5fa); }
+        .admin-nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+        .admin-sidebar-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border, #333); }
+        .main-content { flex: 1; margin-left: 260px; }
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .admin-sidebar { width: 100%; height: auto; position: relative; left: auto; top: auto; border-right: none; border-bottom: 1px solid var(--border, #333); padding: 12px; }
+            .main-content { margin-left: 0; }
+        }
+    
+        /* Light Mode */
+        .light-mode { --bg-dark: #f5f5f5; --bg-card: #ffffff; --bg-input: #e8e8e8; --bg-hover: #e8e8e8; --border: #d0d0d0; --text-primary: #1a1a1a; --text-secondary: #555555; --text-muted: #888888; }
+        .light-mode .sidebar, .light-mode .admin-sidebar { background: #ffffff !important; border-color: #d0d0d0 !important; }
+        .light-mode .sidebar-logo, .light-mode .admin-sidebar-logo { color: #3b82f6 !important; }
+        .light-mode .nav-item, .light-mode .admin-nav-item { color: #555555 !important; }
+        .light-mode .nav-item:hover, .light-mode .admin-nav-item:hover { background: #e8e8e8 !important; color: #1a1a1a !important; }
+        .light-mode .nav-item.active, .light-mode .admin-nav-item.active { background: #dbeafe !important; color: #2563eb !important; }
+        .light-mode .nav-section-title, .light-mode .admin-nav-section { color: #888888 !important; }
+        .light-mode .user-menu { background: #e8e8e8 !important; }
+        .light-mode .user-name { color: #1a1a1a !important; }
+        .light-mode .header { background: #ffffff !important; border-color: #d0d0d0 !important; }
+        .light-mode .header h1 { color: #1a1a1a !important; }
+        .light-mode .header-subtitle { color: #555555 !important; }
+        .light-mode .main, .light-mode .content, .light-mode .admin-main { background: #f5f5f5 !important; }
+        .light-mode .card, .light-mode .stat-card, .light-mode .metric-card, .light-mode .admin-card { background: #ffffff !important; border-color: #d0d0d0 !important; }
+        .light-mode .card-title, .light-mode .stat-label { color: #1a1a1a !important; }
+        .light-mode .card-subtitle { color: #555555 !important; }
+        .light-mode input, .light-mode textarea, .light-mode select { background: #e8e8e8 !important; border-color: #d0d0d0 !important; color: #1a1a1a !important; }
+        .light-mode input::placeholder, .light-mode textarea::placeholder { color: #888888 !important; }
+        .light-mode .form-label, .light-mode label { color: #1a1a1a !important; }
+        .light-mode .badge { background: #dbeafe !important; color: #2563eb !important; }
+        .light-mode .btn-secondary { background: #e8e8e8 !important; color: #1a1a1a !important; border-color: #d0d0d0 !important; }
+        .light-mode .btn-secondary:hover { background: #d0d0d0 !important; }
+        .light-mode .sidebar-footer, .light-mode .admin-sidebar-footer { border-color: #d0d0d0 !important; }
+        .light-mode .logout-btn:hover { background: #e8e8e8 !important; }
+        .light-mode table th { background: #e8e8e8 !important; color: #1a1a1a !important; border-color: #d0d0d0 !important; }
+        .light-mode table td { border-color: #d0d0d0 !important; color: #1a1a1a !important; }
+        .light-mode table tr:hover { background: #e8e8e8 !important; }
+        .light-mode .modal-overlay { background: rgba(0,0,0,0.3) !important; }
+        .light-mode .modal, .light-mode .modal-content { background: #ffffff !important; border-color: #d0d0d0 !important; color: #1a1a1a !important; }
+        .light-mode .notification-bell { color: #555555 !important; }
+        .light-mode .search-box, .light-mode .search-input { background: #e8e8e8 !important; border-color: #d0d0d0 !important; color: #1a1a1a !important; }
+        .light-mode .tab, .light-mode .tab-btn { color: #555555 !important; }
+        .light-mode .tab.active, .light-mode .tab-btn.active { color: #3b82f6 !important; border-color: #3b82f6 !important; }
+        .light-mode .dropdown, .light-mode .dropdown-menu { background: #ffffff !important; border-color: #d0d0d0 !important; }
+        .light-mode .dropdown-item:hover { background: #e8e8e8 !important; }
+        .light-mode .toggle-switch { background: #d0d0d0 !important; }
+        .light-mode .toggle-switch.active { background: #2563eb !important; }
+        .light-mode .tooltip { background: #1a1a1a !important; color: #ffffff !important; }
+        .light-mode .progress-bar { background: #e8e8e8 !important; }
+        .light-mode .empty-state { color: #555555 !important; }
+        .light-mode .filter-bar, .light-mode .toolbar { background: #ffffff !important; border-color: #d0d0d0 !important; }
+        .light-mode .chip { background: #e8e8e8 !important; color: #1a1a1a !important; }
+        .light-mode pre, .light-mode code { background: #e8e8e8 !important; color: #1a1a1a !important; }
+        .light-mode .status-badge { border-color: #d0d0d0 !important; }
+        .light-mode ::selection { background: #3b82f6; color: #ffffff; }
+        .light-mode ::-webkit-scrollbar-track { background: #f5f5f5; }
+        .light-mode ::-webkit-scrollbar-thumb { background: #d0d0d0; }
+        .light-mode ::-webkit-scrollbar-thumb:hover { background: #bbbbbb; }
+
+/* Duplicate html.light-mode block removed */
+    
+        /* Sidebar actions (bell + theme toggle) */
+        /* Sidebar layout fix */
+        .admin-sidebar { display: flex; flex-direction: column; }
+        .admin-sidebar nav { flex: 1; overflow-y: auto; }
+</style>
+</head>
+<body>
+        <aside class="admin-sidebar" id="adminSidebar">
+        <div class="admin-sidebar-logo">FLEETCONNECT</div>
+        <nav id="sidebarNav"></nav>
+        <div class="admin-sidebar-footer">
+            <div style="padding: 12px; background: var(--bg-hover, #333); border-radius: 8px;">
+                <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary, #f5f0e8); margin-bottom: 4px;" id="adminUserName">System Admin</div>
+                <div class="admin-sidebar-role" style="font-size: 0.75rem; color: var(--text-secondary, #888);">Administrator</div>
+                <button onclick="logout()" style="margin-top: 8px; width: 100%; padding: 6px; background: transparent; border: 1px solid #333; color: #888; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 0.75rem; cursor: pointer; transition: all 0.2s;">Logout</button>
+            </div>
+        </div>
+    </aside>
+
+        <div class="main-content">
+            <header class="header">
+                <div class="header-left">
+                    <button class="mobile-toggle" onclick="document.querySelector('.admin-sidebar').classList.toggle('open')"><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+                    <div>
+                        <h1>Work Orders</h1>
+                        <p class="header-subtitle">Search and manage all work orders</p>
+                    </div>
+                </div>
+                <a href="create-job.html" class="btn btn-primary" id="createOrderBtn" style="display:flex;align-items:center;gap:8px;padding:10px 20px;font-size:0.85rem;text-decoration:none;"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>Create Work Order</a>
+            </header>
+
+            <div class="content">
+                <!-- Stats -->
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="stat-label"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>Total</div>
+                        <div class="stat-value" id="statTotal">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>Active</div>
+                        <div class="stat-value" id="statActive" style="color:#22c55e;">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Pending</div>
+                        <div class="stat-value" id="statPending" style="color:#fbbf24;">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Completed</div>
+                        <div class="stat-value" id="statCompleted" style="color:#60a5fa;">0</div>
+                    </div>
+                </div>
+
+                <!-- Search & Filters -->
+                <div class="filters-card">
+                    <input type="text" class="search-input" id="searchInput" placeholder="Search by site, contract #, customer, city...">
+                    <select class="filter-select" id="statusFilter">
+                        <option value="">All Statuses</option>
+                        <option value="pending">Pending</option>
+                        <option value="assigned">Assigned</option>
+                        <option value="accepted">Accepted</option>
+                        <option value="in-progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                        <option value="open">Open</option>
+                    </select>
+                    <select class="filter-select" id="typeFilter">
+                        <option value="">All Types</option>
+                        <option value="fuel-delivery">Fuel Delivery</option>
+                        <option value="equipment-tow">Equipment Tow</option>
+                        <option value="emergency-fuel">Emergency Fuel</option>
+                        <option value="pickup">Pickup</option>
+                        <option value="delivery">Delivery</option>
+                    </select>
+                    <span class="results-count" id="resultsCount"></span>
+                </div>
+
+                <!-- Jobs List -->
+                <div class="jobs-list" id="jobsList">
+                    <div class="loading"><div class="spinner"></div>Loading work orders...</div>
+                </div>
+            </div>
+        </div>
+    
+
+    <!-- Job Detail Modal -->
+    <div class="modal-overlay" id="jobModal">
+        <div class="modal">
+            <div class="modal-header"><h3 id="modalTitle">Work Order Details</h3><button class="modal-close" onclick="closeModal()" aria-label="Close">&times;</button></div>
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-footer" id="modalFooter"><button class="btn btn-secondary" onclick="closeModal()">Close</button></div>
+        </div>
+    </div>
+
+    <!-- Image Viewer -->
+    <div class="image-viewer" id="imageViewer" onclick="closeImageViewer()">
+        <button class="image-viewer-close" onclick="closeImageViewer()">&times;</button>
+        <img id="invoiceImage" src="" alt="Invoice">
+    </div>
+
+    <!-- Decline Confirm Modal -->
+    <div class="confirm-overlay" id="confirmDecline">
+        <div class="confirm-box">
+            <div class="confirm-header">
+                <div class="confirm-icon warning">⚠️</div>
+                <div class="confirm-title">Decline this work order?</div>
+            </div>
+            <div class="confirm-body">
+                <div class="confirm-text">
+                    <strong>Are you sure you want to decline?</strong> In current market conditions, declining work is strongly discouraged. 
+                    This order will be sent back to the pool and may be reassigned to another vendor.<br><br>
+                    Consider accepting the job and reaching out to the rental company if you have scheduling concerns.
+                </div>
+            </div>
+            <div class="confirm-footer">
+                <button class="btn btn-secondary" onclick="closeConfirmDecline()">Cancel — Keep Job</button>
+                <button class="btn btn-danger" id="confirmDeclineBtn" onclick="confirmDeclineJob()">Decline Anyway</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assign Field Worker Modal -->
+    <div class="modal-overlay" id="assignWorkerModal">
+        <div class="modal" style="max-width:500px;">
+            <div class="modal-header"><h3>Assign Field Worker</h3><button class="modal-close" onclick="closeAssignWorkerModal()" aria-label="Close">&times;</button></div>
+            <div class="modal-body" id="workerList"></div>
+            <div class="modal-footer"><button class="btn btn-secondary" onclick="closeAssignWorkerModal()">Cancel</button><button class="btn btn-primary" id="assignWorkerBtn" onclick="confirmAssignWorker()" disabled>Assign</button></div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script src="supabase-client.js"></script>
+    <script src="sidebar.js"></script>
+    <script src="feature-flags.js"></script>
+    <script src="notifications.js"></script>
+    <script src="realtime.js"></script>
+<script src="onboarding.js"></script>
+    <script>
+        // ===== AUTH & NAV =====
+        const currentUser = checkAuth(['admin','vendor','rental','fieldworker']);
+        if (!currentUser) throw new Error('Not authenticated');
+        const isFieldworkerReadonly = currentUser.role === 'fieldworker';
+
+        // Hide create button and show appropriate header for fieldworkers
+        if (isFieldworkerReadonly) {
+            const createBtn = document.getElementById('createOrderBtn');
+            if (createBtn) createBtn.style.display = 'none';
+            const headerSub = document.querySelector('.header-subtitle');
+            if (headerSub) headerSub.textContent = 'View your assigned work orders';
+        }
+
+        // Redirect admin users who just logged in to the admin dashboard
+        if (currentUser.role === 'admin' && document.referrer.includes('login.html')) {
+            window.location.href = 'admin-dashboard.html';
+        }
+
+        // Initialize feature flags for vendor
+        (async () => {
+            if (currentUser.role === 'vendor') {
+                await FC_FLAGS.init('vendor');
+                FC_FLAGS.hideNav('page.invoices', 'invoices.html');
+                FC_FLAGS.hideNav('page.daily_log', 'daily-log.html');
+            }
+        })();
+
+        // Set user info
+        if (document.getElementById('adminUserName')) document.getElementById('adminUserName').textContent = currentUser.name;
+
+        // Update role label
+        const roleLabelsMap = { admin: 'Administrator', rental: 'Rental Account', vendor: 'Vendor Account', fieldworker: 'Field Worker' };
+        var _rl = document.querySelector('.admin-sidebar-role'); if(_rl) _rl.textContent = roleLabelsMap[currentUser.role] || currentUser.role;
+
+        // ===== DATA =====
+        let allJobs = [], allEquipment = [], allDeliveries = [], allVendors = [], fieldWorkers = [];
+
+        async function loadData() {
+            try {
+                const [jobs, deliveries, vendors, eqRes, usersRes] = await Promise.all([
+                    getJobsForCurrentUser(),
+                    getDeliveriesForCurrentUser(),
+                    getAllVendors(),
+                    db.from('equipment').select('*'),
+                    db.from('users').select('*')
+                ]);
+                allJobs = jobs;
+                allDeliveries = deliveries;
+                allVendors = vendors;
+                allEquipment = eqRes.data || [];
+                fieldWorkers = (usersRes.data || []).filter(u => u.role === 'fieldworker');
+
+                updateStats();
+                renderJobs();
+            } catch (err) {
+                console.error('Load error:', err);
+                var _jobs = document.getElementById('jobsList'); if(_jobs) _jobs.innerHTML = '<div class="empty-state"><h3>Error loading data</h3><p>' + err.message + '</p></div>';
+            }
+        }
+
+        function updateStats() {
+            const active = allJobs.filter(j => ['accepted', 'assigned', 'in-progress'].includes(j.status)).length;
+            const pending = allJobs.filter(j => ['pending', 'open'].includes(j.status)).length;
+            const completed = allJobs.filter(j => j.status === 'completed').length;
+            var _stat = document.getElementById('statTotal'); if(_stat) _stat.textContent = allJobs.length;
+            var _stat = document.getElementById('statActive'); if(_stat) _stat.textContent = active;
+            var _stat = document.getElementById('statPending'); if(_stat) _stat.textContent = pending;
+            var _stat = document.getElementById('statCompleted'); if(_stat) _stat.textContent = completed;
+        }
+
+        // ===== RENDER =====
+        function renderJobs() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const status = document.getElementById('statusFilter').value;
+            const type = document.getElementById('typeFilter').value;
+
+            let filtered = allJobs;
+            // Fieldworkers see all jobs assigned to them (not just completed)
+            if (isFieldworkerReadonly) {
+                filtered = filtered.filter(j => j.assigned_worker === currentUser.id);
+            }
+            if (search) {
+                filtered = filtered.filter(j =>
+                    (j.job_site_name || '').toLowerCase().includes(search) ||
+                    (j.contract_number || '').toLowerCase().includes(search) ||
+                    (j.po_number || '').toLowerCase().includes(search) ||
+                    (j.customer_name || '').toLowerCase().includes(search) ||
+                    (j.address_city || '').toLowerCase().includes(search) ||
+                    (j.address_street || '').toLowerCase().includes(search)
+                );
+            }
+            if (status) filtered = filtered.filter(j => j.status === status);
+            if (type) filtered = filtered.filter(j => j.job_type === type);
+
+            var _resu = document.getElementById('resultsCount'); if(_resu) _resu.textContent = filtered.length + ' order' + (filtered.length !== 1 ? 's' : '');
+
+            const container = document.getElementById('jobsList');
+            if (filtered.length === 0) {
+                if (allJobs.length === 0) {
+                    container.innerHTML = '<div class="empty-state" style="display:flex;flex-direction:column;align-items:center;"><div style="font-size:3rem;margin-bottom:16px;opacity:0.5;">📋</div><h3 style="font-size:1.2rem;font-weight:600;margin-bottom:8px;">No work orders yet</h3><p style="font-size:0.9rem;color:#888;margin-bottom:24px;">Create your first work order to get started</p><a href="create-job.html" class="btn btn-primary" style="text-decoration:none;">+ Create Work Order</a></div>';
+                } else {
+                    container.innerHTML = '<div class="empty-state" style="display:flex;flex-direction:column;align-items:center;"><div style="font-size:3rem;margin-bottom:16px;opacity:0.5;">🔍</div><h3 style="font-size:1.2rem;font-weight:600;margin-bottom:8px;">No work orders found</h3><p style="font-size:0.9rem;color:#888;">Try adjusting your search or filters</p></div>';
+                }
+                return;
+            }
+
+            container.innerHTML = filtered.map(job => {
+                const equipment = allEquipment.filter(e => e.job_id === job.id);
+                const vendor = job.assigned_vendor ? allVendors.find(v => v.id === job.assigned_vendor) : null;
+                const vendorName = vendor ? (vendor.company_name || vendor.name) : null;
+                const deliveries = allDeliveries.filter(d => d.job_id === job.id);
+                const totalGal = deliveries.reduce((s, d) => s + (parseFloat(d.gallons) || 0), 0);
+
+                return `
+                    <div class="job-card" onclick="openJob('${job.id}')">
+                        <div class="job-top">
+                            <div>
+                                <div class="job-title">${safe(job.job_site_name || 'Untitled')}</div>
+                                <div class="job-meta">
+                                    ${job.contract_number ? 'Contract: <span>' + job.contract_number + '</span>' : ''}
+                                    ${job.po_number ? '&nbsp;·&nbsp;PO: <span>' + job.po_number + '</span>' : ''}
+                                    ${job.customer_name ? '&nbsp;·&nbsp;' + job.customer_name : ''}
+                                </div>
+                            </div>
+                            <span class="status-badge ${job.status}"><span class="dot"></span>${job.status}</span>
+                        </div>
+                        <div class="job-grid">
+                            <div><div class="job-grid-label">Location</div><div class="job-grid-value">${job.address_city || '—'}${job.address_state ? ', ' + job.address_state : ''}</div></div>
+                            <div><div class="job-grid-label">Date</div><div class="job-grid-value">${formatDate(job.date_out)}</div></div>
+                            <div><div class="job-grid-label">Vendor</div><div class="job-grid-value">${vendorName || '<span style="color:#555;">Unassigned</span>'}</div></div>
+                            <div><div class="job-grid-label">Fuel / Equipment</div><div class="job-grid-value">${totalGal > 0 ? totalGal.toFixed(0) + ' gal' : ''} ${equipment.length > 0 ? equipment.length + ' unit' + (equipment.length > 1 ? 's' : '') : (totalGal > 0 ? '' : '—')}</div></div>
+                        </div>
+                        <div class="job-actions" onclick="event.stopPropagation()">
+                            <button class="btn btn-primary" onclick="openJob('${job.id}')">View Details</button>
+                            ${deliveries.length > 0 ? '<button class="btn btn-secondary" onclick="openDeliveries(\'' + job.id + '\')">Deliveries (' + deliveries.length + ')</button>' : ''}
+                            ${!isFieldworkerReadonly && job.invoice_image ? '<button class="btn btn-invoice" onclick="viewImage(\'' + job.invoice_image + '\')">📄 Invoice</button>' : ''}
+                            ${!isFieldworkerReadonly && canRespondToJob(job) ? '<button class="btn btn-accept" onclick="acceptJob(\'' + job.id + '\')">✓ Accept</button><button class="btn btn-decline" onclick="declineJob(\'' + job.id + '\')">✗ Decline</button>' : ''}
+                            ${!isFieldworkerReadonly && currentUser.role === 'vendor' && job.status !== 'completed' ? '<button class="btn btn-assign" onclick="openAssignWorkerModal(\'' + job.id + '\')">' + (job.assigned_worker ? '↻ Reassign Worker' : '👷 Assign Worker') + '</button>' : ''}
+                            ${!isFieldworkerReadonly && (currentUser.role === 'vendor' || currentUser.role === 'admin') && job.status === 'in-progress' ? '<button class="btn btn-complete" style="background:rgba(96,165,250,0.15);color:#60a5fa;border:1px solid rgba(96,165,250,0.3);" onclick="completeJob(\'' + job.id + '\')">✅ Complete</button>' : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ===== JOB DETAIL MODAL =====
+        async function openJob(jobId) {
+            const job = allJobs.find(j => j.id === jobId);
+            if (!job) return;
+
+            const equipment = allEquipment.filter(e => e.job_id === jobId);
+            const deliveries = allDeliveries.filter(d => d.job_id === jobId);
+            const totalGal = deliveries.reduce((s, d) => s + (parseFloat(d.gallons) || 0), 0);
+            const totalDef = deliveries.reduce((s, d) => s + (parseFloat(d.def_gallons) || 0), 0);
+            const vendor = job.assigned_vendor ? allVendors.find(v => v.id === job.assigned_vendor) : null;
+            const vendorName = vendor ? (vendor.company_name || vendor.name) : '—';
+
+            var _moda = document.getElementById('modalTitle'); if(_moda) _moda.textContent = job.job_site_name || 'Work Order Details';
+            document.getElementById('modalBody').innerHTML = `
+                <div class="detail-section">
+                    <div class="detail-section-title">Order Information</div>
+                    <div class="detail-grid">
+                        <div class="detail-item"><div class="detail-label">Contract #</div><div class="detail-value">${job.contract_number || '—'}</div></div>
+                        <div class="detail-item"><div class="detail-label">PO #</div><div class="detail-value">${job.po_number || '—'}</div></div>
+                        <div class="detail-item"><div class="detail-label">Job Type</div><div class="detail-value">${formatJobType(job.job_type)}</div></div>
+                        <div class="detail-item"><div class="detail-label">Status</div><div class="detail-value"><span class="status-badge ${job.status}"><span class="dot"></span>${job.status}</span></div></div>
+                        <div class="detail-item"><div class="detail-label">Priority</div><div class="detail-value">${(job.priority || 'Normal').charAt(0).toUpperCase() + (job.priority || 'normal').slice(1)}</div></div>
+                        <div class="detail-item"><div class="detail-label">Created</div><div class="detail-value">${formatDate(job.created_at)}</div></div>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <div class="detail-section-title">Location & Contact</div>
+                    <div class="detail-grid">
+                        <div class="detail-item full"><div class="detail-label">Address</div><div class="detail-value">${[job.address_street, job.address_city, job.address_state, job.address_zip].filter(Boolean).join(', ') || '—'}</div></div>
+                        <div class="detail-item"><div class="detail-label">Customer</div><div class="detail-value">${job.customer_name || '—'}</div></div>
+                        <div class="detail-item"><div class="detail-label">Contact</div><div class="detail-value">${job.contact_name || '—'}${job.contact_phone ? ' · <a href="tel:' + job.contact_phone + '" style="color:#60a5fa;">' + job.contact_phone + '</a>' : ''}</div></div>
+                        <div class="detail-item"><div class="detail-label">Vendor</div><div class="detail-value">${vendorName}${(!job.assigned_vendor && ['admin','rental'].includes(currentUser.role) && job.status !== 'completed') ? ' <button class="btn btn-small" onclick="showAssignVendor(\'' + jobId + '\')" style="margin-left:8px;padding:2px 10px;font-size:0.75rem;background:#60a5fa;color:#fff;border:none;border-radius:6px;cursor:pointer;">Assign</button>' : ''}</div></div>
+                        <div class="detail-item"><div class="detail-label">Field Worker</div><div class="detail-value">${job.assigned_worker ? (getWorkerName(job.assigned_worker) || 'Assigned') : '<span style="color:#555;">Unassigned</span>'}${(currentUser.role === 'vendor' && job.status !== 'completed') ? ' <button onclick="closeModal(); openAssignWorkerModal(\'' + jobId + '\')" style="margin-left:8px;padding:2px 10px;font-size:0.75rem;background:rgba(139,92,246,0.15);color:#a78bfa;border:1px solid rgba(139,92,246,0.3);border-radius:6px;cursor:pointer;">' + (job.assigned_worker ? 'Reassign' : 'Assign') + '</button>' : ''}</div></div>
+                        <div class="detail-item"><div class="detail-label">Rental Company</div><div class="detail-value">${job.rental_company || '—'}</div></div>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <div class="detail-section-title">Schedule</div>
+                    <div class="detail-grid">
+                        <div class="detail-item"><div class="detail-label">Date Out</div><div class="detail-value">${formatDate(job.date_out)}${job.time_out ? ' ' + formatTime(job.time_out) : ''}</div></div>
+                        <div class="detail-item"><div class="detail-label">Est. Return</div><div class="detail-value">${formatDate(job.est_return)}${job.time_return ? ' ' + formatTime(job.time_return) : ''}</div></div>
+                        ${job.completed_at ? '<div class="detail-item"><div class="detail-label">Completed</div><div class="detail-value" style="color:#60a5fa;">' + formatDate(job.completed_at) + '</div></div>' : ''}
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <div class="detail-section-title">Status Timeline</div>
+                    <div class="status-timeline">
+                        <div class="timeline-step">
+                            <div class="timeline-circle completed">✓</div>
+                            <div class="timeline-label completed">Created</div>
+                        </div>
+                        <div class="timeline-step">
+                            <div class="timeline-circle ${['accepted', 'assigned', 'in-progress', 'completed'].includes(job.status) ? 'completed' : 'active'}">✓</div>
+                            <div class="timeline-label ${['accepted', 'assigned', 'in-progress', 'completed'].includes(job.status) ? 'completed' : 'active'}">Accepted</div>
+                        </div>
+                        <div class="timeline-step">
+                            <div class="timeline-circle ${['assigned', 'in-progress', 'completed'].includes(job.status) ? 'completed' : job.status === 'accepted' ? 'active' : ''}">✓</div>
+                            <div class="timeline-label ${['assigned', 'in-progress', 'completed'].includes(job.status) ? 'completed' : job.status === 'accepted' ? 'active' : ''}">Assigned</div>
+                        </div>
+                        <div class="timeline-step">
+                            <div class="timeline-circle ${['in-progress', 'completed'].includes(job.status) ? 'completed' : job.status === 'assigned' ? 'active' : ''}">✓</div>
+                            <div class="timeline-label ${['in-progress', 'completed'].includes(job.status) ? 'completed' : job.status === 'assigned' ? 'active' : ''}">In Progress</div>
+                        </div>
+                        <div class="timeline-step">
+                            <div class="timeline-circle ${job.status === 'completed' ? 'completed' : job.status === 'in-progress' ? 'active' : ''}">✓</div>
+                            <div class="timeline-label ${job.status === 'completed' ? 'completed' : job.status === 'in-progress' ? 'active' : ''}">Completed</div>
+                        </div>
+                    </div>
+                </div>
+
+                ${equipment.length > 0 ? `
+                    <div class="detail-section">
+                        <div class="detail-section-title">Equipment (${equipment.length} unit${equipment.length > 1 ? 's' : ''})</div>
+                        <div class="equipment-list">
+                            ${equipment.map(eq => '<div class="equipment-item"><span class="equipment-num">' + (eq.equipment_number || '—') + '</span><span class="equipment-desc">' + (eq.description || '—') + '</span></div>').join('')}
+                        </div>
+                    </div>
+                ` : ''}
+
+                ${deliveries.length > 0 ? `
+                    <div class="detail-section">
+                        <div class="detail-section-title">Deliveries (${deliveries.length})</div>
+                        ${deliveries.map(d => `
+                            <div class="delivery-item">
+                                <div>
+                                    <div class="delivery-gallons">${d.gallons || 0} gal${d.def_gallons ? ' + ' + d.def_gallons + ' DEF' : ''}</div>
+                                    <div class="delivery-meta">${d.delivered_by_name || 'Unknown'}${d.fuel_type ? ' · ' + d.fuel_type : ''}${d.unit_number ? ' · Unit #' + d.unit_number : ''}</div>
+                                </div>
+                                <div style="text-align:right;">
+                                    <div class="delivery-meta">${d.timestamp ? new Date(d.timestamp).toLocaleDateString() : '—'}</div>
+                                    <div class="delivery-meta">${d.timestamp ? new Date(d.timestamp).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : ''}</div>
+                                </div>
+                            </div>
+                        `).join('')}
+                        <div class="delivery-total">
+                            <span class="delivery-total-label">Total Delivered</span>
+                            <span class="delivery-total-value">${totalGal.toFixed(1)} gal${totalDef > 0 ? ' + ' + totalDef.toFixed(1) + ' DEF' : ''}</span>
+                        </div>
+                    </div>
+                ` : ''}
+
+                <div class="detail-section" id="invoiceSummarySection" style="display:none;">
+                    <div class="detail-section-title">📋 Invoice Summary</div>
+                    <div id="invoiceSummaryContent">Loading...</div>
+                </div>
+
+                ${job.instructions ? `
+                    <div class="detail-section">
+                        <div class="detail-section-title">Instructions</div>
+                        <div style="padding:12px 14px;background:#2a2a2a;border-radius:8px;font-size:0.9rem;color:#b8b0a8;line-height:1.6;">${safe(job.instructions)}</div>
+                    </div>
+                ` : ''}
+
+                <div class="detail-section">
+                    <div class="detail-section-title">Invoice</div>
+                    ${job.invoice_image ? `
+                        <button class="invoice-btn" onclick="closeModal(); viewImage('${job.invoice_image}')">
+                            <span class="invoice-btn-icon">📄</span>
+                            <div class="invoice-btn-text"><div class="invoice-btn-title">View Original Invoice</div><div class="invoice-btn-sub">Scanned invoice used to create this order</div></div>
+                            <svg width="20" height="20" fill="none" stroke="#60a5fa" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        </button>
+                    ` : '<div class="no-data">No invoice image — this order was created manually</div>'}
+                </div>
+            `;
+
+            document.getElementById('modalFooter').innerHTML = `
+                ${canRespondToJob(job) ? '<button class="btn btn-accept" onclick="closeModal(); acceptJob(\'' + jobId + '\')">✓ Accept Job</button><button class="btn btn-decline" onclick="closeModal(); declineJob(\'' + jobId + '\')">✗ Decline</button>' : ''}
+                <button class="btn btn-edit" onclick="editJob('${jobId}')">✎ Edit</button>
+                <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+                ${deliveries.length > 0 ? '<button class="btn btn-primary" onclick="closeModal(); openDeliveries(\'' + jobId + '\')">View Deliveries</button>' : ''}
+            `;
+            var _jobM = document.getElementById('jobModal'); if(_jobM) _jobM.classList.add('show');
+
+            // Load invoice summary
+            loadJobInvoices(jobId);
+        }
+
+        async function loadJobInvoices(jobId) {
+            const section = document.getElementById('invoiceSummarySection');
+            const content = document.getElementById('invoiceSummaryContent');
+            if (!section || !content) return;
+            try {
+                const { data: invoices, error } = await db.from('invoices').select('*').eq('job_id', jobId).order('created_at', { ascending: false });
+                if (error || !invoices || invoices.length === 0) {
+                    section.style.display = 'none';
+                    return;
+                }
+                section.style.display = 'block';
+                const totalDiesel = invoices.reduce((s, i) => s + (parseFloat(i.total_diesel) || 0), 0);
+                const totalDef = invoices.reduce((s, i) => s + (parseFloat(i.total_def) || 0), 0);
+                content.innerHTML = `
+                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;">
+                        <div style="background:#2a2a2a;padding:12px;border-radius:8px;text-align:center;">
+                            <div style="font-size:1.3rem;font-weight:700;color:#22c55e;">${invoices.length}</div>
+                            <div style="font-size:0.75rem;color:#888;">Invoices</div>
+                        </div>
+                        <div style="background:#2a2a2a;padding:12px;border-radius:8px;text-align:center;">
+                            <div style="font-size:1.3rem;font-weight:700;color:#f59e0b;">${totalDiesel.toFixed(1)}</div>
+                            <div style="font-size:0.75rem;color:#888;">Total Diesel (gal)</div>
+                        </div>
+                        <div style="background:#2a2a2a;padding:12px;border-radius:8px;text-align:center;">
+                            <div style="font-size:1.3rem;font-weight:700;color:#60a5fa;">${totalDef.toFixed(1)}</div>
+                            <div style="font-size:0.75rem;color:#888;">Total DEF (gal)</div>
+                        </div>
+                    </div>
+                    ${invoices.map(inv => {
+                        const units = inv.units_data || [];
+                        return `<div style="background:#2a2a2a;border-radius:8px;padding:12px;margin-bottom:8px;border:1px solid #333;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                                <span style="font-weight:600;color:#f5f0e8;">${inv.worker_name || 'Unknown'}</span>
+                                <span style="font-size:0.8rem;color:#888;">${inv.invoice_date || ''} ${inv.invoice_time || ''}</span>
+                            </div>
+                            ${units.map(u => `<div style="display:flex;justify-content:space-between;font-size:0.85rem;padding:4px 0;border-top:1px solid #3a3a3a;">
+                                <span style="color:#ccc;">${u.unit_number || '—'} ${u.unit_description || ''}</span>
+                                <span style="color:#888;">⏱${u.unit_hours}h ⛽${u.diesel_gallons}gal 💧${u.def_gallons}gal</span>
+                            </div>`).join('')}
+                            ${inv.notes ? '<div style="font-size:0.8rem;color:#888;margin-top:8px;padding-top:8px;border-top:1px solid #3a3a3a;">📝 ' + safe(inv.notes) + '</div>' : ''}
+                        </div>`;
+                    }).join('')}
+                `;
+            } catch (err) {
+                section.style.display = 'none';
+            }
+        }
+
+        // ===== DELIVERIES MODAL =====
+        async function openDeliveries(jobId) {
+            const job = allJobs.find(j => j.id === jobId);
+            const deliveries = await getDeliveriesForJob(jobId);
+            const total = deliveries.reduce((s, d) => s + (parseFloat(d.gallons) || 0), 0);
+            const totalDef = deliveries.reduce((s, d) => s + (parseFloat(d.def_gallons) || 0), 0);
+
+            var _moda = document.getElementById('modalTitle'); if(_moda) _moda.textContent = 'Deliveries — ' + (job ? job.job_site_name : 'Order');
+
+            if (deliveries.length === 0) {
+                var _moda = document.getElementById('modalBody'); if(_moda) _moda.innerHTML = '<div class="empty-state" style="padding:30px;">No deliveries recorded</div>';
+            } else {
+                document.getElementById('modalBody').innerHTML = deliveries.map(d => `
+                    <div class="delivery-item">
+                        <div>
+                            <div class="delivery-gallons">${d.gallons || 0} gal${d.def_gallons ? ' + ' + d.def_gallons + ' DEF' : ''}</div>
+                            <div class="delivery-meta">${d.delivered_by_name || 'Unknown'}${d.fuel_type ? ' · ' + d.fuel_type : ''}${d.unit_number ? ' · Unit #' + d.unit_number : ''}</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div class="delivery-meta">${d.timestamp ? new Date(d.timestamp).toLocaleDateString() : '—'}</div>
+                            <div class="delivery-meta">${d.timestamp ? new Date(d.timestamp).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : ''}</div>
+                        </div>
+                    </div>
+                `).join('') + `
+                    <div class="delivery-total">
+                        <span class="delivery-total-label">Total Delivered</span>
+                        <span class="delivery-total-value">${total.toFixed(1)} gal${totalDef > 0 ? ' + ' + totalDef.toFixed(1) + ' DEF' : ''}</span>
+                    </div>
+                `;
+            }
+            var _moda = document.getElementById('modalFooter'); if(_moda) _moda.innerHTML = '<button class="btn btn-secondary" onclick="closeModal()">Close</button>';
+            var _jobM = document.getElementById('jobModal'); if(_jobM) _jobM.classList.add('show');
+        }
+
+        // ===== IMAGE VIEWER =====
+        function viewImage(url) {
+            var _invo = document.getElementById('invoiceImage'); if(_invo) _invo.src = url;
+            var _imag = document.getElementById('imageViewer'); if(_imag) _imag.classList.add('show');
+        }
+        function closeImageViewer() {
+            var _imag = document.getElementById('imageViewer'); if(_imag) _imag.classList.remove('show');
+        }
+
+        // ===== MODAL =====
+ var _jobM = document.getElementById('jobModal'); if(_jobM) _jobM.classList.remove('show');
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeImageViewer(); closeModal(); closeConfirmDecline(); closeAssignWorkerModal(); } });
+
+        // ===== FILTER LISTENERS =====
+        var _sear = document.getElementById('searchInput'); if(_sear) _sear.addEventListener('input', renderJobs);
+        var _stat = document.getElementById('statusFilter'); if(_stat) _stat.addEventListener('change', renderJobs);
+        var _type = document.getElementById('typeFilter'); if(_type) _type.addEventListener('change', renderJobs);
+
+        // ===== ACCEPT / DECLINE =====
+        // The users table has a vendor_id field that links to the vendors table.
+        // jobs.assigned_vendor FK -> vendors.id, so we use currentUser.vendor_id
+        function getVendorId() {
+            // Match vendor record by user_id (linked in DB), then fallback to email/name
+            const v = allVendors.find(v =>
+                v.user_id === currentUser.id ||
+                (v.email && v.email === currentUser.email) ||
+                (v.name && v.name.toLowerCase() === currentUser.name?.toLowerCase())
+            );
+            return v ? v.id : null;
+        }
+
+        function canRespondToJob(job) {
+            if (currentUser.role !== 'vendor') return false;
+            if (!['pending', 'assigned'].includes(job.status)) return false;
+            const vendorId = getVendorId();
+            // If assigned to a specific vendor, only they can respond
+            if (job.assigned_vendor && vendorId && job.assigned_vendor !== vendorId) return false;
+            return true;
+        }
+
+        async function acceptJob(jobId) {
+            const job = allJobs.find(j => j.id === jobId);
+            if (!job) return;
+
+            let vendorId = getVendorId();
+
+            // If still no vendor ID, try a DB lookup
+            if (!vendorId) {
+                const { data: found } = await db.from('vendors')
+                    .select('id')
+                    .or(`name.ilike.%${currentUser.name}%,company_name.ilike.%${currentUser.company || currentUser.name}%`)
+                    .limit(1);
+                if (found && found.length > 0) {
+                    vendorId = found[0].id;
+                    // Save it to the user record for future use
+                    await db.from('users').update({ vendor_id: vendorId }).eq('id', currentUser.id);
+                    currentUser.vendor_id = vendorId;
+                    if (typeof setCurrentUser === 'function') {
+                        setCurrentUser(currentUser);
+                    } else {
+                        sessionStorage.setItem('fc_user', JSON.stringify(currentUser));
+                    }
+                } else {
+                    showToast('No vendor profile found. Contact admin to link your account.', 'error');
+                    return;
+                }
+            }
+
+            try {
+                const { error } = await db.from('jobs').update({
+                    status: 'accepted',
+                    assigned_vendor: vendorId
+                }).eq('id', jobId);
+                if (error) throw error;
+                job.status = 'accepted';
+                job.assigned_vendor = vendorId;
+                updateStats();
+                renderJobs();
+                showToast('Job accepted! You can now start working on this order.', 'success');
+            } catch (err) {
+                console.error('Accept error:', err);
+                showToast('Failed to accept job: ' + err.message, 'error');
+            }
+        }
+
+        async function completeJob(jobId) {
+            if (!confirm('Mark this job as completed? This will finalize all invoices.')) return;
+            try {
+                const { error } = await db.from('jobs').update({
+                    status: 'completed',
+                    completed_at: new Date().toISOString()
+                }).eq('id', jobId);
+                if (error) throw error;
+                const job = allJobs.find(j => j.id === jobId);
+                if (job) { job.status = 'completed'; job.completed_at = new Date().toISOString(); }
+                updateStats();
+                renderJobs();
+                showToast('Job completed! View the summary in Invoices.', 'success');
+            } catch (err) {
+                console.error('Complete error:', err);
+                showToast('Failed to complete job: ' + err.message, 'error');
+            }
+        }
+
+        let pendingDeclineJobId = null;
+        function declineJob(jobId) {
+            pendingDeclineJobId = jobId;
+            var _conf = document.getElementById('confirmDecline'); if(_conf) _conf.classList.add('show');
+        }
+        function closeConfirmDecline() {
+            var _conf = document.getElementById('confirmDecline'); if(_conf) _conf.classList.remove('show');
+            pendingDeclineJobId = null;
+        }
+        async function confirmDeclineJob() {
+            if (!pendingDeclineJobId) return;
+            const jobId = pendingDeclineJobId;
+            closeConfirmDecline();
+            try {
+                const { error } = await db.from('jobs').update({
+                    status: 'pending',
+                    assigned_vendor: null
+                }).eq('id', jobId);
+                if (error) throw error;
+                const job = allJobs.find(j => j.id === jobId);
+                if (job) { job.status = 'pending'; job.assigned_vendor = null; }
+                updateStats();
+                renderJobs();
+                showToast('Job declined and returned to pool.', 'success');
+            } catch (err) {
+                console.error('Decline error:', err);
+                showToast('Failed to decline job: ' + err.message, 'error');
+            }
+        }
+
+        function showToast(message, type) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast ' + type + ' show';
+            setTimeout(() => toast.classList.remove('show'), 4000);
+        }
+
+        // ===== ASSIGN VENDOR =====
+        async function showAssignVendor(jobId) {
+            const vendorOptions = allVendors.map(v =>
+                '<option value="' + v.id + '">' + (v.company_name || v.name || v.email) + '</option>'
+            ).join('');
+            closeModal();
+            var _moda = document.getElementById('modalTitle'); if(_moda) _moda.textContent = 'Assign Vendor';
+            document.getElementById('modalBody').innerHTML = `
+                <div class="detail-section">
+                    <div class="detail-section-title">Select a vendor for this job</div>
+                    <select id="vendorAssignSelect" style="width:100%;padding:10px 12px;background:#2a2a2a;border:1px solid #444;border-radius:8px;color:#f5f0e8;font-size:0.9rem;margin-top:8px;">
+                        <option value="">— Choose a vendor —</option>
+                        ${vendorOptions}
+                    </select>
+                </div>
+            `;
+            document.getElementById('modalFooter').innerHTML = `
+                <button class="btn btn-primary" onclick="assignVendorToJob('${jobId}')">Assign Vendor</button>
+                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+            `;
+            var _jobM = document.getElementById('jobModal'); if(_jobM) _jobM.classList.add('show');
+        }
+
+        async function assignVendorToJob(jobId) {
+            const vendorId = document.getElementById('vendorAssignSelect').value;
+            if (!vendorId) { showToast('Please select a vendor.', 'error'); return; }
+            try {
+                const { error } = await db.from('jobs').update({
+                    assigned_vendor: vendorId,
+                    status: 'assigned'
+                }).eq('id', jobId);
+                if (error) throw error;
+                const job = allJobs.find(j => j.id === jobId);
+                if (job) { job.assigned_vendor = vendorId; job.status = 'assigned'; }
+                closeModal();
+                updateStats();
+                renderJobs();
+                const vendor = allVendors.find(v => v.id === vendorId);
+                showToast('Vendor ' + (vendor?.company_name || vendor?.name || '') + ' assigned!', 'success');
+            } catch (err) {
+                console.error('Assign vendor error:', err);
+                showToast('Failed to assign vendor: ' + err.message, 'error');
+            }
+        }
+
+        // ===== EDIT JOB =====
+        function editJob(jobId) {
+            const job = allJobs.find(j => j.id === jobId);
+            if (!job) return;
+
+            var _moda = document.getElementById('modalTitle'); if(_moda) _moda.textContent = 'Edit: ' + (job.job_site_name || 'Work Order');
+            document.getElementById('modalBody').innerHTML = `
+                <div class="detail-section">
+                    <div class="detail-section-title">Order Information</div>
+                    <div class="edit-field-row">
+                        <div class="edit-group"><div class="edit-label">Job Site Name</div><input class="edit-field" id="editJobSite" value="${safe(job.job_site_name || '')}"></div>
+                        <div class="edit-group"><div class="edit-label">Contract #</div><input class="edit-field" id="editContract" value="${safe(job.contract_number || '')}"></div>
+                    </div>
+                    <div class="edit-field-row">
+                        <div class="edit-group"><div class="edit-label">PO #</div><input class="edit-field" id="editPO" value="${safe(job.po_number || '')}"></div>
+                        <div class="edit-group"><div class="edit-label">Job Type</div>
+                            <select class="edit-field" id="editJobType">
+                                <option value="fuel-delivery" ${job.job_type==='fuel-delivery'?'selected':''}>Fuel Delivery</option>
+                                <option value="equipment-tow" ${job.job_type==='equipment-tow'?'selected':''}>Equipment Tow</option>
+                                <option value="emergency-fuel" ${job.job_type==='emergency-fuel'?'selected':''}>Emergency Fuel</option>
+                                <option value="pickup" ${job.job_type==='pickup'?'selected':''}>Pickup</option>
+                                <option value="delivery" ${job.job_type==='delivery'?'selected':''}>Delivery</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="edit-field-row">
+                        <div class="edit-group"><div class="edit-label">Priority</div>
+                            <select class="edit-field" id="editPriority">
+                                <option value="low" ${job.priority==='low'?'selected':''}>Low</option>
+                                <option value="normal" ${job.priority==='normal'||!job.priority?'selected':''}>Normal</option>
+                                <option value="high" ${job.priority==='high'?'selected':''}>High</option>
+                                <option value="urgent" ${job.priority==='urgent'?'selected':''}>Urgent</option>
+                            </select>
+                        </div>
+                        <div class="edit-group"><div class="edit-label">Status</div>
+                            <select class="edit-field" id="editStatus">
+                                <option value="pending" ${job.status==='pending'?'selected':''}>Pending</option>
+                                <option value="assigned" ${job.status==='assigned'?'selected':''}>Assigned</option>
+                                <option value="accepted" ${job.status==='accepted'?'selected':''}>Accepted</option>
+                                <option value="in-progress" ${job.status==='in-progress'?'selected':''}>In Progress</option>
+                                <option value="completed" ${job.status==='completed'?'selected':''}>Completed</option>
+                                <option value="open" ${job.status==='open'?'selected':''}>Open</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <div class="detail-section-title">Location & Contact</div>
+                    <div class="edit-group"><div class="edit-label">Street Address</div><input class="edit-field" id="editStreet" value="${safe(job.address_street || '')}"></div>
+                    <div class="edit-field-row">
+                        <div class="edit-group"><div class="edit-label">City</div><input class="edit-field" id="editCity" value="${safe(job.address_city || '')}"></div>
+                        <div class="edit-group"><div class="edit-label">State</div><input class="edit-field" id="editState" value="${safe(job.address_state || '')}" maxlength="2" style="text-transform:uppercase;"></div>
+                    </div>
+                    <div class="edit-field-row">
+                        <div class="edit-group"><div class="edit-label">Zip</div><input class="edit-field" id="editZip" value="${safe(job.address_zip || '')}"></div>
+                        <div class="edit-group"><div class="edit-label">Customer</div><input class="edit-field" id="editCustomer" value="${safe(job.customer_name || '')}"></div>
+                    </div>
+                    <div class="edit-field-row">
+                        <div class="edit-group"><div class="edit-label">Contact Name</div><input class="edit-field" id="editContact" value="${safe(job.contact_name || '')}"></div>
+                        <div class="edit-group"><div class="edit-label">Contact Phone</div><input class="edit-field" id="editPhone" value="${safe(job.contact_phone || '')}"></div>
+                    </div>
+                    <div class="edit-group"><div class="edit-label">Rental Company</div><input class="edit-field" id="editRentalCo" value="${safe(job.rental_company || '')}"></div>
+                </div>
+
+                <div class="detail-section">
+                    <div class="detail-section-title">Schedule</div>
+                    <div class="edit-field-row">
+                        <div class="edit-group"><div class="edit-label">Date Out</div><input type="date" class="edit-field" id="editDateOut" value="${job.date_out ? job.date_out.substring(0,10) : ''}"></div>
+                        <div class="edit-group"><div class="edit-label">Time Out</div><input type="time" class="edit-field" id="editTimeOut" value="${job.time_out || ''}"></div>
+                    </div>
+                    <div class="edit-field-row">
+                        <div class="edit-group"><div class="edit-label">Est. Return</div><input type="date" class="edit-field" id="editEstReturn" value="${job.est_return ? job.est_return.substring(0,10) : ''}"></div>
+                        <div class="edit-group"><div class="edit-label">Time Return</div><input type="time" class="edit-field" id="editTimeReturn" value="${job.time_return || ''}"></div>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <div class="detail-section-title">Instructions</div>
+                    <textarea class="edit-field" id="editInstructions">${safe(job.instructions || '')}</textarea>
+                </div>
+            `;
+
+            document.getElementById('modalFooter').innerHTML = `
+                <button class="btn btn-secondary" onclick="openJob('${jobId}')">Cancel</button>
+                <button class="btn btn-save" onclick="saveJob('${jobId}')">Save Changes</button>
+            `;
+        }
+
+        async function saveJob(jobId) {
+            const saveBtn = document.querySelector('.btn-save');
+            saveBtn.textContent = 'Saving...';
+            saveBtn.disabled = true;
+
+            // Normalize city casing: "la puente" → "La Puente", trim extra spaces
+            const rawCity = document.getElementById('editCity').value.trim();
+            const normalizedCity = rawCity.replace(/\s+/g, ' ').replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.substr(1).toLowerCase());
+
+            const rawState = document.getElementById('editState').value.trim().toUpperCase();
+
+            const updates = {
+                job_site_name: document.getElementById('editJobSite').value.trim(),
+                contract_number: document.getElementById('editContract').value.trim(),
+                po_number: document.getElementById('editPO').value.trim() || null,
+                job_type: document.getElementById('editJobType').value,
+                priority: document.getElementById('editPriority').value,
+                status: document.getElementById('editStatus').value,
+                address_street: document.getElementById('editStreet').value.trim() || null,
+                address_city: normalizedCity || null,
+                address_state: rawState || null,
+                address_zip: document.getElementById('editZip').value.trim() || null,
+                customer_name: document.getElementById('editCustomer').value.trim() || null,
+                contact_name: document.getElementById('editContact').value.trim() || null,
+                contact_phone: document.getElementById('editPhone').value.trim() || null,
+                rental_company: document.getElementById('editRentalCo').value.trim() || null,
+                date_out: document.getElementById('editDateOut').value || null,
+                time_out: document.getElementById('editTimeOut').value || null,
+                est_return: document.getElementById('editEstReturn').value || null,
+                time_return: document.getElementById('editTimeReturn').value || null,
+                instructions: document.getElementById('editInstructions').value.trim() || null
+            };
+
+            try {
+                const result = await updateJob(jobId, updates);
+                if (!result.success) throw new Error(result.error);
+                
+                // Update local data
+                const idx = allJobs.findIndex(j => j.id === jobId);
+                if (idx !== -1) Object.assign(allJobs[idx], updates);
+                
+                updateStats();
+                renderJobs();
+                openJob(jobId); // Switch back to view mode
+                showToast('Job updated successfully', 'success');
+            } catch (err) {
+                console.error('Save error:', err);
+                showToast('Failed to save: ' + err.message, 'error');
+                saveBtn.textContent = 'Save Changes';
+                saveBtn.disabled = false;
+            }
+        }
+
+        // ===== ASSIGN FIELD WORKER =====
+        let selectedAssignJobId = null, selectedAssignWorkerId = null;
+
+        function getWorkerName(id) {
+            const w = fieldWorkers.find(w => w.id === id);
+            return w ? w.name : null;
+        }
+
+        function openAssignWorkerModal(jobId) {
+            selectedAssignJobId = jobId;
+            selectedAssignWorkerId = null;
+            document.getElementById('workerList').innerHTML = fieldWorkers.length
+                ? fieldWorkers.map(w => `<div class="worker-option" onclick="selectAssignWorker('${w.id}',this)"><div class="worker-option-avatar">${w.name.charAt(0)}</div><div class="worker-option-info"><div class="worker-option-name">${w.name}</div><div class="worker-option-email">${w.email}</div></div><div class="worker-option-check"></div></div>`).join('')
+                : '<div class="empty-state" style="padding:30px;">No field workers available</div>';
+            document.getElementById('assignWorkerBtn').disabled = true;
+            var _assi = document.getElementById('assignWorkerModal'); if(_assi) _assi.classList.add('show');
+        }
+
+        function selectAssignWorker(id, el) {
+            selectedAssignWorkerId = id;
+            document.querySelectorAll('.worker-option').forEach(e => e.classList.remove('selected'));
+            el.classList.add('selected');
+            document.getElementById('assignWorkerBtn').disabled = false;
+        }
+
+        function closeAssignWorkerModal() {
+            var _assi = document.getElementById('assignWorkerModal'); if(_assi) _assi.classList.remove('show');
+        }
+
+        async function confirmAssignWorker() {
+            if (!selectedAssignJobId || !selectedAssignWorkerId) return;
+            try {
+                await assignWorkerToJob(selectedAssignJobId, selectedAssignWorkerId);
+                const job = allJobs.find(j => j.id === selectedAssignJobId);
+                if (job) { job.assigned_worker = selectedAssignWorkerId; job.status = 'in-progress'; }
+                closeAssignWorkerModal();
+                updateStats();
+                renderJobs();
+                const worker = fieldWorkers.find(w => w.id === selectedAssignWorkerId);
+                showToast('Field worker ' + (worker?.name || '') + ' assigned!', 'success');
+            } catch (err) {
+                console.error('Assign worker error:', err);
+                showToast('Failed to assign worker: ' + err.message, 'error');
+            }
+        }
+
+        // ===== INIT =====
+        loadData();
+    </script>
+    
+<script src="hamburger-menu.js"></script>
+<script src="global-search.js"></script>
+<script src="notification-center.js"></script>
+
+    <script>
+    // Role-aware sidebar
+    document.addEventListener('DOMContentLoaded', async () => {
+        if (typeof getCurrentUser === 'function') {
+            try {
+                const user = await getCurrentUser();
+                if (user && user.role === 'rental') {
+                    const nameEl = document.getElementById('adminUserName');
+                    if (nameEl) nameEl.textContent = user.name || 'Rental User';
+                    const roleEl = document.querySelector('.admin-sidebar-footer .admin-sidebar-role');
+                    if (roleEl) roleEl.textContent = 'Rental Account';
+                    // Update sidebar logo link behavior for rental
+                }
+            } catch(e) { console.warn('Role-aware sidebar:', e); }
+        }
+    });
+    </script>
+</body>
+</html>
