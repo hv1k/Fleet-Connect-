@@ -141,22 +141,22 @@
             padding: 9px 12px 9px 32px;
             font-family: 'Inter', sans-serif;
             font-size: 0.82rem;
-            background: var(--bg-input, #2a2a2a);
-            border: 1px solid var(--border, #333);
+            background: var(--bg-input, #e2e6ec);
+            border: 1px solid var(--border, #d0d5dd);
             border-radius: 8px;
-            color: var(--text-primary, #f5f0e8);
+            color: var(--text-primary, #334155);
             outline: none;
             transition: border-color 0.2s;
         }
         .global-search-input:focus { border-color: var(--accent, #60a5fa); }
-        .global-search-input::placeholder { color: var(--text-muted, #666); }
+        .global-search-input::placeholder { color: var(--text-muted, #94a3b8); }
         .global-search-results {
             position: absolute;
             top: 100%;
             left: 0;
             right: 0;
-            background: var(--bg-card, #242424);
-            border: 1px solid var(--border, #333);
+            background: var(--bg-card, #f9fafb);
+            border: 1px solid var(--border, #d0d5dd);
             border-radius: 8px;
             margin-top: 4px;
             max-height: 400px;
@@ -170,7 +170,7 @@
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            color: var(--text-muted, #666);
+            color: var(--text-muted, #94a3b8);
         }
         .global-search-result-item {
             display: flex;
@@ -178,15 +178,15 @@
             gap: 10px;
             padding: 8px 12px;
             text-decoration: none;
-            color: var(--text-primary, #f5f0e8);
+            color: var(--text-primary, #334155);
             transition: background 0.15s;
             cursor: pointer;
         }
-        .global-search-result-item:hover { background: var(--bg-hover, #333); }
+        .global-search-result-item:hover { background: var(--bg-hover, #e8ecf2); }
         .global-search-result-icon { font-size: 1rem; flex-shrink: 0; }
         .global-search-result-title { font-size: 0.82rem; font-weight: 500; }
-        .global-search-result-sub { font-size: 0.72rem; color: var(--text-secondary, #888); }
-        .global-search-empty { padding: 16px; text-align: center; color: var(--text-secondary, #888); font-size: 0.85rem; }
+        .global-search-result-sub { font-size: 0.72rem; color: var(--text-secondary, #64748b); }
+        .global-search-empty { padding: 16px; text-align: center; color: var(--text-secondary, #64748b); font-size: 0.85rem; }
     `;
     document.head.appendChild(style);
 })();
