@@ -504,7 +504,7 @@
             const container = document.getElementById('jobsList');
             if (filtered.length === 0) {
                 if (allJobs.length === 0) {
-                    container.innerHTML = '<div class="empty-state" style="display:flex;flex-direction:column;align-items:center;"><div style="font-size:3rem;margin-bottom:16px;opacity:0.5;">📋</div><h3 style="font-size:1.2rem;font-weight:600;margin-bottom:8px;">No work orders yet</h3><p style="font-size:0.9rem;color:var(--text-muted);margin-bottom:24px;">Create your first work order to get started</p><a href="create-job.html" class="btn btn-primary" style="text-decoration:none;">+ Create Work Order</a></div>';
+                    container.innerHTML = '<div class="empty-state" style="display:flex;flex-direction:column;align-items:center;"><div style="font-size:3rem;margin-bottom:16px;opacity:0.5;">📋</div><h3 style="font-size:1.2rem;font-weight:600;margin-bottom:8px;">No work orders yet</h3><p style="font-size:0.9rem;color:var(--text-muted);margin-bottom:24px;">' + (isFieldworkerReadonly ? 'No assigned work orders' : 'Create your first work order to get started') + '</p>' + (isFieldworkerReadonly ? '' : '<a href="create-job.html" class="btn btn-primary" style="text-decoration:none;">+ Create Work Order</a>') + '</div>';
                 } else {
                     container.innerHTML = '<div class="empty-state" style="display:flex;flex-direction:column;align-items:center;"><div style="font-size:3rem;margin-bottom:16px;opacity:0.5;">🔍</div><h3 style="font-size:1.2rem;font-weight:600;margin-bottom:8px;">No work orders found</h3><p style="font-size:0.9rem;color:var(--text-muted);">Try adjusting your search or filters</p></div>';
                 }
