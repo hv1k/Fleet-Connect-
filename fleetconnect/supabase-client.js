@@ -115,25 +115,22 @@ async function loginUser(email, password) {
 
 async function demoLogin(role) {
     try {
-        // Client-side demo login — no server required
-        const demoUsers = {
-            admin: { id: 'demo-admin', email: 'admin@fleetconnect.demo', name: 'Admin User', role: 'admin', company: 'FleetConnect Demo', vendor_id: null },
-            vendor: { id: 'demo-vendor', email: 'vendor@fleetconnect.demo', name: 'Vendor User', role: 'vendor', company: 'Your Fleet Services', vendor_id: 'demo-vendor-id' },
-            rental: { id: 'demo-rental', email: 'rental@fleetconnect.demo', name: 'Rental User', role: 'rental', company: 'Demo Construction Co', vendor_id: null },
-            fieldworker: { id: 'demo-fieldworker', email: 'worker@fleetconnect.demo', name: 'John Driver', role: 'fieldworker', company: 'Your Fleet Services', vendor_id: 'demo-vendor-id' }
-        };
-        const user = demoUsers[role];
-        if (!user) return { success: false, error: 'Invalid demo role' };
+        const response = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ demo: true, demoRole: role })
+        });
 
-        // Create a simple base64 token (not a real JWT, but enough for client-side auth)
-        var header = btoa(JSON.stringify({alg:'HS256',typ:'JWT'}));
-        var payload = btoa(JSON.stringify({userId:user.id,email:user.email,role:user.role,company:user.company,vendor_id:user.vendor_id,exp:Math.floor(Date.now()/1000)+28800}));
-        var fakeToken = header + '.' + payload + '.demo-signature';
+        const data = await response.json();
 
-        setAuthToken(fakeToken);
-        setCurrentUser(user);
+        if (!response.ok || !data.success) {
+            return { success: false, error: data.error || 'Demo login failed' };
+        }
 
-        return { success: true, user: user };
+        setAuthToken(data.token);
+        setCurrentUser(data.user);
+
+        return { success: true, user: data.user };
     } catch (err) {
         console.error('Demo login error:', err);
         return { success: false, error: 'Network error. Please try again.' };
