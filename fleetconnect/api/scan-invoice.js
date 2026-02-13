@@ -90,7 +90,7 @@ export default async function handler(req, res) {
         try {
             const parts = tokenStr.split('.');
             if (parts.length === 3) {
-                const payload = JSON.parse(atob(parts[1]));
+                const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString());
                 if (!payload.role) throw new Error('No role');
                 // Demo token is valid enough for scan
             } else {
