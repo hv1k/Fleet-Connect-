@@ -557,9 +557,10 @@
             fill.style.width = '30%';
 
             try {
+                const token = localStorage.getItem('token') || '';
                 const response = await fetch('/api/scan-invoice', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
                     body: JSON.stringify({ image: base64Image, mediaType: file.type || 'image/jpeg' })
                 });
                 fill.style.width = '80%';
