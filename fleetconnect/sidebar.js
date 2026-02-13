@@ -78,8 +78,7 @@
                 item(ICONS.reports, 'Reports', 'reports.html', 'page.reports') +
                 item(ICONS.dailyLog, 'Daily Log', 'daily-log.html', 'page.daily_log') +
                 item(ICONS.documentsAlt, 'Documents', 'document-storage.html', 'page.documents') +
-                item(ICONS.bulkImport, 'Bulk Import', 'bulk-import.html', 'page.bulk_import') +
-                item(ICONS.chat, 'Messages', 'chat.html', 'page.messages')
+                item(ICONS.bulkImport, 'Bulk Import', 'bulk-import.html', 'page.bulk_import')
             ) +
             section('SETTINGS',
                 item(ICONS.alerts, 'Alerts', 'alerts-settings.html', 'page.alerts') +
@@ -108,7 +107,6 @@
                 item(ICONS.sla, 'SLA Management', 'sla-management.html', 'page.sla')
             ) +
             section('TOOLS',
-                item(ICONS.chat, 'Messages', 'chat.html', 'page.messages') +
                 item(ICONS.documents, 'Documents', 'document-storage.html', 'page.documents') +
                 item(ICONS.fuel, 'Fuel Calculator', 'fuel-calculator.html', 'page.fuel_calculator') +
                 item(ICONS.equipment, 'Equipment', 'equipment-tracking.html', 'page.equipment')
