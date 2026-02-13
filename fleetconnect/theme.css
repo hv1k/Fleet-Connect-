@@ -442,6 +442,7 @@ a:hover { color: var(--blue-600); }
 }
 .tbl-row {
     display: grid;
+    grid-template-columns: 36px 2fr 2.5fr 1fr 1.5fr 120px;
     gap: 10px;
     padding: 12px 24px;
     align-items: center;
