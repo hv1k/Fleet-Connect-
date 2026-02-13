@@ -100,13 +100,13 @@
     --purple-50: rgba(168,85,247,0.1);
     --amber-50: rgba(245,158,11,0.1);
 
-    --bg-body: #0a0a0a;
-    --bg-card: #141414;
-    --bg-input: #1a1a1a;
-    --bg-hover: #222;
-    --bg-sidebar: #111;
-    --border-color: #2a2a2a;
-    --border-light: #1e1e1e;
+    --bg-body: #0c0c0c;
+    --bg-card: #161616;
+    --bg-input: #1c1c1c;
+    --bg-hover: #1f1f1f;
+    --bg-sidebar: #111111;
+    --border-color: #222222;
+    --border-light: #1a1a1a;
     --text-primary: #ededed;
     --text-secondary: #aaa;
     --text-muted: #777;
@@ -741,4 +741,33 @@ textarea { min-height: 80px; resize: vertical; }
 }
 
 /* Dark mode pill adjustments */
+/* Dark mode refinements */
 [data-theme="dark"] .pill-rental { color: #22d3ee; background: rgba(34,211,238,0.1); }
+[data-theme="dark"] .admin-sidebar { border-right-color: #1a1a1a; }
+[data-theme="dark"] .hero-card,
+[data-theme="dark"] .panel,
+[data-theme="dark"] .tbl,
+[data-theme="dark"] .card {
+    border-color: #1e1e1e;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+[data-theme="dark"] .stat-tile,
+[data-theme="dark"] .mini-stat {
+    background: #1a1a1a;
+    border-color: #222;
+}
+[data-theme="dark"] .btn-p {
+    background: var(--gradient-blue);
+    box-shadow: 0 2px 8px rgba(37,99,235,0.4);
+}
+[data-theme="dark"] .btn-s {
+    background: #1c1c1c;
+    border-color: #2a2a2a;
+    color: #bbb;
+}
+[data-theme="dark"] .inp {
+    background: #1a1a1a;
+    border-color: #2a2a2a;
+    color: #ddd;
+}
+[data-theme="dark"] .tbl-row.data:hover { background: #1c1c1c; }
