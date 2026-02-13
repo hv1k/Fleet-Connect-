@@ -7,10 +7,10 @@
 
 /* ── Light Mode (default) ── */
 :root {
-    --white: #f9fafb;
-    --gray-50: #e9ecf1;
-    --gray-100: #e0e4ea;
-    --gray-200: #e2e8f0;
+    --white: #f5f6f8;
+    --gray-50: #e3e6ec;
+    --gray-100: #d9dde5;
+    --gray-200: #cdd2dc;
     --gray-300: #cbd5e1;
     --gray-400: #94a3b8;
     --gray-500: #64748b;
