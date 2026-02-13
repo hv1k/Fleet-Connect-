@@ -3,18 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
-    <script>
-      // Theme init - prevent flash of wrong theme
-      (function(){
-        var t = localStorage.getItem('fleetconnect-theme');
-        if(t === 'light') document.documentElement.classList.add('light-mode');
-      })();
-    </script>
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Jobs | FleetConnect</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="voice-notes.js" defer></script>
     <!-- PWA Meta Tags -->
     <link rel="manifest" href="/manifest.json">
@@ -24,211 +15,211 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="FleetConnect">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: #1a1a1a; color: #f5f0e8; min-height: 100vh; }
+        
+        
         .layout { display: flex; min-height: 100vh; }
 
         /* Sidebar */
         nav { flex: 1; overflow-y: auto; }
 
         /* Navigate Button */
-        .btn-navigate { background: rgba(34,197,94,0.15) !important; color: #22c55e !important; border: 1px solid rgba(34,197,94,0.3) !important; }
-        .btn-navigate:hover { background: rgba(34,197,94,0.25) !important; }
+        
+        
 
         /* Navigation Menu */
         .nav-menu { box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-        .nav-menu-item { display: block; width: 100%; padding: 12px 16px; background: transparent; border: none; color: #f5f0e8; text-align: left; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.9rem; transition: all 0.2s; border-bottom: 1px solid #333; }
+        .nav-menu-item { display: block; width: 100%; padding: 12px 16px; background: transparent; border: none; color: var(--text-primary); text-align: left; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.9rem; transition: all 0.2s; border-bottom: 1px solid var(--gray-300); }
         .nav-menu-item:last-child { border-bottom: none; }
-        .nav-menu-item:hover { background: #333; color: #60a5fa; }
+        .nav-menu-item:hover { background: var(--gray-300); color: #60a5fa; }
 
         /* Digital Signature */
-        .signature-section { margin-top: 20px; background: #242424; border-radius: 12px; padding: 16px; border: 1px solid #333; }
+        .signature-section { margin-top: 20px; background: var(--bg-card); border-radius: 12px; padding: 16px; border: 1px solid var(--gray-300); }
         .signature-section .section-title { margin-top: 0; margin-bottom: 8px; }
         .signature-canvas-wrap { position: relative; background: #fff; border-radius: 8px; overflow: hidden; margin-bottom: 8px; }
         .signature-canvas-wrap canvas { display: block; width: 100%; touch-action: none; cursor: crosshair; }
-        .signature-placeholder { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); color: #ccc; font-size: 0.85rem; pointer-events: none; }
+        .signature-placeholder { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); color: var(--gray-300); font-size: 0.85rem; pointer-events: none; }
         .signature-actions { display: flex; gap: 8px; }
-        .signature-actions button { flex: 1; padding: 8px; border-radius: 8px; border: 1px solid #444; background: #333; color: #f5f0e8; font-size: 0.8rem; cursor: pointer; }
-        .signature-actions button:hover { background: #444; }
+        .signature-actions button { flex: 1; padding: 8px; border-radius: 8px; border: 1px solid var(--gray-400); background: var(--gray-300); color: var(--text-primary); font-size: 0.8rem; cursor: pointer; }
+        .signature-actions button:hover { background: var(--gray-400); }
         .signature-status { text-align: center; margin-top: 8px; font-size: 0.8rem; color: #22c55e; display: none; }
         .signature-status.show { display: block; }
         /* Mobile sidebar toggle */
-        .mobile-toggle { display: none; background: none; border: none; color: #f5f0e8; cursor: pointer; padding: 4px; }
-        .admin-sidebar { width: 260px; background: #242424; border-right: 1px solid #333; padding: 24px 16px; position: fixed; left: 0; top: 0; height: 100vh; overflow-y: auto; z-index: 99; display: flex; flex-direction: column; }
-        .admin-sidebar-logo { font-size: 1.1rem; font-weight: 700; color: #60a5fa; margin-bottom: 16px; }
-        .admin-nav-section { margin-bottom: 24px; }
-        .admin-nav-section-title { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: #888; padding: 0 12px; margin-bottom: 8px; letter-spacing: 0.5px; }
-        .admin-nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; color: #b8b0a8; text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: all 0.2s; cursor: pointer; margin-bottom: 4px; }
-        .admin-nav-item:hover { background: #333; color: #f5f0e8; }
-        .admin-nav-item.active { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
-        .admin-nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
-        .admin-sidebar-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid #333; }
-        .admin-sidebar nav { flex: 1; overflow-y: auto; }
-        .main-content { flex: 1; margin-left: 260px; }
+        .mobile-toggle { display: none; background: none; border: none; color: var(--text-primary); cursor: pointer; padding: 4px; }
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
 
         @media (max-width: 768px) {
-            .admin-sidebar { left: -260px; transition: left 0.3s; }
+            
             .admin-sidebar.open { left: 0; box-shadow: 4px 0 20px rgba(0,0,0,0.5); }
-            .main-content { margin-left: 0 !important; }
+            
             .mobile-toggle { display: block; }
         }
 
         /* Main */
-        .header { padding: 24px 32px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+        .header { padding: 24px 32px; border-bottom: 1px solid var(--gray-300); display: flex; justify-content: space-between; align-items: center; }
         .header-left { display: flex; align-items: center; gap: 12px; }
         .header h1 { font-size: 1.4rem; font-weight: 700; }
-        .header-subtitle { font-size: 0.85rem; color: #888; margin-top: 2px; }
+        .header-subtitle { font-size: 0.85rem; color: var(--text-muted); margin-top: 2px; }
         .content { padding: 24px 32px; }
 
         /* Stats row */
         .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
-        .stat-card { background: #242424; border: 1px solid #333; border-radius: 14px; padding: 18px 20px; }
-        .stat-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: #888; letter-spacing: 0.3px; display: flex; align-items: center; gap: 6px; }
+        .stat-card { background: var(--bg-card); border: 1px solid var(--gray-300); border-radius: 14px; padding: 18px 20px; }
+        .stat-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.3px; display: flex; align-items: center; gap: 6px; }
         .stat-label svg { width: 15px; height: 15px; }
-        .stat-value { font-size: 1.8rem; font-weight: 700; color: #f5f0e8; margin-top: 6px; }
+        .stat-value { font-size: 1.8rem; font-weight: 700; color: var(--text-primary); margin-top: 6px; }
 
         /* Tabs */
-        .tabs { display: flex; border-bottom: 1px solid #333; margin-bottom: 20px; }
-        .tab { flex: 1; padding: 14px; background: transparent; border: none; border-bottom: 2px solid transparent; color: #888; font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 500; cursor: pointer; text-align: center; transition: all 0.2s; }
-        .tab:hover { color: #f5f0e8; }
+        .tabs { display: flex; border-bottom: 1px solid var(--gray-300); margin-bottom: 20px; }
+        .tab { flex: 1; padding: 14px; background: transparent; border: none; border-bottom: 2px solid transparent; color: var(--text-muted); font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 500; cursor: pointer; text-align: center; transition: all 0.2s; }
+        .tab:hover { color: var(--text-primary); }
         .tab.active { color: #60a5fa; border-bottom-color: #60a5fa; }
 
         /* Job Cards */
-        .job-card { background: #242424; border: 1px solid #333; border-radius: 12px; margin-bottom: 16px; overflow: hidden; }
+        .job-card { background: var(--bg-card); border: 1px solid var(--gray-300); border-radius: 12px; margin-bottom: 16px; overflow: hidden; }
         .job-card.urgent { border-left: 4px solid #fbbf24; }
-        .job-header { padding: 16px; border-bottom: 1px solid #333; }
+        .job-header { padding: 16px; border-bottom: 1px solid var(--gray-300); }
         .job-title { font-size: 1rem; font-weight: 600; margin-bottom: 4px; }
-        .job-meta { font-size: 0.8rem; color: #888; }
-        .job-info { padding: 12px 16px; background: #1e1e1e; }
+        .job-meta { font-size: 0.8rem; color: var(--text-muted); }
+        .job-info { padding: 12px 16px; background: var(--bg-hover); }
         .job-info-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.85rem; }
-        .job-info-label { color: #666; }
-        .job-info-value { color: #f5f0e8; }
+        .job-info-label { color: var(--text-muted); }
+        .job-info-value { color: var(--text-primary); }
         .job-info-value a { color: #60a5fa; text-decoration: none; }
-        .equipment-count { padding: 12px 16px; font-size: 0.85rem; color: #60a5fa; border-top: 1px solid #333; }
+        .equipment-count { padding: 12px 16px; font-size: 0.85rem; color: #60a5fa; border-top: 1px solid var(--gray-300); }
         .job-actions { padding: 12px 16px; display: flex; gap: 10px; }
 
-        .btn { flex: 1; padding: 12px; font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 600; border-radius: 8px; cursor: pointer; text-align: center; border: none; }
-        .btn-primary { background: #60a5fa; color: #1a1a1a; }
-        .btn-primary:hover { background: #3b82f6; }
-        .btn-outline { background: transparent; color: #888; border: 1px solid #333; }
-        .btn-outline:hover { background: #333; color: #f5f0e8; }
+        
+        
+        
+        
+        
 
-        .empty { text-align: center; padding: 60px 20px; color: #888; font-size: 0.9rem; }
+        .empty { text-align: center; padding: 60px 20px; color: var(--text-muted); font-size: 0.9rem; }
         .empty svg { width: 48px; height: 48px; margin-bottom: 12px; opacity: 0.4; }
 
         /* Invoice Modal */
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 1000; overflow-y: auto; }
-        .modal-content { background: #1a1a1a; min-height: 100%; padding: 20px; padding-bottom: 120px; max-width: 700px; margin: 0 auto; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px; background: #242424; border-radius: 12px; margin-bottom: 20px; position: sticky; top: 0; z-index: 10; }
-        .modal-header h2 { font-size: 1.1rem; }
-        .modal-close { background: none; border: none; color: #888; font-size: 1.5rem; cursor: pointer; padding: 4px 8px; }
-        .modal-close:hover { color: #f5f0e8; }
+        
+        
+        
+        
+        
+        
 
-        .job-site-info { background: #242424; padding: 16px; border-radius: 12px; margin-bottom: 20px; }
+        .job-site-info { background: var(--bg-card); padding: 16px; border-radius: 12px; margin-bottom: 20px; }
         .job-site-name { font-weight: 600; font-size: 1.1rem; margin-bottom: 4px; }
-        .job-site-address { font-size: 0.85rem; color: #888; }
+        .job-site-address { font-size: 0.85rem; color: var(--text-muted); }
 
         .section-title { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #60a5fa; margin-bottom: 12px; margin-top: 24px; }
 
         /* Unit Cards */
-        .unit-card { background: #242424; border: 1px solid #333; border-radius: 12px; margin-bottom: 12px; overflow: hidden; }
+        .unit-card { background: var(--bg-card); border: 1px solid var(--gray-300); border-radius: 12px; margin-bottom: 12px; overflow: hidden; }
         .unit-card.active { border-color: #60a5fa; }
         .unit-header { padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
         .unit-info { display: flex; align-items: center; gap: 12px; }
-        .unit-checkbox { width: 24px; height: 24px; border: 2px solid #333; border-radius: 6px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .unit-checkbox { width: 24px; height: 24px; border: 2px solid var(--gray-300); border-radius: 6px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
         .unit-card.active .unit-checkbox { background: #60a5fa; border-color: #60a5fa; }
-        .unit-card.active .unit-checkbox::after { content: '✓'; color: #1a1a1a; font-weight: bold; font-size: 14px; }
+        .unit-card.active .unit-checkbox::after { content: '✓'; color: var(--bg-body); font-weight: bold; font-size: 14px; }
         .unit-number { font-weight: 600; color: #60a5fa; }
-        .unit-desc { font-size: 0.85rem; color: #888; }
-        .unit-toggle { color: #666; font-size: 0.8rem; }
+        .unit-desc { font-size: 0.85rem; color: var(--text-muted); }
+        .unit-toggle { color: var(--text-muted); font-size: 0.8rem; }
 
-        .unit-fields { display: none; padding: 16px; border-top: 1px solid #333; background: #1e1e1e; }
+        .unit-fields { display: none; padding: 16px; border-top: 1px solid var(--gray-300); background: var(--bg-hover); }
         .unit-card.active .unit-fields { display: block; }
 
         .field-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
-        .field-group label { display: block; font-size: 0.75rem; color: #666; margin-bottom: 4px; text-transform: uppercase; }
-        .field-group input { width: 100%; padding: 12px; background: #242424; border: 1px solid #333; border-radius: 8px; color: #f5f0e8; font-family: 'Inter', sans-serif; font-size: 1rem; text-align: center; }
+        .field-group label { display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px; text-transform: uppercase; }
+        .field-group input { width: 100%; padding: 12px; background: var(--bg-card); border: 1px solid var(--gray-300); border-radius: 8px; color: var(--text-primary); font-family: 'Inter', sans-serif; font-size: 1rem; text-align: center; }
         .field-group input:focus { outline: none; border-color: #60a5fa; }
-        .field-group .unit-label { font-size: 0.7rem; color: #666; text-align: center; margin-top: 2px; }
+        .field-group .unit-label { font-size: 0.7rem; color: var(--text-muted); text-align: center; margin-top: 2px; }
 
         /* Invoice Details */
-        .invoice-details { background: #242424; border: 1px solid #333; border-radius: 12px; padding: 16px; margin-top: 20px; }
+        .invoice-details { background: var(--bg-card); border: 1px solid var(--gray-300); border-radius: 12px; padding: 16px; margin-top: 20px; }
         .detail-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
-        .detail-group label { display: block; font-size: 0.8rem; color: #888; margin-bottom: 6px; }
-        .detail-group input, .detail-group textarea { width: 100%; padding: 12px; background: #1e1e1e; border: 1px solid #333; border-radius: 8px; color: #f5f0e8; font-family: 'Inter', sans-serif; }
+        .detail-group label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px; }
+        .detail-group input, .detail-group textarea { width: 100%; padding: 12px; background: var(--bg-hover); border: 1px solid var(--gray-300); border-radius: 8px; color: var(--text-primary); font-family: 'Inter', sans-serif; }
         .detail-group input:focus, .detail-group textarea:focus { outline: none; border-color: #60a5fa; }
         .detail-group textarea { min-height: 70px; resize: vertical; }
 
         /* Incident */
-        .incident-toggle { display: flex; align-items: center; gap: 12px; padding: 14px; background: #1e1e1e; border-radius: 10px; cursor: pointer; margin-top: 16px; }
+        .incident-toggle { display: flex; align-items: center; gap: 12px; padding: 14px; background: var(--bg-hover); border-radius: 10px; cursor: pointer; margin-top: 16px; }
         .incident-toggle input { display: none; }
-        .toggle-switch { width: 48px; height: 26px; background: #333; border-radius: 13px; position: relative; transition: background 0.3s; flex-shrink: 0; }
+        .toggle-switch { width: 48px; height: 26px; background: var(--gray-300); border-radius: 13px; position: relative; transition: background 0.3s; flex-shrink: 0; }
         .toggle-switch::after { content: ''; position: absolute; width: 20px; height: 20px; background: white; border-radius: 50%; top: 3px; left: 3px; transition: transform 0.3s; }
         .incident-toggle input:checked + .toggle-switch { background: #fbbf24; }
         .incident-toggle input:checked + .toggle-switch::after { transform: translateX(22px); }
         .incident-fields { display: none; padding: 16px; background: rgba(251, 191, 36, 0.1); border: 1px solid #fbbf24; border-radius: 10px; margin-top: 12px; }
         .incident-fields.show { display: block; }
         .incident-fields h4 { color: #fbbf24; font-size: 0.9rem; margin-bottom: 12px; }
-        .file-upload { border: 2px dashed #333; border-radius: 10px; padding: 16px; text-align: center; cursor: pointer; margin-bottom: 10px; }
+        .file-upload { border: 2px dashed var(--gray-300); border-radius: 10px; padding: 16px; text-align: center; cursor: pointer; margin-bottom: 10px; }
         .file-upload:hover { border-color: #60a5fa; }
         .file-upload input { display: none; }
-        .file-upload-text { font-size: 0.85rem; color: #888; }
+        .file-upload-text { font-size: 0.85rem; color: var(--text-muted); }
         .file-preview { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
         .file-preview-item { position: relative; width: 60px; height: 60px; border-radius: 8px; overflow: hidden; }
         .file-preview-item img, .file-preview-item video { width: 100%; height: 100%; object-fit: cover; }
         .file-preview-item .remove { position: absolute; top: 2px; right: 2px; width: 18px; height: 18px; background: #ef4444; border: none; border-radius: 50%; color: white; font-size: 10px; cursor: pointer; }
 
         /* Summary */
-        .invoice-summary { background: #242424; border: 1px solid #60a5fa; border-radius: 12px; padding: 16px; margin-top: 20px; }
+        .invoice-summary { background: var(--bg-card); border: 1px solid #60a5fa; border-radius: 12px; padding: 16px; margin-top: 20px; }
         .summary-title { font-size: 0.8rem; color: #60a5fa; text-transform: uppercase; margin-bottom: 12px; }
-        .summary-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #333; }
+        .summary-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--gray-300); }
         .summary-row:last-child { border-bottom: none; font-weight: 600; }
-        .summary-label { color: #888; }
+        .summary-label { color: var(--text-muted); }
         .summary-value { font-weight: 600; }
 
-        .submit-invoice { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: calc(100% - 40px); max-width: 660px; padding: 16px; background: #60a5fa; color: #1a1a1a; border: none; border-radius: 10px; font-family: 'Inter', sans-serif; font-size: 1rem; font-weight: 600; cursor: pointer; z-index: 100; }
+        .submit-invoice { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: calc(100% - 40px); max-width: 660px; padding: 16px; background: #60a5fa; color: var(--bg-body); border: none; border-radius: 10px; font-family: 'Inter', sans-serif; font-size: 1rem; font-weight: 600; cursor: pointer; z-index: 100; }
         .submit-invoice:hover { background: #3b82f6; }
         .submit-invoice:disabled { opacity: 0.6; cursor: not-allowed; }
 
         /* History */
-        .history-invoice { background: #242424; border: 1px solid #333; border-radius: 12px; margin-bottom: 16px; overflow: hidden; }
-        .history-header { padding: 14px 16px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; }
+        .history-invoice { background: var(--bg-card); border: 1px solid var(--gray-300); border-radius: 12px; margin-bottom: 16px; overflow: hidden; }
+        .history-header { padding: 14px 16px; border-bottom: 1px solid var(--gray-300); display: flex; justify-content: space-between; }
         .history-date { font-weight: 600; }
-        .history-worker { font-size: 0.85rem; color: #888; }
+        .history-worker { font-size: 0.85rem; color: var(--text-muted); }
         .history-units { padding: 12px 16px; }
-        .history-unit { display: flex; justify-content: space-between; padding: 10px; background: #1e1e1e; border-radius: 8px; margin-bottom: 8px; }
+        .history-unit { display: flex; justify-content: space-between; padding: 10px; background: var(--bg-hover); border-radius: 8px; margin-bottom: 8px; }
         .history-unit:last-child { margin-bottom: 0; }
         .history-unit-number { font-weight: 600; color: #60a5fa; }
-        .history-unit-details { font-size: 0.85rem; color: #888; text-align: right; }
-        .history-totals { padding: 12px 16px; background: #1e1e1e; border-top: 1px solid #333; display: flex; justify-content: space-around; }
+        .history-unit-details { font-size: 0.85rem; color: var(--text-muted); text-align: right; }
+        .history-totals { padding: 12px 16px; background: var(--bg-hover); border-top: 1px solid var(--gray-300); display: flex; justify-content: space-around; }
         .history-total { text-align: center; }
         .history-total-value { font-size: 1.1rem; font-weight: 700; color: #60a5fa; }
-        .history-total-label { font-size: 0.7rem; color: #666; text-transform: uppercase; }
+        .history-total-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; }
         .history-incident { margin: 12px 16px; padding: 12px; background: rgba(251,191,36,0.1); border: 1px solid #fbbf24; border-radius: 8px; }
         .history-incident-title { color: #fbbf24; font-weight: 600; font-size: 0.85rem; margin-bottom: 6px; }
-        .history-incident-desc { font-size: 0.85rem; color: #888; }
+        .history-incident-desc { font-size: 0.85rem; color: var(--text-muted); }
         .history-incident-media { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
         .history-incident-media img, .history-incident-media video { width: 70px; height: 70px; object-fit: cover; border-radius: 6px; cursor: pointer; }
 
         /* GPS Location Tracker */
-        .gps-section { background: #242424; border: 1px solid #333; border-radius: 12px; padding: 16px; margin-top: 20px; }
+        .gps-section { background: var(--bg-card); border: 1px solid var(--gray-300); border-radius: 12px; padding: 16px; margin-top: 20px; }
         .gps-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
-        .gps-title { font-size: 0.9rem; font-weight: 600; color: #f5f0e8; }
-        .gps-button { display: flex; align-items: center; gap: 8px; padding: 12px 16px; background: #333; border: 1px solid #444; border-radius: 8px; color: #888; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 500; transition: all 0.2s; flex: 1; }
-        .gps-button:hover:not(.gps-button.disabled) { background: #3d3d3d; border-color: #555; color: #f5f0e8; }
+        .gps-title { font-size: 0.9rem; font-weight: 600; color: var(--text-primary); }
+        .gps-button { display: flex; align-items: center; gap: 8px; padding: 12px 16px; background: var(--gray-300); border: 1px solid var(--gray-400); border-radius: 8px; color: var(--text-muted); cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 500; transition: all 0.2s; flex: 1; }
+        .gps-button:hover:not(.gps-button.disabled) { background: var(--gray-300); border-color: var(--gray-500); color: var(--text-primary); }
         .gps-button.disabled { opacity: 0.6; cursor: not-allowed; }
         .gps-button.capturing { background: rgba(96, 165, 250, 0.15); border-color: #60a5fa; color: #60a5fa; }
         .gps-button.success { background: rgba(34, 197, 94, 0.15); border-color: #22c55e; color: #22c55e; }
         .gps-button.error { background: rgba(239, 68, 68, 0.15); border-color: #ef4444; color: #ef4444; }
         .gps-icon { width: 18px; height: 18px; flex-shrink: 0; }
-        .gps-status { padding: 12px; background: #1e1e1e; border-radius: 8px; border: 1px solid #333; margin-top: 12px; display: none; }
+        .gps-status { padding: 12px; background: var(--bg-hover); border-radius: 8px; border: 1px solid var(--gray-300); margin-top: 12px; display: none; }
         .gps-status.show { display: block; }
         .gps-status.success { border-color: #22c55e; background: rgba(34, 197, 94, 0.05); }
         .gps-status.error { border-color: #ef4444; background: rgba(239, 68, 68, 0.05); }
-        .gps-coords { font-size: 0.85rem; color: #f5f0e8; font-family: 'Courier New', monospace; margin-bottom: 6px; }
-        .gps-coords-label { font-size: 0.7rem; color: #666; text-transform: uppercase; margin-bottom: 4px; }
+        .gps-coords { font-size: 0.85rem; color: var(--text-primary); font-family: 'Courier New', monospace; margin-bottom: 6px; }
+        .gps-coords-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
         .gps-coords-value { display: flex; justify-content: space-between; align-items: center; }
-        .gps-map-link { display: inline-block; margin-top: 8px; padding: 6px 10px; background: #60a5fa; color: #1a1a1a; border-radius: 6px; text-decoration: none; font-size: 0.8rem; font-weight: 600; text-align: center; flex: 1; max-width: 100px; }
+        .gps-map-link { display: inline-block; margin-top: 8px; padding: 6px 10px; background: #60a5fa; color: var(--bg-body); border-radius: 6px; text-decoration: none; font-size: 0.8rem; font-weight: 600; text-align: center; flex: 1; max-width: 100px; }
         .gps-map-link:hover { background: #3b82f6; }
         .gps-error-msg { font-size: 0.85rem; color: #ef4444; margin-bottom: 0; }
         .gps-success-msg { font-size: 0.85rem; color: #22c55e; display: flex; align-items: center; gap: 6px; }
@@ -246,38 +237,38 @@
         .priority-badge.low { background: rgba(34, 197, 94, 0.2); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.4); }
 
         /* No Address Styling */
-        .no-address { color: #666; font-style: italic; }
+        .no-address { color: var(--text-muted); font-style: italic; }
 
         /* Enhanced Signature Modal */
         .signature-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); z-index: 2000; display: flex; flex-direction: column; }
-        .signature-modal-header { padding: 16px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; background: #1a1a1a; }
-        .signature-modal-header h3 { font-size: 1rem; color: #f5f0e8; margin: 0; }
-        .signature-modal-close { background: none; border: none; color: #888; font-size: 1.5rem; cursor: pointer; padding: 4px 8px; }
-        .signature-modal-close:hover { color: #f5f0e8; }
+        .signature-modal-header { padding: 16px; border-bottom: 1px solid var(--gray-300); display: flex; justify-content: space-between; align-items: center; background: var(--bg-body); }
+        .signature-modal-header h3 { font-size: 1rem; color: var(--text-primary); margin: 0; }
+        .signature-modal-close { background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; padding: 4px 8px; }
+        .signature-modal-close:hover { color: var(--text-primary); }
         .signature-modal-canvas { flex: 1; display: flex; align-items: center; justify-content: center; background: #fff; }
         .signature-modal-canvas canvas { width: 100%; height: 100%; display: block; touch-action: none; cursor: crosshair; }
-        .signature-modal-footer { padding: 16px; background: #1a1a1a; border-top: 1px solid #333; display: flex; gap: 8px; }
+        .signature-modal-footer { padding: 16px; background: var(--bg-body); border-top: 1px solid var(--gray-300); display: flex; gap: 8px; }
         .signature-modal-footer button { flex: 1; padding: 12px; border-radius: 8px; border: none; font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
-        .sig-btn-clear { background: #333; color: #888; }
-        .sig-btn-clear:hover { background: #444; color: #f5f0e8; }
-        .sig-btn-done { background: #60a5fa; color: #1a1a1a; }
+        .sig-btn-clear { background: var(--gray-300); color: var(--text-muted); }
+        .sig-btn-clear:hover { background: var(--gray-400); color: var(--text-primary); }
+        .sig-btn-done { background: #60a5fa; color: var(--bg-body); }
         .sig-btn-done:hover { background: #3b82f6; }
 
         /* Photo Upload Section */
-        .photo-upload-section { background: #242424; border: 1px solid #333; border-radius: 12px; padding: 16px; margin-top: 20px; }
-        .photo-upload-title { font-size: 0.9rem; font-weight: 600; color: #f5f0e8; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .photo-upload-section { background: var(--bg-card); border: 1px solid var(--gray-300); border-radius: 12px; padding: 16px; margin-top: 20px; }
+        .photo-upload-title { font-size: 0.9rem; font-weight: 600; color: var(--text-primary); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
         .photo-required-badge { color: #ef4444; font-size: 1rem; }
         .camera-button-group { display: grid; grid-template-columns: 1fr; gap: 8px; margin-bottom: 16px; }
-        .camera-button { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px 16px; background: #333; border: 2px solid #444; border-radius: 10px; color: #f5f0e8; font-family: 'Inter', sans-serif; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
-        .camera-button:hover { background: #3d3d3d; border-color: #60a5fa; color: #60a5fa; }
+        .camera-button { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px 16px; background: var(--gray-300); border: 2px solid var(--gray-400); border-radius: 10px; color: var(--text-primary); font-family: 'Inter', sans-serif; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .camera-button:hover { background: var(--gray-300); border-color: #60a5fa; color: #60a5fa; }
         .camera-button:active { transform: scale(0.98); }
         .camera-button svg { width: 20px; height: 20px; }
         .photo-categories { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
-        .photo-category { background: #1e1e1e; padding: 12px; border-radius: 8px; border: 1px solid #333; }
+        .photo-category { background: var(--bg-hover); padding: 12px; border-radius: 8px; border: 1px solid var(--gray-300); }
         .photo-category-label { font-size: 0.8rem; font-weight: 600; color: #60a5fa; text-transform: uppercase; display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
         .photo-category-required { color: #ef4444; }
         .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-        .photo-thumbnail { position: relative; width: 100%; aspect-ratio: 1; border-radius: 8px; overflow: hidden; background: #333; border: 2px solid #333; }
+        .photo-thumbnail { position: relative; width: 100%; aspect-ratio: 1; border-radius: 8px; overflow: hidden; background: var(--gray-300); border: 2px solid var(--gray-300); }
         .photo-thumbnail img, .photo-thumbnail video { width: 100%; height: 100%; object-fit: cover; }
         .photo-thumbnail-delete { position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; background: #ef4444; border: none; border-radius: 50%; color: white; font-size: 14px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .photo-thumbnail-delete:hover { background: #dc2626; }
@@ -290,59 +281,60 @@
         }
     
         /* Light Mode */
-        .light-mode { --bg-dark: #f5f5f5; --bg-card: #ffffff; --bg-input: #e8e8e8; --bg-hover: #e8e8e8; --border: #d0d0d0; --text-primary: #1a1a1a; --text-secondary: #555555; --text-muted: #888888; }
-        .light-mode .admin-sidebar { background: #ffffff !important; border-color: #d0d0d0 !important; }
-        .light-mode .admin-sidebar-logo { color: #3b82f6 !important; }
-        .light-mode .admin-nav-item { color: #555555 !important; }
-        .light-mode .admin-nav-item:hover { background: #e8e8e8 !important; color: #1a1a1a !important; }
-        .light-mode .admin-nav-item.active { background: #dbeafe !important; color: #2563eb !important; }
-        .light-mode .admin-nav-section { color: #888888 !important; }
-        .light-mode .user-menu { background: #e8e8e8 !important; }
-        .light-mode .user-name { color: #1a1a1a !important; }
-        .light-mode .header { background: #ffffff !important; border-color: #d0d0d0 !important; }
-        .light-mode .header h1 { color: #1a1a1a !important; }
-        .light-mode .header-subtitle { color: #555555 !important; }
-        .light-mode .main-content, .light-mode .content, .light-mode .admin-main { background: #f5f5f5 !important; }
-        .light-mode .card, .light-mode .stat-card, .light-mode .metric-card, .light-mode .admin-card { background: #ffffff !important; border-color: #d0d0d0 !important; }
-        .light-mode .card-title, .light-mode .stat-label { color: #1a1a1a !important; }
-        .light-mode .card-subtitle { color: #555555 !important; }
-        .light-mode input, .light-mode textarea, .light-mode select { background: #e8e8e8 !important; border-color: #d0d0d0 !important; color: #1a1a1a !important; }
-        .light-mode input::placeholder, .light-mode textarea::placeholder { color: #888888 !important; }
-        .light-mode .form-label, .light-mode label { color: #1a1a1a !important; }
-        .light-mode .badge { background: #dbeafe !important; color: #2563eb !important; }
-        .light-mode .btn-secondary { background: #e8e8e8 !important; color: #1a1a1a !important; border-color: #d0d0d0 !important; }
-        .light-mode .btn-secondary:hover { background: #d0d0d0 !important; }
-        .light-mode .admin-sidebar-footer { border-color: #d0d0d0 !important; }
-        .light-mode .logout-btn:hover { background: #e8e8e8 !important; }
-        .light-mode table th { background: #e8e8e8 !important; color: #1a1a1a !important; border-color: #d0d0d0 !important; }
-        .light-mode table td { border-color: #d0d0d0 !important; color: #1a1a1a !important; }
-        .light-mode table tr:hover { background: #e8e8e8 !important; }
-        .light-mode .modal-overlay { background: rgba(0,0,0,0.3) !important; }
-        .light-mode .modal, .light-mode .modal-content { background: #ffffff !important; border-color: #d0d0d0 !important; color: #1a1a1a !important; }
-        .light-mode .notification-bell { color: #555555 !important; }
-        .light-mode .search-box, .light-mode .search-input { background: #e8e8e8 !important; border-color: #d0d0d0 !important; color: #1a1a1a !important; }
-        .light-mode .tab, .light-mode .tab-btn { color: #555555 !important; }
-        .light-mode .tab.active, .light-mode .tab-btn.active { color: #3b82f6 !important; border-color: #3b82f6 !important; }
-        .light-mode .dropdown, .light-mode .dropdown-menu { background: #ffffff !important; border-color: #d0d0d0 !important; }
-        .light-mode .dropdown-item:hover { background: #e8e8e8 !important; }
-        .light-mode .toggle-switch { background: #d0d0d0 !important; }
-        .light-mode .toggle-switch.active { background: #2563eb !important; }
-        .light-mode .tooltip { background: #1a1a1a !important; color: #ffffff !important; }
-        .light-mode .progress-bar { background: #e8e8e8 !important; }
-        .light-mode .empty-state { color: #555555 !important; }
-        .light-mode .filter-bar, .light-mode .toolbar { background: #ffffff !important; border-color: #d0d0d0 !important; }
-        .light-mode .chip { background: #e8e8e8 !important; color: #1a1a1a !important; }
-        .light-mode pre, .light-mode code { background: #e8e8e8 !important; color: #1a1a1a !important; }
-        .light-mode .status-badge { border-color: #d0d0d0 !important; }
-        .light-mode ::selection { background: #3b82f6; color: #ffffff; }
-        .light-mode ::-webkit-scrollbar-track { background: #f5f5f5; }
-        .light-mode ::-webkit-scrollbar-thumb { background: #d0d0d0; }
-        .light-mode ::-webkit-scrollbar-thumb:hover { background: #bbbbbb; }
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
 
         .theme-toggle { background: none; border: 1px solid var(--border); border-radius: 8px; padding: 8px; cursor: pointer; color: var(--text-primary); font-size: 1.2rem; transition: all 0.2s; line-height: 1; }
         .theme-toggle:hover { background: var(--bg-hover); }
 
         </style>
+    <link rel="stylesheet" href="theme.css">
 </head>
 <body>
     <div class="layout">
@@ -350,10 +342,10 @@
             <div class="admin-sidebar-logo">FLEETCONNECT</div>
 <nav id="sidebarNav"></nav>
             <div class="admin-sidebar-footer">
-                <div style="padding: 12px; background: #333; border-radius: 8px;">
-                    <div style="font-size: 0.8rem; font-weight: 600; color: #f5f0e8; margin-bottom: 4px;" id="adminUserName">User</div>
-                    <div class="admin-sidebar-role" style="font-size: 0.75rem; color: #888;">Field Worker</div>
-                    <button onclick="logout()" style="margin-top: 8px; width: 100%; padding: 6px; background: transparent; border: 1px solid #333; color: #888; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 0.75rem; cursor: pointer; transition: all 0.2s;">Logout</button>
+                <div style="padding: 12px; background: var(--gray-300); border-radius: 8px;">
+                    <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary); margin-bottom: 4px;" id="adminUserName">User</div>
+                    <div class="admin-sidebar-role" style="font-size: 0.75rem; color: var(--text-muted);">Field Worker</div>
+                    <button onclick="logout()" style="margin-top: 8px; width: 100%; padding: 6px; background: transparent; border: 1px solid var(--gray-300); color: var(--text-muted); border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 0.75rem; cursor: pointer; transition: all 0.2s;">Logout</button>
                 </div>
             </div>
         </aside>
@@ -605,13 +597,13 @@
                             ${hasAddress ? `
                                 <div style="position: relative; flex: 1; min-width: 100px;">
                                     <button class="btn btn-navigate" onclick="toggleNavMenu(this)" style="width: 100%; margin: 0;">🧭 Navigate</button>
-                                    <div class="nav-menu" style="display: none; position: absolute; top: 100%; right: 0; background: #242424; border: 1px solid #333; border-radius: 8px; margin-top: 4px; z-index: 10; min-width: 150px;">
+                                    <div class="nav-menu" style="display: none; position: absolute; top: 100%; right: 0; background: var(--bg-card); border: 1px solid var(--gray-300); border-radius: 8px; margin-top: 4px; z-index: 10; min-width: 150px;">
                                         <button class="nav-menu-item" onclick="openNavApp('google', '${encodeURIComponent((job.address_street||'')+', '+(job.address_city||'')+', '+(job.address_state||'')+' '+(job.address_zip||''))}', '${job.id}')">Google Maps</button>
                                         <button class="nav-menu-item" onclick="openNavApp('apple', '${encodeURIComponent((job.address_street||'')+', '+(job.address_city||'')+', '+(job.address_state||'')+' '+(job.address_zip||''))}', '${job.id}')">Apple Maps</button>
                                         <button class="nav-menu-item" onclick="openNavApp('waze', '${encodeURIComponent((job.address_street||'')+', '+(job.address_city||'')+', '+(job.address_state||'')+' '+(job.address_zip||''))}', '${job.id}')">Waze</button>
                                     </div>
                                 </div>
-                            ` : `<div style="padding:8px 12px;background:rgba(107,114,128,0.15);color:#888;border:1px solid #444;border-radius:8px;font-size:0.85rem;text-align:center;font-style:italic;flex: 1; min-width: 100px;">⚠️ No Address</div>`}
+                            ` : `<div style="padding:8px 12px;background:rgba(107,114,128,0.15);color:var(--text-muted);border:1px solid var(--gray-400);border-radius:8px;font-size:0.85rem;text-align:center;font-style:italic;flex: 1; min-width: 100px;">⚠️ No Address</div>`}
                         </div>
                     </div>
                 `;
@@ -646,7 +638,7 @@
                     </div>
 
                     <div class="section-title">Select Units Serviced</div>
-                    <p style="font-size:0.85rem;color:#888;margin-bottom:16px;">Tap each unit you fueled and enter the details</p>
+                    <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:16px;">Tap each unit you fueled and enter the details</p>
 
                     <div id="unitsList">
                         ${equipment.length > 0 ? equipment.map(eq => `
@@ -682,7 +674,7 @@
                                 </div>
                             </div>
                         `).join('') : `
-                            <div style="padding:30px;text-align:center;color:#666;background:#242424;border-radius:12px;">
+                            <div style="padding:30px;text-align:center;color:var(--text-muted);background:var(--bg-card);border-radius:12px;">
                                 No equipment added to this job.<br>Contact your vendor to add units.
                             </div>
                         `}
@@ -786,7 +778,7 @@
                             <span>📷 Required Photos</span>
                             <span class="photo-required-badge">*</span>
                         </div>
-                        <p style="font-size:0.8rem;color:#888;margin-bottom:12px;">Capture photos for meter/gauge readings (required before submission)</p>
+                        <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:12px;">Capture photos for meter/gauge readings (required before submission)</p>
                         <div class="camera-button-group">
                             <button type="button" class="camera-button" onclick="openPhotoCapture('meter_before')">
                                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
@@ -807,13 +799,13 @@
 
                     ${FC_FLAGS.isOn('signature') ? `<div class="signature-section">
                         <div class="section-title">Site Contact Signature</div>
-                        <p style="font-size:0.8rem;color:#888;margin-bottom:10px;">Have the site contact sign below to confirm delivery</p>
+                        <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:10px;">Have the site contact sign below to confirm delivery</p>
                         <button type="button" class="btn btn-primary" style="width:100%;margin-bottom:12px;" onclick="openSignatureModal()">✍️ Capture Signature</button>
                         <div id="signaturePreview" style="display:none;text-align:center;margin-top:12px;">
-                            <img id="signatureImg" style="max-width:100%;height:auto;border-radius:8px;border:1px solid #333;">
+                            <img id="signatureImg" style="max-width:100%;height:auto;border-radius:8px;border:1px solid var(--gray-300);">
                             <p style="font-size:0.8rem;color:#22c55e;margin-top:8px;">✓ Signature captured</p>
                         </div>
-                        <input type="text" id="signerName" placeholder="Signer's name (optional)" style="width:100%;margin-top:8px;padding:10px;border-radius:8px;border:1px solid #444;background:#333;color:#f5f0e8;font-size:0.85rem;">
+                        <input type="text" id="signerName" placeholder="Signer's name (optional)" style="width:100%;margin-top:8px;padding:10px;border-radius:8px;border:1px solid var(--gray-400);background:var(--gray-300);color:var(--text-primary);font-size:0.85rem;">
                     </div>` : ''}
 
                     <button class="submit-invoice" id="submitBtn" onclick="submitInvoice('${jobId}')">
@@ -861,7 +853,7 @@
                         <div class="gps-coords">
                             <div><strong>Latitude:</strong> ${lat}</div>
                             <div><strong>Longitude:</strong> ${lng}</div>
-                            <div style="font-size:0.75rem;color:#666;margin-top:4px;">Accuracy: ±${Math.round(accuracy)}m</div>
+                            <div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">Accuracy: ±${Math.round(accuracy)}m</div>
                         </div>
                         <a class="gps-map-link" href="https://www.google.com/maps/?q=${lat},${lng}" target="_blank">Open in Google Maps</a>
                     `;
@@ -1090,7 +1082,7 @@
                                             <div class="history-unit">
                                                 <div>
                                                     <div class="history-unit-number">${safe(u.unit_number)}</div>
-                                                    <div style="font-size:0.8rem;color:#666;">${safe(u.unit_description || '')}</div>
+                                                    <div style="font-size:0.8rem;color:var(--text-muted);">${safe(u.unit_description || '')}</div>
                                                 </div>
                                                 <div class="history-unit-details">
                                                     <div>⏱ ${u.unit_hours} hrs</div>
@@ -1104,7 +1096,7 @@
                                         <div class="history-total"><div class="history-total-value">${inv.total_def}</div><div class="history-total-label">Total DEF</div></div>
                                         <div class="history-total"><div class="history-total-value">${units.length}</div><div class="history-total-label">Units</div></div>
                                     </div>
-                                    ${inv.notes ? `<div style="padding:12px 16px;font-size:0.85rem;color:#888;border-top:1px solid #333;">📝 ${safe(inv.notes)}</div>` : ''}
+                                    ${inv.notes ? `<div style="padding:12px 16px;font-size:0.85rem;color:var(--text-muted);border-top:1px solid var(--gray-300);">📝 ${safe(inv.notes)}</div>` : ''}
                                     ${inv.has_incident ? `
                                         <div class="history-incident">
                                             <div class="history-incident-title">⚠️ Incident Reported</div>
@@ -1656,5 +1648,6 @@
 <script src="hamburger-menu.js"></script>
 <script src="global-search.js"></script>
 <script src="notification-center.js"></script>
+    <script src="theme-toggle.js"></script>
 </body>
 </html>

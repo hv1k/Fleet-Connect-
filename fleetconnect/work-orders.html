@@ -3,72 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
-    <script>
-      // Theme init - prevent flash of wrong theme
-      (function(){
-        var t = localStorage.getItem('fleetconnect-theme');
-        if(t === 'light') document.documentElement.classList.add('light-mode');
-      })();
-    </script>
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Work Orders | FleetConnect</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root {
-            --bg-dark: #1a1a1a;
-            --bg-card: #242424;
-            --bg-hover: #333;
-            --border: #333;
-            --text-primary: #e8e0d8;
-            --text-secondary: #b8b0a8;
-            --text-muted: #888;
-            --accent: #3b82f6;
-            --success: #22c55e;
-            --warning: #f59e0b;
-            --error: #ef4444;
-            --admin: #60a5fa;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: #1a1a1a; color: #f5f0e8; min-height: 100vh; display: flex; }
+        
+        
+        
         .layout { display: flex; min-height: 100vh; }
 
         /* Sidebar */
         nav { flex: 1; overflow-y: auto; }
 
         /* Main */
-        .header { padding: 24px 32px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+        .header { padding: 24px 32px; border-bottom: 1px solid var(--gray-300); display: flex; justify-content: space-between; align-items: center; }
         .header-left { display: flex; align-items: center; gap: 12px; }
         .header h1 { font-size: 1.4rem; font-weight: 700; }
-        .header-subtitle { font-size: 0.85rem; color: #888; margin-top: 2px; }
+        .header-subtitle { font-size: 0.85rem; color: var(--text-muted); margin-top: 2px; }
         .content { padding: 24px 32px; }
 
         /* Stats row */
         .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
-        .stat-card { background: #242424; border: 1px solid #333; border-radius: 14px; padding: 18px 20px; }
-        .stat-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: #888; letter-spacing: 0.3px; display: flex; align-items: center; gap: 6px; }
+        .stat-card { background: var(--bg-card); border: 1px solid var(--gray-300); border-radius: 14px; padding: 18px 20px; }
+        .stat-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.3px; display: flex; align-items: center; gap: 6px; }
         .stat-label svg { width: 15px; height: 15px; }
-        .stat-value { font-size: 1.8rem; font-weight: 700; color: #f5f0e8; margin-top: 6px; }
+        .stat-value { font-size: 1.8rem; font-weight: 700; color: var(--text-primary); margin-top: 6px; }
 
         /* Search & Filters */
-        .filters-card { background: #242424; border: 1px solid #333; border-radius: 14px; padding: 16px 20px; margin-bottom: 24px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
-        .search-input { flex: 1; min-width: 220px; padding: 10px 14px 10px 38px; border: 1px solid #444; border-radius: 8px; font-size: 0.85rem; font-family: inherit; background: #2a2a2a url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23666'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'/%3E%3C/svg%3E") 12px center no-repeat; background-size: 16px; color: #f5f0e8; }
+        .filters-card { background: var(--bg-card); border: 1px solid var(--gray-300); border-radius: 14px; padding: 16px 20px; margin-bottom: 24px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+        .search-input { flex: 1; min-width: 220px; padding: 10px 14px 10px 38px; border: 1px solid var(--gray-400); border-radius: 8px; font-size: 0.85rem; font-family: inherit; background: var(--bg-input) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23666'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'/%3E%3C/svg%3E") 12px center no-repeat; background-size: 16px; color: var(--text-primary); }
         .search-input:focus { outline: none; border-color: #60a5fa; }
-        .search-input::placeholder { color: #666; }
-        .filter-select { padding: 10px 14px; border: 1px solid #444; border-radius: 8px; font-size: 0.85rem; font-family: inherit; background: #2a2a2a; color: #f5f0e8; cursor: pointer; }
+        .search-input::placeholder { color: var(--text-muted); }
+        .filter-select { padding: 10px 14px; border: 1px solid var(--gray-400); border-radius: 8px; font-size: 0.85rem; font-family: inherit; background: var(--bg-input); color: var(--text-primary); cursor: pointer; }
         .filter-select:focus { outline: none; border-color: #60a5fa; }
-        .results-count { font-size: 0.8rem; color: #888; margin-left: auto; white-space: nowrap; }
+        .results-count { font-size: 0.8rem; color: var(--text-muted); margin-left: auto; white-space: nowrap; }
 
         /* Jobs list */
         .jobs-list { display: flex; flex-direction: column; gap: 12px; }
-        .job-card { background: #242424; border: 1px solid #333; border-radius: 14px; padding: 20px 24px; cursor: pointer; transition: all 0.15s; }
-        .job-card:hover { border-color: #60a5fa; background: #282828; }
+        .job-card { background: var(--bg-card); border: 1px solid var(--gray-300); border-radius: 14px; padding: 20px 24px; cursor: pointer; transition: all 0.15s; }
+        .job-card:hover { border-color: #60a5fa; background: var(--bg-card); }
         .job-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
-        .job-title { font-size: 1rem; font-weight: 600; color: #f5f0e8; margin-bottom: 3px; }
-        .job-meta { font-size: 0.8rem; color: #888; display: flex; gap: 12px; flex-wrap: wrap; }
+        .job-title { font-size: 1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 3px; }
+        .job-meta { font-size: 0.8rem; color: var(--text-muted); display: flex; gap: 12px; flex-wrap: wrap; }
         .job-meta span { color: #60a5fa; font-weight: 500; }
         .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; text-transform: capitalize; flex-shrink: 0; }
         .status-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
@@ -77,70 +55,70 @@
         .status-badge.in-progress { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
         .status-badge.completed { background: rgba(148, 163, 184, 0.15); color: #94a3b8; }
         .status-badge.open { background: rgba(96, 165, 250, 0.1); color: #60a5fa; }
-        .job-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; padding: 14px 16px; background: #2a2a2a; border-radius: 10px; }
-        .job-grid-label { font-size: 0.65rem; font-weight: 600; text-transform: uppercase; color: #666; margin-bottom: 3px; letter-spacing: 0.3px; }
-        .job-grid-value { font-size: 0.85rem; color: #f5f0e8; }
+        .job-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; padding: 14px 16px; background: var(--bg-input); border-radius: 10px; }
+        .job-grid-label { font-size: 0.65rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); margin-bottom: 3px; letter-spacing: 0.3px; }
+        .job-grid-value { font-size: 0.85rem; color: var(--text-primary); }
         .job-actions { display: flex; gap: 8px; margin-top: 14px; }
-        .btn { padding: 8px 16px; border-radius: 8px; font-size: 0.8rem; font-weight: 500; font-family: inherit; cursor: pointer; border: none; transition: all 0.15s; }
-        .btn-primary { background: #60a5fa; color: #1a1a1a; }
-        .btn-primary:hover { background: #3b82f6; }
-        .btn-secondary { background: #333; color: #f5f0e8; }
-        .btn-secondary:hover { background: #444; }
-        .btn-invoice { background: rgba(96, 165, 250, 0.1); color: #60a5fa; border: 1px solid rgba(96, 165, 250, 0.3); }
-        .btn-invoice:hover { background: rgba(96, 165, 250, 0.2); }
-        .btn-accept { background: #22c55e; color: #fff; }
-        .btn-accept:hover { background: #16a34a; }
-        .btn-decline { background: transparent; color: #f87171; border: 1px solid rgba(248,113,113,0.4); }
-        .btn-decline:hover { background: rgba(248,113,113,0.1); }
-        .btn-danger { background: #dc2626; color: #fff; }
-        .btn-danger:hover { background: #b91c1c; }
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
 
         /* Confirm Modal */
         .confirm-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 300; align-items: center; justify-content: center; padding: 20px; }
         .confirm-overlay.show { display: flex; }
-        .confirm-box { background: #242424; border: 1px solid #333; border-radius: 16px; max-width: 440px; width: 100%; }
+        .confirm-box { background: var(--bg-card); border: 1px solid var(--gray-300); border-radius: 16px; max-width: 440px; width: 100%; }
         .confirm-header { padding: 20px 24px 0; display: flex; align-items: center; gap: 12px; }
         .confirm-icon { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; }
         .confirm-icon.warning { background: rgba(251,191,36,0.15); }
         .confirm-body { padding: 16px 24px 24px; }
         .confirm-title { font-size: 1.05rem; font-weight: 600; }
-        .confirm-text { font-size: 0.85rem; color: #999; line-height: 1.6; margin-top: 12px; }
+        .confirm-text { font-size: 0.85rem; color: var(--gray-500); line-height: 1.6; margin-top: 12px; }
         .confirm-text strong { color: #fbbf24; font-weight: 600; }
-        .confirm-footer { padding: 16px 24px; border-top: 1px solid #333; display: flex; gap: 10px; justify-content: flex-end; background: #2a2a2a; border-radius: 0 0 16px 16px; }
+        .confirm-footer { padding: 16px 24px; border-top: 1px solid var(--gray-300); display: flex; gap: 10px; justify-content: flex-end; background: var(--bg-input); border-radius: 0 0 16px 16px; }
         .toast { position: fixed; bottom: 24px; right: 24px; padding: 14px 20px; border-radius: 10px; font-size: 0.85rem; font-weight: 500; z-index: 400; transform: translateY(100px); opacity: 0; transition: all 0.3s; }
         .toast.show { transform: translateY(0); opacity: 1; }
         .toast.success { background: #16a34a; color: #fff; }
         .toast.error { background: #dc2626; color: #fff; }
 
         /* Modal */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 200; align-items: flex-start; justify-content: center; padding: 40px 20px; overflow-y: auto; }
-        .modal-overlay.show { display: flex; }
-        .modal { background: #242424; border-radius: 16px; width: 100%; max-width: 800px; border: 1px solid #333; }
-        .modal-header { padding: 20px 24px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
-        .modal-header h3 { font-size: 1.1rem; font-weight: 600; }
-        .modal-close { width: 32px; height: 32px; border-radius: 8px; border: none; background: #333; color: #888; cursor: pointer; font-size: 1.1rem; }
-        .modal-close:hover { background: #444; color: #f5f0e8; }
-        .modal-body { padding: 24px; max-height: 70vh; overflow-y: auto; }
-        .modal-footer { padding: 16px 24px; border-top: 1px solid #333; display: flex; justify-content: flex-end; gap: 10px; background: #2a2a2a; border-radius: 0 0 16px 16px; }
+        
+        
+        
+        
+        
+        
+        
+        
+        
 
         .detail-section { margin-bottom: 20px; }
         .detail-section-title { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: #60a5fa; margin-bottom: 10px; letter-spacing: 0.5px; }
         .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .detail-item { padding: 12px 14px; background: #2a2a2a; border-radius: 8px; }
+        .detail-item { padding: 12px 14px; background: var(--bg-input); border-radius: 8px; }
         .detail-item.full { grid-column: span 2; }
-        .detail-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: #666; margin-bottom: 3px; letter-spacing: 0.3px; }
-        .detail-value { font-size: 0.9rem; color: #f5f0e8; }
+        .detail-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); margin-bottom: 3px; letter-spacing: 0.3px; }
+        .detail-value { font-size: 0.9rem; color: var(--text-primary); }
 
         .equipment-list { display: flex; flex-direction: column; gap: 6px; }
-        .equipment-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #2a2a2a; border-radius: 8px; }
+        .equipment-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--bg-input); border-radius: 8px; }
         .equipment-num { font-weight: 600; color: #60a5fa; }
-        .equipment-desc { font-size: 0.85rem; color: #888; }
+        .equipment-desc { font-size: 0.85rem; color: var(--text-muted); }
 
-        .delivery-item { padding: 12px 16px; background: #2a2a2a; border-radius: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .delivery-item { padding: 12px 16px; background: var(--bg-input); border-radius: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
         .delivery-gallons { font-size: 1.05rem; font-weight: 700; color: #60a5fa; }
-        .delivery-meta { font-size: 0.8rem; color: #888; }
+        .delivery-meta { font-size: 0.8rem; color: var(--text-muted); }
         .delivery-total { padding: 14px 16px; background: rgba(96,165,250,0.1); border: 1px solid rgba(96,165,250,0.25); border-radius: 10px; margin-top: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .delivery-total-label { font-size: 0.85rem; color: #888; }
+        .delivery-total-label { font-size: 0.85rem; color: var(--text-muted); }
         .delivery-total-value { font-size: 1.2rem; font-weight: 700; color: #60a5fa; }
 
         .invoice-btn { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: rgba(96,165,250,0.08); border: 1px solid rgba(96,165,250,0.25); border-radius: 10px; cursor: pointer; width: 100%; text-align: left; transition: all 0.15s; }
@@ -148,31 +126,31 @@
         .invoice-btn-icon { font-size: 1.3rem; }
         .invoice-btn-text { flex: 1; }
         .invoice-btn-title { font-weight: 600; color: #60a5fa; font-size: 0.85rem; }
-        .invoice-btn-sub { font-size: 0.8rem; color: #888; }
-        .no-data { padding: 16px; background: #2a2a2a; border-radius: 10px; text-align: center; color: #555; font-size: 0.85rem; }
+        .invoice-btn-sub { font-size: 0.8rem; color: var(--text-muted); }
+        .no-data { padding: 16px; background: var(--bg-input); border-radius: 10px; text-align: center; color: var(--gray-500); font-size: 0.85rem; }
 
         /* Edit mode */
-        .edit-field { width: 100%; padding: 8px 10px; background: #1a1a1a; border: 1px solid #444; border-radius: 6px; color: #f5f0e8; font-family: inherit; font-size: 0.85rem; }
+        .edit-field { width: 100%; padding: 8px 10px; background: var(--bg-body); border: 1px solid var(--gray-400); border-radius: 6px; color: var(--text-primary); font-family: inherit; font-size: 0.85rem; }
         .edit-field:focus { outline: none; border-color: #60a5fa; }
         .edit-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .edit-group { margin-bottom: 12px; }
-        .edit-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: #666; margin-bottom: 4px; letter-spacing: 0.3px; }
+        .edit-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; letter-spacing: 0.3px; }
         select.edit-field { cursor: pointer; }
         textarea.edit-field { min-height: 80px; resize: vertical; }
-        .btn-edit { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); }
-        .btn-edit:hover { background: rgba(251,191,36,0.25); }
-        .btn-save { background: #22c55e; color: #fff; }
-        .btn-save:hover { background: #16a34a; }
+        
+        
+        
+        
 
         /* Status Timeline */
         .status-timeline { display: flex; align-items: center; justify-content: space-between; margin: 20px 0; position: relative; padding: 20px 0; }
-        .status-timeline::before { content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 2px; background: #333; z-index: 0; }
+        .status-timeline::before { content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 2px; background: var(--gray-300); z-index: 0; }
         .timeline-step { flex: 1; display: flex; flex-direction: column; align-items: center; position: relative; z-index: 1; }
         .timeline-step:not(:last-child) { margin-right: 0; }
-        .timeline-circle { width: 40px; height: 40px; border-radius: 50%; background: #2a2a2a; border: 2px solid #444; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; font-weight: 700; color: #888; font-size: 0.9rem; }
+        .timeline-circle { width: 40px; height: 40px; border-radius: 50%; background: var(--bg-input); border: 2px solid var(--gray-400); display: flex; align-items: center; justify-content: center; margin-bottom: 8px; font-weight: 700; color: var(--text-muted); font-size: 0.9rem; }
         .timeline-circle.completed { background: #22c55e; border-color: #22c55e; color: #fff; }
         .timeline-circle.active { background: #60a5fa; border-color: #60a5fa; color: #fff; }
-        .timeline-label { font-size: 0.75rem; text-align: center; color: #888; max-width: 80px; line-height: 1.3; white-space: normal; }
+        .timeline-label { font-size: 0.75rem; text-align: center; color: var(--text-muted); max-width: 80px; line-height: 1.3; white-space: normal; }
         .timeline-label.completed { color: #22c55e; font-weight: 600; }
         .timeline-label.active { color: #60a5fa; font-weight: 600; }
 
@@ -180,31 +158,31 @@
         .image-viewer { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 300; align-items: center; justify-content: center; padding: 20px; }
         .image-viewer.show { display: flex; }
         .image-viewer img { max-width: 100%; max-height: 90vh; border-radius: 8px; }
-        .image-viewer-close { position: absolute; top: 20px; right: 20px; background: #333; border: none; color: #fff; width: 40px; height: 40px; border-radius: 50%; font-size: 1.3rem; cursor: pointer; }
-        .image-viewer-close:hover { background: #444; }
+        .image-viewer-close { position: absolute; top: 20px; right: 20px; background: var(--gray-300); border: none; color: #fff; width: 40px; height: 40px; border-radius: 50%; font-size: 1.3rem; cursor: pointer; }
+        .image-viewer-close:hover { background: var(--gray-400); }
 
         /* Assign Worker Modal */
-        .worker-option { display: flex; align-items: center; gap: 12px; padding: 12px; border: 2px solid #333; border-radius: 10px; cursor: pointer; margin-bottom: 8px; }
-        .worker-option:hover { border-color: #60a5fa; background: #2a2a2a; }
+        .worker-option { display: flex; align-items: center; gap: 12px; padding: 12px; border: 2px solid var(--gray-300); border-radius: 10px; cursor: pointer; margin-bottom: 8px; }
+        .worker-option:hover { border-color: #60a5fa; background: var(--bg-input); }
         .worker-option.selected { border-color: #60a5fa; background: rgba(96, 165, 250, 0.1); }
-        .worker-option-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #60a5fa, #3b82f6); display: flex; align-items: center; justify-content: center; color: #1a1a1a; font-weight: 600; }
+        .worker-option-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #60a5fa, #3b82f6); display: flex; align-items: center; justify-content: center; color: var(--bg-body); font-weight: 600; }
         .worker-option-info { flex: 1; }
-        .worker-option-name { font-weight: 600; color: #f5f0e8; }
-        .worker-option-email { font-size: 0.8rem; color: #888; }
-        .worker-option-check { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #444; }
+        .worker-option-name { font-weight: 600; color: var(--text-primary); }
+        .worker-option-email { font-size: 0.8rem; color: var(--text-muted); }
+        .worker-option-check { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--gray-400); }
         .worker-option.selected .worker-option-check { background: #60a5fa; border-color: #60a5fa; }
-        .btn-assign { background: rgba(139, 92, 246, 0.15); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.3); }
-        .btn-assign:hover { background: rgba(139, 92, 246, 0.25); }
+        
+        
 
-        .empty-state { text-align: center; padding: 60px 20px; color: #666; }
-        .empty-state svg { width: 48px; height: 48px; margin-bottom: 16px; color: #444; }
-        .empty-state h3 { color: #888; font-size: 1rem; margin-bottom: 8px; }
-        .empty-state p { font-size: 0.85rem; }
-        .loading { text-align: center; padding: 60px; color: #888; }
-        .spinner { width: 36px; height: 36px; border: 3px solid #333; border-top-color: #60a5fa; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+        
+        
+        
+        
+        
+        .spinner { width: 36px; height: 36px; border: 3px solid var(--gray-300); border-top-color: #60a5fa; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        .mobile-toggle { display: none; width: 40px; height: 40px; border: 1px solid #444; border-radius: 8px; background: #2a2a2a; color: #f5f0e8; align-items: center; justify-content: center; cursor: pointer; }
+        .mobile-toggle { display: none; width: 40px; height: 40px; border: 1px solid var(--gray-400); border-radius: 8px; background: var(--bg-input); color: var(--text-primary); align-items: center; justify-content: center; cursor: pointer; }
 
         @media (max-width: 1100px) { .stats-row { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 900px) {
@@ -224,89 +202,86 @@
         }
     
         /* Sidebar */
-        .admin-sidebar { width: 260px; background: var(--bg-card, #242424); border-right: 1px solid var(--border, #333); padding: 24px 16px; position: fixed; left: 0; top: 0; height: 100vh; overflow-y: auto; z-index: 99; display: flex; flex-direction: column; }
-        .admin-sidebar-logo { font-size: 1.1rem; font-weight: 700; color: var(--admin, #60a5fa); margin-bottom: 16px; }
-        .admin-nav-section { margin-bottom: 24px; }
-        .admin-nav-section-title { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted, #666); padding: 0 12px; margin-bottom: 8px; letter-spacing: 0.5px; }
-        .admin-nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; color: #b8b0a8; text-decoration: none; font-size: 0.85rem; font-weight: 500; transition: all 0.2s; cursor: pointer; margin-bottom: 4px; }
-        .admin-nav-item:hover { background: var(--bg-hover, #333); color: var(--text-primary, #f5f0e8); }
-        .admin-nav-item.active { background: rgba(96, 165, 250, 0.15); color: var(--admin, #60a5fa); }
-        .admin-nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
-        .admin-sidebar-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border, #333); }
-        .main-content { flex: 1; margin-left: 260px; }
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         @media (max-width: 768px) {
             body { flex-direction: column; }
-            .admin-sidebar { width: 100%; height: auto; position: relative; left: auto; top: auto; border-right: none; border-bottom: 1px solid var(--border, #333); padding: 12px; }
-            .main-content { margin-left: 0; }
+            
+            
         }
     
         /* Light Mode */
-        .light-mode { --bg-dark: #f5f5f5; --bg-card: #ffffff; --bg-input: #e8e8e8; --bg-hover: #e8e8e8; --border: #d0d0d0; --text-primary: #1a1a1a; --text-secondary: #555555; --text-muted: #888888; }
-        .light-mode .sidebar, .light-mode .admin-sidebar { background: #ffffff !important; border-color: #d0d0d0 !important; }
-        .light-mode .sidebar-logo, .light-mode .admin-sidebar-logo { color: #3b82f6 !important; }
-        .light-mode .nav-item, .light-mode .admin-nav-item { color: #555555 !important; }
-        .light-mode .nav-item:hover, .light-mode .admin-nav-item:hover { background: #e8e8e8 !important; color: #1a1a1a !important; }
-        .light-mode .nav-item.active, .light-mode .admin-nav-item.active { background: #dbeafe !important; color: #2563eb !important; }
-        .light-mode .nav-section-title, .light-mode .admin-nav-section { color: #888888 !important; }
-        .light-mode .user-menu { background: #e8e8e8 !important; }
-        .light-mode .user-name { color: #1a1a1a !important; }
-        .light-mode .header { background: #ffffff !important; border-color: #d0d0d0 !important; }
-        .light-mode .header h1 { color: #1a1a1a !important; }
-        .light-mode .header-subtitle { color: #555555 !important; }
-        .light-mode .main, .light-mode .content, .light-mode .admin-main { background: #f5f5f5 !important; }
-        .light-mode .card, .light-mode .stat-card, .light-mode .metric-card, .light-mode .admin-card { background: #ffffff !important; border-color: #d0d0d0 !important; }
-        .light-mode .card-title, .light-mode .stat-label { color: #1a1a1a !important; }
-        .light-mode .card-subtitle { color: #555555 !important; }
-        .light-mode input, .light-mode textarea, .light-mode select { background: #e8e8e8 !important; border-color: #d0d0d0 !important; color: #1a1a1a !important; }
-        .light-mode input::placeholder, .light-mode textarea::placeholder { color: #888888 !important; }
-        .light-mode .form-label, .light-mode label { color: #1a1a1a !important; }
-        .light-mode .badge { background: #dbeafe !important; color: #2563eb !important; }
-        .light-mode .btn-secondary { background: #e8e8e8 !important; color: #1a1a1a !important; border-color: #d0d0d0 !important; }
-        .light-mode .btn-secondary:hover { background: #d0d0d0 !important; }
-        .light-mode .sidebar-footer, .light-mode .admin-sidebar-footer { border-color: #d0d0d0 !important; }
-        .light-mode .logout-btn:hover { background: #e8e8e8 !important; }
-        .light-mode table th { background: #e8e8e8 !important; color: #1a1a1a !important; border-color: #d0d0d0 !important; }
-        .light-mode table td { border-color: #d0d0d0 !important; color: #1a1a1a !important; }
-        .light-mode table tr:hover { background: #e8e8e8 !important; }
-        .light-mode .modal-overlay { background: rgba(0,0,0,0.3) !important; }
-        .light-mode .modal, .light-mode .modal-content { background: #ffffff !important; border-color: #d0d0d0 !important; color: #1a1a1a !important; }
-        .light-mode .notification-bell { color: #555555 !important; }
-        .light-mode .search-box, .light-mode .search-input { background: #e8e8e8 !important; border-color: #d0d0d0 !important; color: #1a1a1a !important; }
-        .light-mode .tab, .light-mode .tab-btn { color: #555555 !important; }
-        .light-mode .tab.active, .light-mode .tab-btn.active { color: #3b82f6 !important; border-color: #3b82f6 !important; }
-        .light-mode .dropdown, .light-mode .dropdown-menu { background: #ffffff !important; border-color: #d0d0d0 !important; }
-        .light-mode .dropdown-item:hover { background: #e8e8e8 !important; }
-        .light-mode .toggle-switch { background: #d0d0d0 !important; }
-        .light-mode .toggle-switch.active { background: #2563eb !important; }
-        .light-mode .tooltip { background: #1a1a1a !important; color: #ffffff !important; }
-        .light-mode .progress-bar { background: #e8e8e8 !important; }
-        .light-mode .empty-state { color: #555555 !important; }
-        .light-mode .filter-bar, .light-mode .toolbar { background: #ffffff !important; border-color: #d0d0d0 !important; }
-        .light-mode .chip { background: #e8e8e8 !important; color: #1a1a1a !important; }
-        .light-mode pre, .light-mode code { background: #e8e8e8 !important; color: #1a1a1a !important; }
-        .light-mode .status-badge { border-color: #d0d0d0 !important; }
-        .light-mode ::selection { background: #3b82f6; color: #ffffff; }
-        .light-mode ::-webkit-scrollbar-track { background: #f5f5f5; }
-        .light-mode ::-webkit-scrollbar-thumb { background: #d0d0d0; }
-        .light-mode ::-webkit-scrollbar-thumb:hover { background: #bbbbbb; }
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
 
-/* Duplicate html.light-mode block removed */
-    
-        /* Sidebar actions (bell + theme toggle) */
-        /* Sidebar layout fix */
-        .admin-sidebar { display: flex; flex-direction: column; }
-        .admin-sidebar nav { flex: 1; overflow-y: auto; }
+/* Duplicate html
+        
 </style>
+    <link rel="stylesheet" href="theme.css">
 </head>
 <body>
         <aside class="admin-sidebar" id="adminSidebar">
         <div class="admin-sidebar-logo">FLEETCONNECT</div>
         <nav id="sidebarNav"></nav>
         <div class="admin-sidebar-footer">
-            <div style="padding: 12px; background: var(--bg-hover, #333); border-radius: 8px;">
-                <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary, #f5f0e8); margin-bottom: 4px;" id="adminUserName">System Admin</div>
-                <div class="admin-sidebar-role" style="font-size: 0.75rem; color: var(--text-secondary, #888);">Administrator</div>
-                <button onclick="logout()" style="margin-top: 8px; width: 100%; padding: 6px; background: transparent; border: 1px solid #333; color: #888; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 0.75rem; cursor: pointer; transition: all 0.2s;">Logout</button>
+            <div style="padding: 12px; background: var(--bg-hover, var(--gray-300)); border-radius: 8px;">
+                <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary, var(--text-primary)); margin-bottom: 4px;" id="adminUserName">System Admin</div>
+                <div class="admin-sidebar-role" style="font-size: 0.75rem; color: var(--text-secondary, var(--text-muted));">Administrator</div>
+                <button onclick="logout()" style="margin-top: 8px; width: 100%; padding: 6px; background: transparent; border: 1px solid var(--gray-300); color: var(--text-muted); border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 0.75rem; cursor: pointer; transition: all 0.2s;">Logout</button>
             </div>
         </div>
     </aside>
@@ -529,9 +504,9 @@
             const container = document.getElementById('jobsList');
             if (filtered.length === 0) {
                 if (allJobs.length === 0) {
-                    container.innerHTML = '<div class="empty-state" style="display:flex;flex-direction:column;align-items:center;"><div style="font-size:3rem;margin-bottom:16px;opacity:0.5;">📋</div><h3 style="font-size:1.2rem;font-weight:600;margin-bottom:8px;">No work orders yet</h3><p style="font-size:0.9rem;color:#888;margin-bottom:24px;">Create your first work order to get started</p><a href="create-job.html" class="btn btn-primary" style="text-decoration:none;">+ Create Work Order</a></div>';
+                    container.innerHTML = '<div class="empty-state" style="display:flex;flex-direction:column;align-items:center;"><div style="font-size:3rem;margin-bottom:16px;opacity:0.5;">📋</div><h3 style="font-size:1.2rem;font-weight:600;margin-bottom:8px;">No work orders yet</h3><p style="font-size:0.9rem;color:var(--text-muted);margin-bottom:24px;">Create your first work order to get started</p><a href="create-job.html" class="btn btn-primary" style="text-decoration:none;">+ Create Work Order</a></div>';
                 } else {
-                    container.innerHTML = '<div class="empty-state" style="display:flex;flex-direction:column;align-items:center;"><div style="font-size:3rem;margin-bottom:16px;opacity:0.5;">🔍</div><h3 style="font-size:1.2rem;font-weight:600;margin-bottom:8px;">No work orders found</h3><p style="font-size:0.9rem;color:#888;">Try adjusting your search or filters</p></div>';
+                    container.innerHTML = '<div class="empty-state" style="display:flex;flex-direction:column;align-items:center;"><div style="font-size:3rem;margin-bottom:16px;opacity:0.5;">🔍</div><h3 style="font-size:1.2rem;font-weight:600;margin-bottom:8px;">No work orders found</h3><p style="font-size:0.9rem;color:var(--text-muted);">Try adjusting your search or filters</p></div>';
                 }
                 return;
             }
@@ -559,7 +534,7 @@
                         <div class="job-grid">
                             <div><div class="job-grid-label">Location</div><div class="job-grid-value">${job.address_city || '—'}${job.address_state ? ', ' + job.address_state : ''}</div></div>
                             <div><div class="job-grid-label">Date</div><div class="job-grid-value">${formatDate(job.date_out)}</div></div>
-                            <div><div class="job-grid-label">Vendor</div><div class="job-grid-value">${vendorName || '<span style="color:#555;">Unassigned</span>'}</div></div>
+                            <div><div class="job-grid-label">Vendor</div><div class="job-grid-value">${vendorName || '<span style="color:var(--gray-500);">Unassigned</span>'}</div></div>
                             <div><div class="job-grid-label">Fuel / Equipment</div><div class="job-grid-value">${totalGal > 0 ? totalGal.toFixed(0) + ' gal' : ''} ${equipment.length > 0 ? equipment.length + ' unit' + (equipment.length > 1 ? 's' : '') : (totalGal > 0 ? '' : '—')}</div></div>
                         </div>
                         <div class="job-actions" onclick="event.stopPropagation()">
@@ -608,7 +583,7 @@
                         <div class="detail-item"><div class="detail-label">Customer</div><div class="detail-value">${job.customer_name || '—'}</div></div>
                         <div class="detail-item"><div class="detail-label">Contact</div><div class="detail-value">${job.contact_name || '—'}${job.contact_phone ? ' · <a href="tel:' + job.contact_phone + '" style="color:#60a5fa;">' + job.contact_phone + '</a>' : ''}</div></div>
                         <div class="detail-item"><div class="detail-label">Vendor</div><div class="detail-value">${vendorName}${(!job.assigned_vendor && ['admin','rental'].includes(currentUser.role) && job.status !== 'completed') ? ' <button class="btn btn-small" onclick="showAssignVendor(\'' + jobId + '\')" style="margin-left:8px;padding:2px 10px;font-size:0.75rem;background:#60a5fa;color:#fff;border:none;border-radius:6px;cursor:pointer;">Assign</button>' : ''}</div></div>
-                        <div class="detail-item"><div class="detail-label">Field Worker</div><div class="detail-value">${job.assigned_worker ? (getWorkerName(job.assigned_worker) || 'Assigned') : '<span style="color:#555;">Unassigned</span>'}${(currentUser.role === 'vendor' && job.status !== 'completed') ? ' <button onclick="closeModal(); openAssignWorkerModal(\'' + jobId + '\')" style="margin-left:8px;padding:2px 10px;font-size:0.75rem;background:rgba(139,92,246,0.15);color:#a78bfa;border:1px solid rgba(139,92,246,0.3);border-radius:6px;cursor:pointer;">' + (job.assigned_worker ? 'Reassign' : 'Assign') + '</button>' : ''}</div></div>
+                        <div class="detail-item"><div class="detail-label">Field Worker</div><div class="detail-value">${job.assigned_worker ? (getWorkerName(job.assigned_worker) || 'Assigned') : '<span style="color:var(--gray-500);">Unassigned</span>'}${(currentUser.role === 'vendor' && job.status !== 'completed') ? ' <button onclick="closeModal(); openAssignWorkerModal(\'' + jobId + '\')" style="margin-left:8px;padding:2px 10px;font-size:0.75rem;background:rgba(139,92,246,0.15);color:#a78bfa;border:1px solid rgba(139,92,246,0.3);border-radius:6px;cursor:pointer;">' + (job.assigned_worker ? 'Reassign' : 'Assign') + '</button>' : ''}</div></div>
                         <div class="detail-item"><div class="detail-label">Rental Company</div><div class="detail-value">${job.rental_company || '—'}</div></div>
                     </div>
                 </div>
@@ -687,7 +662,7 @@
                 ${job.instructions ? `
                     <div class="detail-section">
                         <div class="detail-section-title">Instructions</div>
-                        <div style="padding:12px 14px;background:#2a2a2a;border-radius:8px;font-size:0.9rem;color:#b8b0a8;line-height:1.6;">${safe(job.instructions)}</div>
+                        <div style="padding:12px 14px;background:var(--bg-input);border-radius:8px;font-size:0.9rem;color:var(--text-secondary);line-height:1.6;">${safe(job.instructions)}</div>
                     </div>
                 ` : ''}
 
@@ -730,31 +705,31 @@
                 const totalDef = invoices.reduce((s, i) => s + (parseFloat(i.total_def) || 0), 0);
                 content.innerHTML = `
                     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;">
-                        <div style="background:#2a2a2a;padding:12px;border-radius:8px;text-align:center;">
+                        <div style="background:var(--bg-input);padding:12px;border-radius:8px;text-align:center;">
                             <div style="font-size:1.3rem;font-weight:700;color:#22c55e;">${invoices.length}</div>
-                            <div style="font-size:0.75rem;color:#888;">Invoices</div>
+                            <div style="font-size:0.75rem;color:var(--text-muted);">Invoices</div>
                         </div>
-                        <div style="background:#2a2a2a;padding:12px;border-radius:8px;text-align:center;">
+                        <div style="background:var(--bg-input);padding:12px;border-radius:8px;text-align:center;">
                             <div style="font-size:1.3rem;font-weight:700;color:#f59e0b;">${totalDiesel.toFixed(1)}</div>
-                            <div style="font-size:0.75rem;color:#888;">Total Diesel (gal)</div>
+                            <div style="font-size:0.75rem;color:var(--text-muted);">Total Diesel (gal)</div>
                         </div>
-                        <div style="background:#2a2a2a;padding:12px;border-radius:8px;text-align:center;">
+                        <div style="background:var(--bg-input);padding:12px;border-radius:8px;text-align:center;">
                             <div style="font-size:1.3rem;font-weight:700;color:#60a5fa;">${totalDef.toFixed(1)}</div>
-                            <div style="font-size:0.75rem;color:#888;">Total DEF (gal)</div>
+                            <div style="font-size:0.75rem;color:var(--text-muted);">Total DEF (gal)</div>
                         </div>
                     </div>
                     ${invoices.map(inv => {
                         const units = inv.units_data || [];
-                        return `<div style="background:#2a2a2a;border-radius:8px;padding:12px;margin-bottom:8px;border:1px solid #333;">
+                        return `<div style="background:var(--bg-input);border-radius:8px;padding:12px;margin-bottom:8px;border:1px solid var(--gray-300);">
                             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-                                <span style="font-weight:600;color:#f5f0e8;">${inv.worker_name || 'Unknown'}</span>
-                                <span style="font-size:0.8rem;color:#888;">${inv.invoice_date || ''} ${inv.invoice_time || ''}</span>
+                                <span style="font-weight:600;color:var(--text-primary);">${inv.worker_name || 'Unknown'}</span>
+                                <span style="font-size:0.8rem;color:var(--text-muted);">${inv.invoice_date || ''} ${inv.invoice_time || ''}</span>
                             </div>
                             ${units.map(u => `<div style="display:flex;justify-content:space-between;font-size:0.85rem;padding:4px 0;border-top:1px solid #3a3a3a;">
-                                <span style="color:#ccc;">${u.unit_number || '—'} ${u.unit_description || ''}</span>
-                                <span style="color:#888;">⏱${u.unit_hours}h ⛽${u.diesel_gallons}gal 💧${u.def_gallons}gal</span>
+                                <span style="color:var(--gray-300);">${u.unit_number || '—'} ${u.unit_description || ''}</span>
+                                <span style="color:var(--text-muted);">⏱${u.unit_hours}h ⛽${u.diesel_gallons}gal 💧${u.def_gallons}gal</span>
                             </div>`).join('')}
-                            ${inv.notes ? '<div style="font-size:0.8rem;color:#888;margin-top:8px;padding-top:8px;border-top:1px solid #3a3a3a;">📝 ' + safe(inv.notes) + '</div>' : ''}
+                            ${inv.notes ? '<div style="font-size:0.8rem;color:var(--text-muted);margin-top:8px;padding-top:8px;border-top:1px solid #3a3a3a;">📝 ' + safe(inv.notes) + '</div>' : ''}
                         </div>`;
                     }).join('')}
                 `;
@@ -948,7 +923,7 @@
             document.getElementById('modalBody').innerHTML = `
                 <div class="detail-section">
                     <div class="detail-section-title">Select a vendor for this job</div>
-                    <select id="vendorAssignSelect" style="width:100%;padding:10px 12px;background:#2a2a2a;border:1px solid #444;border-radius:8px;color:#f5f0e8;font-size:0.9rem;margin-top:8px;">
+                    <select id="vendorAssignSelect" style="width:100%;padding:10px 12px;background:var(--bg-input);border:1px solid var(--gray-400);border-radius:8px;color:var(--text-primary);font-size:0.9rem;margin-top:8px;">
                         <option value="">— Choose a vendor —</option>
                         ${vendorOptions}
                     </select>
@@ -1196,5 +1171,6 @@
         }
     });
     </script>
+    <script src="theme-toggle.js"></script>
 </body>
 </html>

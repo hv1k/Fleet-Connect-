@@ -3,18 +3,25 @@
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Invoices — FleetConnect</title>
-<link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="glassmorphism.css">
+    <link rel="stylesheet" href="theme.css">
 </head>
 <body>
-<div id="sidebar"></div>
-<div class="main">
+<aside class="admin-sidebar" id="adminSidebar">
+        <div class="admin-sidebar-logo">FLEETCONNECT</div>
+        <nav id="sidebarNav"></nav>
+        <div class="admin-sidebar-footer">
+            <div class="user-card"><div class="user-avatar" id="adminUserAvatar">U</div><div><div class="user-info-name" id="adminUserName">User</div><div class="user-info-role" id="adminUserRole">—</div></div></div>
+            <button class="sidebar-logout" onclick="logout()">Sign out</button>
+        </div>
+    </aside>
+<div class="main-content"><div class="page">
 
 <h1 class="page-title">Invoices</h1>
 <div class="card">
   <table><thead><tr><th>Job</th><th>Worker</th><th>Hours</th><th>Diesel</th><th>DEF</th><th>Total</th><th>Status</th><th>Date</th></tr></thead><tbody id="body"></tbody></table>
 </div>
 
+</div>
 </div>
 <script src="store.js"></script>
 <script src="sidebar.js"></script>
@@ -26,5 +33,6 @@ document.getElementById('body').innerHTML = Store.getInvoices().slice().reverse(
   return '<tr><td>'+(job?job.jobSite:'-')+'</td><td>'+i.worker+'</td><td>'+i.hours+'</td><td>$'+(parseFloat(i.diesel)||0).toFixed(2)+'</td><td>$'+(parseFloat(i.def)||0).toFixed(2)+'</td><td>$'+parseFloat(i.total).toFixed(2)+'</td><td><span class="badge badge-'+i.status+'">'+i.status+'</span></td><td>'+new Date(i.createdAt).toLocaleDateString()+'</td></tr>';
 }).join('') || '<tr><td colspan="8" class="empty-state">No invoices yet</td></tr>';
 </script>
+    <script src="theme-toggle.js"></script>
 </body>
 </html>

@@ -3,12 +3,18 @@
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Time Clock — FleetConnect</title>
-<link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="glassmorphism.css">
+    <link rel="stylesheet" href="theme.css">
 </head>
 <body>
-<div id="sidebar"></div>
-<div class="main">
+<aside class="admin-sidebar" id="adminSidebar">
+        <div class="admin-sidebar-logo">FLEETCONNECT</div>
+        <nav id="sidebarNav"></nav>
+        <div class="admin-sidebar-footer">
+            <div class="user-card"><div class="user-avatar" id="adminUserAvatar">U</div><div><div class="user-info-name" id="adminUserName">User</div><div class="user-info-role" id="adminUserRole">—</div></div></div>
+            <button class="sidebar-logout" onclick="logout()">Sign out</button>
+        </div>
+    </aside>
+<div class="main-content"><div class="page">
 
 <h1 class="page-title">Time Clock</h1>
 <div class="card" style="max-width:500px;margin:0 auto;text-align:center;">
@@ -20,6 +26,7 @@
   <table><thead><tr><th>Clock In</th><th>Clock Out</th><th>Duration</th></tr></thead><tbody id="logBody"></tbody></table>
 </div>
 
+</div>
 </div>
 <script src="store.js"></script>
 <script src="sidebar.js"></script>
@@ -67,5 +74,6 @@ function renderLog() {
 renderBtn();
 renderLog();
 </script>
+    <script src="theme-toggle.js"></script>
 </body>
 </html>

@@ -3,12 +3,18 @@
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>My Dashboard — FleetConnect</title>
-<link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="glassmorphism.css">
+    <link rel="stylesheet" href="theme.css">
 </head>
 <body>
-<div id="sidebar"></div>
-<div class="main">
+<aside class="admin-sidebar" id="adminSidebar">
+        <div class="admin-sidebar-logo">FLEETCONNECT</div>
+        <nav id="sidebarNav"></nav>
+        <div class="admin-sidebar-footer">
+            <div class="user-card"><div class="user-avatar" id="adminUserAvatar">U</div><div><div class="user-info-name" id="adminUserName">User</div><div class="user-info-role" id="adminUserRole">—</div></div></div>
+            <button class="sidebar-logout" onclick="logout()">Sign out</button>
+        </div>
+    </aside>
+<div class="main-content"><div class="page">
 
 <h1 class="page-title">My Dashboard</h1>
 <div class="stats-grid" id="stats"></div>
@@ -19,6 +25,7 @@
   <a href="time-clock.html" class="btn btn-primary" style="background:var(--warning)">⏰ Time Clock</a>
 </div>
 
+</div>
 </div>
 <script src="store.js"></script>
 <script src="sidebar.js"></script>
@@ -32,5 +39,6 @@ document.getElementById('stats').innerHTML = [
   {v:myJobs.length,l:'Assigned Jobs'},{v:myJobs.filter(j=>j.status==='assigned').length,l:'Active'},{v:myInvs.length,l:'Invoices Submitted'},{v:clocked?'🟢 IN':'🔴 OUT',l:'Clock Status'}
 ].map(x=>'<div class="stat-card"><div class="stat-value">'+x.v+'</div><div class="stat-label">'+x.l+'</div></div>').join('');
 </script>
+    <script src="theme-toggle.js"></script>
 </body>
 </html>

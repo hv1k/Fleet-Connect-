@@ -3,18 +3,25 @@
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Jobs — FleetConnect</title>
-<link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="glassmorphism.css">
+    <link rel="stylesheet" href="theme.css">
 </head>
 <body>
-<div id="sidebar"></div>
-<div class="main">
+<aside class="admin-sidebar" id="adminSidebar">
+        <div class="admin-sidebar-logo">FLEETCONNECT</div>
+        <nav id="sidebarNav"></nav>
+        <div class="admin-sidebar-footer">
+            <div class="user-card"><div class="user-avatar" id="adminUserAvatar">U</div><div><div class="user-info-name" id="adminUserName">User</div><div class="user-info-role" id="adminUserRole">—</div></div></div>
+            <button class="sidebar-logout" onclick="logout()">Sign out</button>
+        </div>
+    </aside>
+<div class="main-content"><div class="page">
 
 <h1 class="page-title">All Jobs</h1>
 <div class="card">
   <table><thead><tr><th>Job Site</th><th>Customer</th><th>Equipment</th><th>Status</th><th>Worker</th><th>Created</th></tr></thead><tbody id="body"></tbody></table>
 </div>
 
+</div>
 </div>
 <script src="store.js"></script>
 <script src="sidebar.js"></script>
@@ -24,5 +31,6 @@ document.getElementById('body').innerHTML = Store.getJobs().slice().reverse().ma
   '<tr><td>'+j.jobSite+'</td><td>'+j.customer+'</td><td>'+(j.equipment||'-')+'</td><td><span class="badge badge-'+j.status+'">'+j.status+'</span></td><td>'+(j.assignedWorker||'-')+'</td><td>'+new Date(j.createdAt).toLocaleDateString()+'</td></tr>'
 ).join('') || '<tr><td colspan="6" class="empty-state">No jobs yet. <a href="create-work-order.html">Create one</a></td></tr>';
 </script>
+    <script src="theme-toggle.js"></script>
 </body>
 </html>

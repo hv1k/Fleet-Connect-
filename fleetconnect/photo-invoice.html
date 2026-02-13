@@ -3,55 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
-    <script>
-      // Theme init - prevent flash of wrong theme
-      (function(){
-        var t = localStorage.getItem('fleetconnect-theme');
-        if(t === 'light') document.documentElement.classList.add('light-mode');
-      })();
-    </script>
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Photo Invoice | FleetConnect</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: #1a1a1a; color: #f5f0e8; min-height: 100vh; }
+        
+        
         .container { max-width: 700px; margin: 0 auto; padding: 16px; padding-bottom: 100px; }
 
-        .header { padding: 20px 0; border-bottom: 1px solid #333; margin-bottom: 20px; }
+        .header { padding: 20px 0; border-bottom: 1px solid var(--gray-300); margin-bottom: 20px; }
         .header h1 { font-size: 1.4rem; font-weight: 700; margin-bottom: 4px; }
-        .header p { font-size: 0.85rem; color: #888; }
+        .header p { font-size: 0.85rem; color: var(--text-muted); }
 
-        .card { background: #242424; border: 1px solid #333; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
-        .card-title { font-size: 0.9rem; font-weight: 600; color: #f5f0e8; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .card { background: var(--bg-card); border: 1px solid var(--gray-300); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+        .card-title { font-size: 0.9rem; font-weight: 600; color: var(--text-primary); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
         .card-required { color: #ef4444; font-size: 1rem; }
 
-        .camera-button { width: 100%; padding: 16px; background: #333; border: 2px solid #444; border-radius: 10px; color: #f5f0e8; font-family: 'Inter', sans-serif; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .camera-button:hover { background: #3d3d3d; border-color: #60a5fa; color: #60a5fa; }
+        .camera-button { width: 100%; padding: 16px; background: var(--gray-300); border: 2px solid var(--gray-400); border-radius: 10px; color: var(--text-primary); font-family: 'Inter', sans-serif; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .camera-button:hover { background: var(--gray-300); border-color: #60a5fa; color: #60a5fa; }
         .camera-button:active { transform: scale(0.98); }
         .camera-button svg { width: 20px; height: 20px; }
 
-        .photo-category { background: #1e1e1e; padding: 12px; border-radius: 8px; border: 1px solid #333; margin-bottom: 8px; }
+        .photo-category { background: var(--bg-hover); padding: 12px; border-radius: 8px; border: 1px solid var(--gray-300); margin-bottom: 8px; }
         .photo-category:last-child { margin-bottom: 0; }
         .category-label { font-size: 0.8rem; font-weight: 600; color: #60a5fa; text-transform: uppercase; display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
         .category-required { color: #ef4444; }
         .photo-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
 
-        .photo-thumbnail { position: relative; width: 100%; aspect-ratio: 1; border-radius: 8px; overflow: hidden; background: #333; border: 2px solid #444; }
+        .photo-thumbnail { position: relative; width: 100%; aspect-ratio: 1; border-radius: 8px; overflow: hidden; background: var(--gray-300); border: 2px solid var(--gray-400); }
         .photo-thumbnail img, .photo-thumbnail video { width: 100%; height: 100%; object-fit: cover; }
         .photo-thumbnail-delete { position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; background: #ef4444; border: none; border-radius: 50%; color: white; font-size: 14px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .photo-thumbnail-delete:hover { background: #dc2626; }
 
-        .input-hidden { display: none; }
+        
 
-        .btn { width: 100%; padding: 14px; border-radius: 8px; border: none; font-family: 'Inter', sans-serif; font-size: 0.95rem; font-weight: 600; cursor: pointer; }
-        .btn-primary { background: #60a5fa; color: #1a1a1a; }
-        .btn-primary:hover { background: #3b82f6; }
-        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
-        .btn-outline { background: transparent; color: #888; border: 1px solid #333; }
-        .btn-outline:hover { background: #333; color: #f5f0e8; }
+        
+        
+        
+        
+        
+        
 
         .button-group { display: flex; gap: 8px; }
         .button-group button { flex: 1; }
@@ -62,15 +53,15 @@
         .toast.error { background: #ef4444; color: #fff; }
         .toast.info { background: #60a5fa; color: #fff; }
 
-        .submit-section { position: fixed; bottom: 0; left: 0; right: 0; padding: 16px; background: #242424; border-top: 1px solid #333; display: flex; gap: 8px; }
+        .submit-section { position: fixed; bottom: 0; left: 0; right: 0; padding: 16px; background: var(--bg-card); border-top: 1px solid var(--gray-300); display: flex; gap: 8px; }
         .submit-section button { flex: 1; padding: 14px; font-family: 'Inter', sans-serif; font-size: 0.95rem; font-weight: 600; border-radius: 8px; border: none; cursor: pointer; }
-        .submit-section .btn-primary { background: #60a5fa; color: #1a1a1a; }
-        .submit-section .btn-primary:hover { background: #3b82f6; }
-        .submit-section .btn-outline { background: #333; color: #888; border: 1px solid #444; }
-        .submit-section .btn-outline:hover { background: #444; color: #f5f0e8; }
+        .submit-section 
+        .submit-section 
+        .submit-section 
+        .submit-section 
 
-        .empty-state { text-align: center; padding: 40px 20px; color: #666; }
-        .empty-state svg { width: 48px; height: 48px; margin-bottom: 12px; opacity: 0.4; }
+        
+        
 
         @media (max-width: 480px) {
           .container { padding: 12px; }
@@ -78,55 +69,56 @@
         }
     
         /* Light Mode */
-        .light-mode { --bg-dark: #f5f5f5; --bg-card: #ffffff; --bg-input: #e8e8e8; --bg-hover: #e8e8e8; --border: #d0d0d0; --text-primary: #1a1a1a; --text-secondary: #555555; --text-muted: #888888; }
-        .light-mode .sidebar, .light-mode .admin-sidebar { background: #ffffff !important; border-color: #d0d0d0 !important; }
-        .light-mode .sidebar-logo, .light-mode .admin-sidebar-logo { color: #3b82f6 !important; }
-        .light-mode .nav-item, .light-mode .admin-nav-item { color: #555555 !important; }
-        .light-mode .nav-item:hover, .light-mode .admin-nav-item:hover { background: #e8e8e8 !important; color: #1a1a1a !important; }
-        .light-mode .nav-item.active, .light-mode .admin-nav-item.active { background: #dbeafe !important; color: #2563eb !important; }
-        .light-mode .nav-section-title, .light-mode .admin-nav-section { color: #888888 !important; }
-        .light-mode .user-menu { background: #e8e8e8 !important; }
-        .light-mode .user-name { color: #1a1a1a !important; }
-        .light-mode .header { background: #ffffff !important; border-color: #d0d0d0 !important; }
-        .light-mode .header h1 { color: #1a1a1a !important; }
-        .light-mode .header-subtitle { color: #555555 !important; }
-        .light-mode .main, .light-mode .content, .light-mode .admin-main { background: #f5f5f5 !important; }
-        .light-mode .card, .light-mode .stat-card, .light-mode .metric-card, .light-mode .admin-card { background: #ffffff !important; border-color: #d0d0d0 !important; }
-        .light-mode .card-title, .light-mode .stat-label { color: #1a1a1a !important; }
-        .light-mode .card-subtitle { color: #555555 !important; }
-        .light-mode input, .light-mode textarea, .light-mode select { background: #e8e8e8 !important; border-color: #d0d0d0 !important; color: #1a1a1a !important; }
-        .light-mode input::placeholder, .light-mode textarea::placeholder { color: #888888 !important; }
-        .light-mode .form-label, .light-mode label { color: #1a1a1a !important; }
-        .light-mode .badge { background: #dbeafe !important; color: #2563eb !important; }
-        .light-mode .btn-secondary { background: #e8e8e8 !important; color: #1a1a1a !important; border-color: #d0d0d0 !important; }
-        .light-mode .btn-secondary:hover { background: #d0d0d0 !important; }
-        .light-mode .sidebar-footer, .light-mode .admin-sidebar-footer { border-color: #d0d0d0 !important; }
-        .light-mode .logout-btn:hover { background: #e8e8e8 !important; }
-        .light-mode table th { background: #e8e8e8 !important; color: #1a1a1a !important; border-color: #d0d0d0 !important; }
-        .light-mode table td { border-color: #d0d0d0 !important; color: #1a1a1a !important; }
-        .light-mode table tr:hover { background: #e8e8e8 !important; }
-        .light-mode .modal-overlay { background: rgba(0,0,0,0.3) !important; }
-        .light-mode .modal, .light-mode .modal-content { background: #ffffff !important; border-color: #d0d0d0 !important; color: #1a1a1a !important; }
-        .light-mode.light-mode .search-box, .light-mode .search-input { background: #e8e8e8 !important; border-color: #d0d0d0 !important; color: #1a1a1a !important; }
-        .light-mode .tab, .light-mode .tab-btn { color: #555555 !important; }
-        .light-mode .tab.active, .light-mode .tab-btn.active { color: #3b82f6 !important; border-color: #3b82f6 !important; }
-        .light-mode .dropdown, .light-mode .dropdown-menu { background: #ffffff !important; border-color: #d0d0d0 !important; }
-        .light-mode .dropdown-item:hover { background: #e8e8e8 !important; }
-        .light-mode .toggle-switch { background: #d0d0d0 !important; }
-        .light-mode .toggle-switch.active { background: #2563eb !important; }
-        .light-mode .tooltip { background: #1a1a1a !important; color: #ffffff !important; }
-        .light-mode .progress-bar { background: #e8e8e8 !important; }
-        .light-mode .empty-state { color: #555555 !important; }
-        .light-mode .filter-bar, .light-mode .toolbar { background: #ffffff !important; border-color: #d0d0d0 !important; }
-        .light-mode .chip { background: #e8e8e8 !important; color: #1a1a1a !important; }
-        .light-mode pre, .light-mode code { background: #e8e8e8 !important; color: #1a1a1a !important; }
-        .light-mode .status-badge { border-color: #d0d0d0 !important; }
-        .light-mode ::selection { background: #3b82f6; color: #ffffff; }
-        .light-mode ::-webkit-scrollbar-track { background: #f5f5f5; }
-        .light-mode ::-webkit-scrollbar-thumb { background: #d0d0d0; }
-        .light-mode ::-webkit-scrollbar-thumb:hover { background: #bbbbbb; }
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        .light-mode
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
 
 </style>
+    <link rel="stylesheet" href="theme.css">
 </head>
 <body>
     <div class="container">
@@ -139,7 +131,7 @@
             <!-- Job Info -->
             <div class="card" id="jobInfoCard" style="display:none;">
                 <div class="card-title">Job Information</div>
-                <div id="jobInfo" style="font-size:0.9rem;color:#888;"></div>
+                <div id="jobInfo" style="font-size:0.9rem;color:var(--text-muted);"></div>
             </div>
 
             <!-- Photo Categories -->
@@ -148,7 +140,7 @@
                     <span>📷 Required Photos</span>
                     <span class="card-required">*</span>
                 </div>
-                <p style="font-size:0.8rem;color:#888;margin-bottom:12px;">Capture meter readings and equipment photos</p>
+                <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:12px;">Capture meter readings and equipment photos</p>
 
                 <button type="button" class="camera-button" style="margin-bottom:8px;" onclick="openPhotoCapture('meter_before')">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
@@ -169,7 +161,7 @@
             <!-- Notes (Optional) -->
             <div class="card">
                 <div class="card-title">Notes (Optional)</div>
-                <textarea id="invoiceNotes" placeholder="Any additional notes..." style="width:100%;padding:10px;border-radius:8px;border:1px solid #333;background:#1e1e1e;color:#f5f0e8;font-family:'Inter',sans-serif;font-size:0.85rem;min-height:70px;resize:vertical;"></textarea>
+                <textarea id="invoiceNotes" placeholder="Any additional notes..." style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--gray-300);background:var(--bg-hover);color:var(--text-primary);font-family:'Inter',sans-serif;font-size:0.85rem;min-height:70px;resize:vertical;"></textarea>
             </div>
         </div>
 
@@ -370,5 +362,6 @@
 <script src="hamburger-menu.js"></script>
 <script src="global-search.js"></script>
 <script src="notification-center.js"></script>
+    <script src="theme-toggle.js"></script>
 </body>
 </html>
