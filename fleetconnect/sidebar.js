@@ -172,10 +172,17 @@
 
     function applyFeatureFlags(nav) {
         if (!FC_FLAGS || !FC_FLAGS._loaded) {
-            // Flags not loaded yet — wait and retry once
-            setTimeout(function() {
-                if (FC_FLAGS && FC_FLAGS._loaded) applyFeatureFlags(nav);
-            }, 1500);
+            // Flags not loaded yet — poll every 300ms up to 5s
+            var attempts = 0;
+            var poll = setInterval(function() {
+                attempts++;
+                if (FC_FLAGS && FC_FLAGS._loaded) {
+                    clearInterval(poll);
+                    applyFeatureFlags(nav);
+                } else if (attempts > 16) {
+                    clearInterval(poll);
+                }
+            }, 300);
             return;
         }
         var flagged = nav.querySelectorAll('[data-flag]');
