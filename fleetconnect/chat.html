@@ -12,7 +12,7 @@
         
 
         
-        body { font-family: 'Inter', sans-serif; background: var(--bg-deep); color: var(--text-primary); min-height: 100vh; overflow: hidden; display: flex; }
+        body {  background: var(--bg-deep); color: var(--text-primary); min-height: 100vh; overflow: hidden; display: flex; }
 
         .layout { display: flex; height: 100vh; }
 
@@ -22,7 +22,7 @@
         .conversations-panel { width: 340px; background: var(--bg-deep); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
         .conversations-header { padding: 20px 16px; border-bottom: 1px solid var(--border); }
         .conversations-header h2 { font-size: 1.1rem; font-weight: 600; margin-bottom: 12px; }
-        .search-input { width: 100%; padding: 10px 12px 10px 36px; background: var(--bg-input) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23666'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'/%3E%3C/svg%3E") 8px center no-repeat; background-size: 18px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.85rem; color: var(--text-primary); font-family: 'Inter', sans-serif; }
+        .search-input { width: 100%; padding: 10px 12px 10px 36px; background: var(--bg-input) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23666'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'/%3E%3C/svg%3E") 8px center no-repeat; background-size: 18px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.85rem; color: var(--text-primary);  }
         .search-input::placeholder { color: var(--text-muted); }
         .search-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
 
@@ -73,7 +73,7 @@
         /* Input Area */
         .chat-input-area { padding: 16px 24px; border-top: 1px solid var(--border); background: var(--bg-card); display: flex; gap: 12px; align-items: flex-end; }
         
-        .message-input { flex: 1; padding: 12px 14px; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-md); color: var(--text-primary); font-family: 'Inter', sans-serif; font-size: 0.9rem; resize: none; max-height: 100px; transition: all 0.2s; }
+        .message-input { flex: 1; padding: 12px 14px; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-md); color: var(--text-primary);  font-size: 0.9rem; resize: none; max-height: 100px; transition: all 0.2s; }
         .message-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
         .message-input::placeholder { color: var(--text-muted); }
 
@@ -190,7 +190,7 @@
             <div style="padding: 12px; background: var(--bg-hover, var(--gray-300)); border-radius: 8px;">
                 <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary, var(--text-primary)); margin-bottom: 4px;" id="adminUserName">Rental User</div>
                 <div class="admin-sidebar-role" style="font-size: 0.75rem; color: var(--text-secondary, var(--text-muted));">Rental Account</div>
-                <button onclick="logout()" style="margin-top: 8px; width: 100%; padding: 6px; background: transparent; border: 1px solid var(--gray-300); color: var(--text-muted); border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 0.75rem; cursor: pointer; transition: all 0.2s;">Logout</button>
+                <button onclick="logout()" style="margin-top: 8px; width: 100%; padding: 6px; background: transparent; border: 1px solid var(--gray-300); color: var(--text-muted); border-radius: 6px;  font-size: 0.75rem; cursor: pointer; transition: all 0.2s;">Logout</button>
             </div>
         </div>
     </aside>

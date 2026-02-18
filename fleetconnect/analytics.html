@@ -15,7 +15,7 @@
         .container { position: relative; z-index: 1; max-width: 1400px; margin: 0 auto; padding: 24px 32px; }
 
         .nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
-        .logo { font-family: 'Inter', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--accent); letter-spacing: -0.5px; text-decoration: none; }
+        .logo {  font-size: 1.1rem; font-weight: 700; color: var(--accent); letter-spacing: -0.5px; text-decoration: none; }
         .nav-right { display: flex; align-items: center; gap: 24px; }
         .nav-links { display: flex; gap: 24px; }
         .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: color 0.2s; }
@@ -23,14 +23,14 @@
 .admin-badge { background: var(--admin); color: white; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; }
         .user-info { display: flex; align-items: center; gap: 12px; }
         .user-name { font-size: 0.9rem; color: var(--text-secondary); }
-        .logout-btn { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); padding: 8px 16px; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
+        .logout-btn { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); padding: 8px 16px; border-radius: 6px;  font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
         .logout-btn:hover { border-color: var(--error); color: var(--error); }
 
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
         .header-content h1 { font-size: 1.4rem; font-weight: 700; margin-bottom: 8px; }
         .header-content p { color: var(--text-secondary); }
         .date-selector { display: flex; gap: 8px; }
-        .date-btn { padding: 8px 16px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-secondary); border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
+        .date-btn { padding: 8px 16px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-secondary); border-radius: 6px;  font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
         .date-btn:hover { border-color: var(--admin); }
         .date-btn.active { background: var(--admin); color: white; border-color: var(--admin); }
 
@@ -167,7 +167,7 @@
             <div style="padding: 12px; background: var(--bg-hover, var(--gray-300)); border-radius: 8px;">
                 <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary, var(--text-primary)); margin-bottom: 4px;" id="adminUserName">System Admin</div>
                 <div style="font-size: 0.75rem; color: var(--text-secondary, var(--text-muted));">Administrator</div>
-                <button onclick="logout()" style="margin-top: 8px; width: 100%; padding: 6px; background: transparent; border: 1px solid var(--gray-300); color: var(--text-muted); border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 0.75rem; cursor: pointer; transition: all 0.2s;">Logout</button>
+                <button onclick="logout()" style="margin-top: 8px; width: 100%; padding: 6px; background: transparent; border: 1px solid var(--gray-300); color: var(--text-muted); border-radius: 6px;  font-size: 0.75rem; cursor: pointer; transition: all 0.2s;">Logout</button>
             </div>
         </div>
     </aside>
@@ -694,7 +694,7 @@
             ctx.stroke();
 
             ctx.fillStyle = '#888';
-            ctx.font = '12px Inter';
+            ctx.font = '12px sans-serif';
             ctx.textAlign = 'center';
             ctx.fillText(label, width / 2, height - 10);
         }

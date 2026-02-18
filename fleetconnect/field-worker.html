@@ -28,7 +28,7 @@
 
         /* Navigation Menu */
         .nav-menu { box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-        .nav-menu-item { display: block; width: 100%; padding: 12px 16px; background: transparent; border: none; color: var(--text-primary); text-align: left; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.9rem; transition: all 0.2s; border-bottom: 1px solid var(--gray-300); }
+        .nav-menu-item { display: block; width: 100%; padding: 12px 16px; background: transparent; border: none; color: var(--text-primary); text-align: left; cursor: pointer;  font-size: 0.9rem; transition: all 0.2s; border-bottom: 1px solid var(--gray-300); }
         .nav-menu-item:last-child { border-bottom: none; }
         .nav-menu-item:hover { background: var(--gray-300); color: #60a5fa; }
 
@@ -80,7 +80,7 @@
 
         /* Tabs */
         .tabs { display: flex; border-bottom: 1px solid var(--gray-300); margin-bottom: 20px; }
-        .tab { flex: 1; padding: 14px; background: transparent; border: none; border-bottom: 2px solid transparent; color: var(--text-muted); font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 500; cursor: pointer; text-align: center; transition: all 0.2s; }
+        .tab { flex: 1; padding: 14px; background: transparent; border: none; border-bottom: 2px solid transparent; color: var(--text-muted);  font-size: 0.85rem; font-weight: 500; cursor: pointer; text-align: center; transition: all 0.2s; }
         .tab:hover { color: var(--text-primary); }
         .tab.active { color: #60a5fa; border-bottom-color: #60a5fa; }
 
@@ -138,7 +138,7 @@
 
         .field-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
         .field-group label { display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px; text-transform: uppercase; }
-        .field-group input { width: 100%; padding: 12px; background: var(--bg-card); border: 1px solid var(--gray-300); border-radius: 8px; color: var(--text-primary); font-family: 'Inter', sans-serif; font-size: 1rem; text-align: center; }
+        .field-group input { width: 100%; padding: 12px; background: var(--bg-card); border: 1px solid var(--gray-300); border-radius: 8px; color: var(--text-primary);  font-size: 1rem; text-align: center; }
         .field-group input:focus { outline: none; border-color: #60a5fa; }
         .field-group .unit-label { font-size: 0.7rem; color: var(--text-muted); text-align: center; margin-top: 2px; }
 
@@ -146,7 +146,7 @@
         .invoice-details { background: var(--bg-card); border: 1px solid var(--gray-300); border-radius: 12px; padding: 16px; margin-top: 20px; }
         .detail-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
         .detail-group label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px; }
-        .detail-group input, .detail-group textarea { width: 100%; padding: 12px; background: var(--bg-hover); border: 1px solid var(--gray-300); border-radius: 8px; color: var(--text-primary); font-family: 'Inter', sans-serif; }
+        .detail-group input, .detail-group textarea { width: 100%; padding: 12px; background: var(--bg-hover); border: 1px solid var(--gray-300); border-radius: 8px; color: var(--text-primary);  }
         .detail-group input:focus, .detail-group textarea:focus { outline: none; border-color: #60a5fa; }
         .detail-group textarea { min-height: 70px; resize: vertical; }
 
@@ -177,7 +177,7 @@
         .summary-label { color: var(--text-muted); }
         .summary-value { font-weight: 600; }
 
-        .submit-invoice { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: calc(100% - 40px); max-width: 660px; padding: 16px; background: #60a5fa; color: var(--bg-body); border: none; border-radius: 10px; font-family: 'Inter', sans-serif; font-size: 1rem; font-weight: 600; cursor: pointer; z-index: 100; }
+        .submit-invoice { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: calc(100% - 40px); max-width: 660px; padding: 16px; background: #60a5fa; color: var(--bg-body); border: none; border-radius: 10px;  font-size: 1rem; font-weight: 600; cursor: pointer; z-index: 100; }
         .submit-invoice:hover { background: #3b82f6; }
         .submit-invoice:disabled { opacity: 0.6; cursor: not-allowed; }
 
@@ -205,7 +205,7 @@
         .gps-section { background: var(--bg-card); border: 1px solid var(--gray-300); border-radius: 12px; padding: 16px; margin-top: 20px; }
         .gps-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
         .gps-title { font-size: 0.9rem; font-weight: 600; color: var(--text-primary); }
-        .gps-button { display: flex; align-items: center; gap: 8px; padding: 12px 16px; background: var(--gray-300); border: 1px solid var(--gray-400); border-radius: 8px; color: var(--text-muted); cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 500; transition: all 0.2s; flex: 1; }
+        .gps-button { display: flex; align-items: center; gap: 8px; padding: 12px 16px; background: var(--gray-300); border: 1px solid var(--gray-400); border-radius: 8px; color: var(--text-muted); cursor: pointer;  font-size: 0.9rem; font-weight: 500; transition: all 0.2s; flex: 1; }
         .gps-button:hover:not(.gps-button.disabled) { background: var(--gray-300); border-color: var(--gray-500); color: var(--text-primary); }
         .gps-button.disabled { opacity: 0.6; cursor: not-allowed; }
         .gps-button.capturing { background: rgba(96, 165, 250, 0.15); border-color: #60a5fa; color: #60a5fa; }
@@ -248,7 +248,7 @@
         .signature-modal-canvas { flex: 1; display: flex; align-items: center; justify-content: center; background: #fff; }
         .signature-modal-canvas canvas { width: 100%; height: 100%; display: block; touch-action: none; cursor: crosshair; }
         .signature-modal-footer { padding: 16px; background: var(--bg-body); border-top: 1px solid var(--gray-300); display: flex; gap: 8px; }
-        .signature-modal-footer button { flex: 1; padding: 12px; border-radius: 8px; border: none; font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
+        .signature-modal-footer button { flex: 1; padding: 12px; border-radius: 8px; border: none;  font-size: 0.9rem; font-weight: 600; cursor: pointer; }
         .sig-btn-clear { background: var(--gray-300); color: var(--text-muted); }
         .sig-btn-clear:hover { background: var(--gray-400); color: var(--text-primary); }
         .sig-btn-done { background: #60a5fa; color: var(--bg-body); }
@@ -259,7 +259,7 @@
         .photo-upload-title { font-size: 0.9rem; font-weight: 600; color: var(--text-primary); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
         .photo-required-badge { color: #ef4444; font-size: 1rem; }
         .camera-button-group { display: grid; grid-template-columns: 1fr; gap: 8px; margin-bottom: 16px; }
-        .camera-button { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px 16px; background: var(--gray-300); border: 2px solid var(--gray-400); border-radius: 10px; color: var(--text-primary); font-family: 'Inter', sans-serif; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .camera-button { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px 16px; background: var(--gray-300); border: 2px solid var(--gray-400); border-radius: 10px; color: var(--text-primary);  font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
         .camera-button:hover { background: var(--gray-300); border-color: #60a5fa; color: #60a5fa; }
         .camera-button:active { transform: scale(0.98); }
         .camera-button svg { width: 20px; height: 20px; }
@@ -345,7 +345,7 @@
                 <div style="padding: 12px; background: var(--gray-300); border-radius: 8px;">
                     <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary); margin-bottom: 4px;" id="adminUserName">User</div>
                     <div class="admin-sidebar-role" style="font-size: 0.75rem; color: var(--text-muted);">Field Worker</div>
-                    <button onclick="logout()" style="margin-top: 8px; width: 100%; padding: 6px; background: transparent; border: 1px solid var(--gray-300); color: var(--text-muted); border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 0.75rem; cursor: pointer; transition: all 0.2s;">Logout</button>
+                    <button onclick="logout()" style="margin-top: 8px; width: 100%; padding: 6px; background: transparent; border: 1px solid var(--gray-300); color: var(--text-muted); border-radius: 6px;  font-size: 0.75rem; cursor: pointer; transition: all 0.2s;">Logout</button>
                 </div>
             </div>
         </aside>
