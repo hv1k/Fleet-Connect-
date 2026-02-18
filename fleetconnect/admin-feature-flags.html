@@ -54,8 +54,12 @@
         .category-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
         .category-title { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-secondary); }
         .category-badge { font-size: 0.7rem; padding: 3px 10px; border-radius: 4px; font-weight: 600; }
-        .category-badge.pages { background: rgba(96, 165, 250, 0.15); color: var(--accent-blue); }
-        .category-badge.analytics { background: rgba(168, 85, 247, 0.15); color: #a855f7; }
+        .category-badge.main { background: rgba(96, 165, 250, 0.15); color: var(--accent-blue); }
+        .category-badge.operations { background: rgba(168, 85, 247, 0.15); color: #a855f7; }
+        .category-badge.business { background: rgba(251, 146, 60, 0.15); color: #f59e0b; }
+        .category-badge.management { background: rgba(168, 85, 247, 0.15); color: #a855f7; }
+        .category-badge.tools { background: rgba(34, 197, 94, 0.15); color: var(--success); }
+        .category-badge.settings { background: rgba(107, 114, 128, 0.15); color: var(--gray-500); }
         .category-badge.features { background: rgba(34, 197, 94, 0.15); color: var(--success); }
         .bulk-btns { display: flex; gap: 8px; }
         .bulk-btn { font-size: 0.7rem; padding: 4px 10px; border-radius: 4px; cursor: pointer; border: 1px solid var(--border); background: transparent; color: var(--text-secondary);  transition: all 0.15s; }
@@ -269,6 +273,31 @@
         let allFlags = [];
         let currentRole = 'vendor';
 
+        // Sidebar sections mapping for each role
+        const sidebarSections = {
+            vendor: {
+                'MAIN': ['page.dashboard', 'page.work_orders', 'page.create_job', 'page.daily_log'],
+                'OPERATIONS': ['page.dispatch', 'page.route_optimization', 'page.worker_metrics', 'page.inventory'],
+                'BUSINESS': ['page.invoices', 'page.payments', 'page.profitability', 'page.subcontractors', 'page.job_bidding', 'page.sla'],
+                'TOOLS': ['page.documents', 'page.fuel_calculator', 'page.equipment'],
+                'SETTINGS': ['page.alerts'],
+                'FEATURES': [] // catch-all for non-page flags
+            },
+            rental: {
+                'MAIN': ['page.dashboard', 'page.create_job', 'page.work_orders'],
+                'MANAGEMENT': ['page.invoices', 'page.contracts', 'page.equipment', 'page.vendor_comparison', 'page.recurring_jobs'],
+                'TOOLS': ['page.reports', 'page.daily_log', 'page.documents', 'page.bulk_import'],
+                'SETTINGS': ['page.alerts'],
+                'FEATURES': []
+            },
+            fieldworker: {
+                'MAIN': ['page.dashboard', 'page.work_orders', 'page.time_tracking'],
+                'TOOLS': ['page.messages', 'page.documents', 'page.fuel_calculator'],
+                'SETTINGS': [],
+                'FEATURES': []
+            }
+        };
+
         document.addEventListener('DOMContentLoaded', async () => {
             const user = checkAuth(['admin']);
             if (!user) return;
@@ -315,35 +344,55 @@
             var _stat = document.getElementById('statDisabled'); if(_stat) _stat.textContent = disabled;
             var _stat = document.getElementById('statTotal'); if(_stat) _stat.textContent = roleFlags.length;
 
-            // Group by category
-            const categories = {};
-            roleFlags.forEach(f => {
-                const cat = f.category || 'other';
-                if (!categories[cat]) categories[cat] = [];
-                categories[cat].push(f);
+            // Get sidebar sections for the current role
+            const roleSections = sidebarSections[role] || {};
+            const sections = {};
+            
+            // Initialize all sections for this role
+            Object.keys(roleSections).forEach(sectionName => {
+                sections[sectionName] = [];
             });
 
-            // Category display order
-            const catOrder = ['pages', 'analytics', 'features', 'other'];
-            const catLabels = { pages: 'Pages', analytics: 'Analytics & Dashboards', features: 'Features', other: 'Other' };
+            // Map each flag to its sidebar section
+            roleFlags.forEach(f => {
+                let assigned = false;
+                
+                // Find which section this flag belongs to
+                for (const [sectionName, flagKeys] of Object.entries(roleSections)) {
+                    if (flagKeys.includes(f.feature_key)) {
+                        sections[sectionName].push(f);
+                        assigned = true;
+                        break;
+                    }
+                }
+                
+                // If not found in any specific section, put it in FEATURES
+                if (!assigned) {
+                    if (!sections['FEATURES']) sections['FEATURES'] = [];
+                    sections['FEATURES'].push(f);
+                }
+            });
+
+            // Section display order (prioritize by role structure)
+            const sectionOrder = Object.keys(roleSections).filter(s => s !== 'FEATURES').concat(['FEATURES']);
 
             let html = '';
-            catOrder.forEach(cat => {
-                if (!categories[cat] || categories[cat].length === 0) return;
+            sectionOrder.forEach(sectionName => {
+                if (!sections[sectionName] || sections[sectionName].length === 0) return;
 
-                const flags = categories[cat];
+                const flags = sections[sectionName];
                 const enabledCount = flags.filter(f => f.enabled).length;
 
                 html += `
                 <div class="category-section">
                     <div class="category-header">
                         <div style="display:flex;align-items:center;gap:10px;">
-                            <span class="category-title">${safe(catLabels[cat] || cat)}</span>
-                            <span class="category-badge ${cat}">${enabledCount}/${flags.length} on</span>
+                            <span class="category-title">${sectionName}</span>
+                            <span class="category-badge ${sectionName.toLowerCase()}">${enabledCount}/${flags.length} on</span>
                         </div>
                         <div class="bulk-btns">
-                            <button class="bulk-btn" onclick="bulkToggle('${role}', '${cat}', true)">Enable All</button>
-                            <button class="bulk-btn" onclick="bulkToggle('${role}', '${cat}', false)">Disable All</button>
+                            <button class="bulk-btn" onclick="bulkToggle('${role}', '${sectionName}', true)">Enable All</button>
+                            <button class="bulk-btn" onclick="bulkToggle('${role}', '${sectionName}', false)">Disable All</button>
                         </div>
                     </div>
                     <div class="flags-grid">
@@ -490,8 +539,23 @@
             }
         }
 
-        async function bulkToggle(role, category, enabled) {
-            const flags = allFlags.filter(f => f.role === role && f.category === category);
+        async function bulkToggle(role, sectionName, enabled) {
+            const roleFlags = allFlags.filter(f => f.role === role);
+            const roleSections = sidebarSections[role] || {};
+            
+            // Get flags for this section
+            let flags = [];
+            if (sectionName === 'FEATURES') {
+                // For FEATURES section, get all flags not in other sections
+                const assignedKeys = new Set();
+                Object.values(roleSections).forEach(keys => keys.forEach(k => assignedKeys.add(k)));
+                flags = roleFlags.filter(f => !assignedKeys.has(f.feature_key));
+            } else {
+                // For specific sections, get flags matching the section's feature keys
+                const sectionKeys = roleSections[sectionName] || [];
+                flags = roleFlags.filter(f => sectionKeys.includes(f.feature_key));
+            }
+            
             let successCount = 0;
 
             for (const flag of flags) {
