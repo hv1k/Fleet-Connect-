@@ -378,9 +378,9 @@ async function createJob(jobData, equipmentList) {
             priority: jobData.priority,
             instructions: sanitizeInput(jobData.instructions),
             status: jobData.status || 'pending',
-            assigned_vendor: jobData.assignedVendor || null,
+            assigned_vendor: (jobData.assignedVendor && !String(jobData.assignedVendor).startsWith('demo-')) ? jobData.assignedVendor : null,
             allow_open_if_declined: jobData.allowOpenIfDeclined,
-            created_by: jobData.createdBy || null,
+            created_by: (jobData.createdBy && !String(jobData.createdBy).startsWith('demo-')) ? jobData.createdBy : null,
             invoice_image: jobData.invoiceImage || null,
             document_source: jobData.documentSource || null,
             field_ticket_id: jobData.fieldTicketId || null,
@@ -399,8 +399,8 @@ async function createJob(jobData, equipmentList) {
         .single();
 
     if (jobError) {
-        console.error('Error creating job:', jobError);
-        return { success: false, error: jobError.message };
+        console.error('Error creating job:', jobError, JSON.stringify(jobError));
+        return { success: false, error: jobError.message || jobError.details || JSON.stringify(jobError) };
     }
 
     if (equipmentList && equipmentList.length > 0) {
